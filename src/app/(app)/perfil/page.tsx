@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
-import { Suspense } from "react";
+import { Suspense, type ReactNode } from "react";
 import { getAnalysis } from "@/lib/analysis";
 import { logout } from "@/app/auth-actions";
 import { revokeHealthKey, syncProfileAverages } from "@/app/actions";
@@ -575,46 +576,80 @@ function Salud({ db }: { db: Db }) {
             )}
           </div>
           <div>
-            <p className="mb-2 font-semibold">2. Crea el atajo en el iPhone (app Atajos → +)</p>
-            <ol className="list-decimal space-y-1.5 pl-5 text-ink-2">
-              <li>
-                Añade <strong className="text-ink">Buscar muestras de salud</strong>: tipo <em>Pasos</em>, filtro <em>Fecha de inicio · es hoy</em>.
-              </li>
-              <li>
-                Añade <strong className="text-ink">Calcular estadísticas</strong>: <em>Suma</em> de las muestras. Renombra el resultado a «Pasos».
-              </li>
-              <li>
-                Repite los dos pasos con el tipo <em>Energía activa</em> (resultado «Activas») y, si quieres, con <em>Energía en reposo</em> («Reposo»).
-              </li>
-              <li>
-                Añade <strong className="text-ink">Obtener contenido de URL</strong> con la URL <code className="break-all text-xs">{endpoint}</code> y en «Mostrar más»:
-                <ul className="mt-1 list-disc space-y-1 pl-5">
-                  <li>Método: <em>POST</em>.</li>
+            <p className="mb-1 font-semibold">2. Crea el atajo en el iPhone</p>
+            <p className="mb-3 text-ink-2">
+              Abre la <strong className="text-ink">app Atajos</strong> (icono de dos cuadrados rosa y azul; no es Ajustes → Atajos) → pestaña Atajos → <em>+</em>. Cada
+              acción se añade desde la barra <em>Buscar acciones</em> de abajo y se coloca al final: el orden importa.
+            </p>
+            <ol className="space-y-5">
+              <ShortcutStep n={1} img="1-pasos" w={600} h={882} title="Pasos de hoy">
+                Busca <em>muestras</em> y añade <strong className="text-ink">Buscar muestras de salud</strong> (puede llamarse «Buscar muestras médicas»). Tipo{" "}
+                <em>Pasos</em> (<em>Steps</em>), filtro <em>Fecha de inicio · es hoy</em>, unidad <em>contar</em>. Debajo, añade{" "}
+                <strong className="text-ink">Calcular estadísticas</strong> con <em>Suma</em>: tiene que poner «Calcular Suma de Muestras médicas».
+              </ShortcutStep>
+              <ShortcutStep n={2} img="2-variable-pasos" w={600} h={304} title="Guárdalo como «Pasos»">
+                Añade <strong className="text-ink">Definir variable</strong>, escribe <code>Pasos</code> como nombre y deja <em>Suma</em> como valor.
+              </ShortcutStep>
+              <ShortcutStep n={3} img="3-calorias" w={600} h={584} title="Calorías de hoy → «Activas»">
+                Repite los pasos 1 y 2 con el tipo <em>Energía en actividad</em> (en la lista va por la E; arriba del menú hay un buscador), unidad{" "}
+                <em>kcal</em> y la variable <code>Activas</code>. Revisa que el cálculo sea <em>Suma</em> y no <em>Media</em>, y el filtro <em>es hoy</em>.
+              </ShortcutStep>
+              <ShortcutStep n={4} img="4-buscar-url" w={600} h={831} title="La acción que envía">
+                Busca <em>contenido</em> y elige <strong className="text-ink">Obtener contenido de URL</strong> (icono verde con flecha). No sirven «URL» ni «Abrir URL».
+              </ShortcutStep>
+              <ShortcutStep n={5} img="5-enviar" w={600} h={885} title="Configura el envío">
+                <ul className="list-disc space-y-1 pl-5">
                   <li>
-                    Encabezados: clave <code>Authorization</code>, valor <code>Bearer rio_…</code> (lo que copiaste en el paso 1).
+                    URL: <code className="break-all">{endpoint}</code>
                   </li>
                   <li>
-                    Cuerpo de la solicitud: <em>JSON</em>, con los campos de tipo Número <code>pasos</code> = Pasos, <code>kcalActivas</code> = Activas y <code>kcalReposo</code> = Reposo.
+                    Método: <em>POST</em>.
+                  </li>
+                  <li>
+                    Cabeceras → Añadir nueva cabecera: <code>Authorization</code> y como valor lo copiado en el paso 1 (<code>Bearer rio_…</code>, con un espacio).
+                  </li>
+                  <li>
+                    Cuerpo de la solicitud: <em>JSON</em>, dos campos de tipo <em>Número</em> en minúscula: <code>pasos</code> y <code>kcalActivas</code>. En cada valor,
+                    borra el 0, pulsa <em>Seleccionar variable</em> y elige <em>Pasos</em> o <em>Activas</em>.
                   </li>
                 </ul>
-              </li>
-              <li>
-                Añade <strong className="text-ink">Mostrar resultado</strong> para ver la respuesta («Guardado: 8234 pasos…») y pulsa ▶ para probarlo. La primera vez
-                te pedirá permiso para leer Salud.
-              </li>
+              </ShortcutStep>
+              <ShortcutStep n={6} img="6-resultado" w={600} h={393} title="Pruébalo">
+                Añade <strong className="text-ink">Mostrar resultado</strong> y pulsa ▶. La primera vez pide permiso para leer Salud: <em>Permitir</em>. Tiene que salir{" "}
+                <code>&quot;ok&quot; : true</code> con tus pasos (justo después de medianoche saldrá 0). Si sale 0 de día, revisa Ajustes → Salud → Acceso a datos →
+                Atajos.
+              </ShortcutStep>
             </ol>
           </div>
           <div>
-            <p className="mb-2 font-semibold">3. Que se ejecute solo</p>
-            <p className="text-ink-2">
-              Atajos → <em>Automatización</em> → <em>+</em> → <em>Hora del día</em>, por ejemplo a las 22:00 cada día → <em>Ejecutar inmediatamente</em> → elige tu atajo.
-              Puede ejecutarse varias veces al día: cada envío actualiza el total de ese día. Salud solo se puede leer con el iPhone desbloqueado; si un día no llega,
-              ábrelo y pulsa el atajo.
-            </p>
+            <p className="mb-1 font-semibold">3. Que se ejecute solo</p>
+            <ol className="space-y-5">
+              <ShortcutStep n={7} img="7-automatizacion" w={600} h={362} title="Cada noche a las 23:50">
+                En Atajos → <em>Automatización</em> → <em>+</em> → <em>Hora del día</em>: 23:50, todos los días → <em>Ejecutar inmediatamente</em> (sin «Notificar al
+                ejecutar») → elige tu atajo. Puede ejecutarse más veces al día: cada envío actualiza el total. Salud solo se lee con el iPhone desbloqueado; si un día no
+                llega, pulsa el atajo a mano.
+              </ShortcutStep>
+            </ol>
           </div>
         </div>
       </Card>
     </div>
+  );
+}
+
+/** Paso de la guía del atajo con su captura del iPhone (public/atajo, la clave personal va tapada). */
+function ShortcutStep({ n, title, img, w, h, children }: { n: number; title: string; img: string; w: number; h: number; children: ReactNode }) {
+  return (
+    <li className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_220px]">
+      <div className="text-ink-2">
+        <p className="mb-1 font-semibold text-ink">
+          <span className="mr-2 inline-grid h-6 w-6 place-items-center rounded-full bg-accent text-xs text-accent-ink">{n}</span>
+          {title}
+        </p>
+        {children}
+      </div>
+      <Image src={`/atajo/${img}.webp`} width={w} height={h} alt={`Captura del paso ${n}: ${title}`} unoptimized className="h-auto w-full max-w-[260px] rounded-xl border border-line sm:max-w-none" />
+    </li>
   );
 }
 

@@ -16,6 +16,6 @@ export function proxy(req: NextRequest) {
 }
 
 export const config = {
-  // todo salvo los estáticos, iconos, manifest, service worker y pantalla sin conexión (los pide el navegador sin credenciales)
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|manifest.webmanifest|sw.js|offline.html|.*\\.(?:png|svg)$).*)"],
+  // todo salvo los estáticos, iconos, imágenes de public, manifest, service worker y pantalla sin conexión (los pide el navegador sin credenciales)
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|manifest.webmanifest|sw.js|offline.html|.*\\.(?:png|svg|webp)$).*)"],
 };
