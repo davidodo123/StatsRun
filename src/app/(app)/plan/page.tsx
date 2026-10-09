@@ -5,6 +5,8 @@ import { getAnalysis } from "@/lib/analysis";
 import { Card, Empty, Loading, Notice, PageHeader, Stat } from "@/components/ui";
 import { SessionCard } from "@/components/SessionCard";
 import { AiCoachButton } from "@/components/AiCoachButton";
+import { ReadinessCard } from "@/components/ReadinessCard";
+import { assessReadiness } from "@/lib/engine/readiness";
 import { UnavailableForm } from "@/components/UnavailableForm";
 import { adaptIfMissed, coachConfig } from "@/lib/coach";
 import { availableDaysOf } from "@/lib/engine/planner";
@@ -179,6 +181,17 @@ async function Content({ searchParams }: { searchParams: PageProps<"/plan">["sea
         </div>
 
         <div className="space-y-4">
+          {stats && (
+            <ReadinessCard
+              r={assessReadiness({
+                stats,
+                activities: db.activities,
+                today,
+                missed14d: [...(matches?.values() ?? [])].filter((m) => m.status === "missed" && m.session.date < today && diffDays(today, m.session.date) <= 14).length,
+                raceDate: plan.goal.date,
+              })}
+            />
+          )}
           <Card title="Entrenador IA" subtitle={coachConfig().configured ? `Modelo ${coachConfig().model}` : "Desactivado"}>
             {coachConfig().configured ? (
               <div className="space-y-3 text-sm text-ink-2">

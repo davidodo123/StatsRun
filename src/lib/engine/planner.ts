@@ -625,15 +625,28 @@ function raceSession(goal: Goal, pace: number, predicted: number): PlannedSessio
 const STRENGTH: Record<Phase, { title: string; steps: string[] }> = {
   base: {
     title: "Fuerza general",
-    steps: ["3 rondas: sentadilla 12, zancadas 10/pierna, puente glúteo 15, plancha 40″, plancha lateral 30″/lado, elevación gemelos 15", "Movilidad de cadera y tobillo 5′"],
+    steps: [
+      "3 × 8-12 sentadilla goblet a RPE 7 (te quedan 3 repeticiones)",
+      "3 × 8-10/pierna zancada o step-up a RPE 7",
+      "3 × 10-12 puente de glúteo o hip thrust a RPE 7",
+      "3 × 15 elevación de gemelos (rodilla recta) + 3 × 15 sentado (sóleo)",
+      "Core: plancha 3 × 40″, plancha lateral 2 × 30″/lado",
+      "Progresión: cuando hagas el máximo de repeticiones en todas las series, sube el peso",
+    ],
   },
   construccion: {
     title: "Fuerza + pliometría",
-    steps: ["3 × 8 sentadilla búlgara (con peso)", "3 × 8 peso muerto rumano", "3 × 10 saltos al cajón / skipping", "3 × 15 gemelo excéntrico", "Core: dead bug 3×10, plancha 3×45″"],
+    steps: [
+      "Fuerza pesada (mejora la economía de carrera): 4 × 4-6 sentadilla o búlgara a RPE 7-8",
+      "3 × 5-6 peso muerto rumano a RPE 7-8, sin llegar al fallo",
+      "Pliometría: 3 × 6 saltos al cajón + 3 × 10 saltos a la comba, máxima calidad",
+      "3 × 12 gemelo excéntrico (bajada en 3″)",
+      "Core: dead bug 3 × 10, Pallof press 3 × 10/lado",
+    ],
   },
   especifico: {
     title: "Fuerza de mantenimiento",
-    steps: ["2 × 8 sentadilla búlgara", "2 × 8 peso muerto rumano", "2 × 15 gemelo", "Core 10′", "Sin llegar al fallo"],
+    steps: ["2 × 5-6 sentadilla búlgara a RPE 7 (mismo peso que en construcción)", "2 × 5-6 peso muerto rumano a RPE 7", "2 × 6 saltos al cajón", "2 × 15 gemelo", "Core 10′", "Objetivo: mantener la fuerza ganada, nunca al fallo"],
   },
   taper: { title: "Activación ligera", steps: ["2 rondas: puente glúteo 12, plancha 30″, monster walk con banda 10/lado", "Movilidad 10′"] },
 };

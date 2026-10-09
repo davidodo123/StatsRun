@@ -147,5 +147,6 @@ export interface CoachState {
   model: string;
   summary: string;
   changed: number;
+  verdict?: "progresar" | "mantener" | "descargar" | "recuperar";
   error?: string;
 }

@@ -16,6 +16,8 @@ Leyenda: `[x]` hecho · `[ ]` pendiente · `[/]` empezado
 - [x] Optimizar la web (el build fallaba y Vercel servía una versión vieja; lecturas a Redis deduplicadas)
 - [x] Registrar entreno con los datos de Strava a mano: nombre, distancia, ritmo medio, tiempo en movimiento, desnivel +, altitud máx., pasos. Quitada la captura.
 - [x] *Extra:* «¿Cómo te has sentido?» al registrar → la IA ajusta la rutina → [[Decisiones#Sensaciones para la IA]]
+- [x] *Extra:* IA con base científica: diagnóstico de estado de forma (Selye, Banister, ACWR, checklist de Helms) → [[Estudio entrenamiento]]
+- [x] *Extra:* investigación ampliada: tope por sesión (Frandsen 2025), enfermedad, semáforo de dolor, afinamiento → [[Estudio entrenamiento#9. Evidencia ampliada (búsqueda del 2026-10-09)]]
 - [x] *Extra:* fallos de seguridad y datos (secreto de sesión, escrituras simultáneas en Redis)
 
 Detalle en [[2026-10-09]].
@@ -46,6 +48,12 @@ Detalle en [[2026-10-09]].
 ### Hacer aplicación
 - [ ] Diseño
 - [ ] Conectar con la app de Salud para datos más precisos
+
+### IA / ciencia (salido del estudio)
+- [ ] Carga por sRPE (RPE × minutos) cuando no hay FC — *candidato a Importante*
+- [ ] El planificador aplica también el tope por sesión de Frandsen (no solo la IA)
+- [ ] Desacople aeróbico (Pa:FC) en tiradas largas — necesita los streams de Strava
+- [ ] VFC (HRV) diaria si se conecta con la app de Salud
 
 ### Experiencias de la app
 - [ ] Flyover estilo Strava con la ruta seguida
