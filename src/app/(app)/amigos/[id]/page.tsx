@@ -10,12 +10,12 @@ import { getDb } from "@/lib/db";
 import { requireUserId } from "@/lib/session";
 import { athleteSummary, type AthleteSummary } from "@/lib/summary";
 import { shortDate, todayLocal } from "@/lib/dates";
-import { fmtDuration, fmtKm, fmtPace } from "@/lib/format";
+import { fmtDuration, fmtKm } from "@/lib/format";
 import { unfriend } from "@/app/auth-actions";
+import { ActivityItem } from "@/components/ActivityItem";
+import { publicActivity } from "@/lib/feed";
 
 export const metadata: Metadata = { title: "Stats de tu amigo" };
-
-const SPORT: Record<string, string> = { run: "Correr", ride: "Bici", swim: "Natación", walk: "Caminar", strength: "Fuerza", other: "Otro" };
 
 export default function FriendPage({ params }: PageProps<"/amigos/[id]">) {
   return (
@@ -37,6 +37,7 @@ async function Content({ params }: { params: PageProps<"/amigos/[id]">["params"]
   const f = athleteSummary(fDb, today);
   const me = athleteSummary(myDb, today);
   const first = friend.name.split(" ")[0];
+  const names = new Map<string, string>([[uid, "ti"], [friend.id, friend.name]]);
 
   return (
     <>
@@ -105,18 +106,9 @@ async function Content({ params }: { params: PageProps<"/amigos/[id]">["params"]
               </Card>
               <Card title="Últimos entrenos">
                 {f.recent.length ? (
-                  <ul className="divide-y divide-line text-sm">
+                  <ul className="divide-y divide-line">
                     {f.recent.map((a) => (
-                      <li key={a.id} className="py-2">
-                        <span className="block truncate font-medium">{a.name}</span>
-                        <span className="block text-xs text-muted tabular">
-                          {shortDate(a.date)} · {SPORT[a.sport]}
-                          {a.distanceM > 0 && ` · ${(a.distanceM / 1000).toFixed(1)} km`} · {fmtDuration(a.movingSec)}
-                          {a.sport === "run" && a.distanceM > 0 && ` · ${fmtPace(a.movingSec / (a.distanceM / 1000))}/km`}
-                          {a.avgHr && ` · ${a.avgHr} ppm`}
-                          {a.rpe && ` · RPE ${a.rpe}`}
-                        </span>
-                      </li>
+                      <ActivityItem key={a.id} a={publicActivity(a)} href={`/actividad/${encodeURIComponent(a.id)}?de=${friend.id}`} names={names} />
                     ))}
                   </ul>
                 ) : (

@@ -79,3 +79,28 @@ Qué se decidió, por qué y cuándo. Si algo cambia, se añade una entrada nuev
 *2026-10-09*
 
 - Un documento JSON por usuario en Upstash Redis. Cada escritura comprueba que nadie ha escrito entre medias (si no, reintenta): evita que la IA y el usuario se pisen cambios.
+
+## Amigos, sesiones compartidas y mapas
+*2026-10-09*
+
+- **Buscar perfiles con solicitud de amistad.** Al buscar solo se ve el nombre, el @usuario y la foto; nunca el código ni el email.
+  - Para ver las estadísticas, el otro tiene que aceptar la solicitud.
+  - Si los dos se envían solicitud, quedan como amigos.
+  - El código de amigo sigue funcionando como atajo (cuenta como aceptación).
+- **Feed** «Actividad de tus amigos»: sus sesiones de los últimos 14 días.
+  - Sin sensaciones ni notas: eso es privado. Lo quita `publicActivity`.
+- **Sesiones compartidas:** `Activity.with` guarda los ids de los amigos con los que entrenaste (solo amigos).
+  - Al amigo le aparece en «Entrenasteis juntos» durante 30 días, con dos opciones:
+    - **Añadir**: copia distancia, tiempo, desnivel y recorrido. El pulso, el RPE y las sensaciones son de cada uno y se rellenan al editarla.
+    - **No, gracias**: la descarta.
+  - La copia lleva `sharedFrom` para no duplicarla.
+- **Mapa:** el recorrido se guarda como *encoded polyline* (`Activity.route`, `src/lib/route.ts`), simplificado a 400 puntos como máximo.
+  - Viene de Strava (`map.summary_polyline`) y de los archivos GPX, TCX y FIT importados.
+  - Se dibuja en SVG sobre teselas de CARTO (datos de OpenStreetMap, con atribución). No hace falta clave ni librería.
+  - En las listas sale como miniatura sin teselas.
+- **Página nueva** `/actividad/[id]`: mapa grande, datos y con quién.
+  - Para ver la de un amigo se usa `?de=<id>` y se comprueba que sois amigos.
+  - Las sensaciones solo aparecen en las tuyas.
+- **Strava:**
+  - La primera sincronización tras este cambio recarga el último año, para traer los mapas de lo ya importado (`routesSynced`).
+  - Al volver a sincronizar ya **no se pierden** el RPE, las sensaciones ni las notas que añadiste (antes se sobrescribían).

@@ -89,6 +89,7 @@ interface StravaSummaryActivity {
   kilojoules?: number;
   suffer_score?: number;
   pr_count?: number;
+  map?: { summary_polyline?: string | null };
 }
 
 const SPORT_MAP: Record<string, SportKind> = {
@@ -132,6 +133,7 @@ export function mapActivity(a: StravaSummaryActivity): Activity {
     kilojoules: a.kilojoules,
     sufferScore: a.suffer_score,
     prCount: a.pr_count,
+    route: a.map?.summary_polyline || undefined,
   };
 }
 
@@ -145,12 +147,13 @@ export interface SyncResult {
  * Importa actividades nuevas desde la última sincronizada (o los últimos `initialDays`).
  * Límite de Strava ~100 lecturas / 15 min: se cortan las páginas en `maxPages`.
  */
-export async function syncActivities(auth: StravaAuth, existing: Activity[], initialDays = 365, maxPages = 10): Promise<SyncResult> {
+export async function syncActivities(auth: StravaAuth, existing: Activity[], initialDays = 365, maxPages = 10, full = false): Promise<SyncResult> {
   const token = await validToken(auth);
   const stravaActs = existing.filter((a) => a.source === "strava");
   const latest = stravaActs.reduce((m, a) => (a.startLocal > m ? a.startLocal : m), "");
   // margen de 2 días por zonas horarias y ediciones
-  const after = latest
+  // ull: vuelve a traer todo el periodo (p. ej. para rellenar los recorridos de lo ya sincronizado)
+  const after = latest && !full
     ? Math.floor(new Date(`${latest}Z`).getTime() / 1000) - 2 * 86400
     : Math.floor(Date.now() / 1000) - initialDays * 86400;
 
@@ -177,11 +180,14 @@ export async function syncActivities(auth: StravaAuth, existing: Activity[], ini
     imported = 0; // la escritura puede reintentarse
     const byId = new Map(db.activities.map((a) => [a.id, a]));
     for (const a of fetched) {
-      if (!byId.has(a.id)) imported++;
-      byId.set(a.id, a);
+      const prev = byId.get(a.id);
+      if (!prev) imported++;
+      // conservar lo que añade el atleta (RPE, sensaciones, notas, sesión del plan, con quién)
+      byId.set(a.id, prev ? { ...prev, ...a } : a);
     }
     db.activities = [...byId.values()].sort((x, y) => x.startLocal.localeCompare(y.startLocal));
     db.lastSync = new Date().toISOString();
+    if (!rateLimited) db.routesSynced = true;
   });
   return { imported, pages: page, rateLimited };
 }

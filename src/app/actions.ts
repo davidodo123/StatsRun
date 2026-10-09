@@ -10,6 +10,7 @@ import { generateDemoActivities } from "@/lib/demo";
 import { applyBlockedDates, availableDaysOf, generatePlan } from "@/lib/engine/planner";
 import { computeStats } from "@/lib/engine/stats";
 import { profileAverages } from "@/lib/engine/profile";
+import { areFriends, getFriends } from "@/lib/auth";
 import { findRace } from "@/lib/races";
 import { adaptWithAI, coachConfig } from "@/lib/coach";
 import { parseTime } from "@/lib/format";
@@ -173,7 +174,7 @@ export async function syncStrava(): Promise<FormState> {
   const db = await getDb();
   if (!db.strava) return { error: "Strava no está conectado." };
   try {
-    const r = await syncActivities(db.strava, db.activities);
+    const r = await syncActivities(db.strava, db.activities, 365, 10, !db.routesSynced);
     if (r.imported > 0) await scheduleAiAdapt();
     refresh();
     return {
@@ -307,6 +308,9 @@ export async function saveActivity(_: FormState, fd: FormData): Promise<FormStat
   const existingId = String(fd.get("id") ?? "") || undefined;
   const sessionId = String(fd.get("sessionId") ?? "") || undefined;
   const label: Record<string, string> = { run: "Carrera", ride: "Bici", swim: "Natación", walk: "Caminata", strength: "Fuerza", other: "Entrenamiento" };
+  // solo se puede añadir a amigos
+  const friendIds = new Set((await getFriends(await requireUserId())).map((f) => f.id));
+  const withIds = [...new Set(fd.getAll("with").map(String))].filter((x) => friendIds.has(x));
 
   await updateDb((db) => {
     const id = existingId ?? `manual-${Date.now().toString(36)}`;
@@ -334,6 +338,7 @@ export async function saveActivity(_: FormState, fd: FormData): Promise<FormStat
       feelings: String(fd.get("feelings") ?? "").trim().slice(0, 1000) || undefined,
       notes: String(fd.get("notes") ?? "").trim() || undefined,
       sessionId,
+      with: withIds.length ? withIds : undefined,
     };
     db.activities = [...db.activities.filter((a) => a.id !== id), act].sort((a, b) => a.startLocal.localeCompare(b.startLocal));
   });
@@ -342,6 +347,52 @@ export async function saveActivity(_: FormState, fd: FormData): Promise<FormStat
   if (!existingId) redirect(sessionId ? "/plan?registrado=1" : "/registrar?guardado=1");
   refresh();
   return { ok: true, message: "Entreno actualizado." };
+}
+
+/** Añade a mis entrenos la sesión en la que me ha incluido un amigo (copia distancia, tiempo, desnivel y recorrido). */
+export async function copySharedActivity(fd: FormData): Promise<void> {
+  const uid = await requireUserId();
+  const ownerId = String(fd.get("owner") ?? "");
+  const actId = String(fd.get("id") ?? "");
+  if (!(await areFriends(uid, ownerId))) return;
+  const src = (await getDb(ownerId)).activities.find((a) => a.id === actId);
+  if (!src?.with?.includes(uid)) return;
+  const sharedFrom = `${ownerId}:${actId}`;
+  await updateDb((db) => {
+    if (db.activities.some((a) => a.sharedFrom === sharedFrom)) return;
+    db.activities = [
+      ...db.activities,
+      {
+        id: `shared-${Date.now().toString(36)}`,
+        source: "manual" as const,
+        name: src.name,
+        sport: src.sport,
+        sportRaw: src.sportRaw,
+        date: src.date,
+        startLocal: src.startLocal,
+        distanceM: src.distanceM,
+        movingSec: src.movingSec,
+        elapsedSec: src.elapsedSec,
+        elevationGainM: src.elevationGainM,
+        maxAltitudeM: src.maxAltitudeM,
+        route: src.route,
+        // el pulso, el RPE y las sensaciones son de cada uno: se rellenan al editarla
+        with: [ownerId],
+        sharedFrom,
+      },
+    ].sort((a, b) => a.startLocal.localeCompare(b.startLocal));
+  });
+  await scheduleAiAdapt();
+  refresh();
+}
+
+/** Descarta una sesión compartida sin añadirla. */
+export async function dismissSharedActivity(fd: FormData): Promise<void> {
+  const sharedFrom = `${String(fd.get("owner") ?? "")}:${String(fd.get("id") ?? "")}`;
+  await updateDb((db) => {
+    db.dismissedShared = [...new Set([...(db.dismissedShared ?? []), sharedFrom])].slice(-200);
+  });
+  refresh();
 }
 
 export async function deleteActivity(fd: FormData): Promise<void> {

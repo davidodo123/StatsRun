@@ -1,6 +1,7 @@
 // Importa archivos de actividad sueltos: GPX, TCX (XML) y FIT (binario de Garmin/COROS/Polar…).
 import type { Activity } from "../types";
 import { localParts, shortHash, sportFromName } from "./common";
+import { routeFromPoints } from "../route";
 
 interface Point {
   t?: number; // ms
@@ -84,7 +85,7 @@ function summarize(points: Point[]) {
   };
 }
 
-function build(id: string, name: string, sportRaw: string, s: ReturnType<typeof summarize>, cadencePerLeg: boolean): Activity | undefined {
+function build(id: string, name: string, sportRaw: string, s: ReturnType<typeof summarize>, cadencePerLeg: boolean, points: Point[]): Activity | undefined {
   if (!s.start || s.elapsedSec <= 0) return undefined;
   const sport = sportFromName(sportRaw);
   return {
@@ -101,6 +102,7 @@ function build(id: string, name: string, sportRaw: string, s: ReturnType<typeof 
     avgHr: s.avgHr ? Math.round(s.avgHr) : undefined,
     maxHr: s.maxHr,
     avgCadence: s.avgCad ? Math.round(sport === "run" && cadencePerLeg && s.avgCad < 120 ? s.avgCad * 2 : s.avgCad) : undefined,
+    route: routeFromPoints(points),
   };
 }
 
@@ -123,7 +125,7 @@ export function parseGpx(xml: string, fileName: string): Activity | undefined {
   }
   if (!points.length) return undefined;
   // GPX de Strava/Garmin: tipo numérico o "running"; si la cadencia < 120 es por pierna
-  return build(`file-${shortHash(xml)}`, name, /^\d+$/.test(type) ? "Run" : type, summarize(points), true);
+  return build(`file-${shortHash(xml)}`, name, /^\d+$/.test(type) ? "Run" : type, summarize(points), true, points);
 }
 
 export function parseTcx(xml: string, fileName: string): Activity | undefined {
@@ -145,7 +147,7 @@ export function parseTcx(xml: string, fileName: string): Activity | undefined {
   }
   if (!points.length) return undefined;
   const name = decode(tagStr(xml, "Notes") ?? fileName.replace(/\.\w+$/, ""));
-  return build(`file-${shortHash(xml)}`, name, sport, summarize(points), true);
+  return build(`file-${shortHash(xml)}`, name, sport, summarize(points), true, points);
 }
 
 /** FIT: usa el resumen de sesión que graba el propio reloj (más preciso que recalcular). */
@@ -156,7 +158,11 @@ export async function parseFit(buf: Uint8Array, fileName: string): Promise<Activ
   const fit = await parser.parseAsync(ab);
   const hash = shortHash(Array.from(buf.subarray(0, 4096)).join(",") + buf.length);
   const out: Activity[] = [];
-  (fit.sessions ?? []).forEach((s, i) => {
+  // fit-file-parser da la posición en grados; por si acaso, convierte semicírculos
+  const deg = (v?: number) => (v === undefined ? undefined : Math.abs(v) > 180 ? (v * 180) / 2 ** 31 : v);
+  const route = routeFromPoints((fit.records ?? []).map((r) => ({ lat: deg(r.position_lat), lon: deg(r.position_long) })));
+  const sessions = fit.sessions ?? [];
+  sessions.forEach((s, i) => {
     const start = s.start_time ? new Date(s.start_time) : undefined;
     if (!start || isNaN(start.getTime())) return;
     const sportRaw = String(s.sport ?? "running");
@@ -178,6 +184,8 @@ export async function parseFit(buf: Uint8Array, fileName: string): Promise<Activ
       maxHr: s.max_heart_rate ? Math.round(Number(s.max_heart_rate)) : undefined,
       // FIT guarda la cadencia de carrera por pierna
       avgCadence: cad ? Math.round(sport === "run" && cad < 120 ? cad * 2 : cad) : undefined,
+      // con varias sesiones (multideporte) no se sabe qué tramo es de cada una
+      route: sessions.length === 1 ? route : undefined,
     });
   });
   return out;

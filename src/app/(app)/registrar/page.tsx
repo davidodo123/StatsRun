@@ -12,6 +12,8 @@ import { fmtDuration, fmtPace } from "@/lib/format";
 import { WEEKDAYS, diffDays, shortDate, weekday } from "@/lib/dates";
 import type { PlannedSession } from "@/lib/types";
 import { deleteActivity } from "@/app/actions";
+import { getFriends } from "@/lib/auth";
+import { requireUserId } from "@/lib/session";
 
 export const metadata: Metadata = { title: "Registrar entreno" };
 
@@ -44,7 +46,7 @@ function fromSession(s: PlannedSession, today: string): ActivityFormInitial {
 
 async function Content({ searchParams }: { searchParams: PageProps<"/registrar">["searchParams"] }) {
   const sp = await searchParams;
-  const { db, today, matches } = await getAnalysis();
+  const [{ db, today, matches }, friends] = await Promise.all([getAnalysis(), requireUserId().then(getFriends)]);
   const sessions = db.plan?.weeks.flatMap((w) => w.sessions) ?? [];
 
   const editId = typeof sp.editar === "string" ? sp.editar : undefined;
@@ -73,6 +75,7 @@ async function Content({ searchParams }: { searchParams: PageProps<"/registrar">
       feel: editing.feel,
       feelings: editing.feelings,
       notes: editing.notes,
+      with: editing.with,
     };
   else if (session) initial = fromSession(session, today);
   else initial = { sport: "run", name: "", date: today, time: "07:00", rpe: 4 };
@@ -96,7 +99,13 @@ async function Content({ searchParams }: { searchParams: PageProps<"/registrar">
         </div>
       )}
       <Card className="lg:col-span-2" title={editing ? "Editar entreno" : session ? "Registrar sesión del plan" : "Nuevo entreno"}>
-        <ActivityForm key={editing?.id ?? session?.id ?? "nuevo"} initial={initial} session={session} today={today} />
+        <ActivityForm
+          key={editing?.id ?? session?.id ?? "nuevo"}
+          initial={initial}
+          session={session}
+          today={today}
+          friends={friends.map((f) => ({ id: f.id, name: f.name, username: f.username }))}
+        />
         {editing && (
           <form action={deleteActivity} className="mt-4 border-t border-line pt-4">
             <input type="hidden" name="id" value={editing.id} />

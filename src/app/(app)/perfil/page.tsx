@@ -15,6 +15,9 @@ import { fmtDuration, fmtKm, fmtNum, fmtPace } from "@/lib/format";
 import { diffDays, mondayOf, shortDate } from "@/lib/dates";
 import type { Activity, Db, Phase } from "@/lib/types";
 import type { Stats } from "@/lib/engine/stats";
+import { ActivityItem } from "@/components/ActivityItem";
+import { getFriends } from "@/lib/auth";
+import { requireUserId } from "@/lib/session";
 
 export const metadata: Metadata = { title: "Perfil" };
 
@@ -28,7 +31,6 @@ const TABS = [
 ] as const;
 type Tab = (typeof TABS)[number]["id"];
 
-const SPORT: Record<Activity["sport"], string> = { run: "Correr", ride: "Bici", swim: "Natación", walk: "Caminar", strength: "Fuerza", other: "Otros" };
 const LEVEL: Record<string, string> = { nuevo: "Empezando", principiante: "Principiante", intermedio: "Intermedio", avanzado: "Avanzado" };
 const PHASE_LABEL: Record<Phase, string> = { base: "Base", construccion: "Construcción", especifico: "Específico", taper: "Afinado" };
 const PAGE_SIZE = 25;
@@ -586,24 +588,23 @@ function Row({ label, value, note }: { label: string; value: string; note?: stri
   );
 }
 
-function ActivityList({ acts }: { acts: Activity[] }) {
+async function ActivityList({ acts }: { acts: Activity[] }) {
+  // nombres para «con quién»; la lectura de usuarios se memoriza por petición
+  const names = new Map((await getFriends(await requireUserId())).map((f) => [f.id, f.name]));
   return (
-    <ul className="divide-y divide-line text-sm">
+    <ul className="divide-y divide-line">
       {acts.map((a) => (
-        <li key={a.id} className="flex items-center justify-between gap-2 py-2">
-          <span className="min-w-0">
-            <span className="block truncate font-medium">{a.name}</span>
-            <span className="block text-xs text-muted tabular">
-              {shortDate(a.date)} · {SPORT[a.sport]}
-              {a.distanceM > 0 && ` · ${fmtKm(a.distanceM / 1000, 2)} km`} · {fmtDuration(a.movingSec)}
-              {a.sport === "run" && a.distanceM > 0 && ` · ${fmtPace(a.movingSec / (a.distanceM / 1000))}/km`}
-              {a.avgHr && ` · ${Math.round(a.avgHr)} ppm`}
-            </span>
-          </span>
-          <Link href={`/registrar?editar=${encodeURIComponent(a.id)}`} className="shrink-0 text-xs font-semibold text-accent">
-            Editar
-          </Link>
-        </li>
+        <ActivityItem
+          key={a.id}
+          a={a}
+          href={`/actividad/${encodeURIComponent(a.id)}`}
+          names={names}
+          action={
+            <Link href={`/registrar?editar=${encodeURIComponent(a.id)}`} className="shrink-0 text-xs font-semibold text-accent">
+              Editar
+            </Link>
+          }
+        />
       ))}
     </ul>
   );

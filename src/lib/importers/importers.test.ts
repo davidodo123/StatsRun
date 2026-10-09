@@ -3,6 +3,7 @@ import { FitBaseType, FitEncoder } from "fit-file-parser";
 import { parseCsv, parseStravaActivitiesCsv, parseStravaDate } from "./stravaCsv";
 import { parseFit, parseGpx, parseTcx } from "./trackFiles";
 import { mergeActivities, sportFromName } from "./common";
+import { decodePolyline } from "../route";
 
 // Cabecera real de la exportación de Strava (recortada), con columnas repetidas
 const HEADER =
@@ -76,6 +77,11 @@ describe("archivos de actividad", () => {
     expect(Math.abs(a.elevationGainM - 60)).toBeLessThan(4);
     expect(a.avgHr).toBe(150);
     expect(a.avgCadence).toBe(170);
+    // recorrido guardado (121 puntos: por debajo del máximo, no se simplifica)
+    const route = decodePolyline(a.route!);
+    expect(route).toHaveLength(121);
+    expect(route[0]).toEqual([40, -3.7]);
+    expect(route[120][0]).toBeCloseTo(40.03238, 4);
   });
 
   it("TCX con distancia acumulada", () => {

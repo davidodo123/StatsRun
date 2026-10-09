@@ -62,6 +62,9 @@ export interface Activity {
   feelings?: string; // sensaciones en sus palabras: la IA las lee para reajustar la rutina
   notes?: string;
   sessionId?: string; // sesión del plan a la que corresponde
+  route?: string; // recorrido GPS como encoded polyline (lib/route.ts)
+  with?: string[]; // ids de los amigos con los que se hizo la sesión
+  sharedFrom?: string; // "<idUsuario>:<idActividad>" si se copió de la sesión de un amigo
 }
 
 export type SessionType =
@@ -138,6 +141,8 @@ export interface Db {
   activities: Activity[];
   strava?: StravaAuth;
   lastSync?: string;
+  dismissedShared?: string[]; // sesiones compartidas por amigos que no se quieren añadir ("<idUsuario>:<idActividad>")
+  routesSynced?: boolean; // ya se trajeron de Strava los recorridos de lo sincronizado antes de guardar mapas
   coach?: CoachState;
   unavailableDates?: string[]; // fechas concretas sin poder entrenar (futuras: no planificar; pasadas: "no pude")
 }

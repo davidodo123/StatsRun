@@ -38,6 +38,7 @@ export interface ActivityFormInitial {
   feel?: Feel;
   feelings?: string;
   notes?: string;
+  with?: string[];
 }
 
 const FEELS: { value: Feel; label: string }[] = [
@@ -48,7 +49,17 @@ const FEELS: { value: Feel; label: string }[] = [
   { value: "muy_duro", label: "🥵 Muy duro" },
 ];
 
-export function ActivityForm({ initial, session, today }: { initial: ActivityFormInitial; session?: PlannedSession; today: string }) {
+export function ActivityForm({
+  initial,
+  session,
+  today,
+  friends = [],
+}: {
+  initial: ActivityFormInitial;
+  session?: PlannedSession;
+  today: string;
+  friends?: { id: string; name: string; username: string }[];
+}) {
   const [state, action, pending] = useActionState<FormState, FormData>(saveActivity, {});
   const [sport, setSport] = useState(initial.sport);
   const [dist, setDist] = useState(initial.distanceKm?.toString() ?? "");
@@ -238,6 +249,8 @@ export function ActivityForm({ initial, session, today }: { initial: ActivityFor
         <textarea className="input min-h-16" name="notes" defaultValue={initial.notes} placeholder="Clima, zapatillas, recorrido…" />
       </label>
 
+      {friends.length > 0 && <WithFriends friends={friends} initial={initial.with ?? []} />}
+
       <div className="flex flex-wrap items-center gap-3">
         <button className="btn" disabled={pending}>
           {pending ? "Guardando…" : initial.id ? "Guardar cambios" : "Registrar entreno"}
@@ -253,5 +266,36 @@ export function ActivityForm({ initial, session, today }: { initial: ActivityFor
         )}
       </div>
     </form>
+  );
+}
+
+/** «¿Con quién has entrenado?»: amigos marcados (con filtro si son muchos). La sesión les aparecerá para añadirla a sus entrenos. */
+function WithFriends({ friends, initial }: { friends: { id: string; name: string; username: string }[]; initial: string[] }) {
+  const [q, setQ] = useState("");
+  const [picked, setPicked] = useState<string[]>(initial);
+  const norm = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+  const shown = friends.filter((f) => picked.includes(f.id) || !q || norm(`${f.name} ${f.username}`).includes(norm(q)));
+  return (
+    <fieldset className="space-y-2">
+      <legend className="field">¿Con quién has entrenado?</legend>
+      {friends.length > 6 && <input className="input" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar amigo…" aria-label="Buscar amigo" />}
+      <div className="flex flex-wrap gap-1.5">
+        {shown.map((f) => (
+          <label key={f.id} className="cursor-pointer rounded-full border border-line px-3 py-1 text-xs font-medium has-[:checked]:border-accent has-[:checked]:bg-surface-2">
+            <input
+              type="checkbox"
+              name="with"
+              value={f.id}
+              checked={picked.includes(f.id)}
+              onChange={(e) => setPicked((p) => (e.target.checked ? [...p, f.id] : p.filter((x) => x !== f.id)))}
+              className="sr-only"
+            />
+            {picked.includes(f.id) ? "✓ " : "+ "}
+            {f.name}
+          </label>
+        ))}
+      </div>
+      <p className="text-xs text-muted">Les aparecerá en Amigos para que la añadan a sus entrenos con un clic.</p>
+    </fieldset>
   );
 }

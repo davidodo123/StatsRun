@@ -3,7 +3,17 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { refresh } from "next/cache";
-import { addFriendByCode, createGoogleUser, linkGoogleAccount, regenerateFriendCode, removeFriend, type GoogleIdentity } from "@/lib/auth";
+import {
+  addFriendByCode,
+  answerFriendRequest,
+  cancelFriendRequest,
+  createGoogleUser,
+  linkGoogleAccount,
+  regenerateFriendCode,
+  removeFriend,
+  sendFriendRequest,
+  type GoogleIdentity,
+} from "@/lib/auth";
 import { GOOGLE_PENDING_COOKIE, endSession, requireUserId, startSession, unsealValue } from "@/lib/session";
 import type { FormState } from "./actions";
 
@@ -45,6 +55,21 @@ export async function addFriend(_: FormState, fd: FormData): Promise<FormState> 
   if (r.error) return { error: r.error };
   refresh();
   return { ok: true, message: `Ahora ${r.friend?.name} y tú podéis ver vuestras estadísticas.` };
+}
+
+export async function requestFriend(fd: FormData): Promise<void> {
+  await sendFriendRequest(await requireUserId(), str(fd, "id"));
+  refresh();
+}
+
+export async function answerRequest(fd: FormData): Promise<void> {
+  await answerFriendRequest(await requireUserId(), str(fd, "id"), str(fd, "accept") === "1");
+  refresh();
+}
+
+export async function cancelRequest(fd: FormData): Promise<void> {
+  await cancelFriendRequest(await requireUserId(), str(fd, "id"));
+  refresh();
 }
 
 export async function unfriend(fd: FormData): Promise<void> {

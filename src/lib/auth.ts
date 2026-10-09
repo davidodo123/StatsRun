@@ -21,6 +21,7 @@ export interface User {
   createdAt: string;
   friendCode: string;
   friends: string[]; // ids
+  requests?: string[]; // ids de quienes le han enviado solicitud de amistad (pendientes)
 }
 
 interface UsersDoc {
@@ -174,9 +175,99 @@ export async function addFriendByCode(uid: string, codeRaw: string): Promise<{ f
     else {
       me.friends.push(friend.id);
       if (!friend.friends.includes(uid)) friend.friends.push(uid);
+      // el código vale como aceptación: se limpian solicitudes pendientes entre los dos
+      me.requests = me.requests?.filter((x) => x !== friend!.id);
+      friend.requests = friend.requests?.filter((x) => x !== uid);
     }
   });
   return error ? { error } : { friend: friend && toPublic(friend) };
+}
+
+export type Relation = "amigo" | "enviada" | "recibida" | "ninguna";
+
+export interface SearchResult extends Omit<PublicUser, "friendCode"> {
+  relation: Relation;
+}
+
+const normalize = (s: string) =>
+  s
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase()
+    .trim();
+
+/**
+ * Busca perfiles por nombre o @usuario. Solo devuelve nombre, usuario y foto (nunca el código de amigo ni el email):
+ * para ver las estadísticas hace falta que el otro acepte la solicitud.
+ */
+export async function searchUsers(uid: string, query: string, limit = 10): Promise<SearchResult[]> {
+  const q = normalize(query.replace(/^@/, ""));
+  if (q.length < 2) return [];
+  const { users } = await readUsers();
+  const me = users.find((u) => u.id === uid);
+  if (!me) return [];
+  const relation = (u: User): Relation =>
+    me.friends.includes(u.id) ? "amigo" : u.requests?.includes(uid) ? "enviada" : me.requests?.includes(u.id) ? "recibida" : "ninguna";
+  return users
+    .filter((u) => u.id !== uid && (normalize(u.name).includes(q) || u.username.includes(q)))
+    .map((u) => ({ u, starts: normalize(u.name).startsWith(q) || u.username.startsWith(q) }))
+    .sort((a, b) => Number(b.starts) - Number(a.starts) || a.u.name.localeCompare(b.u.name))
+    .slice(0, limit)
+    .map(({ u }) => ({ id: u.id, username: u.username, name: u.name, picture: u.picture, relation: relation(u) }));
+}
+
+/** Solicitudes recibidas y enviadas pendientes. */
+export async function getRequests(uid: string): Promise<{ received: PublicUser[]; sent: PublicUser[] }> {
+  const { users } = await readUsers();
+  const me = users.find((u) => u.id === uid);
+  if (!me) return { received: [], sent: [] };
+  return {
+    received: users.filter((u) => me.requests?.includes(u.id)).map(toPublic),
+    sent: users.filter((u) => u.requests?.includes(uid)).map(toPublic),
+  };
+}
+
+/** Envía solicitud. Si el otro ya te la había enviado, os hacéis amigos directamente. */
+export async function sendFriendRequest(uid: string, targetId: string): Promise<{ error?: string; becameFriends?: boolean }> {
+  let error: string | undefined;
+  let becameFriends = false;
+  await updateUsers((doc) => {
+    error = undefined; // la escritura puede reintentarse
+    becameFriends = false;
+    const me = doc.users.find((u) => u.id === uid);
+    const target = doc.users.find((u) => u.id === targetId);
+    if (!me || !target || target.id === uid) error = "Usuario no válido.";
+    else if (me.friends.includes(target.id)) error = `Ya eres amigo de ${target.name}.`;
+    else if (me.requests?.includes(target.id)) {
+      me.requests = me.requests.filter((x) => x !== target.id);
+      me.friends.push(target.id);
+      if (!target.friends.includes(uid)) target.friends.push(uid);
+      becameFriends = true;
+    } else if (!target.requests?.includes(uid)) target.requests = [...(target.requests ?? []), uid];
+  });
+  return { error, becameFriends };
+}
+
+/** Acepta o rechaza una solicitud recibida. */
+export async function answerFriendRequest(uid: string, fromId: string, accept: boolean): Promise<void> {
+  await updateUsers((doc) => {
+    const me = doc.users.find((u) => u.id === uid);
+    const from = doc.users.find((u) => u.id === fromId);
+    if (!me?.requests?.includes(fromId)) return;
+    me.requests = me.requests.filter((x) => x !== fromId);
+    if (accept && from) {
+      if (!me.friends.includes(fromId)) me.friends.push(fromId);
+      if (!from.friends.includes(uid)) from.friends.push(uid);
+    }
+  });
+}
+
+/** Retira una solicitud enviada. */
+export async function cancelFriendRequest(uid: string, targetId: string): Promise<void> {
+  await updateUsers((doc) => {
+    const target = doc.users.find((u) => u.id === targetId);
+    if (target?.requests) target.requests = target.requests.filter((x) => x !== uid);
+  });
 }
 
 export async function removeFriend(uid: string, friendId: string): Promise<void> {

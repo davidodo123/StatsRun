@@ -24,12 +24,12 @@ Detalle en [[2026-10-09]].
 
 ---
 
-## ⏳ Fase 2 · Importante — *siguiente*
+## ⏳ Fase 2 · Importante — *hecha 2026-10-09, pendiente de que David la compruebe* → [[Decisiones#Amigos, sesiones compartidas y mapas]]
 
-- [/] Añadir amigos — ya existe con **código de amigo** (6 letras); falta poder **buscar perfiles**
-- [ ] Sección de sesiones de amigos (ver sus entrenos)
-- [ ] Sesiones compartidas: al registrar, «añadir a otra persona» buscando su perfil → aparece con quién lo hiciste
-- [ ] Imagen de la sesión: **el mapa** del recorrido
+- [x] Añadir amigos: **buscar perfiles** por nombre o @usuario con **solicitud de amistad** (el código de amigo sigue sirviendo)
+- [x] Sección de sesiones de amigos: «Actividad de tus amigos» (14 días)
+- [x] Sesiones compartidas: al registrar, «¿Con quién has entrenado?» → sale «👥 con Ana» y a Ana le aparece para añadirla a sus entrenos
+- [x] Imagen de la sesión: **el mapa** del recorrido (Strava, GPX, TCX y FIT) en una página de detalle nueva
 
 ---
 
