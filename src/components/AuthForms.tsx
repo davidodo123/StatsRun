@@ -10,7 +10,9 @@ export function AuthShell({ title, subtitle, children }: { title: string; subtit
     <div className="mx-auto w-full max-w-sm py-10">
       <div className="mb-6 flex items-center gap-2 text-lg font-bold tracking-tight">
         <span className="grid h-8 w-8 place-items-center rounded-lg bg-accent text-accent-ink">▲</span>
-        Pace<span className="text-accent">Lab</span>
+        <span>
+          Run-In-<span className="text-accent">Out</span>
+        </span>
       </div>
       <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
       <p className="mt-1 text-sm text-ink-2">{subtitle}</p>
@@ -87,7 +89,7 @@ export function LinkPanel({ email }: { email: string }) {
         {state.error && <p className="text-sm font-medium text-critical">✕ {state.error}</p>}
       </form>
       <div className="mt-5 border-t border-line pt-5">
-        <p className="mb-3 text-sm text-ink-2">¿Es tu primera vez en PaceLab?</p>
+        <p className="mb-3 text-sm text-ink-2">¿Es tu primera vez en Run-In-Out?</p>
         <form action={createAccount}>
           <SubmitButton ghost pendingText="Creando…">
             Crear cuenta nueva

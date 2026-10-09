@@ -3,10 +3,10 @@ import "./globals.css";
 import { ServiceWorkerRegister } from "@/components/Pwa";
 
 export const metadata: Metadata = {
-  title: { default: "PaceLab", template: "%s · PaceLab" },
+  title: { default: "Run-In-Out", template: "%s · Run-In-Out" },
   description: "Planes de entrenamiento adaptados a ti y a tu carrera, con estadísticas avanzadas y Strava.",
-  applicationName: "PaceLab",
-  appleWebApp: { capable: true, title: "PaceLab", statusBarStyle: "black-translucent" },
+  applicationName: "Run-In-Out",
+  appleWebApp: { capable: true, title: "Run-In-Out", statusBarStyle: "black-translucent" },
   icons: { apple: "/apple-touch-icon.png" },
 };
 

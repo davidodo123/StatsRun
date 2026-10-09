@@ -31,6 +31,35 @@ export interface Goal {
   targetTimeSec?: number; // vacío = "terminar"
   elevationGainM?: number;
   temperatureC?: number;
+  course?: RaceCourse; // recorrido oficial subido (KMZ/KML/GPX)
+}
+
+export interface CourseMarker {
+  kind: "salida" | "meta" | "agua" | "km";
+  lat: number;
+  lon: number;
+  name?: string;
+}
+
+/** Recorrido de una carrera: trazado, distancia y desnivel calculados del archivo. */
+export interface RaceCourse {
+  route: string; // encoded polyline (lib/route.ts)
+  distanceKm: number;
+  elevationGainM?: number;
+  elevationLossM?: number;
+  markers: CourseMarker[];
+  fileName: string;
+  name?: string;
+}
+
+/** Documento adjunto (PDF): el contenido va aparte (Vercel Blob o data/files en local). */
+export interface StoredDocument {
+  id: string;
+  name: string;
+  size: number;
+  contentType: string;
+  uploadedAt: string;
+  key: string; // dónde está guardado (URL de Blob o ruta local)
 }
 
 export type Feel = "muy_facil" | "facil" | "bien" | "duro" | "muy_duro";
@@ -141,6 +170,7 @@ export interface Db {
   activities: Activity[];
   strava?: StravaAuth;
   lastSync?: string;
+  documents?: StoredDocument[]; // PDFs de la carrera (reglamento, dorsal…)
   dismissedShared?: string[]; // sesiones compartidas por amigos que no se quieren añadir ("<idUsuario>:<idActividad>")
   routesSynced?: boolean; // ya se trajeron de Strava los recorridos de lo sincronizado antes de guardar mapas
   coach?: CoachState;

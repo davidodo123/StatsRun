@@ -1,8 +1,9 @@
-// Service worker de PaceLab.
+// Service worker de Run-In-Out.
 // - Páginas: siempre de la red (los datos son personales y cambian); sin conexión, una pantalla propia.
 // - Estáticos de Next (_next/static, con hash en el nombre) e iconos: de la caché primero, para abrir rápido.
 // No se guarda en caché ninguna página con datos del usuario.
-const VERSION = "v1";
+// subir la versión al cambiar offline.html o los iconos: renueva la caché en los móviles con la app instalada
+const VERSION = "v2";
 const STATIC = `pacelab-static-${VERSION}`;
 const PRECACHE = ["/offline.html", "/icon.svg", "/icon-192.png", "/icon-512.png", "/apple-touch-icon.png"];
 

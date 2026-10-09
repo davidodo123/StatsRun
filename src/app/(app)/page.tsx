@@ -25,7 +25,7 @@ async function Dashboard() {
   if (!db.profile || !stats)
     return (
       <div className="mx-auto max-w-2xl py-10 text-center">
-        <p className="text-sm font-semibold uppercase tracking-widest text-accent">PaceLab</p>
+        <p className="text-sm font-semibold uppercase tracking-widest text-accent">Run-In-Out</p>
         <h1 className="mt-2 text-3xl font-bold tracking-tight md:text-4xl">Tu entrenador de running, con datos de verdad</h1>
         <p className="mt-3 text-ink-2">
           Planes periodizados según tu peso, experiencia y carrera objetivo, que se adaptan con tus actividades de Strava. Ritmos VDOT, forma y fatiga, predicciones y

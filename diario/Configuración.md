@@ -9,6 +9,7 @@ tags: [config]
 ## Vercel
 - Proyecto: **run-in-out** → https://run-in-out.vercel.app
 - Despliega solo con cada push a `main`.
+- Región de funciones: **iad1 (Washington)**, la misma que la base de datos Upstash. Plan Hobby: 1 sola región.
 - Hay un segundo proyecto, `stats-run`, conectado al mismo repo (duplicado).
 
 ### Variables de entorno
@@ -20,14 +21,23 @@ tags: [config]
 | `KV_REST_API_URL` / `KV_REST_API_TOKEN` | Base de datos Upstash Redis |
 | `OPENROUTER_API_KEY` / `OPENROUTER_MODEL` | Entrenador IA |
 | `STRAVA_CLIENT_ID` / `STRAVA_CLIENT_SECRET` / `APP_URL` | Conexión con Strava |
+| `CONTACT_EMAIL` | Correo público de contacto en `/privacidad` (se lee en cada visita) |
+| `BLOB_READ_WRITE_TOKEN` | Vercel Blob (PDFs de la carrera). Lo crea Vercel al conectar un Blob store: Storage → Create → Blob → conectar a run-in-out |
 
 ## Google Cloud
 - Proyecto: **Run-In-Out** → Google Auth Platform
 - Cliente OAuth «Run-In-Out» (aplicación web). URIs de redirección:
   - `http://localhost:3000/api/auth/google/callback`
   - `https://run-in-out.vercel.app/api/auth/google/callback`
-- Estado: **Prueba** → solo entran los usuarios de prueba (Público → Usuarios de prueba).
-- Para publicar hace falta página principal y política de privacidad.
+- Estado: **En producción** desde el 2026-10-09: puede entrar cualquier cuenta de Google.
+  - Permisos básicos (`openid email profile`): no hace falta la verificación de Google.
+  - Sin logotipo, para no activar la verificación de marca.
+  - La primera vez puede salir «app no verificada» → Configuración avanzada → Ir a Run-In-Out.
+- Marca:
+  - página principal `https://run-in-out.vercel.app`;
+  - privacidad `https://run-in-out.vercel.app/privacidad`;
+  - dominio autorizado `run-in-out.vercel.app`.
+- Secreto del cliente **rotado el 2026-10-09**: el nuevo está en `.env.local` y en Vercel (Production, Preview y Development).
 
 ## Local
 ```bash

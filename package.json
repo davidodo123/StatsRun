@@ -10,6 +10,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@vercel/blob": "^2.8.1",
     "fflate": "^0.8.3",
     "fit-file-parser": "^6.1.2",
     "next": "16.4.0",

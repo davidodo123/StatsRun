@@ -1,9 +1,20 @@
 import { decodePolyline, routeView } from "../lib/route";
+import type { CourseMarker } from "../lib/types";
 
 // Teselas de OpenStreetMap: uso ligero permitido con atribución (https://operations.osmfoundation.org/policies/tiles/).
 export const tileUrl = (z: number, x: number, y: number) => `https://tile.openstreetmap.org/${z}/${x}/${y}.png`;
 
-/** Mapa del recorrido: teselas de fondo + línea del recorrido, inicio (verde) y fin (cuadro). Sin teselas sirve de miniatura. */
+const MARKER: Record<CourseMarker["kind"], { icon: string; label: string; fill: string }> = {
+  salida: { icon: "▶", label: "Salida", fill: "#16a34a" },
+  meta: { icon: "⚑", label: "Meta", fill: "#111111" },
+  agua: { icon: "💧", label: "Avituallamiento", fill: "#2563eb" },
+  km: { icon: "•", label: "Punto kilométrico", fill: "#6b7280" },
+};
+
+/**
+ * Mapa del recorrido: teselas de fondo + línea del recorrido, inicio (verde) y fin (cuadro).
+ * Con `markers` dibuja los puntos del circuito (salida, meta, avituallamientos). Sin teselas sirve de miniatura.
+ */
 export function RouteMap({
   route,
   width = 640,
@@ -11,6 +22,7 @@ export function RouteMap({
   tiles = true,
   className = "",
   label = "Mapa del recorrido",
+  markers = [],
 }: {
   route: string;
   width?: number;
@@ -18,6 +30,7 @@ export function RouteMap({
   tiles?: boolean;
   className?: string;
   label?: string;
+  markers?: CourseMarker[];
 }) {
   const v = routeView(decodePolyline(route), width, height, tiles ? 24 : 4);
   if (!v) return null;
@@ -25,6 +38,8 @@ export function RouteMap({
   const [sx, sy] = v.path[0];
   const [ex, ey] = v.path[v.path.length - 1];
   const stroke = tiles ? 4 : Math.max(1.5, width / 40);
+  // con salida y meta marcadas en el archivo, no hacen falta los puntos genéricos de inicio y fin
+  const hasEnds = markers.some((m) => m.kind === "salida" || m.kind === "meta");
   return (
     <svg viewBox={`0 0 ${width} ${height}`} className={`block h-auto w-full ${tiles ? "rounded-xl" : "rounded-md"} bg-surface-2 ${className}`} role="img" aria-label={label}>
       {tiles &&
@@ -33,8 +48,25 @@ export function RouteMap({
       <polyline points={pts} fill="none" stroke="var(--accent)" strokeWidth={stroke} strokeLinejoin="round" strokeLinecap="round" />
       {tiles && (
         <>
-          <circle cx={sx} cy={sy} r={6} fill="var(--good, #22c55e)" stroke="white" strokeWidth={2} />
-          <rect x={ex - 5} y={ey - 5} width={10} height={10} fill="var(--ink, #111)" stroke="white" strokeWidth={2} />
+          {!hasEnds && (
+            <>
+              <circle cx={sx} cy={sy} r={6} fill="var(--good, #22c55e)" stroke="white" strokeWidth={2} />
+              <rect x={ex - 5} y={ey - 5} width={10} height={10} fill="var(--ink, #111)" stroke="white" strokeWidth={2} />
+            </>
+          )}
+          {markers.map((m, i) => {
+            const [x, y] = v.toCanvas([m.lat, m.lon]);
+            const s = MARKER[m.kind];
+            return (
+              <g key={i} transform={`translate(${x.toFixed(1)},${y.toFixed(1)})`}>
+                <title>{m.name || s.label}</title>
+                <circle r={11} fill={s.fill} stroke="white" strokeWidth={2.5} />
+                <text textAnchor="middle" dominantBaseline="central" fontSize={11} fill="white">
+                  {s.icon}
+                </text>
+              </g>
+            );
+          })}
           <text x={width - 6} y={height - 6} textAnchor="end" fontSize={10} fill="#333" stroke="white" strokeWidth={3} paintOrder="stroke">
             © OpenStreetMap
           </text>

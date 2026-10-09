@@ -1,4 +1,4 @@
-# StatsRun (PaceLab)
+# StatsRun (Run-In-Out)
 
 App de entrenamiento para corredores: planes periodizados hacia una carrera, registro de entrenos, forma/fatiga, estadísticas y amigos.
 

@@ -83,7 +83,7 @@ export function InstallBanner() {
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src="/icon-192.png" alt="" className="h-10 w-10 shrink-0 rounded-xl" />
       <div className="min-w-0 flex-1">
-        <p className="font-semibold">Instala PaceLab en tu móvil</p>
+        <p className="font-semibold">Instala Run-In-Out en tu móvil</p>
         {ios ? (
           <p className="text-xs text-ink-2">
             En Safari pulsa <strong>Compartir</strong> <span aria-hidden>⎋</span> y luego <strong>«Añadir a pantalla de inicio»</strong>.

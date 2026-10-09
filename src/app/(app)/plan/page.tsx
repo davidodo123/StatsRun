@@ -6,6 +6,7 @@ import { Card, Empty, Loading, Notice, PageHeader, Stat } from "@/components/ui"
 import { SessionCard } from "@/components/SessionCard";
 import { AiCoachButton } from "@/components/AiCoachButton";
 import { ReadinessCard } from "@/components/ReadinessCard";
+import { RaceCard } from "@/components/RaceCard";
 import { assessReadiness } from "@/lib/engine/readiness";
 import { UnavailableForm } from "@/components/UnavailableForm";
 import { adaptIfMissed, coachConfig } from "@/lib/coach";
@@ -108,6 +109,8 @@ async function Content({ searchParams }: { searchParams: PageProps<"/plan">["sea
           ))}
         </div>
       )}
+
+      {db.goal && <RaceCard goal={db.goal} documents={db.documents ?? []} />}
 
       {/* Línea temporal de fases */}
       <Card className="mt-4" title="Periodización">

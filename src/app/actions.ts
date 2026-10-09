@@ -11,6 +11,7 @@ import { applyBlockedDates, availableDaysOf, generatePlan } from "@/lib/engine/p
 import { computeStats } from "@/lib/engine/stats";
 import { profileAverages } from "@/lib/engine/profile";
 import { areFriends, getFriends } from "@/lib/auth";
+import { deleteFile } from "@/lib/files";
 import { findRace } from "@/lib/races";
 import { adaptWithAI, coachConfig } from "@/lib/coach";
 import { parseTime } from "@/lib/format";
@@ -119,7 +120,10 @@ export async function saveGoal(_: FormState, fd: FormData): Promise<FormState> {
     temperatureC: num(fd, "temperatureC") ?? race?.temperatureC,
   };
   await updateDb((db) => {
-    db.goal = goal;
+    // misma carrera (cambio de fecha u objetivo): se conserva el recorrido subido
+    const prev = db.goal;
+    const same = prev && (goal.raceId ? prev.raceId === goal.raceId : prev.name === goal.name);
+    db.goal = same && prev.course ? { ...goal, course: prev.course } : goal;
   });
   const db = await getDb();
   if (db.profile) {
@@ -129,6 +133,38 @@ export async function saveGoal(_: FormState, fd: FormData): Promise<FormState> {
   }
   refresh();
   return { ok: true, message: "Objetivo guardado. Completa tu perfil para generar el plan." };
+}
+
+/** Usa el desnivel del recorrido subido para la carrera objetivo y rehace el plan (cambia el ritmo previsto). */
+export async function applyCourseToPlan(): Promise<void> {
+  await updateDb((db) => {
+    const c = db.goal?.course;
+    if (db.goal && c?.elevationGainM !== undefined) db.goal = { ...db.goal, elevationGainM: c.elevationGainM };
+  });
+  const db = await getDb();
+  if (db.profile && db.goal) {
+    await rebuildPlan(db);
+    await scheduleAiAdapt();
+  }
+  refresh();
+}
+
+export async function removeCourse(): Promise<void> {
+  await updateDb((db) => {
+    if (db.goal) delete db.goal.course;
+  });
+  refresh();
+}
+
+export async function deleteDocument(fd: FormData): Promise<void> {
+  const id = String(fd.get("id") ?? "");
+  let key: string | undefined;
+  await updateDb((db) => {
+    key = db.documents?.find((d) => d.id === id)?.key;
+    db.documents = (db.documents ?? []).filter((d) => d.id !== id);
+  });
+  if (key) await deleteFile(key).catch(() => undefined);
+  refresh();
 }
 
 async function rebuildPlan(db: Db) {

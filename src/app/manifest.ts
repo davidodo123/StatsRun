@@ -4,8 +4,8 @@ import type { MetadataRoute } from "next";
 export default function manifest(): MetadataRoute.Manifest {
   return {
     id: "/",
-    name: "PaceLab — Entrenamiento y estadísticas",
-    short_name: "PaceLab",
+    name: "Run-In-Out — Entrenamiento y estadísticas",
+    short_name: "Run-In-Out",
     description: "Planes de running adaptados a ti y a tu carrera, con Strava.",
     start_url: "/",
     scope: "/",

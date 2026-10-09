@@ -50,6 +50,11 @@ Detalle en [[2026-10-09]].
 - [x] Diseño móvil revisado con capturas: desbordes arreglados, botones y tablas ajustados
 - [ ] Conectar con la app de Salud: desde la web no se puede (HealthKit/Health Connect son nativos). Opciones futuras: importar el export de Apple Salud o empaquetar con Capacitor
 
+### Carrera objetivo — *hecho 2026-10-09* → [[Decisiones#Recorrido y documentos de la carrera]]
+- [x] Subir el recorrido de la carrera (.kmz, .kml, .gpx) → mapa con salida, meta y avituallamientos, distancia y desnivel
+- [x] Adjuntar PDFs de la carrera (reglamento, dorsal…), privados
+- [ ] Crear el Blob store en Vercel para que los PDF funcionen en producción → [[Configuración#Variables de entorno]]
+
 ### IA / ciencia (salido del estudio)
 - [x] Carga por sRPE (RPE × minutos) cuando no hay FC — *ya existía en `load.ts`*
 - [x] El planificador aplica también el tope por sesión de Frandsen: la tirada larga sube como mucho un 10 % (mín. 0,5 km)
@@ -64,9 +69,9 @@ Detalle en [[2026-10-09]].
 
 ## 🔧 Pendientes técnicos
 
-- [ ] Rotar el secreto de Google (se compartió en una captura) → [[Configuración#Google Cloud]]
+- [/] Rotar el secreto de Google: el nuevo ya está en `.env.local` y en Vercel. **Falta borrar el secreto antiguo** en Google Cloud, cuando se haya probado el login → [[Configuración#Google Cloud]]
 - [x] Página `/privacidad` (pública) + **borrar mi cuenta** en Perfil → Editar
-- [ ] Poner `CONTACT_EMAIL` en Vercel y **publicar** la app en Google Cloud (URL de privacidad: run-in-out.vercel.app/privacidad) → [[Configuración#Google Cloud]]
+- [x] `CONTACT_EMAIL` en Vercel (se lee en cada visita) y app **publicada** en Google Cloud (En producción)
 - [ ] Comprobar `OPENROUTER_API_KEY` en Vercel (sin ella la IA no ajusta nada)
-- [ ] Región de funciones de Vercel = región de Upstash Redis
+- [x] Región de funciones de Vercel = región de Upstash Redis (las dos en iad1)
 - [ ] Borrar el proyecto duplicado `stats-run` en Vercel (si no se usa)

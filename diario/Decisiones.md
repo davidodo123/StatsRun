@@ -161,3 +161,29 @@ Qué se decidió, por qué y cuándo. Si algo cambia, se añade una entrada nuev
   - La tabla de mejora en móvil enseña solo los dos últimos bloques.
   - `Date.now()` antes de una petición real daba un error con `cacheComponents` + `partialPrefetching`. Ahora `getUserId` espera a `connection()` antes de comprobar la caducidad.
 - La tirada más larga reciente para generar el plan pasa de 42 a 30 días, igual que Frandsen.
+
+## Nombre Run-In-Out
+*2026-10-09*
+
+- La app se llama **Run-In-Out** en todos los textos visibles: logo, título, app instalada, privacidad y pantalla sin conexión.
+- Las claves internas `pacelab-…` (caché del service worker y aviso de instalar) no cambian: no se ven, y cambiarlas haría que el aviso volviera a salir.
+- Versión del service worker v2, para renovar la pantalla sin conexión guardada.
+
+## Recorrido y documentos de la carrera
+*2026-10-09*
+
+- **Recorrido** (`.kmz`, `.kml`, `.gpx`) → se guarda en `goal.course` (`src/lib/importers/course.ts`).
+  - Pensado para las webs de carreras como cruzandolameta.es, que dan el circuito en KMZ.
+  - Se usa la línea más larga del archivo. Los puntos con hora de las exportaciones de Garmin se ignoran.
+  - Se sacan la distancia, el desnivel (umbral de 3 m) y los marcadores de salida, meta, avituallamientos y km, según su nombre o icono.
+  - Comprobado con el KMZ real de Santa Fe: 10,05 km, +31/−34 m, salida, meta y 2 avituallamientos.
+- El desnivel del recorrido **no cambia el plan solo**: hay un botón «Ajustar el plan a este desnivel» que rehace el plan con ese dato.
+- Si se vuelve a guardar la misma carrera (otra fecha u otro objetivo), se conserva el recorrido.
+- **PDFs** (reglamento, dorsal…) en «Documentos»:
+  - se comprueba que son PDF de verdad (cabecera `%PDF-`);
+  - máximo 4 MB (Vercel corta las peticiones a 4,5 MB) y 20 documentos.
+- Se guardan en **Vercel Blob privado** (sin URL pública). En local van a `data/files/`.
+  - Solo se abren con `/api/documentos/[id]`, que comprueba que el documento es del usuario de la sesión.
+  - Se sirven con `Cache-Control: private, no-store`.
+- Al borrar un documento o la cuenta, también se borra el archivo.
+- Todo está en la tarjeta «Tu carrera: recorrido y documentos» de la página Plan. Los documentos no se comparten con los amigos.

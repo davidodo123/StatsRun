@@ -127,6 +127,8 @@ export interface RouteView {
   path: [number, number][];
   /** Teselas de mapa que cubren el lienzo. */
   tiles: { x: number; y: number; z: number; left: number; top: number }[];
+  /** Pasa cualquier punto a coordenadas del lienzo (p. ej. marcadores de salida o avituallamiento). */
+  toCanvas: (p: LatLon) => [number, number];
 }
 
 /** Encaja el recorrido en un lienzo de width × height con margen, eligiendo el mayor zoom que quepa (máx. 16). */
@@ -150,5 +152,9 @@ export function routeView(points: LatLon[], width: number, height: number, pad =
   for (let tx = Math.floor(ox / TILE); tx <= Math.floor((ox + width) / TILE); tx++)
     for (let ty = Math.floor(oy / TILE); ty <= Math.floor((oy + height) / TILE); ty++)
       if (ty >= 0 && ty < n) tiles.push({ x: ((tx % n) + n) % n, y: ty, z: zoom, left: tx * TILE - ox, top: ty * TILE - oy });
-  return { width, height, zoom, path: px.map(([x, y]) => [x - ox, y - oy]), tiles };
+  const toCanvas = (p: LatLon): [number, number] => {
+    const [x, y] = project(p, zoom);
+    return [x - ox, y - oy];
+  };
+  return { width, height, zoom, path: px.map(([x, y]) => [x - ox, y - oy]), tiles, toCanvas };
 }

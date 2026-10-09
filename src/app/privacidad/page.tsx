@@ -41,12 +41,12 @@ export default function PrivacyPage() {
     <main className="min-w-0 flex-1 px-4 py-10">
       <article className="mx-auto max-w-2xl space-y-8">
         <header>
-          <p className="text-sm font-semibold uppercase tracking-widest text-accent">PaceLab · run-in-out.vercel.app</p>
+          <p className="text-sm font-semibold uppercase tracking-widest text-accent">Run-In-Out · run-in-out.vercel.app</p>
           <h1 className="mt-1 text-3xl font-bold tracking-tight">Política de privacidad</h1>
           <p className="mt-1 text-sm text-muted">Última actualización: {UPDATED}</p>
         </header>
 
-        <Section title="Qué es PaceLab">
+        <Section title="Qué es Run-In-Out">
           <p>
             Una aplicación para planificar y analizar entrenamientos de carrera y fuerza, y para compartirlos con amigos. Esta política explica qué datos guarda,
             para qué y con quién se comparten.

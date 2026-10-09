@@ -38,7 +38,10 @@ export function NavView({ path }: { path?: string }) {
       <nav className="sticky top-0 hidden h-screen w-56 shrink-0 flex-col gap-1 border-r border-line bg-surface p-4 md:flex">
         <Link href="/" className="mb-6 flex items-center gap-2 px-2 text-lg font-bold tracking-tight">
           <span className="grid h-8 w-8 place-items-center rounded-lg bg-accent text-accent-ink">▲</span>
-          Pace<span className="text-accent">Lab</span>
+          {/* un solo bloque: el contenedor flex separaría «Run-In-» de «Out» */}
+          <span>
+            Run-In-<span className="text-accent">Out</span>
+          </span>
         </Link>
         {ITEMS.map((it) => (
           <Link
