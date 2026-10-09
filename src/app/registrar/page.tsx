@@ -2,7 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import { getAnalysis } from "@/lib/analysis";
-import { ActivityForm, type ActivityFormInitial } from "@/components/ActivityForm";
+import type { ActivityFormInitial } from "@/components/ActivityForm";
+import { ActivityEntry } from "@/components/ActivityEntry";
+import { ImportPanel } from "@/components/ImportPanel";
+import { coachConfig } from "@/lib/coach";
 import { SESSION_KIND } from "@/components/SessionCard";
 import { Card, Loading, Notice, PageHeader, Status } from "@/components/ui";
 import { fmtDuration, fmtPace } from "@/lib/format";
@@ -86,7 +89,7 @@ async function Content({ searchParams }: { searchParams: PageProps<"/registrar">
         </div>
       )}
       <Card className="lg:col-span-2" title={editing ? "Editar entreno" : session ? "Registrar sesión del plan" : "Nuevo entreno"}>
-        <ActivityForm key={editing?.id ?? session?.id ?? "nuevo"} initial={initial} session={session} today={today} />
+        <ActivityEntry key={editing?.id ?? session?.id ?? "nuevo"} initial={initial} session={session} today={today} aiEnabled={coachConfig().configured} />
         {editing && (
           <form action={deleteActivity} className="mt-4 border-t border-line pt-4">
             <input type="hidden" name="id" value={editing.id} />
@@ -117,6 +120,28 @@ async function Content({ searchParams }: { searchParams: PageProps<"/registrar">
             </ul>
           </Card>
         )}
+
+        <Card title="Importar archivo del reloj" subtitle="Datos exactos: distancia, pulso, cadencia y desnivel">
+          <ImportPanel />
+          <details className="mt-3 text-xs text-ink-2">
+            <summary className="cursor-pointer font-semibold text-accent">Cómo sacar el archivo gratis</summary>
+            <ul className="mt-2 space-y-1.5">
+              <li>
+                • <strong>Strava (web)</strong>: abre la actividad → menú «⋯» → <em>Exportar GPX</em> o <em>Exportar original</em> (.fit).
+              </li>
+              <li>
+                • <strong>Strava, todo el historial</strong>: Ajustes → Mi cuenta → <em>Descargar o eliminar tu cuenta</em> → «Solicitar archivo». Llega un .zip por email: súbelo tal cual.
+              </li>
+              <li>
+                • <strong>Garmin Connect</strong>: actividad → engranaje → <em>Exportar original</em> (.fit) o <em>Exportar a GPX/TCX</em>.
+              </li>
+              <li>
+                • <strong>Coros, Polar, Suunto, Huawei</strong>: en la app web de cada marca, «Exportar» la actividad en .fit, .tcx o .gpx.
+              </li>
+              <li>• Al importar, la IA reajusta tus próximos entrenos automáticamente.</li>
+            </ul>
+          </details>
+        </Card>
 
         <Card title="Últimos entrenos">
           {recent.length ? (

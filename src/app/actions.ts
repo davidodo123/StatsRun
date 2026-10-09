@@ -2,20 +2,27 @@
 
 import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
+import { after } from "next/server";
 import { updateDb, readDbNow as getDb } from "@/lib/db";
 import { deauthorize, syncActivities } from "@/lib/strava";
 import { generateDemoActivities } from "@/lib/demo";
-import { generatePlan } from "@/lib/engine/planner";
+import { applyBlockedDates, availableDaysOf, generatePlan } from "@/lib/engine/planner";
 import { computeStats } from "@/lib/engine/stats";
 import { findRace } from "@/lib/races";
+import { adaptWithAI, coachConfig } from "@/lib/coach";
 import { parseTime } from "@/lib/format";
-import { diffDays, todayLocal } from "@/lib/dates";
+import { addDays, diffDays, todayLocal } from "@/lib/dates";
 import type { Db, Goal, Level, Profile, Sex } from "@/lib/types";
 
 export interface FormState {
   ok?: boolean;
   error?: string;
   message?: string;
+}
+
+/** Tras cambiar datos, la IA reajusta los próximos entrenos en segundo plano. */
+function scheduleAiAdapt() {
+  if (coachConfig().configured) after(() => adaptWithAI().then(() => undefined));
 }
 
 const num = (fd: FormData, k: string) => {
@@ -29,6 +36,11 @@ export async function saveProfile(_: FormState, fd: FormData): Promise<FormState
   const heightCm = num(fd, "heightCm");
   if (!age || !weightKg || !heightCm || age < 10 || age > 100 || weightKg < 30 || weightKg > 250 || heightCm < 120 || heightCm > 230)
     return { error: "Revisa edad, peso y altura." };
+
+  const availableDays = [...new Set(fd.getAll("availableDays").map(Number))].filter((d) => d >= 0 && d <= 6).sort((a, b) => a - b);
+  if (availableDays.length < 2) return { error: "Marca al menos 2 días en los que puedas entrenar." };
+  const longRunDay = num(fd, "longRunDay") ?? 6;
+  if (!availableDays.includes(longRunDay)) return { error: "El día de la tirada larga tiene que ser uno de tus días disponibles." };
 
   const raceDist = num(fd, "raceDistanceKm");
   const raceTime = parseTime(String(fd.get("raceTime") ?? ""));
@@ -45,14 +57,26 @@ export async function saveProfile(_: FormState, fd: FormData): Promise<FormState
     weeklyKm: num(fd, "weeklyKm") ?? 0,
     longestRunKm: num(fd, "longestRunKm") ?? 0,
     recentRace: raceDist && raceTime ? { distanceKm: raceDist, timeSec: raceTime } : undefined,
-    daysPerWeek: Math.min(7, Math.max(3, num(fd, "daysPerWeek") ?? 4)),
-    longRunDay: num(fd, "longRunDay") ?? 6,
+    daysPerWeek: availableDays.length,
+    availableDays,
+    longRunDay,
     strengthPerWeek: Math.min(2, Math.max(0, num(fd, "strengthPerWeek") ?? 1)),
     injuries: String(fd.get("injuries") ?? "").trim() || undefined,
   };
+  const prev = (await getDb()).profile;
   await updateDb((db) => {
     db.profile = profile;
   });
+  // si cambia la disponibilidad, rehacer el plan sobre los nuevos días
+  const db = await getDb();
+  const sameSchedule =
+    prev && availableDaysOf(prev).join() === availableDays.join() && prev.longRunDay === longRunDay && prev.strengthPerWeek === profile.strengthPerWeek;
+  if (db.plan && !sameSchedule) {
+    await rebuildPlan(db);
+    scheduleAiAdapt();
+    refresh();
+    return { ok: true, message: "Perfil guardado. Plan reorganizado con tus nuevos días; la IA lo está ajustando." };
+  }
   refresh();
   return { ok: true, message: "Perfil guardado." };
 }
@@ -83,6 +107,7 @@ export async function saveGoal(_: FormState, fd: FormData): Promise<FormState> {
   const db = await getDb();
   if (db.profile) {
     await rebuildPlan(db);
+    scheduleAiAdapt();
     redirect("/plan");
   }
   refresh();
@@ -107,6 +132,7 @@ async function rebuildPlan(db: Db) {
     longestRecentKm: longestRecent || db.profile.longestRunKm,
     today,
   });
+  applyBlockedDates(plan, db.unavailableDates ?? [], availableDaysOf(db.profile), today);
   plan.notes.push(`VDOT tomado de: ${stats.vdot.source}.`);
   if (hasRecentData) plan.notes.push(`Volumen de partida según tus actividades: ${stats.totals.avgWeeklyKm6.toFixed(0)} km/semana (media 6 semanas).`);
   await updateDb((d) => {
@@ -117,7 +143,14 @@ async function rebuildPlan(db: Db) {
 export async function regeneratePlan(): Promise<void> {
   const db = await getDb();
   await rebuildPlan(db);
+  scheduleAiAdapt();
   refresh();
+}
+
+export async function adaptPlanWithAI(): Promise<FormState> {
+  const r = await adaptWithAI();
+  refresh();
+  return r.ok ? { ok: true, message: `${r.changed} sesiones ajustadas. ${r.message}` } : { error: r.message };
 }
 
 export async function syncStrava(): Promise<FormState> {
@@ -125,6 +158,7 @@ export async function syncStrava(): Promise<FormState> {
   if (!db.strava) return { error: "Strava no está conectado." };
   try {
     const r = await syncActivities(db.strava, db.activities);
+    if (r.imported > 0) scheduleAiAdapt();
     refresh();
     return {
       ok: true,
@@ -182,6 +216,45 @@ export async function clearPlan(): Promise<void> {
   refresh();
 }
 
+// ---------- Disponibilidad puntual ----------
+
+/** Marca un día o rango como no disponible: mueve las sesiones afectadas y la IA rehace la rutina. */
+export async function markUnavailable(_: FormState, fd: FormData): Promise<FormState> {
+  const from = String(fd.get("from") ?? "");
+  const to = String(fd.get("to") ?? "") || from;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(from) || !/^\d{4}-\d{2}-\d{2}$/.test(to) || to < from) return { error: "Revisa las fechas." };
+  if (diffDays(to, from) > 60) return { error: "Como máximo 60 días seguidos." };
+  const dates: string[] = [];
+  for (let d = from; d <= to; d = addDays(d, 1)) dates.push(d);
+  const today = todayLocal();
+  let moved = 0;
+  let dropped = 0;
+  await updateDb((db) => {
+    db.unavailableDates = [...new Set([...(db.unavailableDates ?? []), ...dates])].filter((d) => diffDays(today, d) <= 30).sort();
+    if (db.plan && db.profile) ({ moved, dropped } = applyBlockedDates(db.plan, db.unavailableDates, availableDaysOf(db.profile), today));
+  });
+  scheduleAiAdapt();
+  refresh();
+  const what = [moved && `${moved} movidas`, dropped && `${dropped} quitadas`].filter(Boolean).join(", ");
+  return { ok: true, message: `Anotado.${what ? ` Sesiones ${what}.` : ""}${coachConfig().configured ? " La IA está rehaciendo tu rutina." : ""}` };
+}
+
+/** "No pude hacerla": marca el día de una sesión (pasada o futura) como no disponible. */
+export async function skipSession(fd: FormData): Promise<void> {
+  const date = String(fd.get("date") ?? "");
+  const f = new FormData();
+  f.set("from", date);
+  await markUnavailable({}, f);
+}
+
+export async function clearUnavailable(fd: FormData): Promise<void> {
+  const date = String(fd.get("date") ?? "");
+  await updateDb((db) => {
+    db.unavailableDates = (db.unavailableDates ?? []).filter((d) => d !== date);
+  });
+  refresh();
+}
+
 // ---------- Registro manual de actividades ----------
 
 const SPORTS = ["run", "ride", "swim", "walk", "strength", "other"] as const;
@@ -232,6 +305,7 @@ export async function saveActivity(_: FormState, fd: FormData): Promise<FormStat
     };
     db.activities = [...db.activities.filter((a) => a.id !== id), act].sort((a, b) => a.startLocal.localeCompare(b.startLocal));
   });
+  scheduleAiAdapt();
   // nuevo: volver con el formulario limpio para no registrarlo dos veces
   if (!existingId) redirect(sessionId ? "/plan?registrado=1" : "/registrar?guardado=1");
   refresh();

@@ -48,12 +48,90 @@ const TAPER: Record<DistanceCat, number[]> = {
 // Disposición semanal (lunes = 0) con la tirada larga el domingo; luego se rota al día elegido.
 type Slot = "L" | "Q1" | "Q2" | "E" | "R";
 const LAYOUT: Record<number, [number, Slot][]> = {
+  2: [[2, "Q1"], [6, "L"]],
   3: [[1, "Q1"], [3, "E"], [6, "L"]],
   4: [[1, "Q1"], [3, "Q2"], [5, "E"], [6, "L"]],
   5: [[1, "Q1"], [2, "E"], [3, "Q2"], [5, "E"], [6, "L"]],
   6: [[1, "Q1"], [2, "E"], [3, "Q2"], [4, "E"], [5, "E"], [6, "L"]],
   7: [[0, "R"], [1, "Q1"], [2, "E"], [3, "Q2"], [4, "E"], [5, "E"], [6, "L"]],
 };
+
+const HARD: SessionType[] = ["long", "tempo", "intervals", "repetitions", "marathon_pace", "race_pace", "hills", "fartlek"];
+export const isHardSession = (t: SessionType) => HARD.includes(t);
+
+/** Días disponibles del perfil; si no se indicaron, los de la disposición clásica según nº de días y día de tirada. */
+export function availableDaysOf(profile: Pick<Profile, "availableDays" | "daysPerWeek" | "longRunDay">): number[] {
+  if (profile.availableDays?.length) return [...new Set(profile.availableDays)].filter((d) => d >= 0 && d <= 6).sort((a, b) => a - b);
+  const n = clamp(Math.round(profile.daysPerWeek), 2, 7);
+  return LAYOUT[n].map(([d]) => (d + profile.longRunDay - 6 + 7) % 7).sort((a, b) => a - b);
+}
+
+/** Reparte los huecos de la disposición base sobre los días disponibles, con la tirada larga en su día. */
+function weekLayout(avail: number[], longRunDay: number): [number, Slot][] {
+  const L = avail.includes(longRunDay) ? longRunDay : (avail.find((d) => d >= 5) ?? avail.at(-1)!);
+  // orden cíclico empezando el día después de la tirada; la tirada queda la última, como en LAYOUT
+  const order = [...avail].sort((a, b) => ((a - L + 6) % 7) - ((b - L + 6) % 7));
+  const out: [number, Slot][] = LAYOUT[avail.length].map(([, s], i) => [order[i], s]);
+  // evitar calidad el día justo antes de la tirada si hay un hueco suave que pueda intercambiarse
+  const before = (L + 6) % 7;
+  const qi = out.findIndex(([d, s]) => d === before && (s === "Q1" || s === "Q2"));
+  if (qi >= 0) {
+    const ei = out.findIndex(([d, s]) => s === "E" && d !== before && d !== (L + 1) % 7);
+    if (ei >= 0) [out[qi][1], out[ei][1]] = [out[ei][1], out[qi][1]];
+  }
+  return out;
+}
+
+/**
+ * Mueve las sesiones que caen en fechas no disponibles al día libre más cercano de la misma semana
+ * (dentro de los días disponibles). Si no hay hueco, la sesión se elimina. Devuelve nº de movidas/eliminadas.
+ */
+export function applyBlockedDates(plan: Plan, blocked: string[], avail: number[], today: string): { moved: number; dropped: number } {
+  const set = new Set(blocked);
+  let moved = 0;
+  let dropped = 0;
+  for (const w of plan.weeks) {
+    const affected = w.sessions.filter((s) => set.has(s.date) && s.date >= today && s.type !== "race");
+    if (!affected.length) continue;
+    // primero las sesiones importantes, que eligen hueco antes
+    affected.sort((a, b) => Number(isHardSession(b.type)) - Number(isHardSession(a.type)));
+    for (const s of affected) {
+      const isStrength = s.type === "strength";
+      const busy = (d: string) => w.sessions.some((x) => x !== s && x.date === d && (x.type === "strength") === isStrength);
+      const hardNear = (d: string) => w.sessions.some((x) => x !== s && isHardSession(x.type) && Math.abs(diffDays(x.date, d)) <= 1);
+      const raceDate = plan.goal.date;
+      const candidates = avail
+        .map((d) => addDays(w.start, d))
+        .filter((d) => d >= today && !set.has(d) && !busy(d) && diffDays(raceDate, d) >= 2)
+        .sort(
+          (a, b) =>
+            Number(isHardSession(s.type) && hardNear(a)) - Number(isHardSession(s.type) && hardNear(b)) ||
+            Math.abs(diffDays(a, s.date)) - Math.abs(diffDays(b, s.date)),
+        );
+      // sin hueco libre: una sesión clave ocupa el lugar del rodaje suave más cercano, que es la que se pierde
+      const easy = !candidates.length && isHardSession(s.type)
+        ? w.sessions
+            .filter((x) => ["easy", "recovery", "strides", "run_walk"].includes(x.type) && x.date >= today && !set.has(x.date) && diffDays(raceDate, x.date) >= 2)
+            .sort((a, b) => Math.abs(diffDays(a.date, s.date)) - Math.abs(diffDays(b.date, s.date)))[0]
+        : undefined;
+      if (candidates.length) {
+        s.date = candidates[0];
+        moved++;
+      } else if (easy) {
+        s.date = easy.date;
+        w.sessions = w.sessions.filter((x) => x !== easy);
+        moved++;
+        dropped++;
+      } else {
+        w.sessions = w.sessions.filter((x) => x !== s);
+        dropped++;
+      }
+    }
+    w.sessions.sort((a, b) => a.date.localeCompare(b.date) || (a.type === "strength" ? 1 : -1));
+    w.targetKm = Math.round(w.sessions.reduce((x, y) => x + y.distanceKm, 0));
+  }
+  return { moved, dropped };
+}
 
 const PHASE_FOCUS: Record<Phase, string> = {
   base: "Base aeróbica: volumen suave, técnica y fuerza. Construir el motor.",
@@ -179,8 +257,8 @@ export function generatePlan(input: PlanInput): Plan {
 
   // ---- Semanas ----
   const maxVol = Math.max(...vols);
-  const days = clamp(Math.round(profile.daysPerWeek), 3, 7);
-  const shift = profile.longRunDay - 6;
+  const avail = availableDaysOf(profile);
+  const days = avail.length;
   const runWalkWeeks = lvl === 0 ? Math.min(6, Math.ceil(buildWeeks / 2)) : heavy && lvl === 1 ? 3 : 0;
   let longKmPrev = Math.max(input.longestRecentKm, lvl === 0 ? 3 : 5);
   const weeks: PlanWeek[] = [];
@@ -199,12 +277,12 @@ export function generatePlan(input: PlanInput): Plan {
     const q2Active =
       lvl >= 2 || (lvl === 1 && days >= 5 && (phase === "construccion" || phase === "especifico"));
 
-    const layout = LAYOUT[days].map(([d, s]) => [(d + shift + 7) % 7, s] as [number, Slot]);
+    const layout = weekLayout(avail, profile.longRunDay);
     const slots = layout.map(([d, s]) => [d, s === "Q2" && (!q2Active || recovery || (isRaceWeek && cat !== "5k")) ? "E" : s] as [number, Slot]);
 
     // Tirada larga
     // el maratón necesita tiradas de 28-32 km aunque el volumen semanal sea moderado
-    const longPct = (days <= 3 ? 0.4 : days === 4 ? 0.36 : days === 5 ? 0.32 : 0.28) + (cat === "marathon" ? 0.06 : 0);
+    const longPct = (days <= 2 ? 0.45 : days <= 3 ? 0.4 : days === 4 ? 0.36 : days === 5 ? 0.32 : 0.28) + (cat === "marathon" ? 0.06 : 0);
     let longKm: number;
     if (phase === "taper") longKm = isRaceWeek ? 0 : Math.min(longKmPrev * (vol / maxVol) * 1.1, vol * 0.4);
     else if (recovery) longKm = longKmPrev * 0.75;

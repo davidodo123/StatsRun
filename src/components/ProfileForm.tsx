@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import { saveProfile, type FormState } from "@/app/actions";
 import type { Profile } from "@/lib/types";
 import { WEEKDAYS } from "@/lib/dates";
+import { availableDaysOf } from "@/lib/engine/planner";
 
 function fmtT(sec?: number) {
   if (!sec) return "";
@@ -23,6 +24,7 @@ const LEVELS = [
 export function ProfileForm({ profile }: { profile?: Profile }) {
   const [state, action, pending] = useActionState<FormState, FormData>(saveProfile, {});
   const p = profile;
+  const avail = availableDaysOf(p ?? { daysPerWeek: 4, longRunDay: 6 });
   return (
     <form action={action} className="space-y-6">
       <fieldset className="rounded-2xl border border-line bg-surface p-4 md:p-5">
@@ -110,16 +112,24 @@ export function ProfileForm({ profile }: { profile?: Profile }) {
       <fieldset className="rounded-2xl border border-line bg-surface p-4 md:p-5">
         <legend className="px-1 text-sm font-semibold">Disponibilidad</legend>
         <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
-          <label className="field">
-            Días de carrera por semana
-            <select className="input" name="daysPerWeek" defaultValue={p?.daysPerWeek ?? 4}>
-              {[3, 4, 5, 6, 7].map((d) => (
-                <option key={d} value={d}>
-                  {d} días
-                </option>
+          <div className="sm:col-span-2 md:col-span-3">
+            <p className="field">Días en los que puedes entrenar</p>
+            <div className="mt-2 grid grid-cols-7 gap-1.5">
+              {WEEKDAYS.map((d, i) => (
+                <label
+                  key={d}
+                  className="flex cursor-pointer flex-col items-center gap-1 rounded-xl border border-line px-1 py-2 text-xs font-semibold has-[:checked]:border-accent has-[:checked]:bg-surface-2"
+                >
+                  <input type="checkbox" name="availableDays" value={i} defaultChecked={avail.includes(i)} className="accent-[var(--accent)]" />
+                  <span className="sm:hidden">{d.slice(0, 2)}</span>
+                  <span className="hidden sm:inline">{d}</span>
+                </label>
               ))}
-            </select>
-          </label>
+            </div>
+            <p className="mt-1 text-xs text-muted">
+              El plan solo pondrá carrera en esos días (mínimo 2). Para días sueltos en que no puedas (viajes, turnos), márcalos en la página del plan.
+            </p>
+          </div>
           <label className="field">
             Día de la tirada larga
             <select className="input" name="longRunDay" defaultValue={p?.longRunDay ?? 6}>

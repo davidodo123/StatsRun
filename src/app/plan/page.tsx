@@ -4,11 +4,16 @@ import { Suspense } from "react";
 import { getAnalysis } from "@/lib/analysis";
 import { Card, Empty, Loading, Notice, PageHeader, Stat } from "@/components/ui";
 import { SessionCard } from "@/components/SessionCard";
+import { AiCoachButton } from "@/components/AiCoachButton";
+import { UnavailableForm } from "@/components/UnavailableForm";
+import { adaptIfMissed, coachConfig } from "@/lib/coach";
+import { availableDaysOf } from "@/lib/engine/planner";
+import { after } from "next/server";
 import { trainingPaces } from "@/lib/engine/physiology";
 import { fmtDuration, fmtPaceRange } from "@/lib/format";
-import { addDays, diffDays, mondayOf, shortDate } from "@/lib/dates";
+import { WEEKDAYS, addDays, diffDays, mondayOf, shortDate, weekday } from "@/lib/dates";
 import type { Phase } from "@/lib/types";
-import { clearPlan, regeneratePlan } from "../actions";
+import { clearPlan, clearUnavailable, regeneratePlan } from "../actions";
 
 export const metadata: Metadata = { title: "Plan" };
 
@@ -37,7 +42,10 @@ async function Content({ searchParams }: { searchParams: PageProps<"/plan">["sea
       </>
     );
 
+  // si se han quedado sesiones sin hacer, la IA reprograma en segundo plano (máx. 1 vez al día)
+  after(adaptIfMissed);
   const thisWeek = mondayOf(today);
+  const blockedSoon = (db.unavailableDates ?? []).filter((d) => d >= today);
   const allSessions = [...(matches?.values() ?? [])];
   // sesiones ya pasadas + las de hoy que ya están registradas
   const past = allSessions.filter((m) => m.session.type !== "strength" && (m.session.date < today || (m.session.date === today && m.status !== "today")));
@@ -169,6 +177,52 @@ async function Content({ searchParams }: { searchParams: PageProps<"/plan">["sea
         </div>
 
         <div className="space-y-4">
+          <Card title="Entrenador IA" subtitle={coachConfig().configured ? `Modelo ${coachConfig().model}` : "Desactivado"}>
+            {coachConfig().configured ? (
+              <div className="space-y-3 text-sm text-ink-2">
+                {db.coach?.summary ? <p>{db.coach.summary}</p> : <p>Aún no ha revisado tu plan.</p>}
+                {db.coach?.updatedAt && (
+                  <p className="text-xs text-muted">
+                    Última revisión: {new Date(db.coach.updatedAt).toLocaleString("es-ES")} · {db.coach.changed} sesiones ajustadas
+                  </p>
+                )}
+                {db.coach?.error && <Notice tone="warn">Último intento falló: {db.coach.error}</Notice>}
+                <p className="text-xs text-muted">Se ejecuta solo cada vez que registras o importas un entreno, marcas días sin poder entrenar, dejas sesiones sin hacer o adaptas el plan. Reajusta y reprograma carrera y fuerza de los próximos 14 días.</p>
+                <AiCoachButton />
+              </div>
+            ) : (
+              <p className="text-sm text-ink-2">
+                Añade <code>OPENROUTER_API_KEY</code> en <code>.env.local</code> para que la IA adapte tus entrenos.
+              </p>
+            )}
+          </Card>
+          <Card title="Disponibilidad" subtitle={db.profile ? `Entrenas: ${availableDaysOf(db.profile).map((d) => WEEKDAYS[d].slice(0, 3)).join(", ")}` : undefined}>
+            <div className="space-y-3 text-sm">
+              <p className="text-ink-2">
+                ¿Un viaje, turno o imprevisto? Marca los días y las sesiones se mueven a tus días libres; la IA rehace la rutina. Para cambiar tus días fijos, ve a tu{" "}
+                <Link href="/perfil" className="text-accent">
+                  perfil
+                </Link>
+                .
+              </p>
+              <UnavailableForm today={today} />
+              {blockedSoon.length > 0 && (
+                <ul className="flex flex-wrap gap-1.5">
+                  {blockedSoon.map((d) => (
+                    <li key={d}>
+                      <form action={clearUnavailable} className="flex items-center gap-1 rounded-full border border-line px-2 py-0.5 text-xs">
+                        <input type="hidden" name="date" value={d} />
+                        {WEEKDAYS[weekday(d)].slice(0, 3)} {shortDate(d)}
+                        <button className="text-muted hover:text-critical" title="Vuelvo a estar disponible" aria-label={`Quitar ${d}`}>
+                          ✕
+                        </button>
+                      </form>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </Card>
           <Card title="Tus ritmos de entrenamiento" subtitle={`VDOT ${plan.startVdot.toFixed(1)} (inicio) → ${plan.targetVdot.toFixed(1)} (final)`}>
             <table className="w-full text-sm tabular">
               <thead className="text-left text-xs text-muted">

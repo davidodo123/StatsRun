@@ -1,4 +1,6 @@
 import { gunzipSync } from "node:zlib";
+import { after } from "next/server";
+import { adaptWithAI, coachConfig } from "@/lib/coach";
 import { updateDb } from "@/lib/db";
 import { mergeActivities } from "@/lib/importers/common";
 import { parseStravaActivitiesCsv } from "@/lib/importers/stravaCsv";
@@ -66,6 +68,9 @@ export async function POST(req: Request) {
       skipped = r.skipped;
       db.lastSync = new Date().toISOString();
     });
+
+  // entrenos nuevos: la IA reajusta los próximos días en segundo plano
+  if (added > 0 && coachConfig().configured) after(() => adaptWithAI().then(() => undefined));
 
   return Response.json({ added, skipped, parsed: incoming.length, errors } satisfies ImportResponse);
 }

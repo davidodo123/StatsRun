@@ -4,6 +4,7 @@ import type { SessionMatch } from "@/lib/engine/planner";
 import { fmtPaceRange } from "@/lib/format";
 import { WEEKDAYS, shortDate, weekday } from "@/lib/dates";
 import { Status } from "./ui";
+import { skipSession } from "@/app/actions";
 
 type Kind = "suave" | "calidad" | "larga" | "fuerza" | "carrera";
 
@@ -57,6 +58,7 @@ export function SessionCard({ s, match, compact, showDate = true }: { s: Planned
           )}
           <span>· {kind.label}</span>
           {s.zone && <span>· {s.zone}</span>}
+          {s.aiAdjusted && <span className="text-accent">· ✦ Ajustada por IA</span>}
         </div>
         <h3 className="mt-0.5 font-semibold leading-snug">{s.title}</h3>
         <p className="text-xs text-ink-2 tabular">
@@ -76,6 +78,12 @@ export function SessionCard({ s, match, compact, showDate = true }: { s: Planned
             </ul>
           </>
         )}
+        {match?.status === "upcoming" && s.type !== "race" && !compact && (
+          <form action={skipSession} className="mt-2">
+            <input type="hidden" name="date" value={s.date} />
+            <button className="text-xs text-ink-2 underline hover:text-critical">No puedo ese día</button>
+          </form>
+        )}
         {(st || canLog || (match && match.activities.length > 0)) && (
           <div className="mt-2 flex flex-wrap items-center gap-3">
             {canLog &&
@@ -91,6 +99,14 @@ export function SessionCard({ s, match, compact, showDate = true }: { s: Planned
                 )
               ))}
             {st && <Status tone={st.tone}>{st.label}</Status>}
+            {s.type !== "race" && match && (match.status === "missed" || match.status === "today") && (
+              <form action={skipSession}>
+                <input type="hidden" name="date" value={s.date} />
+                <button className="text-xs text-ink-2 underline hover:text-critical" title="La IA reorganiza los próximos días">
+                  {match.status === "missed" ? "No pude → reajustar" : "Hoy no puedo"}
+                </button>
+              </form>
+            )}
             {match && match.activities.length > 0 && s.type !== "strength" && (
               <span className="text-xs text-ink-2 tabular">
                 Real: {match.doneKm.toFixed(1)} km ({Math.round(match.compliance * 100)} %)

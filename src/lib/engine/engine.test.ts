@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { raceTimeFromVdot, trainingPaces, vdotFromRace, riegel, hrZones } from "./physiology";
 import { fitnessSeries, acwr } from "./load";
-import { generatePlan, matchPlan } from "./planner";
+import { applyBlockedDates, availableDaysOf, generatePlan, matchPlan } from "./planner";
 import { computeStats } from "./stats";
 import { generateDemoActivities } from "../demo";
 import type { Profile } from "../types";
@@ -134,5 +134,48 @@ describe("registro manual", () => {
     const act = { id: "m2", source: "manual" as const, name: "x", sport: "run" as const, sportRaw: "run", date: addDays(s.date, 1), startLocal: `${addDays(s.date, 1)}T07:00:00`, distanceM: s.distanceKm * 1000, movingSec: 3000, elapsedSec: 3000, elevationGainM: 0, sessionId: s.id };
     const m = matchPlan(plan, [act], addDays(s.date, 2)).get(s.id)!;
     expect(m.status).toBe("done");
+  });
+});
+
+describe("Disponibilidad", () => {
+  const today = "2026-10-05"; // lunes
+  const goal = { name: "10K", distanceKm: 10, date: "2026-12-13" };
+  const base = { goal, currentVdot: 45, currentWeeklyKm: 35, longestRecentKm: 14, today };
+  const wd = (d: string) => (new Date(`${d}T12:00:00`).getDay() + 6) % 7;
+
+  it("solo planifica carrera en los días elegidos y la tirada en su día", () => {
+    const p = { ...profile, availableDays: [1, 3, 5, 6], daysPerWeek: 4, longRunDay: 5 };
+    const plan = generatePlan({ ...base, profile: p });
+    const runs = plan.weeks.flatMap((w) => w.sessions).filter((s) => s.type !== "strength" && s.type !== "race");
+    expect(runs.every((s) => p.availableDays.includes(wd(s.date)))).toBe(true);
+    expect(runs.filter((s) => s.type === "long").every((s) => wd(s.date) === 5)).toBe(true);
+  });
+
+  it("con 2 días genera calidad + tirada", () => {
+    const plan = generatePlan({ ...base, profile: { ...profile, availableDays: [2, 6], daysPerWeek: 2 } });
+    const w = plan.weeks[1].sessions.filter((s) => s.type !== "strength");
+    expect(w.length).toBe(2);
+    expect(w.some((s) => s.type === "long")).toBe(true);
+  });
+
+  it("mueve sesiones de fechas bloqueadas a otro día disponible libre", () => {
+    const p = { ...profile, availableDays: [0, 1, 3, 5, 6], daysPerWeek: 5 };
+    const plan = generatePlan({ ...base, profile: p });
+    const long = plan.weeks[1].sessions.find((s) => s.type === "long")!;
+    const blocked = long.date;
+    const r = applyBlockedDates(plan, [blocked], availableDaysOf(p), today);
+    expect(r.moved + r.dropped).toBeGreaterThan(0);
+    expect(plan.weeks[1].sessions.some((s) => s.date === blocked)).toBe(false);
+    const runDates = plan.weeks[1].sessions.filter((s) => s.type !== "strength").map((s) => s.date);
+    expect(new Set(runDates).size).toBe(runDates.length);
+  });
+
+  it("si no hay hueco, la tirada larga sustituye a un rodaje suave", () => {
+    const p = { ...profile, availableDays: [5, 6], daysPerWeek: 2, longRunDay: 6 };
+    const plan = generatePlan({ ...base, profile: { ...p, availableDays: [2, 5, 6], daysPerWeek: 3 } });
+    const w = plan.weeks[1];
+    const long = w.sessions.find((s) => s.type === "long")!;
+    applyBlockedDates(plan, [long.date], [2, 5, 6], today);
+    expect(w.sessions.some((s) => s.type === "long")).toBe(true);
   });
 });

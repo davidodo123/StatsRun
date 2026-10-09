@@ -16,7 +16,8 @@ export interface Profile {
   weeklyKm: number; // volumen actual medio
   longestRunKm: number; // tirada más larga en las últimas 4-6 semanas
   recentRace?: { distanceKm: number; timeSec: number };
-  daysPerWeek: number; // 3-7
+  daysPerWeek: number; // 2-7 (= nº de availableDays si se indican)
+  availableDays?: number[]; // días de la semana en que puede entrenar (0 = lunes ... 6 = domingo)
   longRunDay: number; // 0 = lunes ... 6 = domingo
   strengthPerWeek: number; // 0-2
   injuries?: string;
@@ -89,6 +90,7 @@ export interface PlannedSession {
   durationMin: number;
   pace?: PaceRange;
   zone?: string;
+  aiAdjusted?: boolean; // contenido reescrito por el entrenador IA
 }
 
 export type Phase = "base" | "construccion" | "especifico" | "taper";
@@ -130,4 +132,14 @@ export interface Db {
   activities: Activity[];
   strava?: StravaAuth;
   lastSync?: string;
+  coach?: CoachState;
+  unavailableDates?: string[]; // fechas concretas sin poder entrenar (futuras: no planificar; pasadas: "no pude")
+}
+
+export interface CoachState {
+  updatedAt: string;
+  model: string;
+  summary: string;
+  changed: number;
+  error?: string;
 }
