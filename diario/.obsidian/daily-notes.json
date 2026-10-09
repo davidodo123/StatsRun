@@ -1,0 +1,6 @@
+{
+  "folder": "Diario",
+  "format": "YYYY-MM-DD",
+  "template": "Plantillas/Día",
+  "autorun": false
+}

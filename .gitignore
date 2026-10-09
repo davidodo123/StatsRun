@@ -43,3 +43,7 @@ next-env.d.ts
 
 # datos locales del atleta (tokens de Strava y actividades)
 /data
+
+# Obsidian: estado de la interfaz (cambia solo, no se versiona)
+/diario/.obsidian/workspace*.json
+/diario/.obsidian/cache
