@@ -44,6 +44,31 @@ Qué se decidió, por qué y cuándo. Si algo cambia, se añade una entrada nuev
 - El ACWR se queda como una señal más, por las críticas de Impellizzeri.
 - Todo el porqué → [[Estudio entrenamiento]] (sección 9).
 
+## Perfil con pestañas
+*2026-10-09*
+
+- `/perfil` tiene una cabecera (iniciales, nivel, VDOT, km, carreras, horas) y estas pestañas por URL (`?tab=`):
+  - Resumen
+  - Running
+  - Fuerza
+  - Actividades
+  - Logros
+  - Editar perfil
+- La lógica está en `src/lib/engine/profile.ts` (funciones puras con tests); la página solo pinta.
+- **Mejores tiempos:** mejor ritmo medio en carreras de esa distancia o más (margen GPS del 3 %), llevado a la distancia exacta.
+  - Si la carrera es más de un 10 % más larga, se marca como «estimado».
+  - Aún no hay splits por km, así que no se pueden sacar tiempos reales dentro de una carrera.
+- **Tabla de mejora:** 3 bloques de 4 semanas y el cambio del último respecto al anterior.
+  - Métricas: km/sem, carreras/sem, ritmo, FC, EF, cadencia, tirada más larga y fuerza/sem.
+  - En el ritmo y la FC, bajar es mejorar.
+- **Logros:** se calculan con los datos que ya hay; no se guardan.
+  - Grupos: distancia, volumen, ritmo, constancia, fuerza y plan.
+  - Cada logro tiene fecha de conseguido o barra de progreso.
+- **Promedios:** el botón «Actualizar el perfil con estos datos» pone en el perfil los km/semana y la tirada más larga de las últimas 6 semanas.
+  - Solo aparece si los datos difieren (3 km/sem o 2 km).
+  - No toca la fuerza por semana, porque eso cambia el plan.
+- La pestaña Actividades tiene filtro (todas, correr, fuerza, otros) y páginas de 25; cada sesión tiene un enlace para editarla.
+
 ## Registro manual en vez de captura
 *2026-10-09*
 

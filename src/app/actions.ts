@@ -9,6 +9,7 @@ import { deauthorize, syncActivities } from "@/lib/strava";
 import { generateDemoActivities } from "@/lib/demo";
 import { applyBlockedDates, availableDaysOf, generatePlan } from "@/lib/engine/planner";
 import { computeStats } from "@/lib/engine/stats";
+import { profileAverages } from "@/lib/engine/profile";
 import { findRace } from "@/lib/races";
 import { adaptWithAI, coachConfig } from "@/lib/coach";
 import { parseTime } from "@/lib/format";
@@ -83,6 +84,17 @@ export async function saveProfile(_: FormState, fd: FormData): Promise<FormState
   }
   refresh();
   return { ok: true, message: "Perfil guardado." };
+}
+
+/** Actualiza los km/semana y la tirada más larga del perfil con la media real de las últimas 6 semanas. */
+export async function syncProfileAverages(): Promise<void> {
+  const today = todayLocal();
+  await updateDb((db) => {
+    const avg = profileAverages(db.activities, today);
+    if (!db.profile || !avg) return;
+    db.profile = { ...db.profile, weeklyKm: avg.weeklyKm, longestRunKm: avg.longestRunKm };
+  });
+  refresh();
 }
 
 export async function saveGoal(_: FormState, fd: FormData): Promise<FormState> {

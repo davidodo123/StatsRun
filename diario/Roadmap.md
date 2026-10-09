@@ -35,15 +35,15 @@ Detalle en [[2026-10-09]].
 
 ## 🔮 Fase 3 · Futuro
 
-### Perfil
-- [ ] Mejores tiempos
-- [ ] Sesiones recientes
-- [ ] Apartados Running y Fuerza
-- [ ] Apartado con todas las sesiones hechas
-- [ ] Tabla de mejora con medias a partir de los datos
-- [ ] Ver la preparación (plan) que estás haciendo
-- [ ] Logros
-- [ ] Modificación del perfil (promedios)
+### Perfil — *hecho 2026-10-09, pendiente de que David lo compruebe* → [[Decisiones#Perfil con pestañas]]
+- [x] Mejores tiempos
+- [x] Sesiones recientes
+- [x] Apartados Running y Fuerza
+- [x] Apartado con todas las sesiones hechas
+- [x] Tabla de mejora con medias a partir de los datos
+- [x] Ver la preparación (plan) que estás haciendo
+- [x] Logros
+- [x] Modificación del perfil (promedios)
 
 ### Hacer aplicación
 - [ ] Diseño
