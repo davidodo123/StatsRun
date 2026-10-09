@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { getAnalysis } from "@/lib/analysis";
 import type { ActivityFormInitial } from "@/components/ActivityForm";
 import { ActivityForm } from "@/components/ActivityForm";
+import { coachConfig } from "@/lib/coach";
 import { ImportPanel } from "@/components/ImportPanel";
 import { SESSION_KIND } from "@/components/SessionCard";
 import { Card, Loading, Notice, PageHeader, Status } from "@/components/ui";
@@ -69,6 +70,8 @@ async function Content({ searchParams }: { searchParams: PageProps<"/registrar">
       steps: editing.steps,
       maxAltitudeM: editing.maxAltitudeM,
       rpe: editing.rpe,
+      feel: editing.feel,
+      feelings: editing.feelings,
       notes: editing.notes,
     };
   else if (session) initial = fromSession(session, today);
@@ -86,7 +89,10 @@ async function Content({ searchParams }: { searchParams: PageProps<"/registrar">
     <div className="grid gap-4 lg:grid-cols-3">
       {sp.guardado && (
         <div className="lg:col-span-3">
-          <Notice tone="good">Entreno registrado. Ya cuenta en tu forma, fatiga y estadísticas.</Notice>
+          <Notice tone="good">
+            Entreno registrado. Ya cuenta en tu forma, fatiga y estadísticas.
+            {coachConfig().configured && db.plan && " La IA está leyendo tus sensaciones y ajustando tus próximos entrenos: lo verás en el plan en un minuto."}
+          </Notice>
         </div>
       )}
       <Card className="lg:col-span-2" title={editing ? "Editar entreno" : session ? "Registrar sesión del plan" : "Nuevo entreno"}>

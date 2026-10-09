@@ -13,7 +13,7 @@ import { findRace } from "@/lib/races";
 import { adaptWithAI, coachConfig } from "@/lib/coach";
 import { parseTime } from "@/lib/format";
 import { addDays, diffDays, todayLocal } from "@/lib/dates";
-import type { Db, Goal, Level, Profile, Sex } from "@/lib/types";
+import type { Db, Feel, Goal, Level, Profile, Sex } from "@/lib/types";
 
 export interface FormState {
   ok?: boolean;
@@ -262,6 +262,7 @@ export async function clearUnavailable(fd: FormData): Promise<void> {
 // ---------- Registro manual de actividades ----------
 
 const SPORTS = ["run", "ride", "swim", "walk", "strength", "other"] as const;
+const FEELS: Feel[] = ["muy_facil", "facil", "bien", "duro", "muy_duro"];
 
 export async function saveActivity(_: FormState, fd: FormData): Promise<FormState> {
   const date = String(fd.get("date") ?? "");
@@ -317,6 +318,8 @@ export async function saveActivity(_: FormState, fd: FormData): Promise<FormStat
       steps: steps || undefined,
       maxAltitudeM,
       rpe: rpe && rpe >= 1 && rpe <= 10 ? rpe : undefined,
+      feel: FEELS.find((f) => f === fd.get("feel")),
+      feelings: String(fd.get("feelings") ?? "").trim().slice(0, 1000) || undefined,
       notes: String(fd.get("notes") ?? "").trim() || undefined,
       sessionId,
     };

@@ -33,6 +33,8 @@ export interface Goal {
   temperatureC?: number;
 }
 
+export type Feel = "muy_facil" | "facil" | "bien" | "duro" | "muy_duro";
+
 export type SportKind = "run" | "ride" | "swim" | "walk" | "strength" | "other";
 
 export interface Activity {
@@ -56,6 +58,8 @@ export interface Activity {
   sufferScore?: number;
   prCount?: number;
   rpe?: number; // esfuerzo percibido 1-10
+  feel?: Feel; // cómo se le ha hecho respecto a lo esperado
+  feelings?: string; // sensaciones en sus palabras: la IA las lee para reajustar la rutina
   notes?: string;
   sessionId?: string; // sesión del plan a la que corresponde
 }

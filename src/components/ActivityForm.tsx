@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useActionState, useState } from "react";
 import { saveActivity, type FormState } from "@/app/actions";
-import type { Activity, PlannedSession } from "@/lib/types";
+import type { Activity, Feel, PlannedSession } from "@/lib/types";
 import { fmtDuration, fmtPace, parseTime } from "@/lib/format";
 
 const RPE: Record<number, string> = {
@@ -35,8 +35,18 @@ export interface ActivityFormInitial {
   steps?: number;
   maxAltitudeM?: number;
   rpe?: number;
+  feel?: Feel;
+  feelings?: string;
   notes?: string;
 }
+
+const FEELS: { value: Feel; label: string }[] = [
+  { value: "muy_facil", label: "😌 Muy fácil" },
+  { value: "facil", label: "🙂 Fácil" },
+  { value: "bien", label: "👍 Bien" },
+  { value: "duro", label: "😓 Duro" },
+  { value: "muy_duro", label: "🥵 Muy duro" },
+];
 
 export function ActivityForm({ initial, session, today }: { initial: ActivityFormInitial; session?: PlannedSession; today: string }) {
   const [state, action, pending] = useActionState<FormState, FormData>(saveActivity, {});
@@ -175,6 +185,30 @@ export function ActivityForm({ initial, session, today }: { initial: ActivityFor
         <p className="mt-1 text-xs text-muted">Si no llevas pulsómetro, con esto calculamos la carga del entreno.</p>
       </div>
 
+      <fieldset className="rounded-xl border border-line bg-surface-2 p-4">
+        <legend className="px-1 text-sm font-semibold">¿Cómo te has sentido?</legend>
+        <div className="flex flex-wrap gap-2">
+          {FEELS.map((f) => (
+            <label key={f.value} className="cursor-pointer">
+              <input type="radio" name="feel" value={f.value} defaultChecked={initial.feel === f.value} className="peer sr-only" />
+              <span className="block rounded-full border border-line bg-surface px-3 py-1.5 text-sm peer-checked:border-accent peer-checked:bg-accent peer-checked:text-accent-ink peer-focus-visible:ring-2 peer-focus-visible:ring-accent">
+                {f.label}
+              </span>
+            </label>
+          ))}
+        </div>
+        <textarea
+          className="input mt-3 min-h-24"
+          name="feelings"
+          defaultValue={initial.feelings}
+          maxLength={1000}
+          placeholder="Ej.: Las series se me hicieron fáciles, podría haber ido más rápido. / Me costó mucho, piernas cargadas desde el kilómetro 6. / Molestia en el gemelo derecho."
+        />
+        <p className="mt-1 text-xs text-muted">
+          La IA lo lee al guardar y ajusta tus próximos entrenos: si se te hace fácil, sube la exigencia; si se te hace duro o tienes molestias, la baja.
+        </p>
+      </fieldset>
+
       <div>
         <button type="button" onClick={() => setMore(!more)} className="text-sm font-semibold text-accent">
           {more ? "− Ocultar" : "+ Añadir"} datos del reloj (FC, cadencia)
@@ -200,8 +234,8 @@ export function ActivityForm({ initial, session, today }: { initial: ActivityFor
       </div>
 
       <label className="field">
-        Notas
-        <textarea className="input min-h-20" name="notes" defaultValue={initial.notes} placeholder="Sensaciones, molestias, clima, zapatillas…" />
+        Otras notas
+        <textarea className="input min-h-16" name="notes" defaultValue={initial.notes} placeholder="Clima, zapatillas, recorrido…" />
       </label>
 
       <div className="flex flex-wrap items-center gap-3">

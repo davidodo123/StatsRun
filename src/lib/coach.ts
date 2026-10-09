@@ -83,8 +83,14 @@ Reglas:
 - Si hay sesiones no realizadas ("sesionesNoRealizadas"): NO intentes recuperarlo todo ni acumular. Si se perdió una sesión clave, puedes recolocarla o sustituir un rodaje próximo por una versión reducida; si se perdieron varias, baja la intensidad unos días y retoma la progresión. Explica el criterio.
 - Puedes quitar una sesión con {"id","remove":true} si la semana queda sobrecargada.
 - No subas la distancia de una sesión más de un 15 % (o 2 km) respecto a la original.
-- Si hay fatiga alta (ACWR > 1.3, TSB muy negativo, RPE alto, notas de dolor), reduce intensidad/volumen o cambia calidad por suave.
+- Las SENSACIONES del atleta ("sensacion" y "comoSeSintio" en sus actividades, sobre todo las de los últimos 7 días) son lo que más pesa. Compáralas con la sesión que tenía planificada ("sesionPlanificada"):
+  · "muy_facil"/"facil" o dice que le sobró (podría ir más rápido, iba cómodo) y la carga está controlada (ACWR ≤ 1.3): sube un poco la exigencia de las próximas sesiones de calidad (ritmo algo más rápido dentro del rango, una repetición más, o +5-10 % de distancia), nunca todo a la vez.
+  · "duro"/"muy_duro", le costó terminar, piernas cargadas o mal descanso: baja intensidad o volumen de los próximos 2-4 días; si fue una sesión clave, repítela más adelante sin endurecerla.
+  · Dolor o molestia (articulación, tendón, gemelo, rodilla…): quita intensidad, cambia carrera de calidad por suave o descanso, y en fuerza evita cargar la zona. Menciónalo en "summary".
+  · "bien": mantén la progresión prevista.
+- Si hay fatiga alta (ACWR > 1.3, TSB muy negativo, RPE alto), reduce intensidad/volumen o cambia calidad por suave.
 - Si cumple bien y va fresco, puedes afinar la calidad (series, ritmos) sin pasarte.
+- En "summary" explica qué has cambiado haciendo referencia a lo que dijo el atleta (ej.: "Como el jueves las series se te hicieron fáciles…").
 - Fuerza ("strength", distanceKm 0): adapta ejercicios concretos, series, repeticiones y carga a la fase, nivel, lesiones y fatiga de piernas; mejor el mismo día que una sesión dura o lejos de la tirada larga.
 - Usa los ritmos proporcionados (min:seg /km) en los pasos de carrera.
 - Escribe en español, pasos breves y accionables.
@@ -115,6 +121,14 @@ function buildContext(db: Db, today: string) {
 
   const missed = [...matches.values()].filter((m) => m.session.date < today && diffDays(today, m.session.date) <= 7 && (m.status === "missed" || m.status === "partial"));
 
+  // sesión del plan a la que corresponde cada actividad (registrada para ella o del mismo día)
+  const sessionOf = new Map<string, PlannedSession>();
+  for (const m of matches.values()) for (const a of m.activities) sessionOf.set(a.id, m.session);
+  const planned = (a: Db["activities"][number]) => {
+    const s = (a.sessionId && plan.weeks.flatMap((w) => w.sessions).find((x) => x.id === a.sessionId)) || sessionOf.get(a.id);
+    return s && { tipo: s.type, titulo: s.title, km: s.distanceKm, min: s.durationMin, ritmo: s.pace && `${pace(s.pace.fast)}-${pace(s.pace.slow)}` };
+  };
+
   const p = trainingPaces(stats.vdot.vdot);
   const range = (r: { fast: number; slow: number }) => `${pace(r.fast)}-${pace(r.slow)}`;
 
@@ -143,7 +157,8 @@ function buildContext(db: Db, today: string) {
       .map((a) => ({
         fecha: a.date, deporte: a.sport, nombre: a.name, km: +(a.distanceM / 1000).toFixed(2), min: Math.round(a.movingSec / 60),
         ritmo: a.sport === "run" && a.distanceM > 0 ? pace(a.movingSec / (a.distanceM / 1000)) : undefined,
-        fcMedia: a.avgHr, rpe: a.rpe, notas: a.notes,
+        fcMedia: a.avgHr, rpe: a.rpe, sensacion: a.feel, comoSeSintio: a.feelings, notas: a.notes,
+        sesionPlanificada: planned(a),
       })),
     sesionesNoRealizadas: missed.map((m) => ({ fecha: m.session.date, tipo: m.session.type, titulo: m.session.title, planKm: m.session.distanceKm, hechoKm: +m.doneKm.toFixed(1), estado: m.status })),
     sesionesAAjustar: upcoming.map((s) => {
