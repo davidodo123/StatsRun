@@ -174,6 +174,7 @@ export async function syncActivities(auth: StravaAuth, existing: Activity[], ini
 
   let imported = 0;
   await updateDb((db) => {
+    imported = 0; // la escritura puede reintentarse
     const byId = new Map(db.activities.map((a) => [a.id, a]));
     for (const a of fetched) {
       if (!byId.has(a.id)) imported++;

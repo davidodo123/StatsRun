@@ -2,6 +2,7 @@ import "server-only";
 // Cuentas de usuario y amistades. Todos los usuarios en un único documento (app pequeña, entre amigos).
 import { randomBytes, randomUUID, scrypt as scryptCb, timingSafeEqual } from "node:crypto";
 import { promisify } from "node:util";
+import { cache } from "react";
 import { LEGACY_DB_KEY, kvGet, kvSet, kvUpdate, userDbKey } from "./db";
 
 const scrypt = promisify(scryptCb) as (pw: string, salt: string, len: number) => Promise<Buffer>;
@@ -11,8 +12,12 @@ export interface User {
   id: string;
   username: string; // en minúsculas, único
   name: string;
-  passHash: string;
-  salt: string;
+  // cuentas antiguas (usuario y contraseña); se usan una sola vez para enlazarlas con Google
+  passHash?: string;
+  salt?: string;
+  googleSub?: string; // id estable de la cuenta de Google
+  email?: string;
+  picture?: string;
   createdAt: string;
   friendCode: string;
   friends: string[]; // ids
@@ -22,13 +27,14 @@ interface UsersDoc {
   users: User[];
 }
 
-export type PublicUser = Pick<User, "id" | "username" | "name" | "friendCode">;
-const toPublic = ({ id, username, name, friendCode }: User): PublicUser => ({ id, username, name, friendCode });
+export type PublicUser = Pick<User, "id" | "username" | "name" | "friendCode" | "picture">;
+const toPublic = ({ id, username, name, friendCode, picture }: User): PublicUser => ({ id, username, name, friendCode, picture });
 
-async function readUsers(): Promise<UsersDoc> {
+// al renderizar, una sola lectura por petición; fuera del renderizado (acciones, rutas) React.cache no memoriza
+const readUsers = cache(async (): Promise<UsersDoc> => {
   const raw = await kvGet(USERS_KEY);
   return raw ? (JSON.parse(raw) as UsersDoc) : { users: [] };
-}
+});
 
 const updateUsers = (fn: (doc: UsersDoc) => void | Promise<void>) => kvUpdate<UsersDoc>(USERS_KEY, () => ({ users: [] }), fn);
 
@@ -47,55 +53,92 @@ function newFriendCode(taken: Set<string>): string {
 
 export const normalizeUsername = (u: string) => u.trim().toLowerCase();
 
-/** Registro. Requiere el código de invitación (APP_PASSWORD) si está configurado. */
-export async function registerUser(input: { username: string; name: string; password: string; invite: string }): Promise<{ user?: PublicUser; error?: string }> {
-  const username = normalizeUsername(input.username);
-  if (!/^[a-z0-9_.-]{3,24}$/.test(username)) return { error: "Usuario de 3 a 24 caracteres: letras, números, punto, guion o guion bajo." };
-  if (input.password.length < 6) return { error: "La contraseña debe tener al menos 6 caracteres." };
-  const invite = process.env.APP_PASSWORD;
-  if (invite && input.invite.trim() !== invite) return { error: "Código de invitación incorrecto." };
+/** Identidad devuelta por Google tras el inicio de sesión. */
+export interface GoogleIdentity {
+  sub: string;
+  email: string;
+  name: string;
+  picture?: string;
+}
 
-  const salt = randomBytes(16).toString("hex");
-  const passHash = await hash(input.password, salt);
+export async function findUserByGoogle(sub: string): Promise<PublicUser | undefined> {
+  const u = (await readUsers()).users.find((x) => x.googleSub === sub);
+  return u && toPublic(u);
+}
+
+/** ¿Quedan cuentas antiguas sin enlazar? Solo entonces se ofrece enlazar al entrar con Google por primera vez. */
+export async function hasUnlinkedAccounts(): Promise<boolean> {
+  return (await readUsers()).users.some((u) => !u.googleSub && u.passHash);
+}
+
+// nombre de usuario libre a partir del email (david.s@gmail.com → david.s, david.s2…)
+function usernameFor(email: string, taken: Set<string>): string {
+  const base = (normalizeUsername(email.split("@")[0]).replace(/[^a-z0-9_.-]/g, "") || "atleta").slice(0, 20).padEnd(3, "0");
+  let name = base;
+  for (let i = 2; taken.has(name); i++) name = `${base}${i}`;
+  return name;
+}
+
+/** Cuenta nueva a partir de Google. */
+export async function createGoogleUser(g: GoogleIdentity): Promise<PublicUser> {
   let created: User | undefined;
   let first = false;
-  let error: string | undefined;
   await updateUsers((doc) => {
-    if (doc.users.some((u) => u.username === username)) {
-      error = "Ese usuario ya existe.";
-      return;
-    }
+    // si entró dos veces a la vez, no duplicar
+    created = doc.users.find((u) => u.googleSub === g.sub);
+    if (created) return;
     first = doc.users.length === 0;
     created = {
       id: randomUUID(),
-      username,
-      name: input.name.trim().slice(0, 40) || username,
-      passHash,
-      salt,
+      username: usernameFor(g.email, new Set(doc.users.map((u) => u.username))),
+      name: g.name.trim().slice(0, 40) || g.email.split("@")[0],
+      googleSub: g.sub,
+      email: g.email,
+      picture: g.picture,
       createdAt: new Date().toISOString(),
       friendCode: newFriendCode(new Set(doc.users.map((u) => u.friendCode))),
       friends: [],
     };
     doc.users.push(created);
   });
-  if (error || !created) return { error: error ?? "No se pudo crear la cuenta." };
 
   // la primera cuenta hereda los datos de antes de que hubiera cuentas
   if (first) {
     const legacy = await kvGet(LEGACY_DB_KEY);
-    if (legacy && !(await kvGet(userDbKey(created.id)))) await kvSet(userDbKey(created.id), legacy);
+    if (legacy && !(await kvGet(userDbKey(created!.id)))) await kvSet(userDbKey(created!.id), legacy);
   }
-  return { user: toPublic(created) };
+  return toPublic(created!);
 }
 
-export async function verifyLogin(usernameRaw: string, password: string): Promise<PublicUser | undefined> {
+/** Enlaza una cuenta antigua (usuario y contraseña) con Google; a partir de ahí solo se entra con Google. */
+export async function linkGoogleAccount(usernameRaw: string, password: string, g: GoogleIdentity): Promise<{ user?: PublicUser; error?: string }> {
   const username = normalizeUsername(usernameRaw);
   const user = (await readUsers()).users.find((u) => u.username === username);
   // calcular el hash aunque no exista, para no revelar qué usuarios hay por el tiempo de respuesta
   const got = Buffer.from(await hash(password, user?.salt ?? "0".repeat(32)), "hex");
-  if (!user) return undefined;
-  const expected = Buffer.from(user.passHash, "hex");
-  return expected.length === got.length && timingSafeEqual(expected, got) ? toPublic(user) : undefined;
+  const expected = Buffer.from(user?.passHash ?? "", "hex");
+  if (!user || expected.length !== got.length || !timingSafeEqual(expected, got)) return { error: "Usuario o contraseña incorrectos." };
+  if (user.googleSub) return { error: "Esa cuenta ya está enlazada con otra cuenta de Google." };
+
+  let error: string | undefined;
+  let linked: User | undefined;
+  await updateUsers((doc) => {
+    error = undefined; // la escritura puede reintentarse
+    if (doc.users.some((u) => u.googleSub === g.sub)) {
+      error = "Tu cuenta de Google ya tiene una cuenta en PaceLab.";
+      return;
+    }
+    linked = doc.users.find((u) => u.id === user.id);
+    if (!linked) return;
+    linked.googleSub = g.sub;
+    linked.email = g.email;
+    linked.picture = g.picture;
+    // la contraseña ya no sirve para entrar
+    delete linked.passHash;
+    delete linked.salt;
+  });
+  if (error || !linked) return { error: error ?? "No se pudo enlazar la cuenta." };
+  return { user: toPublic(linked) };
 }
 
 export async function getUser(id: string): Promise<PublicUser | undefined> {
@@ -121,6 +164,7 @@ export async function addFriendByCode(uid: string, codeRaw: string): Promise<{ f
   let friend: User | undefined;
   let error: string | undefined;
   await updateUsers((doc) => {
+    error = undefined; // la escritura puede reintentarse
     const me = doc.users.find((u) => u.id === uid);
     friend = doc.users.find((u) => u.friendCode === code);
     if (!me) error = "Sesión no válida.";

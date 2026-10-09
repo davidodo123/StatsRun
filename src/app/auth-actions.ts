@@ -1,27 +1,38 @@
 "use server";
 
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { refresh } from "next/cache";
-import { addFriendByCode, regenerateFriendCode, registerUser, removeFriend, verifyLogin } from "@/lib/auth";
-import { endSession, requireUserId, startSession } from "@/lib/session";
+import { addFriendByCode, createGoogleUser, linkGoogleAccount, regenerateFriendCode, removeFriend, type GoogleIdentity } from "@/lib/auth";
+import { GOOGLE_PENDING_COOKIE, endSession, requireUserId, startSession, unsealValue } from "@/lib/session";
 import type { FormState } from "./actions";
 
 const str = (fd: FormData, k: string) => String(fd.get(k) ?? "");
 
-export async function register(_: FormState, fd: FormData): Promise<FormState> {
-  const password = str(fd, "password");
-  if (password !== str(fd, "password2")) return { error: "Las contraseñas no coinciden." };
-  const r = await registerUser({ username: str(fd, "username"), name: str(fd, "name"), password, invite: str(fd, "invite") });
-  if (!r.user) return { error: r.error };
-  await startSession(r.user.id);
-  redirect("/perfil");
+/** Identidad de Google que acaba de volver del inicio de sesión y aún no tiene cuenta. */
+async function pendingGoogle(): Promise<GoogleIdentity | undefined> {
+  return unsealValue<GoogleIdentity>((await cookies()).get(GOOGLE_PENDING_COOKIE)?.value);
 }
 
-export async function login(_: FormState, fd: FormData): Promise<FormState> {
-  const user = await verifyLogin(str(fd, "username"), str(fd, "password"));
-  if (!user) return { error: "Usuario o contraseña incorrectos." };
-  await startSession(user.id);
+/** Enlaza la cuenta antigua (usuario y contraseña) con la cuenta de Google pendiente. */
+export async function linkAccount(_: FormState, fd: FormData): Promise<FormState> {
+  const g = await pendingGoogle();
+  if (!g) redirect("/login?error=caducado");
+  const r = await linkGoogleAccount(str(fd, "username"), str(fd, "password"), g);
+  if (!r.user) return { error: r.error };
+  (await cookies()).delete(GOOGLE_PENDING_COOKIE);
+  await startSession(r.user.id);
   redirect("/");
+}
+
+/** Cuenta nueva con la cuenta de Google pendiente. */
+export async function createAccount(): Promise<void> {
+  const g = await pendingGoogle();
+  if (!g) redirect("/login?error=caducado");
+  const user = await createGoogleUser(g);
+  (await cookies()).delete(GOOGLE_PENDING_COOKIE);
+  await startSession(user.id);
+  redirect("/perfil");
 }
 
 export async function logout(): Promise<void> {

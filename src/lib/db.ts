@@ -6,6 +6,7 @@ import "server-only";
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import { connection } from "next/server";
+import { cache } from "react";
 import type { Db } from "./types";
 import { requireUserId } from "./session";
 
@@ -45,7 +46,7 @@ export async function kvGet(key: string): Promise<string | undefined> {
 /** Escribe un documento JSON crudo por clave. */
 export async function kvSet(key: string, json: string): Promise<void> {
   if (redisEnabled()) {
-    await redis(["SET", key, json]);
+    await redis(["EVAL", "redis.call('SET', KEYS[1], ARGV[1]) redis.call('INCR', KEYS[2]) return 1", "2", key, `${key}:v`, json]);
     return;
   }
   if (process.env.VERCEL) throw new Error("En Vercel hace falta una base de datos Redis (Upstash): conéctala en Storage y vuelve a desplegar.");
@@ -69,14 +70,32 @@ function serialize<T>(key: string, fn: () => Promise<T>): Promise<T> {
   return run;
 }
 
-/** Modificación serializada de un documento JSON. */
+// Entre instancias (Vercel) las colas no bastan: cada documento lleva un contador de versión en "<clave>:v"
+// y la escritura solo se aplica si nadie lo ha cambiado desde la lectura; si no, se relee y se reintenta.
+const CAS_SCRIPT = `local v = redis.call('GET', KEYS[2])
+if (v or '') ~= ARGV[1] then return 0 end
+redis.call('SET', KEYS[1], ARGV[2])
+redis.call('INCR', KEYS[2])
+return 1`;
+
+/** Modificación serializada (y atómica entre instancias con Redis) de un documento JSON. */
 export function kvUpdate<T>(key: string, empty: () => T, fn: (doc: T) => void | Promise<void>): Promise<T> {
   return serialize(key, async () => {
-    const raw = await kvGet(key);
-    const doc = raw ? (JSON.parse(raw) as T) : empty();
-    await fn(doc);
-    await kvSet(key, JSON.stringify(doc));
-    return doc;
+    if (!redisEnabled()) {
+      const raw = await kvGet(key);
+      const doc = raw ? (JSON.parse(raw) as T) : empty();
+      await fn(doc);
+      await kvSet(key, JSON.stringify(doc));
+      return doc;
+    }
+    for (let attempt = 0; attempt < 8; attempt++) {
+      const [raw, version] = (await redis(["MGET", key, `${key}:v`])) as [string | null, string | null];
+      const doc = raw ? (JSON.parse(raw) as T) : empty();
+      await fn(doc);
+      if (await redis(["EVAL", CAS_SCRIPT, "2", key, `${key}:v`, version ?? "", JSON.stringify(doc)])) return doc;
+      await new Promise((r) => setTimeout(r, 20 + Math.random() * 80 * (attempt + 1)));
+    }
+    throw new Error("Demasiadas escrituras a la vez: vuelve a intentarlo.");
   });
 }
 
@@ -92,10 +111,13 @@ export async function readDbNow(uid?: string): Promise<Db> {
   return parseDb(await kvGet(userDbKey(uid ?? (await requireUserId()))));
 }
 
-/** Lectura para renderizado: espera a la petición (datos siempre frescos). */
+// una sola lectura por usuario y petición aunque varios componentes pidan sus datos
+const readDbForRender = cache(async (uid: string) => readDbNow(uid));
+
+/** Lectura para renderizado: espera a la petición (datos siempre frescos) y se comparte dentro de ella. */
 export async function getDb(uid?: string): Promise<Db> {
   await connection();
-  return readDbNow(uid);
+  return readDbForRender(uid ?? (await requireUserId()));
 }
 
 /** Modificación atómica y serializada del Db de un usuario (por defecto, el de la sesión actual). */

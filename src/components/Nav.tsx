@@ -24,10 +24,14 @@ function Icon({ d }: { d: string }) {
   );
 }
 
+/** Menú con la sección actual resaltada. Va dentro de <Suspense fallback={<NavView />}>: la ruta solo se conoce al pedir la página. */
 export function Nav() {
-  const path = usePathname();
-  const active = (href: string) => (href === "/" ? path === "/" : path.startsWith(href));
-  if (path === "/login" || path === "/registro") return null;
+  return <NavView path={usePathname()} />;
+}
+
+/** Menú sin sección resaltada (el que se prerenderiza) o con ella. */
+export function NavView({ path }: { path?: string }) {
+  const active = (href: string) => path !== undefined && (href === "/" ? path === "/" : path.startsWith(href));
   return (
     <>
       {/* Escritorio: barra lateral */}

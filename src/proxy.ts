@@ -1,13 +1,14 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 const SESSION_COOKIE = "sr_session";
-const PUBLIC = ["/login", "/registro"];
+// pantalla de entrada y vuelta de Google
+const isPublic = (p: string) => p === "/login" || p.startsWith("/login/") || p.startsWith("/api/auth/");
 
 // Sin sesión, a /login. Aquí solo se mira que exista la cookie; la firma se verifica en el servidor
 // al leer los datos (requireUserId), que también manda a /login si no es válida.
 export function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
-  if (PUBLIC.some((p) => pathname === p)) return NextResponse.next();
+  if (isPublic(pathname)) return NextResponse.next();
   if (req.cookies.has(SESSION_COOKIE)) return NextResponse.next();
   if (pathname.startsWith("/api/")) return Response.json({ error: "Inicia sesión" }, { status: 401 });
   return NextResponse.redirect(new URL("/login", req.url));

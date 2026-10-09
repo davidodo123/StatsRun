@@ -269,15 +269,26 @@ export async function saveActivity(_: FormState, fd: FormData): Promise<FormStat
   if (date > todayLocal()) return { error: "La fecha no puede ser futura." };
   const sport = String(fd.get("sport") ?? "run") as (typeof SPORTS)[number];
   if (!SPORTS.includes(sport)) return { error: "Deporte no válido." };
-  const durationSec = parseTime(String(fd.get("duration") ?? ""));
-  if (!durationSec || durationSec < 60 || durationSec > 24 * 3600) return { error: "Duración con formato h:mm:ss o mm:ss (mínimo 1 minuto)." };
   const distanceKm = num(fd, "distanceKm") ?? 0;
   if (distanceKm < 0 || distanceKm > 400) return { error: "Distancia no válida." };
+  // tiempo en movimiento; si no se indica, a partir del ritmo medio y la distancia
+  const paceSec = parseTime(String(fd.get("pace") ?? ""));
+  const typedSec = parseTime(String(fd.get("duration") ?? ""));
+  const durationSec = typedSec ?? (paceSec && distanceKm > 0 ? Math.round(paceSec * distanceKm) : undefined);
+  if (!durationSec || durationSec < 60 || durationSec > 24 * 3600)
+    return { error: "Indica el tiempo en movimiento (h:mm:ss o mm:ss, mínimo 1 minuto) o la distancia y el ritmo medio." };
   if (sport === "run" && distanceKm > 0 && durationSec / distanceKm < 150) return { error: "Ese ritmo es más rápido que 2:30 /km: revisa distancia y tiempo." };
   const avgHr = num(fd, "avgHr");
   if (avgHr !== undefined && (avgHr < 40 || avgHr > 230)) return { error: "FC media fuera de rango (40-230)." };
   const maxHr = num(fd, "maxHr");
   if (maxHr !== undefined && (maxHr < 40 || maxHr > 240)) return { error: "FC máxima fuera de rango." };
+  const steps = num(fd, "steps");
+  if (steps !== undefined && (steps < 0 || steps > 200_000)) return { error: "Pasos fuera de rango." };
+  const maxAltitudeM = num(fd, "maxAltitudeM");
+  if (maxAltitudeM !== undefined && (maxAltitudeM < -500 || maxAltitudeM > 9000)) return { error: "Altitud máxima fuera de rango." };
+  // sin cadencia del reloj, se saca de los pasos: pasos por minuto en movimiento
+  const stepCadence = steps && (sport === "run" || sport === "walk") ? Math.round(steps / (durationSec / 60)) : undefined;
+  const avgCadence = num(fd, "avgCadence") ?? (stepCadence && stepCadence >= 30 && stepCadence <= 260 ? stepCadence : undefined);
   const rpe = num(fd, "rpe");
   const time = String(fd.get("time") ?? "07:00") || "07:00";
   const existingId = String(fd.get("id") ?? "") || undefined;
@@ -302,7 +313,9 @@ export async function saveActivity(_: FormState, fd: FormData): Promise<FormStat
       elevationGainM: num(fd, "elevationGainM") ?? 0,
       avgHr,
       maxHr,
-      avgCadence: num(fd, "avgCadence"),
+      avgCadence,
+      steps: steps || undefined,
+      maxAltitudeM,
       rpe: rpe && rpe >= 1 && rpe <= 10 ? rpe : undefined,
       notes: String(fd.get("notes") ?? "").trim() || undefined,
       sessionId,

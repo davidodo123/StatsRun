@@ -3,15 +3,14 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { getAnalysis } from "@/lib/analysis";
 import type { ActivityFormInitial } from "@/components/ActivityForm";
-import { ActivityEntry } from "@/components/ActivityEntry";
+import { ActivityForm } from "@/components/ActivityForm";
 import { ImportPanel } from "@/components/ImportPanel";
-import { coachConfig } from "@/lib/coach";
 import { SESSION_KIND } from "@/components/SessionCard";
 import { Card, Loading, Notice, PageHeader, Status } from "@/components/ui";
 import { fmtDuration, fmtPace } from "@/lib/format";
 import { WEEKDAYS, diffDays, shortDate, weekday } from "@/lib/dates";
 import type { PlannedSession } from "@/lib/types";
-import { deleteActivity } from "../actions";
+import { deleteActivity } from "@/app/actions";
 
 export const metadata: Metadata = { title: "Registrar entreno" };
 
@@ -21,7 +20,7 @@ const DEFAULT_RPE = { suave: 3, larga: 5, calidad: 7, fuerza: 6, carrera: 9 } as
 export default function RegistrarPage({ searchParams }: PageProps<"/registrar">) {
   return (
     <>
-      <PageHeader title="Registrar entreno" subtitle="Apunta lo que has hecho: el plan, la forma y las estadísticas se actualizan al momento." />
+      <PageHeader title="Registrar entreno" subtitle="Copia los datos de tu actividad de Strava: el plan, la forma y las estadísticas se actualizan al momento." />
       <Suspense fallback={<Loading />}>
         <Content searchParams={searchParams} />
       </Suspense>
@@ -67,6 +66,8 @@ async function Content({ searchParams }: { searchParams: PageProps<"/registrar">
       avgHr: editing.avgHr,
       maxHr: editing.maxHr,
       avgCadence: editing.avgCadence,
+      steps: editing.steps,
+      maxAltitudeM: editing.maxAltitudeM,
       rpe: editing.rpe,
       notes: editing.notes,
     };
@@ -89,7 +90,7 @@ async function Content({ searchParams }: { searchParams: PageProps<"/registrar">
         </div>
       )}
       <Card className="lg:col-span-2" title={editing ? "Editar entreno" : session ? "Registrar sesión del plan" : "Nuevo entreno"}>
-        <ActivityEntry key={editing?.id ?? session?.id ?? "nuevo"} initial={initial} session={session} today={today} aiEnabled={coachConfig().configured} />
+        <ActivityForm key={editing?.id ?? session?.id ?? "nuevo"} initial={initial} session={session} today={today} />
         {editing && (
           <form action={deleteActivity} className="mt-4 border-t border-line pt-4">
             <input type="hidden" name="id" value={editing.id} />

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { getDb } from "@/lib/db";
-import { logout } from "../auth-actions";
+import { logout } from "@/app/auth-actions";
 import { ProfileForm } from "@/components/ProfileForm";
 import { Card, Loading, PageHeader, Stat } from "@/components/ui";
 import { bmi, bmiLabel, hrMaxOf, hrRestOf, hrZones } from "@/lib/engine/physiology";

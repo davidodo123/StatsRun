@@ -9,7 +9,7 @@ import { requireUserId } from "@/lib/session";
 import { athleteSummary } from "@/lib/summary";
 import { todayLocal, shortDate } from "@/lib/dates";
 import { fmtDuration, fmtKm } from "@/lib/format";
-import { newFriendCode } from "../auth-actions";
+import { newFriendCode } from "@/app/auth-actions";
 
 export const metadata: Metadata = { title: "Amigos" };
 

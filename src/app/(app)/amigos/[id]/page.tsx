@@ -11,7 +11,7 @@ import { requireUserId } from "@/lib/session";
 import { athleteSummary, type AthleteSummary } from "@/lib/summary";
 import { shortDate, todayLocal } from "@/lib/dates";
 import { fmtDuration, fmtKm, fmtPace } from "@/lib/format";
-import { unfriend } from "../../auth-actions";
+import { unfriend } from "@/app/auth-actions";
 
 export const metadata: Metadata = { title: "Stats de tu amigo" };
 

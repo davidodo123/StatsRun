@@ -14,7 +14,7 @@ import { trainingPaces } from "@/lib/engine/physiology";
 import { fmtDuration, fmtPaceRange } from "@/lib/format";
 import { WEEKDAYS, addDays, diffDays, mondayOf, shortDate, weekday } from "@/lib/dates";
 import type { Phase } from "@/lib/types";
-import { clearPlan, clearUnavailable, regeneratePlan } from "../actions";
+import { clearPlan, clearUnavailable, regeneratePlan } from "@/app/actions";
 
 export const metadata: Metadata = { title: "Plan" };
 

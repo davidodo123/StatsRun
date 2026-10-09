@@ -9,7 +9,7 @@ import { buildInsights } from "@/lib/engine/insights";
 import { vo2maxLabel } from "@/lib/engine/physiology";
 import { fmtDuration, fmtKm } from "@/lib/format";
 import { addDays, diffDays, mondayOf, shortDate } from "@/lib/dates";
-import { loadDemo } from "./actions";
+import { loadDemo } from "@/app/actions";
 
 export default function Home() {
   return (

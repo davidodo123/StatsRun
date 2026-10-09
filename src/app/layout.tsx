@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
-import { Nav } from "@/components/Nav";
 
 export const metadata: Metadata = {
   title: { default: "PaceLab", template: "%s · PaceLab" },
@@ -21,12 +20,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="es" className="h-full antialiased">
-      <body className="flex min-h-full">
-        <Nav />
-        <main className="min-w-0 flex-1 px-4 pb-24 pt-6 md:px-8 md:pb-10">
-          <div className="mx-auto max-w-6xl">{children}</div>
-        </main>
-      </body>
+      <body className="flex min-h-full">{children}</body>
     </html>
   );
 }

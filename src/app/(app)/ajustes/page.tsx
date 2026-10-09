@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { getDb } from "@/lib/db";
 import { Card, Loading, Notice, PageHeader } from "@/components/ui";
 import { ImportPanel } from "@/components/ImportPanel";
-import { clearDemo, loadDemo } from "../actions";
+import { clearDemo, loadDemo } from "@/app/actions";
 
 export const metadata: Metadata = { title: "Importar datos" };
 

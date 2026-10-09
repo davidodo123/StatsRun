@@ -3,13 +3,12 @@ import "server-only";
 // a partir de las actividades registradas, la carga, el cumplimiento y la disponibilidad del atleta.
 // El planificador determinista sigue mandando en la estructura (fases, volumen semanal);
 // la IA reescribe, mueve o quita sesiones existentes dentro de límites seguros.
-// También lee capturas de pantalla de apps/relojes para registrar entrenos sin la API de Strava.
 import { readDbNow, updateDb } from "./db";
 import { computeStats } from "./engine/stats";
 import { availableDaysOf, isHardSession, matchPlan } from "./engine/planner";
 import { trainingPaces } from "./engine/physiology";
 import { WEEKDAYS, addDays, diffDays, todayLocal, weekday } from "./dates";
-import type { Activity, Db, PlannedSession, SessionType } from "./types";
+import type { Db, PlannedSession, SessionType } from "./types";
 
 const API = "https://openrouter.ai/api/v1/chat/completions";
 const HORIZON_DAYS = 14;
@@ -20,10 +19,8 @@ export function coachConfig() {
   return { apiKey, model, configured: Boolean(apiKey) };
 }
 
-type Content = string | ({ type: "text"; text: string } | { type: "image_url"; image_url: { url: string; detail?: "high" | "low" } })[];
-
 /** Llamada a OpenRouter que devuelve el primer objeto JSON de la respuesta. */
-async function chatJson<T>(system: string, user: Content, temperature = 0.4): Promise<T> {
+async function chatJson<T>(system: string, user: string, temperature = 0.4): Promise<T> {
   const { apiKey, model } = coachConfig();
   const res = await fetch(API, {
     method: "POST",
@@ -236,6 +233,7 @@ async function run(uid: string): Promise<CoachResult> {
     const byId = new Map((ai.sessions ?? []).filter((s) => s && typeof s.id === "string").map((s) => [s.id, s]));
     let changed = 0;
     await updateDb((d) => {
+      changed = 0; // la escritura puede reintentarse
       // si el plan se regeneró mientras la IA pensaba, descartar
       if (!d.plan || d.plan.createdAt !== createdAt) return;
       const allowed = new Set(built.upcoming.map((s) => s.id));
@@ -287,54 +285,4 @@ async function run(uid: string): Promise<CoachResult> {
     }, uid);
     return { ok: false, changed: 0, message: `Error de la IA: ${message}` };
   }
-}
-
-// ---------------- Lectura de capturas ----------------
-
-export type ScannedActivity = Partial<Pick<Activity, "sport" | "name" | "date" | "elevationGainM" | "avgHr" | "maxHr" | "avgCadence" | "notes">> & {
-  time?: string; // HH:MM
-  distanceKm?: number;
-  duration?: string; // h:mm:ss
-};
-
-const SCAN_SYSTEM = `Extraes los datos de un entreno a partir de capturas de pantalla de apps deportivas (Strava, Garmin Connect, Nike Run Club, Apple Fitness, Coros, Polar, Suunto, Huawei, Xiaomi, cintas de gimnasio…).
-Todas las capturas son del MISMO entreno. Responde SOLO con JSON:
-{"sport":"run|ride|swim|walk|strength|other","name":"título si aparece","date":"YYYY-MM-DD","time":"HH:MM","distanceKm":número,"duration":"h:mm:ss (tiempo en movimiento si aparece, si no el total)","elevationGainM":número,"avgHr":número,"maxHr":número,"avgCadence":número (pasos por minuto; si la app da cadencia por pierna, multiplícala por 2),"notes":"resumen breve de otros datos útiles: parciales/vueltas, ritmo medio, calorías, zonas, ejercicios de fuerza con series y pesos"}
-Reglas: omite los campos que no se vean; no inventes. Convierte millas a km y pies a metros. Fechas relativas ("hoy", "ayer", "lunes") calcúlalas desde la fecha de hoy indicada. Números con punto decimal.`;
-
-export async function scanActivityImages(images: string[]): Promise<ScannedActivity> {
-  if (!coachConfig().configured) throw new Error("Falta OPENROUTER_API_KEY en .env.local.");
-  const today = todayLocal();
-  const raw = await chatJson<Record<string, unknown>>(
-    SCAN_SYSTEM,
-    [
-      { type: "text", text: `Hoy es ${today} (${WEEKDAYS[weekday(today)]}).` },
-      ...images.map((url) => ({ type: "image_url" as const, image_url: { url, detail: "high" as const } })),
-    ],
-    0,
-  );
-  const n = (k: string, lo: number, hi: number) => {
-    const v = Number(String(raw[k] ?? "").replace(",", "."));
-    return Number.isFinite(v) && v >= lo && v <= hi && raw[k] !== "" && raw[k] != null ? v : undefined;
-  };
-  const str = (k: string) => (typeof raw[k] === "string" && raw[k] ? String(raw[k]).trim() : undefined);
-  const sports = ["run", "ride", "swim", "walk", "strength", "other"] as const;
-  const sport = sports.find((s) => s === raw.sport);
-  const date = str("date");
-  const time = str("time");
-  const duration = str("duration");
-  return {
-    sport,
-    name: str("name")?.slice(0, 80),
-    // no aceptar fechas futuras ni de hace más de un año (lectura errónea)
-    date: date && /^\d{4}-\d{2}-\d{2}$/.test(date) && date <= today && diffDays(today, date) < 366 ? date : undefined,
-    time: time && /^\d{1,2}:\d{2}/.test(time) ? time.padStart(5, "0").slice(0, 5) : undefined,
-    distanceKm: n("distanceKm", 0.01, 400),
-    duration: duration && /^\d{1,2}(:\d{1,2}){1,2}$/.test(duration) ? duration : undefined,
-    elevationGainM: n("elevationGainM", 0, 10000),
-    avgHr: n("avgHr", 40, 230),
-    maxHr: n("maxHr", 40, 240),
-    avgCadence: n("avgCadence", 30, 260),
-    notes: str("notes")?.slice(0, 600),
-  };
 }

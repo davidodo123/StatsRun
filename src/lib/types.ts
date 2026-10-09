@@ -50,6 +50,8 @@ export interface Activity {
   avgHr?: number;
   maxHr?: number;
   avgCadence?: number; // pasos por minuto (carrera)
+  steps?: number; // pasos totales
+  maxAltitudeM?: number; // altitud máxima
   kilojoules?: number;
   sufferScore?: number;
   prCount?: number;

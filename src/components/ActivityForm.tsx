@@ -32,6 +32,8 @@ export interface ActivityFormInitial {
   avgHr?: number;
   maxHr?: number;
   avgCadence?: number;
+  steps?: number;
+  maxAltitudeM?: number;
   rpe?: number;
   notes?: string;
 }
@@ -41,13 +43,18 @@ export function ActivityForm({ initial, session, today }: { initial: ActivityFor
   const [sport, setSport] = useState(initial.sport);
   const [dist, setDist] = useState(initial.distanceKm?.toString() ?? "");
   const [dur, setDur] = useState(initial.duration ?? "");
+  const [paceIn, setPaceIn] = useState("");
   const [rpe, setRpe] = useState(initial.rpe ?? 5);
   const [more, setMore] = useState(Boolean(initial.avgHr || initial.maxHr || initial.avgCadence));
 
   const km = Number(dist.replace(",", "."));
   const sec = parseTime(dur);
-  const pace = km > 0 && sec ? sec / km : undefined;
+  const typedPace = parseTime(paceIn);
   const hasDistance = sport !== "strength";
+  const hasSteps = sport === "run" || sport === "walk";
+  // con dos de los tres datos (distancia, tiempo, ritmo) se calcula el tercero; el tiempo manda si están los tres
+  const pace = km > 0 && sec ? sec / km : typedPace;
+  const derivedSec = !sec && km > 0 && typedPace ? typedPace * km : undefined;
 
   return (
     <form action={action} className="space-y-5">
@@ -77,8 +84,8 @@ export function ActivityForm({ initial, session, today }: { initial: ActivityFor
           </select>
         </label>
         <label className="field">
-          Nombre
-          <input className="input" name="name" defaultValue={initial.name} placeholder="Ej.: Rodaje por el parque" />
+          Nombre de la sesión
+          <input className="input" name="name" defaultValue={initial.name} placeholder="Ej.: Carrera de mañana" />
         </label>
         <label className="field">
           Fecha
@@ -88,6 +95,9 @@ export function ActivityForm({ initial, session, today }: { initial: ActivityFor
           Hora de inicio
           <input className="input" type="time" name="time" defaultValue={initial.time} />
         </label>
+      </div>
+
+      <div className={`grid gap-4 ${hasDistance ? "sm:grid-cols-3" : "sm:grid-cols-2"}`}>
         {hasDistance && (
           <label className="field">
             Distancia (km)
@@ -95,23 +105,61 @@ export function ActivityForm({ initial, session, today }: { initial: ActivityFor
           </label>
         )}
         <label className="field">
-          Duración
-          <input className="input" name="duration" value={dur} onChange={(e) => setDur(e.target.value)} placeholder="h:mm:ss o mm:ss" required />
+          {hasDistance ? "Tiempo en movimiento" : "Duración"}
+          <input
+            className="input"
+            name="duration"
+            value={dur}
+            onChange={(e) => setDur(e.target.value)}
+            placeholder={derivedSec ? fmtDuration(derivedSec) : "h:mm:ss o mm:ss"}
+            required={!hasDistance || !derivedSec}
+          />
         </label>
+        {hasDistance && (
+          <label className="field">
+            Ritmo medio (/km)
+            <input
+              className="input"
+              name="pace"
+              inputMode="numeric"
+              value={paceIn}
+              onChange={(e) => setPaceIn(e.target.value)}
+              placeholder={km > 0 && sec ? fmtPace(sec / km) : "m:ss"}
+            />
+          </label>
+        )}
       </div>
 
       {hasDistance && (
         <p className="text-sm text-ink-2 tabular">
-          {pace ? (
+          {pace && (km > 0 || typedPace) ? (
             <>
               Ritmo medio: <strong className="text-ink">{fmtPace(pace)} /km</strong> · {(3600 / pace).toFixed(1)} km/h
+              {derivedSec && <> · Tiempo: <strong className="text-ink">{fmtDuration(derivedSec)}</strong></>}
             </>
-          ) : sec ? (
-            <>Duración: {fmtDuration(sec)}</>
           ) : (
-            "Introduce distancia y duración para ver el ritmo."
+            "Copia de Strava la distancia y el tiempo en movimiento (o el ritmo medio): el que falte se calcula."
           )}
         </p>
+      )}
+
+      {hasDistance && (
+        <div className={`grid gap-4 ${hasSteps ? "sm:grid-cols-3" : "sm:grid-cols-2"}`}>
+          <label className="field">
+            Desnivel positivo (m)
+            <input className="input" type="number" min={0} name="elevationGainM" defaultValue={initial.elevationGainM ?? ""} placeholder="0" />
+          </label>
+          <label className="field">
+            Altitud máx. (m)
+            <input className="input" type="number" name="maxAltitudeM" defaultValue={initial.maxAltitudeM ?? ""} />
+          </label>
+          {hasSteps && (
+            <label className="field">
+              Pasos
+              <input className="input" type="number" min={0} name="steps" defaultValue={initial.steps ?? ""} />
+            </label>
+          )}
+        </div>
       )}
 
       <div>
@@ -126,13 +174,6 @@ export function ActivityForm({ initial, session, today }: { initial: ActivityFor
         </div>
         <p className="mt-1 text-xs text-muted">Si no llevas pulsómetro, con esto calculamos la carga del entreno.</p>
       </div>
-
-      {hasDistance && (
-        <label className="field">
-          Desnivel positivo (m)
-          <input className="input" type="number" name="elevationGainM" defaultValue={initial.elevationGainM ?? ""} placeholder="0" />
-        </label>
-      )}
 
       <div>
         <button type="button" onClick={() => setMore(!more)} className="text-sm font-semibold text-accent">
