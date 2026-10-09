@@ -29,7 +29,7 @@ export function ProfileForm({ profile }: { profile?: Profile }) {
     <form action={action} className="space-y-6">
       <fieldset className="rounded-2xl border border-line bg-surface p-4 md:p-5">
         <legend className="px-1 text-sm font-semibold">Datos físicos</legend>
-        <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
           <label className="field">
             Nombre
             <input className="input" name="name" defaultValue={p?.name} placeholder="Tu nombre" />
@@ -67,7 +67,7 @@ export function ProfileForm({ profile }: { profile?: Profile }) {
 
       <fieldset className="rounded-2xl border border-line bg-surface p-4 md:p-5">
         <legend className="px-1 text-sm font-semibold">Experiencia</legend>
-        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
           {LEVELS.map((lv) => (
             <label key={lv.v} className="flex cursor-pointer gap-2 rounded-xl border border-line p-3 has-[:checked]:border-accent has-[:checked]:bg-surface-2">
               <input type="radio" name="level" value={lv.v} defaultChecked={(p?.level ?? "principiante") === lv.v} className="mt-1 accent-[var(--accent)]" />
@@ -78,7 +78,7 @@ export function ProfileForm({ profile }: { profile?: Profile }) {
             </label>
           ))}
         </div>
-        <div className="mt-4 grid gap-4 sm:grid-cols-2 md:grid-cols-3">
+        <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
           <label className="field">
             Años corriendo
             <input className="input" name="yearsRunning" type="number" step="0.5" defaultValue={p?.yearsRunning ?? 0} />
@@ -111,7 +111,7 @@ export function ProfileForm({ profile }: { profile?: Profile }) {
 
       <fieldset className="rounded-2xl border border-line bg-surface p-4 md:p-5">
         <legend className="px-1 text-sm font-semibold">Disponibilidad</legend>
-        <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
           <div className="sm:col-span-2 md:col-span-3">
             <p className="field">Días en los que puedes entrenar</p>
             <div className="mt-2 grid grid-cols-7 gap-1.5">

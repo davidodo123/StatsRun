@@ -114,7 +114,9 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
-/* Formularios */
+/* Formularios y botones. En la capa de componentes para que las utilidades de Tailwind
+   (px-3, text-xs, w-full, bg-*…) puedan ajustarlos; sin capa, ganaban siempre a las utilidades. */
+@layer components {
 .field {
   display: flex;
   flex-direction: column;
@@ -163,6 +165,7 @@ body {
 .btn-ghost:hover {
   background: var(--surface-2);
   filter: none;
+}
 }
 
 /* Recharts: sin contorno de foco por defecto en el svg */

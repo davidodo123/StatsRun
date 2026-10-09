@@ -45,9 +45,10 @@ Detalle en [[2026-10-09]].
 - [x] Logros
 - [x] Modificación del perfil (promedios)
 
-### Hacer aplicación
-- [ ] Diseño
-- [ ] Conectar con la app de Salud para datos más precisos
+### Hacer aplicación — *PWA hecha 2026-10-09, pendiente de comprobar* → [[Decisiones#App instalable (PWA) y repaso móvil]]
+- [x] App instalable (PWA): icono, pantalla completa, atajos, pantalla sin conexión, aviso «Instala PaceLab»
+- [x] Diseño móvil revisado con capturas: desbordes arreglados, botones y tablas ajustados
+- [ ] Conectar con la app de Salud: desde la web no se puede (HealthKit/Health Connect son nativos). Opciones futuras: importar el export de Apple Salud o empaquetar con Capacitor
 
 ### IA / ciencia (salido del estudio)
 - [x] Carga por sRPE (RPE × minutos) cuando no hay FC — *ya existía en `load.ts`*

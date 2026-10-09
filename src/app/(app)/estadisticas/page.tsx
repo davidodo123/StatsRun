@@ -59,7 +59,7 @@ async function Content() {
         <Stat label="Media 6 semanas" value={fmtKm(T.avgWeeklyKm6)} unit="km/sem" />
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Card title="Kilómetros por semana" subtitle="Últimas 26 semanas">
           <WeeklyKmChart data={weeks} />
         </Card>
@@ -92,7 +92,7 @@ async function Content() {
         </Card>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <Card title="Récords" subtitle="Estimados a partir del ritmo medio de cada actividad">
           <ul className="divide-y divide-line text-sm">
             {stats.records.map((r) => (

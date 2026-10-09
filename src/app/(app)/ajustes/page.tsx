@@ -38,7 +38,7 @@ async function Content({ searchParams }: { searchParams: PageProps<"/ajustes">["
   };
 
   return (
-    <div className="grid gap-4 lg:grid-cols-3">
+    <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
       <div className="space-y-4 lg:col-span-2">
         {msg && <Notice tone={msg.tone}>{msg.text}</Notice>}
         <Card

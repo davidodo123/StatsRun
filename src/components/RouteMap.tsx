@@ -1,7 +1,7 @@
 import { decodePolyline, routeView } from "../lib/route";
 
-// Teselas de CARTO (datos de OpenStreetMap): uso libre con atribución.
-const tileUrl = (z: number, x: number, y: number) => `https://basemaps.cartocdn.com/rastertiles/voyager/${z}/${x}/${y}.png`;
+// Teselas de OpenStreetMap: uso ligero permitido con atribución (https://operations.osmfoundation.org/policies/tiles/).
+export const tileUrl = (z: number, x: number, y: number) => `https://tile.openstreetmap.org/${z}/${x}/${y}.png`;
 
 /** Mapa del recorrido: teselas de fondo + línea del recorrido, inicio (verde) y fin (cuadro). Sin teselas sirve de miniatura. */
 export function RouteMap({
@@ -36,7 +36,7 @@ export function RouteMap({
           <circle cx={sx} cy={sy} r={6} fill="var(--good, #22c55e)" stroke="white" strokeWidth={2} />
           <rect x={ex - 5} y={ey - 5} width={10} height={10} fill="var(--ink, #111)" stroke="white" strokeWidth={2} />
           <text x={width - 6} y={height - 6} textAnchor="end" fontSize={10} fill="#333" stroke="white" strokeWidth={3} paintOrder="stroke">
-            © OpenStreetMap · © CARTO
+            © OpenStreetMap
           </text>
         </>
       )}

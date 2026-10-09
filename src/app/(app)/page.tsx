@@ -98,7 +98,7 @@ async function Dashboard() {
         <Stat label="Esta semana" value={fmtKm(stats.totals.weekKm)} unit="km" sub={`Media 6 sem: ${fmtKm(stats.totals.avgWeeklyKm6)} km`} />
       </div>
 
-      <div className="mt-4 grid gap-4 lg:grid-cols-3">
+      <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
         <div className="space-y-4 lg:col-span-2">
           <Card title="Volumen semanal" subtitle={plan ? "Kilómetros reales frente a los planificados" : "Kilómetros de carrera por semana"}>
             <WeeklyKmChart data={weekly} />

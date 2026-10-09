@@ -34,7 +34,7 @@ export function Calculators() {
   const speed = paceSec ? 3600 / paceSec : undefined;
 
   return (
-    <div className="grid gap-4 lg:grid-cols-2">
+    <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
       <Card title="VDOT y ritmos" subtitle="Introduce una marca reciente (Jack Daniels)">
         <div className="grid grid-cols-2 gap-3">
           <label className="field">

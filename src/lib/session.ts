@@ -3,6 +3,7 @@ import "server-only";
 import { createHash, createHmac, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { connection } from "next/server";
 
 export const SESSION_COOKIE = "sr_session";
 // identidad de Google pendiente de enlazar con una cuenta antigua o de crear cuenta nueva
@@ -57,7 +58,10 @@ export function verifyToken(token: string | undefined): string | undefined {
 
 /** Usuario de la sesión actual, o undefined. */
 export async function getUserId(): Promise<string | undefined> {
-  return verifyToken((await cookies()).get(SESSION_COOKIE)?.value);
+  const token = (await cookies()).get(SESSION_COOKIE)?.value;
+  // la caducidad se comprueba con la hora actual: solo con una petición real, no al prerenderizar
+  await connection();
+  return verifyToken(token);
 }
 
 /** Usuario de la sesión actual; si no hay sesión válida, a /login. */

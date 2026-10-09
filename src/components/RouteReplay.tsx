@@ -2,9 +2,9 @@
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { decodePolyline, project, routeView } from "../lib/route";
+import { tileUrl } from "./RouteMap";
 
 const TILE = 256;
-const tileUrl = (z: number, x: number, y: number) => `https://basemaps.cartocdn.com/rastertiles/voyager/${z}/${x}/${y}.png`;
 
 const fmtTime = (sec: number) => {
   const s = Math.round(sec);
@@ -68,7 +68,7 @@ export function RouteReplay({ route, distanceKm, movingSec, children }: { route:
     return (
       <div className="relative">
         {children}
-        <button type="button" onClick={play} className="btn absolute bottom-3 left-3 shadow-lg">
+        <button type="button" onClick={play} className="btn absolute bottom-2 left-2 px-3 py-1.5 text-xs shadow-lg">
           ▶ Reproducir recorrido
         </button>
       </div>
@@ -104,13 +104,13 @@ export function RouteReplay({ route, distanceKm, movingSec, children }: { route:
         <circle cx={mx} cy={my} r={14} fill="var(--accent)" opacity={0.25} />
         <circle cx={mx} cy={my} r={7} fill="var(--accent)" stroke="white" strokeWidth={3} />
         <text x={W - 6} y={H - 6} textAnchor="end" fontSize={10} fill="#333" stroke="white" strokeWidth={3} paintOrder="stroke">
-          © OpenStreetMap · © CARTO
+          © OpenStreetMap
         </text>
       </svg>
       <div className="absolute left-3 top-3 rounded-xl bg-surface/90 px-3 py-2 text-sm font-semibold tabular shadow" aria-live="off">
         {(p * distanceKm).toFixed(2)} km · {fmtTime(p * movingSec)}
       </div>
-      <button type="button" onClick={() => setPlaying(false)} className="btn btn-ghost absolute bottom-3 left-3 bg-surface/90">
+      <button type="button" onClick={() => setPlaying(false)} className="btn absolute bottom-2 left-2 px-3 py-1.5 text-xs shadow-lg">
         ⏹ Parar
       </button>
     </div>

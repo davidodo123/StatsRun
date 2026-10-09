@@ -137,7 +137,8 @@ async function rebuildPlan(db: Db) {
   const stats = computeStats(db.activities, db.profile, today);
   const hasRecentData = stats.totals.avgWeeklyKm6 > 0;
   const longestRecent = Math.max(
-    ...db.activities.filter((a) => a.sport === "run" && diffDays(today, a.date) <= 42).map((a) => a.distanceM / 1000),
+    // ventana de 30 días, como el tope de pico por sesión (Frandsen 2025)
+    ...db.activities.filter((a) => a.sport === "run" && diffDays(today, a.date) < 30).map((a) => a.distanceM / 1000),
     0,
   );
   const plan = generatePlan({

@@ -35,9 +35,9 @@ async function Content({ params, searchParams }: { params: PageProps<"/actividad
   if (!mine && !(await areFriends(uid, ownerId))) notFound();
   const [db, owner, friends] = await Promise.all([getDb(ownerId), getUser(ownerId), getFriends(uid)]);
   const raw = db.activities.find((a) => a.id === decodeURIComponent(id));
-  if (!raw || !owner) notFound();
+  if (!raw || (!mine && !owner)) notFound();
   const a = mine ? raw : publicActivity(raw);
-  const names = new Map<string, string>([...friends.map((f) => [f.id, f.name] as [string, string]), [uid, "ti"], [owner.id, mine ? "ti" : owner.name]]);
+  const names = new Map<string, string>([...friends.map((f) => [f.id, f.name] as [string, string]), [uid, "ti"], [ownerId, mine ? "ti" : owner!.name]]);
   const together = withText(a.with, names);
   const tags = tagsForDb(db, estimateVdot(db.activities, db.profile, todayLocal()).vdot).get(a.id) ?? [];
   const pace = a.sport === "run" && a.distanceM > 0 ? a.movingSec / (a.distanceM / 1000) : undefined;
@@ -49,7 +49,7 @@ async function Content({ params, searchParams }: { params: PageProps<"/actividad
         title={a.name}
         subtitle={
           <>
-            {!mine && <strong className="text-ink">{owner.name} · </strong>}
+            {!mine && <strong className="text-ink">{owner!.name} · </strong>}
             {WEEKDAYS[weekday(a.date)]} {shortDate(a.date)} · {a.startLocal.slice(11, 16)} · {SPORT_LABEL[a.sport]}
             {together && ` · ${together}`}
           </>
@@ -68,7 +68,7 @@ async function Content({ params, searchParams }: { params: PageProps<"/actividad
         }
       />
 
-      <div className="grid gap-4 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <div className="space-y-4 lg:col-span-2">
           {tags.length > 0 && <TagChips tags={tags} />}
           {a.route ? (

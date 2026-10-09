@@ -78,7 +78,7 @@ export default function PrivacyPage() {
             </li>
             <li>
               <strong className="text-ink">Proveedores técnicos</strong>: Vercel (alojamiento de la web), Upstash (base de datos), Google (inicio de sesión), Strava (si lo
-              conectas) y CARTO/OpenStreetMap (fondos de mapa: tu navegador les pide las imágenes de la zona del recorrido).
+              conectas) y OpenStreetMap (fondos de mapa: tu navegador le pide las imágenes de la zona del recorrido).
             </li>
           </ul>
         </Section>

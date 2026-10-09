@@ -43,7 +43,7 @@ async function RaceBody({ params }: { params: PageProps<"/carreras/[id]">["param
         title={race ? `${race.flag} ${race.name}` : "Carrera personalizada"}
         subtitle={race ? `${race.city}, ${race.country} · normalmente en ${MONTHS[race.month] || "cualquier fecha"}` : "Introduce los datos de tu carrera."}
       />
-      <div className="grid gap-4 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <div className="space-y-4 lg:col-span-2">
           {race && <RaceInfo race={race} />}
           <Card title="Preparar esta carrera" subtitle="Generamos un plan periodizado desde hoy hasta el día de la carrera.">

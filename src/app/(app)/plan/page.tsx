@@ -143,7 +143,7 @@ async function Content({ searchParams }: { searchParams: PageProps<"/plan">["sea
         </div>
       </Card>
 
-      <div className="mt-4 grid gap-4 lg:grid-cols-3">
+      <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
         <div className="space-y-3 lg:col-span-2">
           {plan.weeks.map((w) => {
             const current = w.start === thisWeek;

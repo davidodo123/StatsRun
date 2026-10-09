@@ -9,7 +9,7 @@ export function GoalForm({ race, defaultDate, hasProfile }: { race?: Race; defau
   return (
     <form action={action} className="space-y-4">
       {race && <input type="hidden" name="raceId" value={race.id} />}
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {!race && (
           <>
             <label className="field sm:col-span-2">

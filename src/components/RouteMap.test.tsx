@@ -12,7 +12,7 @@ const route = encodePolyline([
 describe("RouteMap", () => {
   it("dibuja teselas, recorrido y atribución", () => {
     const html = renderToStaticMarkup(<RouteMap route={route} />);
-    expect(html).toContain("basemaps.cartocdn.com/rastertiles/voyager/");
+    expect(html).toContain("tile.openstreetmap.org/");
     expect(html).toContain("<polyline");
     expect(html).toContain("© OpenStreetMap");
   });

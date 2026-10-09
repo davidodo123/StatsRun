@@ -32,7 +32,7 @@ export function RaceList({ races }: { races: Race[] }) {
         ))}
         <input className="input ml-auto max-w-56" placeholder="Buscar ciudad o carrera…" value={q} onChange={(e) => setQ(e.target.value)} />
       </div>
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
         <Link href="/carreras/personalizada" className="flex flex-col justify-center rounded-2xl border border-dashed border-line bg-surface p-4 text-center hover:bg-surface-2">
           <span className="text-2xl">＋</span>
           <span className="font-semibold">Otra carrera</span>

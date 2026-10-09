@@ -137,3 +137,27 @@ Qué se decidió, por qué y cuándo. Si algo cambia, se añade una entrada nuev
 - **Planificador:** la tirada larga sube como mucho un 10 % sobre la más larga reciente (con un mínimo de 0,5 km), redondeando hacia abajo a medio kilómetro.
   - Antes eran +1,5 o +2 km fijos: con tiradas cortas eso era un +20-30 %, justo el pico de riesgo de Frandsen 2025.
   - Si el tope frena la progresión, el plan lo avisa en sus notas.
+
+## App instalable (PWA) y repaso móvil
+*2026-10-09*
+
+- **PWA en vez de app nativa** (elegido por David): se instala desde el navegador, sin tiendas ni cuentas de desarrollador.
+  - Manifest con iconos PNG 192 y 512, uno *maskable* y `apple-touch-icon`, generados con `scripts/generate-icons.mjs`.
+  - Atajos (Registrar, Plan, Amigos), `viewportFit: cover` y margen superior para la muesca del iPhone.
+- **Service worker** (`public/sw.js`):
+  - las páginas salen siempre de la red; sin conexión se muestra `offline.html`;
+  - solo se guardan en caché los estáticos con hash y los iconos;
+  - **nunca** se guarda una página con datos personales;
+  - se registra solo en producción.
+- **Aviso «Instala PaceLab»** con dos variantes:
+  - Android, Chrome y Edge: botón que abre el diálogo del sistema;
+  - iPhone: instrucciones (Compartir → Añadir a pantalla de inicio).
+  - Se puede cerrar y se recuerda en el navegador.
+- **Revisión con capturas reales** (Chrome sin ventana a 390 px, con un usuario de prueba temporal que luego se borró). Problemas encontrados y arreglados:
+  - **Mapas**: CARTO ya exige clave (las teselas salían con «API KEY REQUIRED»). Ahora se usan las de OpenStreetMap, con atribución y política de uso ligero.
+  - **`.btn` e `.input` estaban fuera de cualquier capa de CSS** y ganaban a las utilidades de Tailwind, así que `px-3`, `text-xs`, `w-full`… no hacían nada en los botones. Ahora están en `@layer components`.
+  - Las cuadrículas `grid lg:grid-cols-3` desbordaban en móvil: les faltaba `grid-cols-1` (`minmax(0,1fr)`).
+  - En la tira de fases de Selye, «Supercompensación» no cabía: en móvil se usan etiquetas cortas.
+  - La tabla de mejora en móvil enseña solo los dos últimos bloques.
+  - `Date.now()` antes de una petición real daba un error con `cacheComponents` + `partialPrefetching`. Ahora `getUserId` espera a `connection()` antes de comprobar la caducidad.
+- La tirada más larga reciente para generar el plan pasa de 42 a 30 días, igual que Frandsen.

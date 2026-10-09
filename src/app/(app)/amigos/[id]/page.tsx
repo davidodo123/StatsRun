@@ -33,8 +33,9 @@ async function Content({ params }: { params: PageProps<"/amigos/[id]">["params"]
   if (!(await areFriends(uid, id))) notFound();
   const friend = await getUser(id);
   if (!friend) notFound();
-  const today = todayLocal();
   const [fDb, myDb] = await Promise.all([getDb(id), getDb(uid)]);
+  // la fecha, después de leer datos de la petición (con cacheComponents no puede ir antes)
+  const today = todayLocal();
   const f = athleteSummary(fDb, today);
   const me = athleteSummary(myDb, today);
   const first = friend.name.split(" ")[0];
@@ -81,7 +82,7 @@ async function Content({ params }: { params: PageProps<"/amigos/[id]">["params"]
             />
           </div>
 
-          <div className="mt-4 grid gap-4 lg:grid-cols-3">
+          <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
             <div className="space-y-4 lg:col-span-2">
               <Card title={`Tú vs ${first}`} subtitle="Cómo vais los dos de cara a la carrera">
                 <Comparison me={me} friend={f} friendName={first} />

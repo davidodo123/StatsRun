@@ -92,7 +92,7 @@ export function ActivityForm({
         </div>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <label className="field">
           Deporte
           <select className="input" name="sport" value={sport} onChange={(e) => setSport(e.target.value as Activity["sport"])}>
@@ -225,7 +225,7 @@ export function ActivityForm({
           {more ? "− Ocultar" : "+ Añadir"} datos del reloj (FC, cadencia)
         </button>
         {more && (
-          <div className="mt-3 grid gap-4 sm:grid-cols-3">
+          <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-3">
             <label className="field">
               FC media
               <input className="input" type="number" name="avgHr" defaultValue={initial.avgHr ?? ""} />

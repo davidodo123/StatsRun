@@ -95,7 +95,7 @@ async function Content({ searchParams }: { searchParams: PageProps<"/registrar">
   const savedTags = savedId && db.activities.some((a) => a.id === savedId) ? (tagsForDb(db, estimateVdot(db.activities, db.profile, today).vdot).get(savedId) ?? []) : [];
 
   return (
-    <div className="grid gap-4 lg:grid-cols-3">
+    <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
       {sp.guardado && (
         <div className="lg:col-span-3">
           <Notice tone="good">

@@ -22,7 +22,7 @@ export function Card({ title, subtitle, children, className = "", action }: { ti
             {title && <h2 className="text-sm font-semibold">{title}</h2>}
             {subtitle && <p className="mt-0.5 text-xs text-muted">{subtitle}</p>}
           </div>
-          {action}
+          {action && <div className="shrink-0 whitespace-nowrap">{action}</div>}
         </div>
       )}
       {children}
@@ -90,7 +90,7 @@ export function Pill({ children, className = "" }: { children: ReactNode; classN
 
 export function Loading() {
   return (
-    <div className="grid gap-4 md:grid-cols-4" aria-busy>
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-4" aria-busy>
       {Array.from({ length: 8 }).map((_, i) => (
         <div key={i} className="h-24 animate-pulse rounded-2xl bg-surface" />
       ))}

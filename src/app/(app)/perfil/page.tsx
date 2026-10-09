@@ -139,7 +139,7 @@ function Resumen({ db, stats, matches, today }: { db: Db; stats: Stats; matches?
   const logros = achievements(db.activities, matches);
   const unlocked = logros.filter((a) => a.unlocked).sort((a, b) => (b.date ?? "").localeCompare(a.date ?? ""));
   return (
-    <div className="grid gap-4 lg:grid-cols-3">
+    <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
       <div className="space-y-4 lg:col-span-2">
         <Preparacion db={db} matches={matches} today={today} />
         <Card
@@ -267,7 +267,7 @@ function Running({ db, stats, today }: { db: Db; stats: Stats; today: string }) 
         <Stat label="Desnivel total" value={fmtNum(T.elevation)} unit="m" />
       </div>
       <ImprovementTable rows={periodAverages(db.activities, today)} />
-      <div className="grid gap-4 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <BestTimesCard acts={db.activities} />
         <Card title="Últimas carreras" className="lg:col-span-2">
           {runsList.length ? <ActivityList acts={runsList.slice(0, 10)} /> : <p className="text-sm text-ink-2">Aún no hay carreras.</p>}
@@ -299,12 +299,12 @@ function ImprovementTable({ rows }: { rows: PeriodAvg[] }) {
   return (
     <Card title="Tabla de mejora" subtitle="Medias por bloques de 4 semanas. La flecha compara el último bloque con el anterior.">
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[520px] text-sm tabular">
+        <table className="w-full text-sm tabular sm:min-w-[520px]">
           <thead className="text-left text-xs text-muted">
             <tr>
               <th className="pb-2 font-medium">Métrica</th>
-              {rows.map((r) => (
-                <th key={r.label} className="pb-2 text-right font-medium">
+              {rows.map((r, i) => (
+                <th key={r.label} className={`pb-2 pl-2 text-right font-medium ${i === 2 ? "hidden sm:table-cell" : ""}`}>
                   {r.label}
                 </th>
               ))}
@@ -320,10 +320,11 @@ function ImprovementTable({ rows }: { rows: PeriodAvg[] }) {
               return (
                 <tr key={m.label}>
                   <td className="py-1.5">{m.label}</td>
-                  {rows.map((r) => {
+                  {rows.map((r, i) => {
                     const v = m.get(r);
                     return (
-                      <td key={r.label} className="py-1.5 text-right">
+                      // en móvil solo caben los dos últimos bloques
+                      <td key={r.label} className={`py-1.5 pl-2 text-right ${i === 2 ? "hidden sm:table-cell" : ""}`}>
                         {v !== undefined ? m.fmt(v) : "–"}
                       </td>
                     );
@@ -389,7 +390,7 @@ function Fuerza({ db, today }: { db: Db; today: string }) {
         <Stat label="Media semanal" value={fmtKm(s.perWeek28)} sub={target ? `Objetivo del plan: ${target}/sem` : "Recomendado: 2/sem"} />
         <Stat label="Última sesión" value={s.last ? shortDate(s.last.date) : "–"} sub={s.last ? `Hace ${diffDays(today, s.last.date)} días` : undefined} />
       </div>
-      <div className="grid gap-4 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <Card title="Sesiones por semana" subtitle="Últimas 12 semanas" className="lg:col-span-2">
           <SimpleBars data={s.weeks.map((w) => ({ week: w.week, n: w.count }))} xKey="week" yKey="n" name="Sesiones" unit="" xFormat="day" height={200} />
         </Card>
@@ -485,7 +486,7 @@ function Logros({ list }: { list: Achievement[] }) {
       </Card>
       {groups.map((g) => (
         <Card key={g} title={g}>
-          <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+          <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {list
               .filter((a) => a.group === g)
               .map((a) => (
@@ -525,7 +526,7 @@ function Editar({ db, today }: { db: Db; today: string }) {
   const avg = profileAverages(db.activities, today);
   const outdated = profile && avg && (Math.abs(avg.weeklyKm - profile.weeklyKm) >= 3 || Math.abs(avg.longestRunKm - profile.longestRunKm) >= 2);
   return (
-    <div className="grid gap-6 lg:grid-cols-3">
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
       <div className="lg:col-span-2">
         <ProfileForm key={`${profile?.weeklyKm}-${profile?.longestRunKm}`} profile={profile} />
       </div>

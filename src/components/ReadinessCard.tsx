@@ -3,6 +3,14 @@ import { PHASE_LABEL, type Readiness, type SelyePhase } from "@/lib/engine/readi
 
 const ORDER: SelyePhase[] = ["desentrenamiento", "alarma", "adaptacion", "agotamiento", "supercompensacion"];
 
+const SHORT: Record<SelyePhase, string> = {
+  desentrenamiento: "Desentreno",
+  alarma: "Alarma",
+  adaptacion: "Adaptación",
+  agotamiento: "Agotado",
+  supercompensacion: "Supercomp.",
+};
+
 const TONE = {
   progresar: "good",
   mantener: "neutral",
@@ -33,9 +41,12 @@ export function ReadinessCard({ r }: { r: Readiness }) {
                 key={p}
                 role="listitem"
                 aria-current={p === r.phase ? "step" : undefined}
-                className={`flex-1 rounded-md px-1 py-1 text-center text-[10px] leading-tight ${p === r.phase ? "bg-accent font-semibold text-accent-ink" : "bg-surface-2 text-muted"}`}
+                className={`min-w-0 flex-1 break-words rounded-md px-1 py-1 text-center text-[10px] leading-tight ${p === r.phase ? "bg-accent font-semibold text-accent-ink" : "bg-surface-2 text-muted"}`}
+                title={PHASE_LABEL[p]}
               >
-                {PHASE_LABEL[p]}
+                {/* en móvil no caben los nombres largos («Supercompensación») */}
+                <span className="sm:hidden">{SHORT[p]}</span>
+                <span className="hidden sm:inline">{PHASE_LABEL[p]}</span>
               </span>
             ))}
           </div>

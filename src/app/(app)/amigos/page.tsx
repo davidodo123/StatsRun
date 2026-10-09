@@ -32,8 +32,9 @@ async function Content({ searchParams }: { searchParams: PageProps<"/amigos">["s
   const sp = await searchParams;
   const q = typeof sp.q === "string" ? sp.q.slice(0, 40) : "";
   const uid = await requireUserId();
-  const today = todayLocal();
   const [me, friends, requests, results, myDb] = await Promise.all([getUser(uid), getFriends(uid), getRequests(uid), q ? searchUsers(uid, q) : Promise.resolve([]), getDb()]);
+  // la fecha, después de leer datos de la petición (con cacheComponents no puede ir antes)
+  const today = todayLocal();
   const dbs = await Promise.all(friends.map(async (f) => ({ f, db: await getDb(f.id) })));
   const summaries = dbs.map(({ f, db }) => ({ f, s: athleteSummary(db, today) }));
   const feed = buildFeed(
@@ -46,7 +47,7 @@ async function Content({ searchParams }: { searchParams: PageProps<"/amigos">["s
   const tagsByOwner = new Map(dbs.map(({ f, db }, i) => [f.id, tagsForDb(db, summaries[i].s.stats?.vdot.vdot)]));
 
   return (
-    <div className="grid gap-4 lg:grid-cols-3">
+    <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
       <div className="space-y-4 lg:col-span-2">
         {requests.received.length > 0 && (
           <Card title="Solicitudes de amistad" subtitle="Si aceptas, os veréis las estadísticas y entrenos">
