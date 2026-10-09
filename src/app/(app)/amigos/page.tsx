@@ -7,6 +7,7 @@ import { ActivityItem } from "@/components/ActivityItem";
 import { getFriends, getRequests, getUser, searchUsers, type PublicUser, type SearchResult } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { buildFeed } from "@/lib/feed";
+import { tagsForDb } from "@/lib/engine/tags";
 import { requireUserId } from "@/lib/session";
 import { athleteSummary } from "@/lib/summary";
 import { todayLocal, shortDate } from "@/lib/dates";
@@ -42,6 +43,7 @@ async function Content({ searchParams }: { searchParams: PageProps<"/amigos">["s
     today,
   );
   const names = new Map<string, string>([...friends.map((f) => [f.id, f.name] as [string, string]), [uid, "ti"]]);
+  const tagsByOwner = new Map(dbs.map(({ f, db }, i) => [f.id, tagsForDb(db, summaries[i].s.stats?.vdot.vdot)]));
 
   return (
     <div className="grid gap-4 lg:grid-cols-3">
@@ -77,6 +79,7 @@ async function Content({ searchParams }: { searchParams: PageProps<"/amigos">["s
                   href={`/actividad/${encodeURIComponent(a.id)}?de=${owner.id}`}
                   names={names}
                   owner={owner.name}
+                  tags={tagsByOwner.get(owner.id)?.get(a.id)}
                   action={
                     <span className="flex shrink-0 flex-col gap-1">
                       <form action={copySharedActivity}>
@@ -101,7 +104,7 @@ async function Content({ searchParams }: { searchParams: PageProps<"/amigos">["s
           {feed.items.length ? (
             <ul className="divide-y divide-line">
               {feed.items.map(({ owner, activity: a }) => (
-                <ActivityItem key={`${owner.id}:${a.id}`} a={a} href={`/actividad/${encodeURIComponent(a.id)}?de=${owner.id}`} names={names} owner={owner.name} />
+                <ActivityItem key={`${owner.id}:${a.id}`} a={a} href={`/actividad/${encodeURIComponent(a.id)}?de=${owner.id}`} names={names} owner={owner.name} tags={tagsByOwner.get(owner.id)?.get(a.id)} />
               ))}
             </ul>
           ) : (

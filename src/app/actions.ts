@@ -312,8 +312,8 @@ export async function saveActivity(_: FormState, fd: FormData): Promise<FormStat
   const friendIds = new Set((await getFriends(await requireUserId())).map((f) => f.id));
   const withIds = [...new Set(fd.getAll("with").map(String))].filter((x) => friendIds.has(x));
 
+  const id = existingId ?? `manual-${Date.now().toString(36)}`;
   await updateDb((db) => {
-    const id = existingId ?? `manual-${Date.now().toString(36)}`;
     const prev = db.activities.find((a) => a.id === id);
     const act = {
       ...prev,
@@ -344,7 +344,7 @@ export async function saveActivity(_: FormState, fd: FormData): Promise<FormStat
   });
   await scheduleAiAdapt();
   // nuevo: volver con el formulario limpio para no registrarlo dos veces
-  if (!existingId) redirect(sessionId ? "/plan?registrado=1" : "/registrar?guardado=1");
+  if (!existingId) redirect(sessionId ? "/plan?registrado=1" : `/registrar?guardado=${encodeURIComponent(id)}`);
   refresh();
   return { ok: true, message: "Entreno actualizado." };
 }

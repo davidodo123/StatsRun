@@ -4,6 +4,7 @@ import { RouteMap } from "@/components/RouteMap";
 import { shortDate } from "@/lib/dates";
 import { fmtDuration, fmtKm, fmtPace } from "@/lib/format";
 import type { Activity } from "@/lib/types";
+import type { ActivityTag } from "@/lib/engine/tags";
 
 export const SPORT_LABEL: Record<Activity["sport"], string> = { run: "Correr", ride: "Bici", swim: "Natación", walk: "Caminar", strength: "Fuerza", other: "Otros" };
 const SPORT_ICON: Record<Activity["sport"], string> = { run: "🏃", ride: "🚴", swim: "🏊", walk: "🚶", strength: "🏋️", other: "⚡" };
@@ -15,6 +16,23 @@ export function withText(ids: string[] | undefined, names: Map<string, string>):
   return `con ${list.length > 1 ? `${list.slice(0, -1).join(", ")} y ${list[list.length - 1]}` : list[0]}`;
 }
 
+/** Etiquetas de la sesión (récord, más larga…). Los récords destacan con el color de acento. */
+export function TagChips({ tags }: { tags: ActivityTag[] }) {
+  return (
+    <span className="mt-1 flex flex-wrap gap-1">
+      {tags.map((t) => (
+        <span
+          key={t.label}
+          className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ${t.kind === "record" ? "bg-accent text-accent-ink" : "bg-surface-2 text-ink-2"}`}
+        >
+          <span aria-hidden>{t.icon}</span>
+          {t.label}
+        </span>
+      ))}
+    </span>
+  );
+}
+
 /** Fila de actividad: miniatura del recorrido (o icono), nombre, datos y con quién. */
 export function ActivityItem({
   a,
@@ -22,6 +40,7 @@ export function ActivityItem({
   names,
   owner,
   action,
+  tags,
 }: {
   a: Activity;
   /** Página de detalle de la actividad. */
@@ -30,6 +49,7 @@ export function ActivityItem({
   /** Nombre del dueño (en el feed de amigos). */
   owner?: string;
   action?: ReactNode;
+  tags?: ActivityTag[];
 }) {
   const together = withText(a.with, names);
   return (
@@ -53,6 +73,7 @@ export function ActivityItem({
           {a.avgHr && ` · ${Math.round(a.avgHr)} ppm`}
         </span>
         {together && <span className="block text-xs text-ink-2">👥 {together}</span>}
+        {tags && tags.length > 0 && <TagChips tags={tags} />}
       </span>
       {action}
     </li>

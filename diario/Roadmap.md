@@ -55,9 +55,9 @@ Detalle en [[2026-10-09]].
 - [ ] Desacople aeróbico (Pa:FC) en tiradas largas — necesita los streams de Strava
 - [ ] VFC (HRV) diaria si se conecta con la app de Salud
 
-### Experiencias de la app
-- [ ] Flyover estilo Strava con la ruta seguida
-- [ ] Etiquetas: nuevo récord, mejor puntuación, etc.
+### Experiencias de la app — *hecho 2026-10-09, pendiente de comprobar* → [[Decisiones#Etiquetas y repetición del recorrido]]
+- [x] Flyover estilo Strava con la ruta seguida (repetición animada en 2D, cámara que sigue al corredor)
+- [x] Etiquetas: nuevo récord, primer 5K/10K…, carrera más larga, más desnivel, mejor ritmo del mes, mayor carga
 
 ---
 

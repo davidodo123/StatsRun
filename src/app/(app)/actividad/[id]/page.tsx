@@ -4,12 +4,15 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { Card, Loading, PageHeader, Stat } from "@/components/ui";
 import { RouteMap } from "@/components/RouteMap";
-import { SPORT_LABEL, withText } from "@/components/ActivityItem";
+import { SPORT_LABEL, TagChips, withText } from "@/components/ActivityItem";
+import { RouteReplay } from "@/components/RouteReplay";
+import { tagsForDb } from "@/lib/engine/tags";
+import { estimateVdot } from "@/lib/engine/stats";
 import { areFriends, getFriends, getUser } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { publicActivity } from "@/lib/feed";
 import { requireUserId } from "@/lib/session";
-import { WEEKDAYS, shortDate, weekday } from "@/lib/dates";
+import { WEEKDAYS, shortDate, todayLocal, weekday } from "@/lib/dates";
 import { fmtDuration, fmtKm, fmtNum, fmtPace } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Sesión" };
@@ -36,6 +39,7 @@ async function Content({ params, searchParams }: { params: PageProps<"/actividad
   const a = mine ? raw : publicActivity(raw);
   const names = new Map<string, string>([...friends.map((f) => [f.id, f.name] as [string, string]), [uid, "ti"], [owner.id, mine ? "ti" : owner.name]]);
   const together = withText(a.with, names);
+  const tags = tagsForDb(db, estimateVdot(db.activities, db.profile, todayLocal()).vdot).get(a.id) ?? [];
   const pace = a.sport === "run" && a.distanceM > 0 ? a.movingSec / (a.distanceM / 1000) : undefined;
   const speed = a.distanceM > 0 && a.movingSec > 0 ? a.distanceM / 1000 / (a.movingSec / 3600) : undefined;
 
@@ -66,8 +70,11 @@ async function Content({ params, searchParams }: { params: PageProps<"/actividad
 
       <div className="grid gap-4 lg:grid-cols-3">
         <div className="space-y-4 lg:col-span-2">
+          {tags.length > 0 && <TagChips tags={tags} />}
           {a.route ? (
-            <RouteMap route={a.route} label={`Mapa de ${a.name}`} />
+            <RouteReplay route={a.route} distanceKm={a.distanceM / 1000} movingSec={a.movingSec}>
+              <RouteMap route={a.route} label={`Mapa de ${a.name}`} />
+            </RouteReplay>
           ) : (
             <Card>
               <p className="text-sm text-ink-2">

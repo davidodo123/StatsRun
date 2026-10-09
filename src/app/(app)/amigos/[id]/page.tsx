@@ -14,6 +14,7 @@ import { fmtDuration, fmtKm } from "@/lib/format";
 import { unfriend } from "@/app/auth-actions";
 import { ActivityItem } from "@/components/ActivityItem";
 import { publicActivity } from "@/lib/feed";
+import { tagsForDb } from "@/lib/engine/tags";
 
 export const metadata: Metadata = { title: "Stats de tu amigo" };
 
@@ -38,6 +39,7 @@ async function Content({ params }: { params: PageProps<"/amigos/[id]">["params"]
   const me = athleteSummary(myDb, today);
   const first = friend.name.split(" ")[0];
   const names = new Map<string, string>([[uid, "ti"], [friend.id, friend.name]]);
+  const tags = tagsForDb(fDb, f.stats?.vdot.vdot);
 
   return (
     <>
@@ -108,7 +110,7 @@ async function Content({ params }: { params: PageProps<"/amigos/[id]">["params"]
                 {f.recent.length ? (
                   <ul className="divide-y divide-line">
                     {f.recent.map((a) => (
-                      <ActivityItem key={a.id} a={publicActivity(a)} href={`/actividad/${encodeURIComponent(a.id)}?de=${friend.id}`} names={names} />
+                      <ActivityItem key={a.id} a={publicActivity(a)} href={`/actividad/${encodeURIComponent(a.id)}?de=${friend.id}`} names={names} tags={tags.get(a.id)} />
                     ))}
                   </ul>
                 ) : (

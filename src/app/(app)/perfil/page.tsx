@@ -16,6 +16,7 @@ import { diffDays, mondayOf, shortDate } from "@/lib/dates";
 import type { Activity, Db, Phase } from "@/lib/types";
 import type { Stats } from "@/lib/engine/stats";
 import { ActivityItem } from "@/components/ActivityItem";
+import { tagsForDb } from "@/lib/engine/tags";
 import { getFriends } from "@/lib/auth";
 import { requireUserId } from "@/lib/session";
 
@@ -591,6 +592,8 @@ function Row({ label, value, note }: { label: string; value: string; note?: stri
 async function ActivityList({ acts }: { acts: Activity[] }) {
   // nombres para «con quién»; la lectura de usuarios se memoriza por petición
   const names = new Map((await getFriends(await requireUserId())).map((f) => [f.id, f.name]));
+  const { db, stats } = await getAnalysis();
+  const tags = tagsForDb(db, stats?.vdot.vdot);
   return (
     <ul className="divide-y divide-line">
       {acts.map((a) => (
@@ -599,6 +602,7 @@ async function ActivityList({ acts }: { acts: Activity[] }) {
           a={a}
           href={`/actividad/${encodeURIComponent(a.id)}`}
           names={names}
+          tags={tags.get(a.id)}
           action={
             <Link href={`/registrar?editar=${encodeURIComponent(a.id)}`} className="shrink-0 text-xs font-semibold text-accent">
               Editar

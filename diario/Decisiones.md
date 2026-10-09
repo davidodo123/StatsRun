@@ -104,3 +104,21 @@ Qué se decidió, por qué y cuándo. Si algo cambia, se añade una entrada nuev
 - **Strava:**
   - La primera sincronización tras este cambio recarga el último año, para traer los mapas de lo ya importado (`routesSynced`).
   - Al volver a sincronizar ya **no se pierden** el RPE, las sensaciones ni las notas que añadiste (antes se sobrescribían).
+
+## Etiquetas y repetición del recorrido
+*2026-10-09*
+
+- **Etiquetas** (`src/lib/engine/tags.ts`): se calculan en orden cronológico, así que dicen lo que supuso la sesión **cuando se hizo**.
+  - 🏆 **Récord** de 5K, 10K, media o maratón: el mejor ritmo medio hasta esa fecha. Solo se marca la mayor distancia que cubre la carrera.
+  - 🎉 Primer 5K, primer 10K…
+  - 📏 Tu carrera más larga y ⛰️ más desnivel (este, con 50 m como mínimo). Las dos piden al menos 3 carreras de historial.
+  - ⚡ Mejor ritmo del mes: carreras de 3 km o más, con al menos 3 en la ventana de 30 días.
+  - 💪 Mayor carga, según la carga de entrenamiento con el VDOT de cada uno.
+- Salen en las listas (Perfil, Amigos, página del amigo), en la página de la sesión y en el aviso tras registrar («¡Nuevo récord!»).
+- **Repetición del recorrido** (`RouteReplay`), al estilo del flyover de Strava pero en 2D:
+  - la cámara sigue al corredor con 2 niveles más de zoom;
+  - la línea se va dibujando;
+  - se cuentan los km y el tiempo;
+  - dura de 6 a 14 s según la distancia.
+- Con «reducir movimiento» del sistema activado, la cámara no se mueve.
+- Por qué no en 3D: un flyover en 3D necesita Mapbox o MapLibre con relieve y una clave de pago. Se queda como mejora futura.

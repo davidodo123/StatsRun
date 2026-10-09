@@ -13,6 +13,9 @@ import { WEEKDAYS, diffDays, shortDate, weekday } from "@/lib/dates";
 import type { PlannedSession } from "@/lib/types";
 import { deleteActivity } from "@/app/actions";
 import { getFriends } from "@/lib/auth";
+import { TagChips } from "@/components/ActivityItem";
+import { tagsForDb } from "@/lib/engine/tags";
+import { estimateVdot } from "@/lib/engine/stats";
 import { requireUserId } from "@/lib/session";
 
 export const metadata: Metadata = { title: "Registrar entreno" };
@@ -87,6 +90,9 @@ async function Content({ searchParams }: { searchParams: PageProps<"/registrar">
     return st === "missed" || st === "today" || st === "partial";
   });
   const recent = [...db.activities].reverse().slice(0, 15);
+  // etiquetas de la sesión recién guardada (récord, más larga…) para celebrarlo
+  const savedId = typeof sp.guardado === "string" ? sp.guardado : undefined;
+  const savedTags = savedId && db.activities.some((a) => a.id === savedId) ? (tagsForDb(db, estimateVdot(db.activities, db.profile, today).vdot).get(savedId) ?? []) : [];
 
   return (
     <div className="grid gap-4 lg:grid-cols-3">
@@ -94,6 +100,12 @@ async function Content({ searchParams }: { searchParams: PageProps<"/registrar">
         <div className="lg:col-span-3">
           <Notice tone="good">
             Entreno registrado. Ya cuenta en tu forma, fatiga y estadísticas.
+            {savedTags.length > 0 && (
+              <span className="mt-1 block">
+                <strong className="text-ink">{savedTags.some((t) => t.kind === "record") ? "¡Nuevo récord! " : "¡Bien hecho! "}</strong>
+                <TagChips tags={savedTags} />
+              </span>
+            )}
             {coachConfig().configured && db.plan && " La IA está leyendo tus sensaciones y ajustando tus próximos entrenos: lo verás en el plan en un minuto."}
           </Notice>
         </div>
