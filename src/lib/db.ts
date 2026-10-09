@@ -57,6 +57,15 @@ export async function kvSet(key: string, json: string): Promise<void> {
   await fs.rename(tmp, file);
 }
 
+/** Borra un documento (y su contador de versión). */
+export async function kvDel(key: string): Promise<void> {
+  if (redisEnabled()) {
+    await redis(["DEL", key, `${key}:v`]);
+    return;
+  }
+  await fs.rm(fileFor(key), { force: true });
+}
+
 /** Clave del Db de un usuario. La clave sin usuario es la del modo de un solo atleta (anterior a las cuentas). */
 export const userDbKey = (uid: string) => `${PREFIX}:${uid}`;
 export const LEGACY_DB_KEY = PREFIX;

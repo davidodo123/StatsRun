@@ -5,6 +5,7 @@ import { getAnalysis } from "@/lib/analysis";
 import { logout } from "@/app/auth-actions";
 import { syncProfileAverages } from "@/app/actions";
 import { ProfileForm } from "@/components/ProfileForm";
+import { DeleteAccountForm } from "@/components/DeleteAccountForm";
 import { SessionCard } from "@/components/SessionCard";
 import { SimpleBars } from "@/components/charts";
 import { Card, Empty, Loading, PageHeader, Pill, Stat } from "@/components/ui";
@@ -551,6 +552,9 @@ function Editar({ db, today }: { db: Db; today: string }) {
             <Stat label="IMC" value={bmi(profile.weightKg, profile.heightCm).toFixed(1)} sub={bmiLabel(bmi(profile.weightKg, profile.heightCm))} />
             <Stat label="FC máx" value={hrMaxOf(profile)} unit="ppm" sub={profile.hrMax ? "Medida" : "Estimada (Tanaka)"} />
           </div>
+          <Card title="Borrar mi cuenta" subtitle={<Link href="/privacidad" className="underline">Política de privacidad</Link>}>
+            <DeleteAccountForm />
+          </Card>
           <Card title="Tus zonas de frecuencia cardiaca" subtitle={`Karvonen · FC reposo ${hrRestOf(profile)} ppm`}>
             <table className="w-full text-sm tabular">
               <tbody className="divide-y divide-line">

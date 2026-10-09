@@ -50,8 +50,8 @@ Detalle en [[2026-10-09]].
 - [ ] Conectar con la app de Salud para datos más precisos
 
 ### IA / ciencia (salido del estudio)
-- [ ] Carga por sRPE (RPE × minutos) cuando no hay FC — *candidato a Importante*
-- [ ] El planificador aplica también el tope por sesión de Frandsen (no solo la IA)
+- [x] Carga por sRPE (RPE × minutos) cuando no hay FC — *ya existía en `load.ts`*
+- [x] El planificador aplica también el tope por sesión de Frandsen: la tirada larga sube como mucho un 10 % (mín. 0,5 km)
 - [ ] Desacople aeróbico (Pa:FC) en tiradas largas — necesita los streams de Strava
 - [ ] VFC (HRV) diaria si se conecta con la app de Salud
 
@@ -64,7 +64,8 @@ Detalle en [[2026-10-09]].
 ## 🔧 Pendientes técnicos
 
 - [ ] Rotar el secreto de Google (se compartió en una captura) → [[Configuración#Google Cloud]]
-- [ ] Página `/privacidad` para poder **publicar** la app en Google (ahora solo entran usuarios de prueba)
+- [x] Página `/privacidad` (pública) + **borrar mi cuenta** en Perfil → Editar
+- [ ] Poner `CONTACT_EMAIL` en Vercel y **publicar** la app en Google Cloud (URL de privacidad: run-in-out.vercel.app/privacidad) → [[Configuración#Google Cloud]]
 - [ ] Comprobar `OPENROUTER_API_KEY` en Vercel (sin ella la IA no ajusta nada)
 - [ ] Región de funciones de Vercel = región de Upstash Redis
 - [ ] Borrar el proyecto duplicado `stats-run` en Vercel (si no se usa)

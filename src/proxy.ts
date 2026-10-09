@@ -1,8 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 const SESSION_COOKIE = "sr_session";
-// pantalla de entrada y vuelta de Google
-const isPublic = (p: string) => p === "/login" || p.startsWith("/login/") || p.startsWith("/api/auth/");
+// pantalla de entrada, vuelta de Google y política de privacidad (Google la pide pública)
+const isPublic = (p: string) => p === "/login" || p.startsWith("/login/") || p.startsWith("/api/auth/") || p === "/privacidad";
 
 // Sin sesión, a /login. Aquí solo se mira que exista la cookie; la firma se verifica en el servidor
 // al leer los datos (requireUserId), que también manda a /login si no es válida.

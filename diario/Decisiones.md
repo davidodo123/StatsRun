@@ -122,3 +122,18 @@ Qué se decidió, por qué y cuándo. Si algo cambia, se añade una entrada nuev
   - dura de 6 a 14 s según la distancia.
 - Con «reducir movimiento» del sistema activado, la cámara no se mueve.
 - Por qué no en 3D: un flyover en 3D necesita Mapbox o MapLibre con relieve y una clave de pago. Se queda como mejora futura.
+
+## Privacidad, borrar cuenta y tope de la tirada larga
+*2026-10-09*
+
+- **Página de privacidad** (`src/app/privacidad`), pública: el proxy la deja pasar sin sesión porque Google la exige para publicar el login. Explica:
+  - qué datos se guardan;
+  - qué ven los amigos (nunca las sensaciones);
+  - qué se envía a la IA (sin nombre ni email);
+  - qué proveedores intervienen;
+  - y los derechos de cada uno.
+- El email de contacto se lee de la variable de entorno `CONTACT_EMAIL`, para no escribirlo en el código.
+- **Borrar mi cuenta** (Perfil → Editar): hay que escribir BORRAR. Se borra el Db, se quita el usuario de los amigos y solicitudes de los demás, se desconecta Strava y se cierra la sesión.
+- **Planificador:** la tirada larga sube como mucho un 10 % sobre la más larga reciente (con un mínimo de 0,5 km), redondeando hacia abajo a medio kilómetro.
+  - Antes eran +1,5 o +2 km fijos: con tiradas cortas eso era un +20-30 %, justo el pico de riesgo de Frandsen 2025.
+  - Si el tope frena la progresión, el plan lo avisa en sus notas.

@@ -3,7 +3,7 @@ import "server-only";
 import { randomBytes, randomUUID, scrypt as scryptCb, timingSafeEqual } from "node:crypto";
 import { promisify } from "node:util";
 import { cache } from "react";
-import { LEGACY_DB_KEY, kvGet, kvSet, kvUpdate, userDbKey } from "./db";
+import { LEGACY_DB_KEY, kvDel, kvGet, kvSet, kvUpdate, userDbKey } from "./db";
 
 const scrypt = promisify(scryptCb) as (pw: string, salt: string, len: number) => Promise<Buffer>;
 const USERS_KEY = "statsrun:users";
@@ -275,6 +275,18 @@ export async function removeFriend(uid: string, friendId: string): Promise<void>
     for (const u of doc.users) {
       if (u.id === uid) u.friends = u.friends.filter((f) => f !== friendId);
       if (u.id === friendId) u.friends = u.friends.filter((f) => f !== uid);
+    }
+  });
+}
+
+/** Borra la cuenta: sus datos de entrenamiento, su usuario y su rastro en amigos y solicitudes de los demás. */
+export async function deleteUser(uid: string): Promise<void> {
+  await kvDel(userDbKey(uid));
+  await updateUsers((doc) => {
+    doc.users = doc.users.filter((u) => u.id !== uid);
+    for (const u of doc.users) {
+      u.friends = u.friends.filter((f) => f !== uid);
+      if (u.requests) u.requests = u.requests.filter((r) => r !== uid);
     }
   });
 }

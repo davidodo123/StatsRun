@@ -38,15 +38,23 @@ const ERRORS: Record<string, string> = {
   google: "Google no ha respondido bien. Vuelve a intentarlo.",
 };
 
-export function LoginPanel({ error }: { error?: string }) {
+export function LoginPanel({ error, deleted }: { error?: string; deleted?: boolean }) {
   return (
     <AuthShell title="Entrar" subtitle="Tu plan, tus entrenos y los de tus amigos.">
+      {deleted && <p className="mb-4 text-sm font-medium text-good-ink">✓ Tu cuenta y todos tus datos se han borrado.</p>}
       {/* enlace normal (no fetch): el navegador tiene que ir a Google */}
       <a href="/api/auth/google" className="btn btn-ghost flex w-full items-center justify-center gap-3">
         <GoogleLogo />
         Continuar con Google
       </a>
       {error && <p className="mt-4 text-sm font-medium text-critical">✕ {ERRORS[error] ?? "No se pudo iniciar sesión."}</p>}
+      <p className="mt-4 text-center text-xs text-muted">
+        Al entrar aceptas la{" "}
+        <a href="/privacidad" className="underline">
+          política de privacidad
+        </a>
+        .
+      </p>
     </AuthShell>
   );
 }

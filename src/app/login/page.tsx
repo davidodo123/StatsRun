@@ -13,6 +13,6 @@ export default function LoginPage({ searchParams }: PageProps<"/login">) {
 }
 
 async function Panel({ searchParams }: { searchParams: PageProps<"/login">["searchParams"] }) {
-  const { error } = await searchParams;
-  return <LoginPanel error={typeof error === "string" ? error : undefined} />;
+  const { error, borrada } = await searchParams;
+  return <LoginPanel error={typeof error === "string" ? error : undefined} deleted={borrada === "1"} />;
 }

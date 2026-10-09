@@ -82,6 +82,17 @@ describe("planificador", () => {
     expect(plan.weeks.map((w) => w.phase)).toContain("especifico");
   });
 
+  it("la tirada larga nunca supera en más de un 10 % (mín. 0,5 km) a la más larga de las 4 semanas anteriores", () => {
+    for (const longest of [6, 16]) {
+      const plan = generatePlan({ profile, goal: { ...goal, date: "2027-04-25" }, currentVdot: 45, currentWeeklyKm: 35, longestRecentKm: longest, today });
+      const longs = plan.weeks.map((w) => w.sessions.find((s) => s.type === "long")?.distanceKm ?? 0);
+      longs.forEach((km, i) => {
+        const prevMax = Math.max(longest, ...longs.slice(Math.max(0, i - 4), i));
+        expect(km).toBeLessThanOrEqual(Math.max(prevMax * 1.1, prevMax + 0.5) + 0.05);
+      });
+    }
+  });
+
   it("avisa si el objetivo es irreal", () => {
     const plan = generatePlan({ profile, goal: { ...goal, targetTimeSec: 2 * 3600 + 40 * 60 }, currentVdot: 40, currentWeeklyKm: 35, longestRecentKm: 16, today });
     expect(plan.warnings.join(" ")).toMatch(/ambicioso/);

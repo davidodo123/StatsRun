@@ -142,6 +142,9 @@ const PHASE_FOCUS: Record<Phase, string> = {
 
 const avg = (r: PaceRange) => (r.fast + r.slow) / 2;
 const round1 = (x: number) => Math.round(x * 2) / 2; // a 0,5 km
+/** Subida máxima de la tirada larga respecto a la más larga reciente (Frandsen et al. 2025). */
+export const SPIKE_LIMIT = 0.1;
+
 const clamp = (x: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, x));
 
 export interface PlanInput {
@@ -261,6 +264,7 @@ export function generatePlan(input: PlanInput): Plan {
   const days = avail.length;
   const runWalkWeeks = lvl === 0 ? Math.min(6, Math.ceil(buildWeeks / 2)) : heavy && lvl === 1 ? 3 : 0;
   let longKmPrev = Math.max(input.longestRecentKm, lvl === 0 ? 3 : 5);
+  let spikeLimited = false;
   const weeks: PlanWeek[] = [];
 
   for (let w = 0; w < nWeeks; w++) {
@@ -287,7 +291,12 @@ export function generatePlan(input: PlanInput): Plan {
     if (phase === "taper") longKm = isRaceWeek ? 0 : Math.min(longKmPrev * (vol / maxVol) * 1.1, vol * 0.4);
     else if (recovery) longKm = longKmPrev * 0.75;
     else {
-      longKm = Math.min(vol * longPct, LONG_CAP[cat][lvl], longKmPrev + (lvl <= 1 ? 1.5 : 2));
+      // pico de una sola sesión (Frandsen 2025, BJSM): no pasar de la más larga reciente + 10 %
+      // (con un mínimo de 0,5 km para que las tiradas muy cortas puedan crecer), y como mucho +1,5/+2 km
+      const step = Math.min(lvl <= 1 ? 1.5 : 2, Math.max(0.5, longKmPrev * SPIKE_LIMIT));
+      if (vol * longPct > longKmPrev + step && longKmPrev + step < LONG_CAP[cat][lvl]) spikeLimited = true;
+      // hacia abajo a medio km: la sesión se redondea a 0,5 km y no debe pasarse del tope
+      longKm = Math.floor(Math.min(vol * longPct, LONG_CAP[cat][lvl], longKmPrev + step) * 2) / 2;
       longKmPrev = Math.max(longKmPrev, longKm);
     }
     longKm = Math.max(longKm, isRaceWeek ? 0 : 3);
@@ -339,6 +348,11 @@ export function generatePlan(input: PlanInput): Plan {
       focus: recovery ? "Semana de descarga: asimilar el trabajo. Menos volumen, misma constancia." : isRaceWeek ? "Semana de carrera: descansa, hidrátate y confía en el trabajo hecho." : PHASE_FOCUS[phase],
     });
   }
+
+  if (spikeLimited)
+    notes.push(
+      `La tirada larga sube como mucho un 10 % sobre la más larga reciente (más es un pico de riesgo de lesión). Tirada más larga del plan: ${round1(Math.max(...weeks.flatMap((w) => w.sessions).filter((s) => s.type === "long").map((s) => s.distanceKm), 0))} km.`,
+    );
 
   notes.unshift(
     `VDOT actual ${current.toFixed(1)} → objetivo de entrenamiento ${finalVdot.toFixed(1)}. Ritmo de carrera (en llano): ${fmtPace(racePaceFlat)} /km.`,
