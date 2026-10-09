@@ -181,3 +181,20 @@ Qué se decidió, por qué y cuándo. Si algo cambia, se añade una entrada nuev
 - Si se vuelve a guardar la misma carrera (otra fecha u otro objetivo), se conserva el recorrido.
 - Todo está en la tarjeta «Recorrido de la carrera» de la página Plan.
 - **PDFs de la carrera: descartado.** Se llegaron a hacer (con Vercel Blob privado), pero David no los necesita y se quitaron, también la dependencia `@vercel/blob`.
+
+## Temporada con varias carreras
+*2026-10-09*
+
+- David quería «más de un plan». Se eligió **una temporada**: un único plan hacia la carrera principal (A) con carreras secundarias dentro. Dos planes a la vez se pisarían en el calendario.
+- Las carreras se guardan en `db.races` (`TuneUpRace`) y se meten en el plan con `applyTuneUpRaces` (`planner.ts`) cada vez que se rehace.
+- **B · a tope**:
+  - el día antes, solo activación;
+  - 2 días previos sin series (3 si pasa de 13 km);
+  - después, **un día suave por cada 3 km competidos** (Daniels): 10K → 3 días, media → 7;
+  - sin fuerza el día antes ni los 2 días después.
+- **C · como entreno**: a ritmo de umbral; cuenta como la sesión dura de la semana. Solo el día antes y el de después quedan suaves.
+- La carrera sustituye a la sesión de ese día (p. ej. a la tirada larga del domingo).
+- Aviso si una B está a menos de 21 días de una media o maratón principal (10 días para 5K/10K).
+- Lo que se mueve por días no disponibles, y lo que reprograma la IA, nunca cae en el día de una carrera ni en el anterior. La IA tampoco convierte en dura una sesión pegada a una carrera.
+- Las carreras después de la principal se guardan, pero no entran en el plan.
+- Tarjeta «Temporada» en la página Plan: lista B/C/A, quitar y «+ Añadir carrera».

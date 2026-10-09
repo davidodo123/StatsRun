@@ -34,6 +34,19 @@ export interface Goal {
   course?: RaceCourse; // recorrido oficial subido (KMZ/KML/GPX)
 }
 
+/**
+ * Otra carrera de la temporada, antes de la principal. B = se compite a tope (mini afinamiento y días suaves después);
+ * C = se corre como un entreno de calidad.
+ */
+export interface TuneUpRace {
+  id: string;
+  name: string;
+  distanceKm: number;
+  date: string;
+  priority: "B" | "C";
+  targetTimeSec?: number;
+}
+
 export interface CourseMarker {
   kind: "salida" | "meta" | "agua" | "km";
   lat: number;
@@ -156,6 +169,7 @@ export interface StravaAuth {
 export interface Db {
   profile?: Profile;
   goal?: Goal;
+  races?: TuneUpRace[]; // carreras secundarias de la temporada (la principal es goal)
   plan?: Plan;
   activities: Activity[];
   strava?: StravaAuth;

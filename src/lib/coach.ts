@@ -5,7 +5,7 @@ import "server-only";
 // la IA reescribe, mueve o quita sesiones existentes dentro de límites seguros.
 import { readDbNow, updateDb } from "./db";
 import { computeStats } from "./engine/stats";
-import { availableDaysOf, isHardSession, matchPlan } from "./engine/planner";
+import { availableDaysOf, isHardSession, matchPlan, recoveryDaysAfter } from "./engine/planner";
 import { trainingPaces } from "./engine/physiology";
 import { PHASE_LABEL, assessReadiness, type Readiness } from "./engine/readiness";
 import { WEEKDAYS, addDays, diffDays, todayLocal, weekday } from "./dates";
@@ -95,6 +95,7 @@ PRINCIPIOS:
 - Progresión semanal: sube el volumen poco a poco; subir más de un 30 % en una semana se asocia a más lesiones.
 - Afinamiento (últimas 1-3 semanas antes de la carrera): baja el volumen un 40-60 % de forma progresiva, pero mantén la intensidad y la frecuencia (series cortas a ritmo de carrera). No quites todas las sesiones de calidad.
 - Nunca dos sesiones duras (larga, tempo, series, cuestas, fartlek, ritmo carrera) en días consecutivos.
+- Carreras secundarias ("carrerasSecundarias", ya están en el plan y no se tocan): ni calidad ni fuerza el día antes. Las B se compiten a tope: sin series los 2-3 días previos y solo rodajes suaves los "diasSuavesDespues" días siguientes. Las C se corren como entreno de calidad: cuentan como la sesión dura de esa semana.
 - Haz lo mínimo que haga progresar; sube solo si se recupera bien y se ha estancado o le sobra. Más no es siempre mejor.
 - Flexibilidad: si se pierde una sesión, se sigue por donde iba; no se recupera todo ni se acumula. Si una sesión era clave, recolócala o sustituye un rodaje cercano por una versión reducida.
 - El estrés de fuera (sueño, trabajo, exámenes) también es carga: con mal descanso, prioriza lo suave.
@@ -134,9 +135,12 @@ function buildContext(db: Db, today: string) {
     .filter((s) => s.date >= today && s.date < end && s.type !== "race" && matches.get(s.id)?.status !== "done");
   if (!upcoming.length) return undefined;
 
+  // carreras secundarias: ni el mismo día ni el día antes se puede mover nada
+  const raceDates = plan.weeks.flatMap((w) => w.sessions).filter((s) => s.type === "race" && s.date !== plan.goal.date).map((s) => s.date);
+  const nearRace = (d: string) => raceDates.some((r) => diffDays(r, d) === 0 || diffDays(r, d) === 1);
   const freeDates: string[] = [];
   for (let d = today; d < end && d <= lastDay; d = addDays(d, 1))
-    if (avail.includes(weekday(d)) && !blocked.has(d) && weekOf(d)) freeDates.push(d);
+    if (avail.includes(weekday(d)) && !blocked.has(d) && weekOf(d) && !nearRace(d)) freeDates.push(d);
 
   const missed = [...matches.values()].filter((m) => m.session.date < today && diffDays(today, m.session.date) <= 7 && (m.status === "missed" || m.status === "partial"));
 
@@ -172,7 +176,13 @@ function buildContext(db: Db, today: string) {
       diasRecientesQueNoPudoEntrenar: [...blocked].filter((d) => d < today && diffDays(today, d) <= 7).sort(),
     },
     fechasLibres: freeDates.map((d) => `${d} ${WEEKDAYS[weekday(d)]}`),
-    objetivo: { ...plan.goal, diasRestantes: diffDays(plan.goal.date, today) },
+    objetivo: { ...plan.goal, course: undefined, diasRestantes: diffDays(plan.goal.date, today) },
+    carrerasSecundarias: (db.races ?? [])
+      .filter((r) => r.date >= today && r.date < plan.goal.date)
+      .map((r) => ({
+        nombre: r.name, fecha: r.date, km: r.distanceKm, prioridad: r.priority,
+        diasSuavesDespues: r.priority === "B" ? recoveryDaysAfter(r.distanceKm) : 1,
+      })),
     diagnostico: {
       veredicto: readiness.verdict,
       faseSelye: PHASE_LABEL[readiness.phase],
@@ -312,7 +322,7 @@ async function run(uid: string): Promise<CoachResult> {
         else result.push(s);
       }
       const isRunOn = (date: string, strength: boolean) => result.some((x) => x.date === date && (x.type === "strength") === strength);
-      const hardOn = (date: string) => result.some((x) => isHardSession(x.type) && Math.abs(diffDays(x.date, date)) <= 1);
+      const hardOn = (date: string) => result.some((x) => (isHardSession(x.type) || x.type === "race") && Math.abs(diffDays(x.date, date)) <= 1);
       // descarga: lo que la IA no haya tocado en los próximos 7 días también se acorta
       if (built.readiness.verdict === "descargar") {
         const factor = built.readiness.limits.maxSessionKmFactor;
@@ -341,7 +351,9 @@ async function run(uid: string): Promise<CoachResult> {
         const next = applyAi(s, prop, date, built.readiness.limits);
         // si choca con otra sesión (o pone dos duras seguidas), conservar la fecha original
         if (isRunOn(next.date, strength) || (!strength && isHardSession(next.type) && hardOn(next.date) && next.date !== s.date)) next.date = s.date;
-        if (isRunOn(next.date, strength)) {
+        // tampoco convertir en sesión dura un día pegado a una carrera
+        const raceNext = result.some((x) => x.type === "race" && Math.abs(diffDays(x.date, next.date)) <= 1);
+        if (isRunOn(next.date, strength) || (raceNext && isHardSession(next.type) && !isHardSession(s.type))) {
           result.push(s);
           continue;
         }

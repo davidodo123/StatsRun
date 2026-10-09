@@ -53,6 +53,7 @@ Detalle en [[2026-10-09]].
 ### Carrera objetivo — *hecho 2026-10-09* → [[Decisiones#Recorrido de la carrera]]
 - [x] Subir el recorrido de la carrera (.kmz, .kml, .gpx) → mapa con salida, meta y avituallamientos, distancia y desnivel
 - [-] ~~Adjuntar PDFs de la carrera~~: descartado, no hace falta
+- [x] Más de un plan → **temporada**: carreras secundarias B (a tope) y C (como entreno) dentro del plan de la principal → [[Decisiones#Temporada con varias carreras]]
 
 ### IA / ciencia (salido del estudio)
 - [x] Carga por sRPE (RPE × minutos) cuando no hay FC — *ya existía en `load.ts`*
@@ -68,9 +69,9 @@ Detalle en [[2026-10-09]].
 
 ## 🔧 Pendientes técnicos
 
-- [/] Rotar el secreto de Google: el nuevo ya está en `.env.local` y en Vercel. **Falta borrar el secreto antiguo** en Google Cloud, cuando se haya probado el login → [[Configuración#Google Cloud]]
+- [x] Rotar el secreto de Google: el nuevo está en `.env.local` y en Vercel, y el antiguo se borró → [[Configuración#Google Cloud]]
 - [x] Página `/privacidad` (pública) + **borrar mi cuenta** en Perfil → Editar
 - [x] `CONTACT_EMAIL` en Vercel (se lee en cada visita) y app **publicada** en Google Cloud (En producción)
-- [ ] Comprobar `OPENROUTER_API_KEY` en Vercel (sin ella la IA no ajusta nada)
+- [x] `OPENROUTER_API_KEY` en Vercel: comprobado en producción el 2026-10-09 («Ajustar con IA ahora» ajustó 3 sesiones). En `.env.local` no está, así que en local la IA no ajusta.
 - [x] Región de funciones de Vercel = región de Upstash Redis (las dos en iad1)
-- [ ] Borrar el proyecto duplicado `stats-run` en Vercel (si no se usa)
+- [x] Borrar el proyecto duplicado `stats-run` en Vercel (David dice que ya lo ha hecho)

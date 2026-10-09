@@ -7,6 +7,7 @@ import { SessionCard } from "@/components/SessionCard";
 import { AiCoachButton } from "@/components/AiCoachButton";
 import { ReadinessCard } from "@/components/ReadinessCard";
 import { RaceCard } from "@/components/RaceCard";
+import { TuneUpRaces } from "@/components/TuneUpRaces";
 import { assessReadiness } from "@/lib/engine/readiness";
 import { UnavailableForm } from "@/components/UnavailableForm";
 import { adaptIfMissed, coachConfig } from "@/lib/coach";
@@ -59,7 +60,7 @@ async function Content({ searchParams }: { searchParams: PageProps<"/plan">["sea
   const curPaces = trainingPaces(plan.startVdot);
   const totalKm = plan.weeks.reduce((s, w) => s + w.targetKm, 0);
   const days = diffDays(plan.goal.date, today);
-  const race = plan.weeks.at(-1)?.sessions.find((s) => s.type === "race");
+  const race = plan.weeks.at(-1)?.sessions.find((s) => s.type === "race" && s.date === plan.goal.date);
 
   return (
     <>
@@ -110,6 +111,7 @@ async function Content({ searchParams }: { searchParams: PageProps<"/plan">["sea
         </div>
       )}
 
+      <TuneUpRaces goal={plan.goal} races={db.races ?? []} today={today} />
       {db.goal && <RaceCard goal={db.goal} />}
 
       {/* Línea temporal de fases */}

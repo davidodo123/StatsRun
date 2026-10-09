@@ -7,14 +7,14 @@ import { updateDb, readDbNow as getDb } from "@/lib/db";
 import { requireUserId } from "@/lib/session";
 import { deauthorize, syncActivities } from "@/lib/strava";
 import { generateDemoActivities } from "@/lib/demo";
-import { applyBlockedDates, availableDaysOf, generatePlan } from "@/lib/engine/planner";
+import { applyBlockedDates, applyTuneUpRaces, availableDaysOf, generatePlan } from "@/lib/engine/planner";
 import { computeStats } from "@/lib/engine/stats";
 import { profileAverages } from "@/lib/engine/profile";
 import { areFriends, getFriends } from "@/lib/auth";import { findRace } from "@/lib/races";
 import { adaptWithAI, coachConfig } from "@/lib/coach";
 import { parseTime } from "@/lib/format";
 import { addDays, diffDays, todayLocal } from "@/lib/dates";
-import type { Db, Feel, Goal, Level, Profile, Sex } from "@/lib/types";
+import type { Db, Feel, Goal, Level, Profile, Sex, TuneUpRace } from "@/lib/types";
 
 export interface FormState {
   ok?: boolean;
@@ -173,6 +173,8 @@ async function rebuildPlan(db: Db) {
     longestRecentKm: longestRecent || db.profile.longestRunKm,
     today,
   });
+  // primero las carreras secundarias, para que lo que se mueva por días no disponibles las respete
+  applyTuneUpRaces(plan, db.races ?? [], today);
   applyBlockedDates(plan, db.unavailableDates ?? [], availableDaysOf(db.profile), today);
   plan.notes.push(`VDOT tomado de: ${stats.vdot.source}.`);
   if (hasRecentData) plan.notes.push(`Volumen de partida según tus actividades: ${stats.totals.avgWeeklyKm6.toFixed(0)} km/semana (media 6 semanas).`);
@@ -254,6 +256,46 @@ export async function clearPlan(): Promise<void> {
     db.plan = undefined;
     db.goal = undefined;
   });
+  refresh();
+}
+
+// ---------- Carreras secundarias de la temporada ----------
+
+export async function addTuneUpRace(_: FormState, fd: FormData): Promise<FormState> {
+  const today = todayLocal();
+  const date = String(fd.get("date") ?? "");
+  const distanceKm = num(fd, "distanceKm");
+  const priority: TuneUpRace["priority"] = fd.get("priority") === "C" ? "C" : "B";
+  const target = String(fd.get("targetTime") ?? "").trim();
+  const targetTimeSec = target ? parseTime(target) : undefined;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || date <= today) return { error: "Indica una fecha a partir de mañana." };
+  if (!distanceKm || distanceKm < 1 || distanceKm > 100) return { error: "Distancia no válida." };
+  if (target && !targetTimeSec) return { error: "Tiempo objetivo con formato h:mm:ss o mm:ss." };
+  const db = await getDb();
+  if (!db.goal) return { error: "Primero elige la carrera principal." };
+  if (date >= db.goal.date) return { error: `Tiene que ser antes de ${db.goal.name} (${db.goal.date}).` };
+  if ((db.races ?? []).some((r) => r.date === date)) return { error: "Ya hay otra carrera ese día." };
+  if ((db.races ?? []).filter((r) => r.date >= today).length >= 8) return { error: "Como máximo 8 carreras secundarias." };
+
+  await updateDb((d) => {
+    d.races = [
+      ...(d.races ?? []),
+      { id: crypto.randomUUID().slice(0, 8), name: String(fd.get("name") ?? "").trim().slice(0, 80) || `Carrera ${distanceKm} km`, distanceKm, date, priority, targetTimeSec },
+    ].sort((a, b) => a.date.localeCompare(b.date));
+  });
+  await rebuildPlan(await getDb());
+  await scheduleAiAdapt();
+  refresh();
+  return { ok: true, message: "Carrera añadida. El plan se ha reorganizado a su alrededor." };
+}
+
+export async function removeTuneUpRace(fd: FormData): Promise<void> {
+  const id = String(fd.get("id") ?? "");
+  await updateDb((db) => {
+    db.races = (db.races ?? []).filter((r) => r.id !== id);
+  });
+  await rebuildPlan(await getDb());
+  await scheduleAiAdapt();
   refresh();
 }
 

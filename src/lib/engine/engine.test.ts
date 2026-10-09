@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { raceTimeFromVdot, trainingPaces, vdotFromRace, riegel, hrZones } from "./physiology";
 import { fitnessSeries, acwr } from "./load";
-import { applyBlockedDates, availableDaysOf, generatePlan, matchPlan } from "./planner";
+import { applyBlockedDates, applyTuneUpRaces, availableDaysOf, generatePlan, isHardSession, matchPlan, recoveryDaysAfter } from "./planner";
 import { computeStats } from "./stats";
 import { generateDemoActivities } from "../demo";
 import type { Profile } from "../types";
@@ -188,5 +188,65 @@ describe("Disponibilidad", () => {
     const long = w.sessions.find((s) => s.type === "long")!;
     applyBlockedDates(plan, [long.date], [2, 5, 6], today);
     expect(w.sessions.some((s) => s.type === "long")).toBe(true);
+  });
+});
+
+describe("temporada con carreras secundarias", () => {
+  const today = "2026-10-08";
+  const half = { name: "Media de Sevilla", distanceKm: 21.0975, date: "2027-03-14" };
+  const mk = () => generatePlan({ profile, goal: half, currentVdot: 45, currentWeeklyKm: 35, longestRecentKm: 16, today });
+  const all = (plan: ReturnType<typeof mk>) => plan.weeks.flatMap((w) => w.sessions);
+
+  it("carrera B: sustituye la sesión del día, afina antes y deja días suaves después", () => {
+    const plan = mk();
+    const b = { id: "b", name: "10K Navidad", distanceKm: 10, date: "2026-12-13", priority: "B" as const };
+    expect(applyTuneUpRaces(plan, [b], today)).toEqual(["b"]);
+    const s = all(plan);
+    const day = s.filter((x) => x.date === b.date);
+    expect(day).toHaveLength(1);
+    expect(day[0].type).toBe("race");
+    expect(s.some((x) => x.date === addDays(b.date, -1) && x.type === "strength")).toBe(false);
+    // 2 días antes y 3 después (10 km / 3), sin sesiones duras
+    for (let g = -2; g <= recoveryDaysAfter(10); g++)
+      if (g !== 0) expect(s.some((x) => x.date === addDays(b.date, g) && isHardSession(x.type))).toBe(false);
+    expect(plan.notes.some((n) => n.includes("10K Navidad"))).toBe(true);
+    const week = plan.weeks.find((w) => w.sessions.some((x) => x.id === day[0].id))!;
+    expect(week.targetKm).toBe(Math.round(week.sessions.reduce((a, x) => a + x.distanceKm, 0)));
+  });
+
+  it("carrera C: solo el día antes y el de después quedan suaves", () => {
+    const plan = mk();
+    const c = { id: "c", name: "5K del barrio", distanceKm: 5, date: "2027-01-17", priority: "C" as const };
+    applyTuneUpRaces(plan, [c], today);
+    const s = all(plan);
+    expect(s.find((x) => x.date === c.date)?.type).toBe("race");
+    for (const g of [-1, 1]) expect(s.some((x) => x.date === addDays(c.date, g) && isHardSession(x.type))).toBe(false);
+  });
+
+  it("ignora las carreras después de la principal y avisa si una B está demasiado cerca", () => {
+    const plan = mk();
+    const r = applyTuneUpRaces(
+      plan,
+      [
+        { id: "late", name: "Tarde", distanceKm: 10, date: "2027-04-04", priority: "B" },
+        { id: "close", name: "Cerca", distanceKm: 10, date: "2027-03-01", priority: "B" },
+      ],
+      today,
+    );
+    expect(r).toEqual(["close"]);
+    expect(plan.warnings.some((w) => w.includes("Cerca"))).toBe(true);
+    expect(all(plan).filter((x) => x.type === "race")).toHaveLength(2);
+  });
+
+  it("los días bloqueados no mueven sesiones al día de la carrera ni al anterior", () => {
+    const plan = mk();
+    const b = { id: "b", name: "10K", distanceKm: 10, date: "2026-12-13", priority: "B" as const };
+    applyTuneUpRaces(plan, [b], today);
+    const week = plan.weeks.find((w) => w.sessions.some((x) => x.date === b.date))!;
+    const blocked = week.sessions.filter((x) => x.type !== "race" && x.type !== "strength").map((x) => x.date);
+    applyBlockedDates(plan, blocked, availableDaysOf(profile), today);
+    const s = all(plan);
+    expect(s.filter((x) => x.date === b.date)).toHaveLength(1);
+    expect(s.some((x) => x.date === addDays(b.date, -1) && x.type !== "race")).toBe(false);
   });
 });

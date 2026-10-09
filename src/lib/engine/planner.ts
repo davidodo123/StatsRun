@@ -1,8 +1,8 @@
 // Generador de planes de entrenamiento periodizados hacia una carrera objetivo.
 // Basado en: VDOT de Daniels (ritmos), periodización Lydiard/Pfitzinger (fases),
 // regla del 10 % (progresión), semanas de descarga cada 4 y taper según distancia.
-import type { Activity, Goal, Level, PaceRange, Phase, Plan, PlannedSession, PlanWeek, Profile, SessionType } from "../types";
-import { addDays, diffDays, mondayOf, weekday } from "../dates";
+import type { Activity, Goal, Level, PaceRange, Phase, Plan, PlannedSession, PlanWeek, Profile, SessionType, TuneUpRace } from "../types";
+import { addDays, diffDays, mondayOf, shortDate, weekday } from "../dates";
 import { fmtDuration, fmtPace, fmtPaceRange } from "../format";
 import { bmi, flatEquivalentKm, heatFactor, raceTimeFromVdot, trainingPaces, vdotFromRace, type TrainingPaces } from "./physiology";
 
@@ -90,6 +90,9 @@ export function applyBlockedDates(plan: Plan, blocked: string[], avail: number[]
   const set = new Set(blocked);
   let moved = 0;
   let dropped = 0;
+  // ninguna sesión se mueve al día de una carrera secundaria ni al día antes
+  const races = plan.weeks.flatMap((w) => w.sessions).filter((s) => s.type === "race").map((s) => s.date);
+  const nearRace = (d: string) => races.some((r) => diffDays(r, d) === 0 || diffDays(r, d) === 1);
   for (const w of plan.weeks) {
     const affected = w.sessions.filter((s) => set.has(s.date) && s.date >= today && s.type !== "race");
     if (!affected.length) continue;
@@ -102,7 +105,7 @@ export function applyBlockedDates(plan: Plan, blocked: string[], avail: number[]
       const raceDate = plan.goal.date;
       const candidates = avail
         .map((d) => addDays(w.start, d))
-        .filter((d) => d >= today && !set.has(d) && !busy(d) && diffDays(raceDate, d) >= 2)
+        .filter((d) => d >= today && !set.has(d) && !busy(d) && diffDays(raceDate, d) >= 2 && !nearRace(d))
         .sort(
           (a, b) =>
             Number(isHardSession(s.type) && hardNear(a)) - Number(isHardSession(s.type) && hardNear(b)) ||
@@ -111,7 +114,7 @@ export function applyBlockedDates(plan: Plan, blocked: string[], avail: number[]
       // sin hueco libre: una sesión clave ocupa el lugar del rodaje suave más cercano, que es la que se pierde
       const easy = !candidates.length && isHardSession(s.type)
         ? w.sessions
-            .filter((x) => ["easy", "recovery", "strides", "run_walk"].includes(x.type) && x.date >= today && !set.has(x.date) && diffDays(raceDate, x.date) >= 2)
+            .filter((x) => ["easy", "recovery", "strides", "run_walk"].includes(x.type) && x.date >= today && !set.has(x.date) && diffDays(raceDate, x.date) >= 2 && !nearRace(x.date))
             .sort((a, b) => Math.abs(diffDays(a.date, s.date)) - Math.abs(diffDays(b.date, s.date)))[0]
         : undefined;
       if (candidates.length) {
@@ -131,6 +134,76 @@ export function applyBlockedDates(plan: Plan, blocked: string[], avail: number[]
     w.targetKm = Math.round(w.sessions.reduce((x, y) => x + y.distanceKm, 0));
   }
   return { moved, dropped };
+}
+
+/** Días suaves tras competir a tope: uno por cada 3 km de carrera (Daniels). */
+export const recoveryDaysAfter = (km: number) => Math.max(1, Math.round(km / 3));
+
+/**
+ * Mete las carreras secundarias de la temporada en el plan de la principal (Pfitzinger, carreras de preparación):
+ * - B: el día antes, activación; los 2-3 días previos sin calidad; después, un día suave por cada 3 km competidos.
+ * - C: se corre como un entreno de calidad; solo el día antes y el día después quedan suaves.
+ * La carrera sustituye a la sesión de ese día. Devuelve los ids de las carreras que han entrado en el plan.
+ */
+export function applyTuneUpRaces(plan: Plan, races: TuneUpRace[], today: string): string[] {
+  const first = plan.weeks[0]?.start;
+  if (!first) return [];
+  const buildWeeks = plan.weeks.filter((w) => w.phase !== "taper").length;
+  const mainCat = distanceCat(plan.goal.distanceKm);
+  const applied: string[] = [];
+  let all = plan.weeks.flatMap((w) => w.sessions);
+
+  for (const r of [...races].sort((a, b) => a.date.localeCompare(b.date))) {
+    const wi = plan.weeks.findIndex((w) => r.date >= w.start && r.date <= addDays(w.start, 6));
+    if (r.date < today || r.date >= plan.goal.date || wi < 0) continue;
+    const vdot = plan.startVdot + (plan.targetVdot - plan.startVdot) * clamp(wi / Math.max(1, buildWeeks - 1), 0, 1);
+    const p = trainingPaces(vdot);
+    const isB = r.priority === "B";
+    const preDays = isB ? (r.distanceKm > 13 ? 3 : 2) : 1;
+    const recDays = isB ? recoveryDaysAfter(r.distanceKm) : 1;
+    const soften = (s: PlannedSession, after: boolean): PlannedSession => {
+      const km = round1(Math.max(3, s.distanceKm * 0.7));
+      return {
+        ...easyRun(s.date, km, p, "taper"),
+        id: s.id,
+        description: after ? `Recuperación de ${r.name}: todo suave, sin series.` : `Suave para llegar fresco a ${r.name}.`,
+      };
+    };
+
+    all = all
+      // la carrera sustituye a lo de ese día; sin fuerza el día antes ni (B) los 2 días después
+      .filter((s) => {
+        if (s.type === "race") return true;
+        const g = diffDays(r.date, s.date); // > 0: antes de la carrera
+        if (g === 0) return false;
+        return !(s.type === "strength" && (g === 1 || (isB && g >= -2 && g < 0)));
+      })
+      .map((s) => {
+        if (s.type === "strength" || s.type === "race") return s;
+        const g = diffDays(r.date, s.date);
+        if (isB && g === 1) return { ...shakeout(s.date, p), id: s.id, description: `Soltar piernas para ${r.name}, sin cansarse.` };
+        if (isHardSession(s.type) && ((g > 0 && g <= preDays) || (g < 0 && -g <= recDays))) return soften(s, g < 0);
+        return s;
+      });
+    all.push(tuneUpSession(r, p, vdot));
+    applied.push(r.id);
+
+    const gap = diffDays(plan.goal.date, r.date);
+    if (isB && gap < (mainCat === "half" || mainCat === "marathon" ? 21 : 10))
+      plan.warnings.push(`${r.name} está a ${gap} días de ${plan.goal.name}: competir a tope tan cerca resta frescura. Mejor córrela como C (entreno).`);
+    plan.notes.push(
+      isB
+        ? `${r.name} (${shortDate(r.date)}, carrera B): ${preDays} días previos sin series y ${recDays} días suaves después (un día por cada 3 km competidos).`
+        : `${r.name} (${shortDate(r.date)}, carrera C): se corre como entreno de calidad; el día antes y el de después, suaves.`,
+    );
+  }
+
+  for (const w of plan.weeks) {
+    const end = addDays(w.start, 6);
+    w.sessions = all.filter((s) => s.date >= w.start && s.date <= end).sort((a, b) => a.date.localeCompare(b.date) || (a.type === "strength" ? 1 : -1));
+    w.targetKm = Math.round(w.sessions.reduce((x, y) => x + y.distanceKm, 0));
+  }
+  return applied;
 }
 
 const PHASE_FOCUS: Record<Phase, string> = {
@@ -633,6 +706,30 @@ function raceSession(goal: Goal, pace: number, predicted: number): PlannedSessio
     predicted / 60,
     { fast: pace, slow: pace },
     "Carrera",
+  );
+}
+
+function tuneUpSession(r: TuneUpRace, p: TrainingPaces, vdot: number): PlannedSession {
+  if (r.priority === "B") {
+    const predicted = r.targetTimeSec ?? raceTimeFromVdot(vdot, r.distanceKm);
+    const s = raceSession({ name: r.name, distanceKm: r.distanceKm, date: r.date }, predicted / r.distanceKm, predicted);
+    return { ...s, title: `🏁 ${r.name} · carrera B`, description: `Carrera de preparación a tope. ${s.description} Sirve para medir tu forma y ensayar el día de la principal.` };
+  }
+  return mk(
+    r.date,
+    "race",
+    `🏃 ${r.name} · carrera C`,
+    "Carrera como entreno de calidad: disfruta del ambiente sin vaciarte; la importante es la principal.",
+    [
+      "Calienta 10-15′ suave",
+      `Corre a ritmo de umbral (${fmtPaceRange(p.threshold)}), «cómodamente duro»`,
+      "Si vas muy bien, aprieta solo el último 20 %",
+      "Vuelta a la calma 10′ suave",
+    ],
+    r.distanceKm,
+    (r.distanceKm * avg(p.threshold)) / 60,
+    p.threshold,
+    "Z3-Z4",
   );
 }
 

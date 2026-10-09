@@ -10,7 +10,6 @@ tags: [config]
 - Proyecto: **run-in-out** → https://run-in-out.vercel.app
 - Despliega solo con cada push a `main`.
 - Región de funciones: **iad1 (Washington)**, la misma que la base de datos Upstash. Plan Hobby: 1 sola región.
-- Hay un segundo proyecto, `stats-run`, conectado al mismo repo (duplicado).
 
 ### Variables de entorno
 | Variable | Para qué |
