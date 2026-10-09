@@ -69,6 +69,8 @@ export async function kvDel(key: string): Promise<void> {
 /** Clave del Db de un usuario. La clave sin usuario es la del modo de un solo atleta (anterior a las cuentas). */
 export const userDbKey = (uid: string) => `${PREFIX}:${uid}`;
 export const LEGACY_DB_KEY = PREFIX;
+/** Clave que apunta del hash de la clave de Salud (atajo del iPhone) al usuario. */
+export const healthTokenKey = (hash: string) => `${PREFIX}:salud:${hash}`;
 
 // colas de escritura por clave: serializan las modificaciones dentro de una misma instancia
 const queues = new Map<string, Promise<unknown>>();

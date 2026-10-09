@@ -99,6 +99,7 @@ PRINCIPIOS:
 - Haz lo mínimo que haga progresar; sube solo si se recupera bien y se ha estancado o le sobra. Más no es siempre mejor.
 - Flexibilidad: si se pierde una sesión, se sigue por donde iba; no se recupera todo ni se acumula. Si una sesión era clave, recolócala o sustituye un rodaje cercano por una versión reducida.
 - El estrés de fuera (sueño, trabajo, exámenes) también es carga: con mal descanso, prioriza lo suave.
+- "pasosYCaloriasUltimos7Dias" (Salud del iPhone) es la actividad fuera de los entrenos: días de muchos pasos (más de ~15.000, p. ej. de pie en el trabajo o de viaje) también cansan las piernas; si coinciden antes de una sesión dura o de la tirada larga, menciónalo y no subas la carga.
 
 FUERZA ("strength", distanceKm 0) para corredores:
 - 2 sesiones/semana (1 en afinamiento). Multiarticulares (sentadilla o búlgara, peso muerto rumano, hip thrust, step-up), gemelo y sóleo, core antirrotación.
@@ -211,6 +212,9 @@ function buildContext(db: Db, today: string) {
         fcMedia: a.avgHr, rpe: a.rpe, sensacion: a.feel, comoSeSintio: a.feelings, notas: a.notes,
         sesionPlanificada: planned(a),
       })),
+    pasosYCaloriasUltimos7Dias: (db.health ?? [])
+      .filter((d) => d.date <= today && diffDays(today, d.date) < 7)
+      .map((d) => ({ fecha: d.date, pasos: d.steps, kcalActivas: d.activeKcal })),
     sesionesNoRealizadas: missed.map((m) => ({ fecha: m.session.date, tipo: m.session.type, titulo: m.session.title, planKm: m.session.distanceKm, hechoKm: +m.doneKm.toFixed(1), estado: m.status })),
     sesionesAAjustar: upcoming.map((s) => {
       const w = weekOf(s.date);

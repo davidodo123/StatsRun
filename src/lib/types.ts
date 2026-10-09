@@ -47,6 +47,15 @@ export interface TuneUpRace {
   targetTimeSec?: number;
 }
 
+/** Totales de un día enviados desde la app Salud del iPhone. */
+export interface DailyHealth {
+  date: string;
+  steps?: number;
+  activeKcal?: number; // energía activa
+  restingKcal?: number; // energía en reposo (metabolismo basal)
+  updatedAt: string;
+}
+
 export interface CourseMarker {
   kind: "salida" | "meta" | "agua" | "km";
   lat: number;
@@ -170,6 +179,8 @@ export interface Db {
   profile?: Profile;
   goal?: Goal;
   races?: TuneUpRace[]; // carreras secundarias de la temporada (la principal es goal)
+  health?: DailyHealth[]; // pasos y calorías de cada día (Salud del iPhone, por Atajos)
+  healthTokenHash?: string; // sha256 de la clave personal con la que el atajo envía los datos
   plan?: Plan;
   activities: Activity[];
   strava?: StravaAuth;

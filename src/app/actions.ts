@@ -13,6 +13,7 @@ import { profileAverages } from "@/lib/engine/profile";
 import { areFriends, getFriends } from "@/lib/auth";import { findRace } from "@/lib/races";
 import { adaptWithAI, coachConfig } from "@/lib/coach";
 import { parseTime } from "@/lib/format";
+import { createHealthToken, revokeHealthToken } from "@/lib/healthToken";
 import { addDays, diffDays, todayLocal } from "@/lib/dates";
 import type { Db, Feel, Goal, Level, Profile, Sex, TuneUpRace } from "@/lib/types";
 
@@ -296,6 +297,24 @@ export async function removeTuneUpRace(fd: FormData): Promise<void> {
   });
   await rebuildPlan(await getDb());
   await scheduleAiAdapt();
+  refresh();
+}
+
+// ---------- Salud del iPhone (atajo) ----------
+
+export interface HealthKeyState extends FormState {
+  token?: string;
+}
+
+/** Crea la clave del atajo (la anterior deja de valer). Se enseña una sola vez. */
+export async function newHealthKey(): Promise<HealthKeyState> {
+  const token = await createHealthToken(await requireUserId());
+  refresh();
+  return { ok: true, token };
+}
+
+export async function revokeHealthKey(): Promise<void> {
+  await revokeHealthToken(await requireUserId());
   refresh();
 }
 

@@ -198,3 +198,17 @@ Qué se decidió, por qué y cuándo. Si algo cambia, se añade una entrada nuev
 - Lo que se mueve por días no disponibles, y lo que reprograma la IA, nunca cae en el día de una carrera ni en el anterior. La IA tampoco convierte en dura una sesión pegada a una carrera.
 - Las carreras después de la principal se guardan, pero no entran en el plan.
 - Tarjeta «Temporada» en la página Plan: lista B/C/A, quitar y «+ Añadir carrera».
+
+## Pasos y calorías del iPhone (atajo)
+*2026-10-09*
+
+- David tiene iPhone y no tiene Mac → nada de app nativa. Lo que más quiere de Salud son **pasos y calorías**.
+- Solución sin app: un **atajo de la app Atajos** que lee de Salud los totales del día y los envía por `POST /api/salud`.
+  - Autenticación con una **clave personal** `rio_…` (Perfil → Pasos y calorías). Se enseña una sola vez y solo se guarda su sha256 (`db.healthTokenHash` + clave `statsrun:db:salud:<hash>` → usuario). Se puede cambiar o desactivar; al borrar la cuenta se borra.
+  - `/api/salud` es pública en el proxy: no usa la cookie de sesión, solo la clave.
+  - Cuerpo JSON: `{pasos, kcalActivas, kcalReposo, fecha?}` o `{dias: [...]}`. Acepta números de Atajos en formato español («8.234», «512,7»).
+  - Sin fecha, el día es el de **España** (`todayMadrid`): el servidor de Vercel va en UTC.
+  - Cada envío del mismo día sustituye el total (el atajo puede ir varias veces al día). Se guardan 400 días en `db.health`.
+- Dónde se ve: tarjeta en Inicio (hoy y media de 7 días) y pestaña Perfil → Pasos y calorías (gráficas de 30 días e instrucciones del atajo).
+- La IA recibe los pasos y calorías de los últimos 7 días: muchos pasos (>15.000) cansan las piernas antes de una sesión dura.
+- Limitación de iOS: Salud solo se lee con el iPhone desbloqueado; si la automatización falla, se pulsa el atajo a mano.

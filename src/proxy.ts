@@ -1,8 +1,9 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 const SESSION_COOKIE = "sr_session";
-// pantalla de entrada, vuelta de Google y política de privacidad (Google la pide pública)
-const isPublic = (p: string) => p === "/login" || p.startsWith("/login/") || p.startsWith("/api/auth/") || p === "/privacidad";
+// pantalla de entrada, vuelta de Google, política de privacidad (Google la pide pública)
+// y el atajo de Salud del iPhone, que se autentica con su propia clave
+const isPublic = (p: string) => p === "/login" || p.startsWith("/login/") || p.startsWith("/api/auth/") || p === "/privacidad" || p === "/api/salud";
 
 // Sin sesión, a /login. Aquí solo se mira que exista la cookie; la firma se verifica en el servidor
 // al leer los datos (requireUserId), que también manda a /login si no es válida.

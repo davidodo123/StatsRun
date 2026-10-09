@@ -17,7 +17,7 @@ import {
 } from "@/lib/auth";
 import { GOOGLE_PENDING_COOKIE, endSession, requireUserId, startSession, unsealValue } from "@/lib/session";
 import type { FormState } from "./actions";
-import { readDbNow } from "@/lib/db";
+import { healthTokenKey, kvDel, readDbNow } from "@/lib/db";
 import { deauthorize } from "@/lib/strava";
 const str = (fd: FormData, k: string) => String(fd.get(k) ?? "");
 
@@ -85,7 +85,10 @@ export async function deleteAccount(_: FormState, fd: FormData): Promise<FormSta
   const uid = await requireUserId();
   // desconectar Strava para que deje de dar acceso a la app
   const db = await readDbNow(uid);
-  if (db.strava) await deauthorize(db.strava).catch(() => undefined);  await deleteUser(uid);
+  if (db.strava) await deauthorize(db.strava).catch(() => undefined);
+  // y que la clave del atajo de Salud deje de apuntar a la cuenta
+  if (db.healthTokenHash) await kvDel(healthTokenKey(db.healthTokenHash));
+  await deleteUser(uid);
   await endSession();
   redirect("/login?borrada=1");
 }

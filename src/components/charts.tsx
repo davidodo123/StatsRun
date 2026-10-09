@@ -223,7 +223,8 @@ export function SimpleBars({
       <BarChart data={data} margin={{ top: 8, right: 4, left: -18, bottom: 0 }} barCategoryGap="20%">
         <CartesianGrid stroke={GRID} vertical={false} />
         <XAxis dataKey={xKey} tickFormatter={xf} {...axisProps} interval="preserveStartEnd" minTickGap={16} />
-        <YAxis {...axisProps} width={44} />
+        {/* miles abreviados (pasos): "10,5k" cabe en el eje estrecho */}
+        <YAxis {...axisProps} width={44} tickFormatter={(v: number) => (v >= 1000 ? `${(v / 1000).toLocaleString("es-ES", { maximumFractionDigits: 1 })}k` : String(v))} />
         {tip}
         <Bar isAnimationActive={false} dataKey={yKey} name={name} radius={[4, 4, 0, 0]} fill={S1}>
           {ordinal && data.map((_, i) => <Cell key={i} fill={ramp[Math.min(i, ramp.length - 1)]} />)}

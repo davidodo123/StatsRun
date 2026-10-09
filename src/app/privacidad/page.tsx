@@ -70,6 +70,10 @@ export default function PrivacyPage() {
               <strong className="text-ink">Strava</strong> (solo si lo conectas): las actividades y el recorrido resumido, más los permisos de acceso que da Strava.
             </li>
             <li>
+              <strong className="text-ink">Salud del iPhone</strong> (solo si creas el atajo): los pasos y las calorías activas y en reposo de cada día que tu atajo
+              envía. No leemos nada más de Salud. Puedes desactivar la clave cuando quieras en Perfil → Pasos y calorías.
+            </li>
+            <li>
               <strong className="text-ink">Amigos</strong>: a quién has añadido, solicitudes pendientes y con quién has entrenado.
             </li>
           </ul>

@@ -7,7 +7,8 @@ import { SessionCard } from "@/components/SessionCard";
 import { acwrStatus, tsbStatus } from "@/lib/engine/load";
 import { buildInsights } from "@/lib/engine/insights";
 import { vo2maxLabel } from "@/lib/engine/physiology";
-import { fmtDuration, fmtKm } from "@/lib/format";
+import { fmtDuration, fmtKm, fmtNum } from "@/lib/format";
+import { healthSummary, todayMadrid } from "@/lib/health";
 import { addDays, diffDays, mondayOf, shortDate } from "@/lib/dates";
 import { loadDemo } from "@/app/actions";
 
@@ -61,6 +62,7 @@ async function Dashboard() {
   }
   const fitness = stats.fitness.slice(-120).map((p) => ({ date: p.date, ctl: p.ctl, atl: p.atl, tsb: p.tsb }));
   const daysToRace = goal ? diffDays(goal.date, today) : undefined;
+  const health = healthSummary(db.health, todayMadrid());
 
   return (
     <>
@@ -111,6 +113,36 @@ async function Dashboard() {
         </div>
 
         <div className="space-y-4">
+          <Card
+            title="Pasos y calorías"
+            subtitle={health ? "Hoy, desde Salud del iPhone" : undefined}
+            action={
+              <Link href="/perfil?tab=salud" className="text-xs font-semibold text-accent">
+                {health ? "Ver más →" : "Conectar →"}
+              </Link>
+            }
+          >
+            {health ? (
+              <dl className="grid grid-cols-2 gap-3 text-sm">
+                <div>
+                  <dt className="text-xs text-muted">Pasos</dt>
+                  <dd className="text-2xl font-bold tabular">{health.today?.steps !== undefined ? fmtNum(health.today.steps) : "–"}</dd>
+                  {health.avgSteps7 !== undefined && <dd className="text-xs text-ink-2">Media 7 días: {fmtNum(health.avgSteps7)}</dd>}
+                </div>
+                <div>
+                  <dt className="text-xs text-muted">Calorías activas</dt>
+                  <dd className="text-2xl font-bold tabular">
+                    {health.today?.activeKcal !== undefined ? fmtNum(health.today.activeKcal) : "–"}
+                    <span className="ml-1 text-sm font-normal text-muted">kcal</span>
+                  </dd>
+                  {health.avgActiveKcal7 !== undefined && <dd className="text-xs text-ink-2">Media 7 días: {fmtNum(health.avgActiveKcal7)} kcal</dd>}
+                </div>
+              </dl>
+            ) : (
+              <p className="text-sm text-ink-2">Trae cada día tus pasos y calorías del iPhone con un atajo de la app Atajos.</p>
+            )}
+          </Card>
+
           <Card
             title="Próximos 7 días"
             action={

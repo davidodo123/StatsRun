@@ -3,7 +3,9 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { getAnalysis } from "@/lib/analysis";
 import { logout } from "@/app/auth-actions";
-import { syncProfileAverages } from "@/app/actions";
+import { revokeHealthKey, syncProfileAverages } from "@/app/actions";
+import { HealthKey } from "@/components/HealthKey";
+import { healthSummary, todayMadrid } from "@/lib/health";
 import { ProfileForm } from "@/components/ProfileForm";
 import { DeleteAccountForm } from "@/components/DeleteAccountForm";
 import { SessionCard } from "@/components/SessionCard";
@@ -29,6 +31,7 @@ const TABS = [
   { id: "fuerza", label: "Fuerza" },
   { id: "actividades", label: "Actividades" },
   { id: "logros", label: "Logros" },
+  { id: "salud", label: "Pasos y calorías" },
   { id: "editar", label: "Editar perfil" },
 ] as const;
 type Tab = (typeof TABS)[number]["id"];
@@ -86,6 +89,7 @@ async function Content({ searchParams }: { searchParams: PageProps<"/perfil">["s
       {tab === "fuerza" && <Fuerza db={db} today={today} />}
       {tab === "actividades" && <Actividades db={db} sport={typeof sp.deporte === "string" ? sp.deporte : "todos"} page={Number(sp.pagina) || 1} />}
       {tab === "logros" && <Logros list={achievements(db.activities, matches)} />}
+      {tab === "salud" && <Salud db={db} />}
       {tab === "editar" && <Editar db={db} today={today} />}
     </div>
   );
@@ -515,6 +519,101 @@ function Logros({ list }: { list: Achievement[] }) {
           </ul>
         </Card>
       ))}
+    </div>
+  );
+}
+
+// ---------------- Pasos y calorías ----------------
+
+function Salud({ db }: { db: Db }) {
+  const today = todayMadrid();
+  const h = healthSummary(db.health, today);
+  const endpoint = `${(process.env.APP_URL ?? "https://run-in-out.vercel.app").replace(/\/$/, "")}/api/salud`;
+  const last = db.health?.at(-1);
+  return (
+    <div className="space-y-4">
+      {h ? (
+        <>
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+            <Stat label="Pasos hoy" value={h.today?.steps !== undefined ? fmtNum(h.today.steps) : "–"} sub={h.avgSteps7 !== undefined ? `Media 7 días: ${fmtNum(h.avgSteps7)}` : undefined} />
+            <Stat
+              label="Calorías activas hoy"
+              value={h.today?.activeKcal !== undefined ? fmtNum(h.today.activeKcal) : "–"}
+              unit="kcal"
+              sub={h.avgActiveKcal7 !== undefined ? `Media 7 días: ${fmtNum(h.avgActiveKcal7)} kcal` : undefined}
+            />
+            <Stat
+              label="Calorías totales hoy"
+              value={h.today?.activeKcal !== undefined && h.today.restingKcal !== undefined ? fmtNum(h.today.activeKcal + h.today.restingKcal) : "–"}
+              unit="kcal"
+              sub="Activas + en reposo"
+            />
+            <Stat label="Último envío" value={last ? shortDate(last.date) : "–"} sub={last ? new Date(last.updatedAt).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Madrid" }) : undefined} />
+          </div>
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            <Card title="Pasos" subtitle="Últimos 30 días">
+              <SimpleBars data={h.last30} xKey="date" yKey="steps" name="Pasos" unit="" xFormat="day" />
+            </Card>
+            <Card title="Calorías activas" subtitle="Últimos 30 días">
+              <SimpleBars data={h.last30} xKey="date" yKey="kcal" name="Calorías activas" unit="kcal" xFormat="day" />
+            </Card>
+          </div>
+        </>
+      ) : (
+        <Empty title="Aún no hay datos de Salud">Crea tu clave y el atajo de abajo: cada día llegarán tus pasos y tus calorías del iPhone (o del Apple Watch).</Empty>
+      )}
+
+      <Card title="Conectar con Salud del iPhone" subtitle="Con un atajo de la app Atajos: sin instalar nada más.">
+        <div className="space-y-4 text-sm">
+          <div>
+            <p className="mb-2 font-semibold">1. Tu clave personal</p>
+            <HealthKey hasKey={!!db.healthTokenHash} endpoint={endpoint} />
+            {db.healthTokenHash && (
+              <form action={revokeHealthKey} className="mt-2">
+                <button className="text-xs text-muted underline hover:text-critical">Desactivar la clave</button>
+              </form>
+            )}
+          </div>
+          <div>
+            <p className="mb-2 font-semibold">2. Crea el atajo en el iPhone (app Atajos → +)</p>
+            <ol className="list-decimal space-y-1.5 pl-5 text-ink-2">
+              <li>
+                Añade <strong className="text-ink">Buscar muestras de salud</strong>: tipo <em>Pasos</em>, filtro <em>Fecha de inicio · es hoy</em>.
+              </li>
+              <li>
+                Añade <strong className="text-ink">Calcular estadísticas</strong>: <em>Suma</em> de las muestras. Renombra el resultado a «Pasos».
+              </li>
+              <li>
+                Repite los dos pasos con el tipo <em>Energía activa</em> (resultado «Activas») y, si quieres, con <em>Energía en reposo</em> («Reposo»).
+              </li>
+              <li>
+                Añade <strong className="text-ink">Obtener contenido de URL</strong> con la URL <code className="break-all text-xs">{endpoint}</code> y en «Mostrar más»:
+                <ul className="mt-1 list-disc space-y-1 pl-5">
+                  <li>Método: <em>POST</em>.</li>
+                  <li>
+                    Encabezados: clave <code>Authorization</code>, valor <code>Bearer rio_…</code> (lo que copiaste en el paso 1).
+                  </li>
+                  <li>
+                    Cuerpo de la solicitud: <em>JSON</em>, con los campos de tipo Número <code>pasos</code> = Pasos, <code>kcalActivas</code> = Activas y <code>kcalReposo</code> = Reposo.
+                  </li>
+                </ul>
+              </li>
+              <li>
+                Añade <strong className="text-ink">Mostrar resultado</strong> para ver la respuesta («Guardado: 8234 pasos…») y pulsa ▶ para probarlo. La primera vez
+                te pedirá permiso para leer Salud.
+              </li>
+            </ol>
+          </div>
+          <div>
+            <p className="mb-2 font-semibold">3. Que se ejecute solo</p>
+            <p className="text-ink-2">
+              Atajos → <em>Automatización</em> → <em>+</em> → <em>Hora del día</em>, por ejemplo a las 22:00 cada día → <em>Ejecutar inmediatamente</em> → elige tu atajo.
+              Puede ejecutarse varias veces al día: cada envío actualiza el total de ese día. Salud solo se puede leer con el iPhone desbloqueado; si un día no llega,
+              ábrelo y pulsa el atajo.
+            </p>
+          </div>
+        </div>
+      </Card>
     </div>
   );
 }

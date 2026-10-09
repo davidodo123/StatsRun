@@ -48,7 +48,10 @@ Detalle en [[2026-10-09]].
 ### Hacer aplicación — *PWA hecha 2026-10-09, pendiente de comprobar* → [[Decisiones#App instalable (PWA) y repaso móvil]]
 - [x] App instalable (PWA): icono, pantalla completa, atajos, pantalla sin conexión, aviso «Instala PaceLab»
 - [x] Diseño móvil revisado con capturas: desbordes arreglados, botones y tablas ajustados
-- [ ] Conectar con la app de Salud: desde la web no se puede (HealthKit/Health Connect son nativos). Opciones futuras: importar el export de Apple Salud o empaquetar con Capacitor
+- [x] Instalada en el iPhone de David desde Safari (2026-10-09)
+- [-] ~~App nativa~~: descartada, David tiene iPhone y no tiene Mac (compilar en la nube exigiría Apple Developer, 99 $/año)
+- [x] **Pasos y calorías** de Salud del iPhone con un atajo de Atajos → [[Decisiones#Pasos y calorías del iPhone (atajo)]]
+- [ ] Ampliar el atajo con VFC, pulso en reposo y sueño (para el diagnóstico de la IA)
 
 ### Carrera objetivo — *hecho 2026-10-09* → [[Decisiones#Recorrido de la carrera]]
 - [x] Subir el recorrido de la carrera (.kmz, .kml, .gpx) → mapa con salida, meta y avituallamientos, distancia y desnivel
