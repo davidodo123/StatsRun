@@ -185,7 +185,8 @@ function applyAi(orig: PlannedSession, ai: AiSession, date: string): PlannedSess
   };
 }
 
-let running: Promise<CoachResult> | undefined;
+// una revisión a la vez por usuario
+const running = new Map<string, Promise<CoachResult>>();
 
 export interface CoachResult {
   ok: boolean;
@@ -193,19 +194,23 @@ export interface CoachResult {
   message: string;
 }
 
-/** Ajusta con IA las sesiones de los próximos 14 días. Evita ejecuciones simultáneas. */
-export function adaptWithAI(): Promise<CoachResult> {
-  running ??= run().finally(() => (running = undefined));
-  return running;
+/** Ajusta con IA las sesiones de los próximos 14 días de un usuario. Evita ejecuciones simultáneas. */
+export function adaptWithAI(uid: string): Promise<CoachResult> {
+  let p = running.get(uid);
+  if (!p) {
+    p = run(uid).finally(() => running.delete(uid));
+    running.set(uid, p);
+  }
+  return p;
 }
 
 /**
  * Revisión automática: si desde la última revisión hay sesiones no realizadas, la IA reprograma.
  * Como mucho una vez al día, para no gastar llamadas en cada visita.
  */
-export async function adaptIfMissed(): Promise<void> {
-  if (!coachConfig().configured || running) return;
-  const db = await readDbNow();
+export async function adaptIfMissed(uid: string): Promise<void> {
+  if (!coachConfig().configured || running.has(uid)) return;
+  const db = await readDbNow(uid);
   if (!db.plan) return;
   const today = todayLocal();
   const last = db.coach?.updatedAt?.slice(0, 10);
@@ -214,14 +219,14 @@ export async function adaptIfMissed(): Promise<void> {
   const newMissed = [...matches.values()].some(
     (m) => m.status === "missed" && m.session.date < today && diffDays(today, m.session.date) <= 7 && (!last || m.session.date >= last),
   );
-  if (newMissed) await adaptWithAI();
+  if (newMissed) await adaptWithAI(uid);
 }
 
-async function run(): Promise<CoachResult> {
+async function run(uid: string): Promise<CoachResult> {
   const { configured, model } = coachConfig();
   if (!configured) return { ok: false, changed: 0, message: "Falta OPENROUTER_API_KEY en .env.local." };
   const today = todayLocal();
-  const db = await readDbNow();
+  const db = await readDbNow(uid);
   const built = buildContext(db, today);
   if (!built) return { ok: false, changed: 0, message: "No hay plan o sesiones próximas que ajustar." };
   const createdAt = db.plan!.createdAt;
@@ -273,13 +278,13 @@ async function run(): Promise<CoachResult> {
         w.targetKm = Math.round(w.sessions.reduce((x, y) => x + y.distanceKm, 0));
       }
       d.coach = { updatedAt: new Date().toISOString(), model, summary: ai.summary?.trim().slice(0, 800) || "Plan revisado.", changed };
-    });
+    }, uid);
     return { ok: true, changed, message: ai.summary ?? "Plan revisado." };
   } catch (e) {
     const message = (e as Error).message;
     await updateDb((d) => {
       d.coach = { ...d.coach, updatedAt: d.coach?.updatedAt ?? new Date().toISOString(), model, summary: d.coach?.summary ?? "", changed: d.coach?.changed ?? 0, error: message };
-    });
+    }, uid);
     return { ok: false, changed: 0, message: `Error de la IA: ${message}` };
   }
 }

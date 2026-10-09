@@ -1,6 +1,7 @@
 import { gunzipSync } from "node:zlib";
 import { after } from "next/server";
 import { adaptWithAI, coachConfig } from "@/lib/coach";
+import { requireUserId } from "@/lib/session";
 import { updateDb } from "@/lib/db";
 import { mergeActivities } from "@/lib/importers/common";
 import { parseStravaActivitiesCsv } from "@/lib/importers/stravaCsv";
@@ -17,6 +18,7 @@ export interface ImportResponse {
 }
 
 export async function POST(req: Request) {
+  const uid = await requireUserId();
   const fd = await req.formData();
   const incoming: Activity[] = [];
   const errors: string[] = [];
@@ -67,10 +69,10 @@ export async function POST(req: Request) {
       added = r.added;
       skipped = r.skipped;
       db.lastSync = new Date().toISOString();
-    });
+    }, uid);
 
   // entrenos nuevos: la IA reajusta los próximos días en segundo plano
-  if (added > 0 && coachConfig().configured) after(() => adaptWithAI().then(() => undefined));
+  if (added > 0 && coachConfig().configured) after(() => adaptWithAI(uid).then(() => undefined));
 
   return Response.json({ added, skipped, parsed: incoming.length, errors } satisfies ImportResponse);
 }

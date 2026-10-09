@@ -1,19 +1,16 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-// Protección con contraseña (autenticación básica del navegador) cuando se define APP_PASSWORD.
-// En local, sin APP_PASSWORD, la app queda abierta como siempre.
+const SESSION_COOKIE = "sr_session";
+const PUBLIC = ["/login", "/registro"];
+
+// Sin sesión, a /login. Aquí solo se mira que exista la cookie; la firma se verifica en el servidor
+// al leer los datos (requireUserId), que también manda a /login si no es válida.
 export function proxy(req: NextRequest) {
-  const password = process.env.APP_PASSWORD;
-  if (!password) return NextResponse.next();
-  const auth = req.headers.get("authorization") ?? "";
-  if (auth.startsWith("Basic ")) {
-    const decoded = atob(auth.slice(6));
-    if (decoded.slice(decoded.indexOf(":") + 1) === password) return NextResponse.next();
-  }
-  return new NextResponse("Acceso restringido", {
-    status: 401,
-    headers: { "WWW-Authenticate": 'Basic realm="StatsRun", charset="UTF-8"' },
-  });
+  const { pathname } = req.nextUrl;
+  if (PUBLIC.some((p) => pathname === p)) return NextResponse.next();
+  if (req.cookies.has(SESSION_COOKIE)) return NextResponse.next();
+  if (pathname.startsWith("/api/")) return Response.json({ error: "Inicia sesión" }, { status: 401 });
+  return NextResponse.redirect(new URL("/login", req.url));
 }
 
 export const config = {

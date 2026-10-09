@@ -2,12 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { logout } from "@/app/auth-actions";
 
 const ITEMS = [
   { href: "/", label: "Inicio", icon: "M3 12l9-8 9 8M5 10v10h5v-6h4v6h5V10" },
   { href: "/plan", label: "Plan", icon: "M7 3v3M17 3v3M4 8h16M5 5h14a1 1 0 011 1v13a1 1 0 01-1 1H5a1 1 0 01-1-1V6a1 1 0 011-1z" },
   { href: "/registrar", label: "Registrar", icon: "M12 5v14M5 12h14" },
   { href: "/estadisticas", label: "Stats", icon: "M4 20V10M10 20V4M16 20v-7M22 20H2" },
+  { href: "/amigos", label: "Amigos", icon: "M9 11a4 4 0 100-8 4 4 0 000 8zm-7 10a7 7 0 0114 0M16 3.1a4 4 0 010 7.8M22 21a7 7 0 00-4-6.3" },
   { href: "/carreras", label: "Carreras", icon: "M5 21V4m0 0h11l-2 4 2 4H5" },
   { href: "/herramientas", label: "Calcular", icon: "M5 3h14v18H5zM8 7h8M8 11h2m3 0h3M8 15h2m3 0h3M8 18h2m3 0h3" },
   { href: "/perfil", label: "Perfil", icon: "M12 12a4 4 0 100-8 4 4 0 000 8zm-7 9a7 7 0 0114 0" },
@@ -25,6 +27,7 @@ function Icon({ d }: { d: string }) {
 export function Nav() {
   const path = usePathname();
   const active = (href: string) => (href === "/" ? path === "/" : path.startsWith(href));
+  if (path === "/login" || path === "/registro") return null;
   return (
     <>
       {/* Escritorio: barra lateral */}
@@ -45,11 +48,13 @@ export function Nav() {
             {it.label === "Stats" ? "Estadísticas" : it.label === "Calcular" ? "Calculadoras" : it.label === "Datos" ? "Importar / demo" : it.label}
           </Link>
         ))}
-        <p className="mt-auto px-2 text-xs text-muted">Registra tus entrenos o importa archivos .fit / .gpx</p>
+        <form action={logout} className="mt-auto">
+          <button className="w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-ink-2 hover:bg-surface-2">Cerrar sesión</button>
+        </form>
       </nav>
       {/* Móvil: barra inferior */}
       <nav className="fixed inset-x-0 bottom-0 z-40 flex justify-around border-t border-line bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden">
-        {ITEMS.filter((i) => i.href !== "/herramientas" && i.href !== "/ajustes").map((it) => (
+        {ITEMS.filter((i) => i.href !== "/herramientas" && i.href !== "/ajustes" && i.href !== "/carreras").map((it) => (
           <Link
             key={it.href}
             href={it.href}

@@ -41,9 +41,21 @@ const STATUS: Record<SessionMatch["status"], { tone: "good" | "warn" | "bad" | "
   upcoming: undefined,
 };
 
-export function SessionCard({ s, match, compact, showDate = true }: { s: PlannedSession; match?: SessionMatch; compact?: boolean; showDate?: boolean }) {
+export function SessionCard({
+  s,
+  match,
+  compact,
+  showDate = true,
+  readOnly,
+}: {
+  s: PlannedSession;
+  match?: SessionMatch;
+  compact?: boolean;
+  showDate?: boolean;
+  readOnly?: boolean; // plan de un amigo: sin botones de registrar ni reprogramar
+}) {
   const linked = match?.activities.find((a) => a.sessionId === s.id);
-  const canLog = match !== undefined && match.status !== "upcoming";
+  const canLog = !readOnly && match !== undefined && match.status !== "upcoming";
   const kind = KIND_STYLE[SESSION_KIND[s.type]];
   const st = match ? STATUS[match.status] : undefined;
   return (
@@ -78,7 +90,7 @@ export function SessionCard({ s, match, compact, showDate = true }: { s: Planned
             </ul>
           </>
         )}
-        {match?.status === "upcoming" && s.type !== "race" && !compact && (
+        {!readOnly && match?.status === "upcoming" && s.type !== "race" && !compact && (
           <form action={skipSession} className="mt-2">
             <input type="hidden" name="date" value={s.date} />
             <button className="text-xs text-ink-2 underline hover:text-critical">No puedo ese día</button>
@@ -99,7 +111,7 @@ export function SessionCard({ s, match, compact, showDate = true }: { s: Planned
                 )
               ))}
             {st && <Status tone={st.tone}>{st.label}</Status>}
-            {s.type !== "race" && match && (match.status === "missed" || match.status === "today") && (
+            {!readOnly && s.type !== "race" && match && (match.status === "missed" || match.status === "today") && (
               <form action={skipSession}>
                 <input type="hidden" name="date" value={s.date} />
                 <button className="text-xs text-ink-2 underline hover:text-critical" title="La IA reorganiza los próximos días">

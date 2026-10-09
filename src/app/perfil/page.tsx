@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { getDb } from "@/lib/db";
+import { logout } from "../auth-actions";
 import { ProfileForm } from "@/components/ProfileForm";
 import { Card, Loading, PageHeader, Stat } from "@/components/ui";
 import { bmi, bmiLabel, hrMaxOf, hrRestOf, hrZones } from "@/lib/engine/physiology";
@@ -10,7 +11,13 @@ export const metadata: Metadata = { title: "Perfil" };
 export default function PerfilPage() {
   return (
     <>
-      <PageHeader title="Tu perfil" subtitle="Con estos datos calculamos zonas, ritmos y el volumen adecuado para ti." />
+      <PageHeader title="Tu perfil" subtitle="Con estos datos calculamos zonas, ritmos y el volumen adecuado para ti."
+        action={
+          <form action={logout}>
+            <button className="btn btn-ghost">Cerrar sesión</button>
+          </form>
+        }
+      />
       <Suspense fallback={<Loading />}>
         <Content />
       </Suspense>

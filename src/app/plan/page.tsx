@@ -9,6 +9,7 @@ import { UnavailableForm } from "@/components/UnavailableForm";
 import { adaptIfMissed, coachConfig } from "@/lib/coach";
 import { availableDaysOf } from "@/lib/engine/planner";
 import { after } from "next/server";
+import { requireUserId } from "@/lib/session";
 import { trainingPaces } from "@/lib/engine/physiology";
 import { fmtDuration, fmtPaceRange } from "@/lib/format";
 import { WEEKDAYS, addDays, diffDays, mondayOf, shortDate, weekday } from "@/lib/dates";
@@ -43,7 +44,8 @@ async function Content({ searchParams }: { searchParams: PageProps<"/plan">["sea
     );
 
   // si se han quedado sesiones sin hacer, la IA reprograma en segundo plano (máx. 1 vez al día)
-  after(adaptIfMissed);
+  const uid = await requireUserId();
+  after(() => adaptIfMissed(uid));
   const thisWeek = mondayOf(today);
   const blockedSoon = (db.unavailableDates ?? []).filter((d) => d >= today);
   const allSessions = [...(matches?.values() ?? [])];

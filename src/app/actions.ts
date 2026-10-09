@@ -4,6 +4,7 @@ import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
 import { after } from "next/server";
 import { updateDb, readDbNow as getDb } from "@/lib/db";
+import { requireUserId } from "@/lib/session";
 import { deauthorize, syncActivities } from "@/lib/strava";
 import { generateDemoActivities } from "@/lib/demo";
 import { applyBlockedDates, availableDaysOf, generatePlan } from "@/lib/engine/planner";
@@ -21,8 +22,11 @@ export interface FormState {
 }
 
 /** Tras cambiar datos, la IA reajusta los próximos entrenos en segundo plano. */
-function scheduleAiAdapt() {
-  if (coachConfig().configured) after(() => adaptWithAI().then(() => undefined));
+async function scheduleAiAdapt() {
+  if (!coachConfig().configured) return;
+  // el usuario se resuelve ahora: dentro de after() ya no hay petición de la que leer la sesión
+  const uid = await requireUserId();
+  after(() => adaptWithAI(uid).then(() => undefined));
 }
 
 const num = (fd: FormData, k: string) => {
@@ -73,7 +77,7 @@ export async function saveProfile(_: FormState, fd: FormData): Promise<FormState
     prev && availableDaysOf(prev).join() === availableDays.join() && prev.longRunDay === longRunDay && prev.strengthPerWeek === profile.strengthPerWeek;
   if (db.plan && !sameSchedule) {
     await rebuildPlan(db);
-    scheduleAiAdapt();
+    await scheduleAiAdapt();
     refresh();
     return { ok: true, message: "Perfil guardado. Plan reorganizado con tus nuevos días; la IA lo está ajustando." };
   }
@@ -107,7 +111,7 @@ export async function saveGoal(_: FormState, fd: FormData): Promise<FormState> {
   const db = await getDb();
   if (db.profile) {
     await rebuildPlan(db);
-    scheduleAiAdapt();
+    await scheduleAiAdapt();
     redirect("/plan");
   }
   refresh();
@@ -143,12 +147,12 @@ async function rebuildPlan(db: Db) {
 export async function regeneratePlan(): Promise<void> {
   const db = await getDb();
   await rebuildPlan(db);
-  scheduleAiAdapt();
+  await scheduleAiAdapt();
   refresh();
 }
 
 export async function adaptPlanWithAI(): Promise<FormState> {
-  const r = await adaptWithAI();
+  const r = await adaptWithAI(await requireUserId());
   refresh();
   return r.ok ? { ok: true, message: `${r.changed} sesiones ajustadas. ${r.message}` } : { error: r.message };
 }
@@ -158,7 +162,7 @@ export async function syncStrava(): Promise<FormState> {
   if (!db.strava) return { error: "Strava no está conectado." };
   try {
     const r = await syncActivities(db.strava, db.activities);
-    if (r.imported > 0) scheduleAiAdapt();
+    if (r.imported > 0) await scheduleAiAdapt();
     refresh();
     return {
       ok: true,
@@ -233,7 +237,7 @@ export async function markUnavailable(_: FormState, fd: FormData): Promise<FormS
     db.unavailableDates = [...new Set([...(db.unavailableDates ?? []), ...dates])].filter((d) => diffDays(today, d) <= 30).sort();
     if (db.plan && db.profile) ({ moved, dropped } = applyBlockedDates(db.plan, db.unavailableDates, availableDaysOf(db.profile), today));
   });
-  scheduleAiAdapt();
+  await scheduleAiAdapt();
   refresh();
   const what = [moved && `${moved} movidas`, dropped && `${dropped} quitadas`].filter(Boolean).join(", ");
   return { ok: true, message: `Anotado.${what ? ` Sesiones ${what}.` : ""}${coachConfig().configured ? " La IA está rehaciendo tu rutina." : ""}` };
@@ -305,7 +309,7 @@ export async function saveActivity(_: FormState, fd: FormData): Promise<FormStat
     };
     db.activities = [...db.activities.filter((a) => a.id !== id), act].sort((a, b) => a.startLocal.localeCompare(b.startLocal));
   });
-  scheduleAiAdapt();
+  await scheduleAiAdapt();
   // nuevo: volver con el formulario limpio para no registrarlo dos veces
   if (!existingId) redirect(sessionId ? "/plan?registrado=1" : "/registrar?guardado=1");
   refresh();
