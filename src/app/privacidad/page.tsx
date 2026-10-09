@@ -1,12 +1,30 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import type { ReactNode } from "react";
+import { connection } from "next/server";
+import { Suspense, type ReactNode } from "react";
 
 export const metadata: Metadata = { title: "Política de privacidad" };
 
-// correo de contacto para ejercer derechos; se configura en Vercel (no se escribe en el código)
-const CONTACT = process.env.CONTACT_EMAIL;
 const UPDATED = "9 de octubre de 2026";
+
+/**
+ * Correo de contacto para ejercer derechos (variable CONTACT_EMAIL en Vercel, no en el código).
+ * Se lee en cada petición: si se leyera al compilar, cambiar la variable no se notaría hasta recompilar sin caché.
+ */
+async function ContactLink() {
+  await connection();
+  const contact = process.env.CONTACT_EMAIL;
+  if (!contact) return <> contactando con el administrador de la app</>;
+  return (
+    <>
+      {" "}
+      escribiendo a{" "}
+      <a href={`mailto:${contact}`} className="font-semibold text-accent underline">
+        {contact}
+      </a>
+    </>
+  );
+}
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
@@ -94,17 +112,9 @@ export default function PrivacyPage() {
         <Section title="Tus derechos">
           <p>
             Puedes acceder, corregir, borrar u oponerte al uso de tus datos y pedir una copia
-            {CONTACT ? (
-              <>
-                {" "}
-                escribiendo a{" "}
-                <a href={`mailto:${CONTACT}`} className="font-semibold text-accent underline">
-                  {CONTACT}
-                </a>
-              </>
-            ) : (
-              " contactando con el administrador de la app"
-            )}
+            <Suspense fallback=" contactando con el administrador de la app">
+              <ContactLink />
+            </Suspense>
             . Si crees que no los tratamos bien, puedes reclamar ante la Agencia Española de Protección de Datos (aepd.es).
           </p>
         </Section>
