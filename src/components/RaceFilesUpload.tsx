@@ -4,8 +4,8 @@ import { useRouter } from "next/navigation";
 import { useRef, useState, useTransition } from "react";
 import type { RaceUploadResponse } from "@/app/api/carrera/route";
 
-/** Botón para subir el recorrido (.kmz/.kml/.gpx) o un PDF de la carrera. */
-export function RaceFileUpload({ kind, label }: { kind: "recorrido" | "documento"; label: string }) {
+/** Botón para subir el recorrido de la carrera (.kmz/.kml/.gpx). */
+export function RaceFileUpload({ label }: { label: string }) {
   const input = useRef<HTMLInputElement>(null);
   const router = useRouter();
   const [busy, setBusy] = useState(false);
@@ -18,7 +18,6 @@ export function RaceFileUpload({ kind, label }: { kind: "recorrido" | "documento
     setResult(undefined);
     try {
       const fd = new FormData();
-      fd.append("kind", kind);
       fd.append("file", file);
       const res = await fetch("/api/carrera", { method: "POST", body: fd });
       // un archivo demasiado grande lo corta Vercel antes de llegar a la app: no hay JSON
@@ -44,7 +43,7 @@ export function RaceFileUpload({ kind, label }: { kind: "recorrido" | "documento
         ref={input}
         type="file"
         className="hidden"
-        accept={kind === "recorrido" ? ".kmz,.kml,.gpx,application/vnd.google-earth.kmz,application/vnd.google-earth.kml+xml" : ".pdf,application/pdf"}
+        accept=".kmz,.kml,.gpx,application/vnd.google-earth.kmz,application/vnd.google-earth.kml+xml"
         onChange={(e) => upload(e.target.files?.[0])}
       />
       {result?.error && <p className="text-xs font-medium text-critical">✕ {result.error}</p>}

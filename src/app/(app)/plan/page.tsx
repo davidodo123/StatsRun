@@ -110,7 +110,7 @@ async function Content({ searchParams }: { searchParams: PageProps<"/plan">["sea
         </div>
       )}
 
-      {db.goal && <RaceCard goal={db.goal} documents={db.documents ?? []} />}
+      {db.goal && <RaceCard goal={db.goal} />}
 
       {/* Línea temporal de fases */}
       <Card className="mt-4" title="Periodización">

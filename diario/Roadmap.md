@@ -50,10 +50,9 @@ Detalle en [[2026-10-09]].
 - [x] Diseño móvil revisado con capturas: desbordes arreglados, botones y tablas ajustados
 - [ ] Conectar con la app de Salud: desde la web no se puede (HealthKit/Health Connect son nativos). Opciones futuras: importar el export de Apple Salud o empaquetar con Capacitor
 
-### Carrera objetivo — *hecho 2026-10-09* → [[Decisiones#Recorrido y documentos de la carrera]]
+### Carrera objetivo — *hecho 2026-10-09* → [[Decisiones#Recorrido de la carrera]]
 - [x] Subir el recorrido de la carrera (.kmz, .kml, .gpx) → mapa con salida, meta y avituallamientos, distancia y desnivel
-- [x] Adjuntar PDFs de la carrera (reglamento, dorsal…), privados
-- [ ] Crear el Blob store en Vercel para que los PDF funcionen en producción → [[Configuración#Variables de entorno]]
+- [-] ~~Adjuntar PDFs de la carrera~~: descartado, no hace falta
 
 ### IA / ciencia (salido del estudio)
 - [x] Carga por sRPE (RPE × minutos) cuando no hay FC — *ya existía en `load.ts`*

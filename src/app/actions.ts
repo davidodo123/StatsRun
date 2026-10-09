@@ -10,9 +10,7 @@ import { generateDemoActivities } from "@/lib/demo";
 import { applyBlockedDates, availableDaysOf, generatePlan } from "@/lib/engine/planner";
 import { computeStats } from "@/lib/engine/stats";
 import { profileAverages } from "@/lib/engine/profile";
-import { areFriends, getFriends } from "@/lib/auth";
-import { deleteFile } from "@/lib/files";
-import { findRace } from "@/lib/races";
+import { areFriends, getFriends } from "@/lib/auth";import { findRace } from "@/lib/races";
 import { adaptWithAI, coachConfig } from "@/lib/coach";
 import { parseTime } from "@/lib/format";
 import { addDays, diffDays, todayLocal } from "@/lib/dates";
@@ -153,17 +151,6 @@ export async function removeCourse(): Promise<void> {
   await updateDb((db) => {
     if (db.goal) delete db.goal.course;
   });
-  refresh();
-}
-
-export async function deleteDocument(fd: FormData): Promise<void> {
-  const id = String(fd.get("id") ?? "");
-  let key: string | undefined;
-  await updateDb((db) => {
-    key = db.documents?.find((d) => d.id === id)?.key;
-    db.documents = (db.documents ?? []).filter((d) => d.id !== id);
-  });
-  if (key) await deleteFile(key).catch(() => undefined);
   refresh();
 }
 

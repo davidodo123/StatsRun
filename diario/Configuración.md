@@ -22,8 +22,6 @@ tags: [config]
 | `OPENROUTER_API_KEY` / `OPENROUTER_MODEL` | Entrenador IA |
 | `STRAVA_CLIENT_ID` / `STRAVA_CLIENT_SECRET` / `APP_URL` | Conexión con Strava |
 | `CONTACT_EMAIL` | Correo público de contacto en `/privacidad` (se lee en cada visita) |
-| `BLOB_READ_WRITE_TOKEN` | Vercel Blob (PDFs de la carrera). Lo crea Vercel al conectar un Blob store: Storage → Create → Blob → conectar a run-in-out |
-
 ## Google Cloud
 - Proyecto: **Run-In-Out** → Google Auth Platform
 - Cliente OAuth «Run-In-Out» (aplicación web). URIs de redirección:

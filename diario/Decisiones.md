@@ -169,7 +169,7 @@ Qué se decidió, por qué y cuándo. Si algo cambia, se añade una entrada nuev
 - Las claves internas `pacelab-…` (caché del service worker y aviso de instalar) no cambian: no se ven, y cambiarlas haría que el aviso volviera a salir.
 - Versión del service worker v2, para renovar la pantalla sin conexión guardada.
 
-## Recorrido y documentos de la carrera
+## Recorrido de la carrera
 *2026-10-09*
 
 - **Recorrido** (`.kmz`, `.kml`, `.gpx`) → se guarda en `goal.course` (`src/lib/importers/course.ts`).
@@ -179,11 +179,5 @@ Qué se decidió, por qué y cuándo. Si algo cambia, se añade una entrada nuev
   - Comprobado con el KMZ real de Santa Fe: 10,05 km, +31/−34 m, salida, meta y 2 avituallamientos.
 - El desnivel del recorrido **no cambia el plan solo**: hay un botón «Ajustar el plan a este desnivel» que rehace el plan con ese dato.
 - Si se vuelve a guardar la misma carrera (otra fecha u otro objetivo), se conserva el recorrido.
-- **PDFs** (reglamento, dorsal…) en «Documentos»:
-  - se comprueba que son PDF de verdad (cabecera `%PDF-`);
-  - máximo 4 MB (Vercel corta las peticiones a 4,5 MB) y 20 documentos.
-- Se guardan en **Vercel Blob privado** (sin URL pública). En local van a `data/files/`.
-  - Solo se abren con `/api/documentos/[id]`, que comprueba que el documento es del usuario de la sesión.
-  - Se sirven con `Cache-Control: private, no-store`.
-- Al borrar un documento o la cuenta, también se borra el archivo.
-- Todo está en la tarjeta «Tu carrera: recorrido y documentos» de la página Plan. Los documentos no se comparten con los amigos.
+- Todo está en la tarjeta «Recorrido de la carrera» de la página Plan.
+- **PDFs de la carrera: descartado.** Se llegaron a hacer (con Vercel Blob privado), pero David no los necesita y se quitaron, también la dependencia `@vercel/blob`.

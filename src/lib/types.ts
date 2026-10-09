@@ -52,16 +52,6 @@ export interface RaceCourse {
   name?: string;
 }
 
-/** Documento adjunto (PDF): el contenido va aparte (Vercel Blob o data/files en local). */
-export interface StoredDocument {
-  id: string;
-  name: string;
-  size: number;
-  contentType: string;
-  uploadedAt: string;
-  key: string; // dónde está guardado (URL de Blob o ruta local)
-}
-
 export type Feel = "muy_facil" | "facil" | "bien" | "duro" | "muy_duro";
 
 export type SportKind = "run" | "ride" | "swim" | "walk" | "strength" | "other";
@@ -169,9 +159,7 @@ export interface Db {
   plan?: Plan;
   activities: Activity[];
   strava?: StravaAuth;
-  lastSync?: string;
-  documents?: StoredDocument[]; // PDFs de la carrera (reglamento, dorsal…)
-  dismissedShared?: string[]; // sesiones compartidas por amigos que no se quieren añadir ("<idUsuario>:<idActividad>")
+  lastSync?: string;  dismissedShared?: string[]; // sesiones compartidas por amigos que no se quieren añadir ("<idUsuario>:<idActividad>")
   routesSynced?: boolean; // ya se trajeron de Strava los recorridos de lo sincronizado antes de guardar mapas
   coach?: CoachState;
   unavailableDates?: string[]; // fechas concretas sin poder entrenar (futuras: no planificar; pasadas: "no pude")

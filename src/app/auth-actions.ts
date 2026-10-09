@@ -19,8 +19,6 @@ import { GOOGLE_PENDING_COOKIE, endSession, requireUserId, startSession, unsealV
 import type { FormState } from "./actions";
 import { readDbNow } from "@/lib/db";
 import { deauthorize } from "@/lib/strava";
-import { deleteFile } from "@/lib/files";
-
 const str = (fd: FormData, k: string) => String(fd.get(k) ?? "");
 
 /** Identidad de Google que acaba de volver del inicio de sesión y aún no tiene cuenta. */
@@ -87,10 +85,7 @@ export async function deleteAccount(_: FormState, fd: FormData): Promise<FormSta
   const uid = await requireUserId();
   // desconectar Strava para que deje de dar acceso a la app
   const db = await readDbNow(uid);
-  if (db.strava) await deauthorize(db.strava).catch(() => undefined);
-  // los PDFs subidos también se borran
-  await Promise.all((db.documents ?? []).map((d) => deleteFile(d.key).catch(() => undefined)));
-  await deleteUser(uid);
+  if (db.strava) await deauthorize(db.strava).catch(() => undefined);  await deleteUser(uid);
   await endSession();
   redirect("/login?borrada=1");
 }
