@@ -212,3 +212,35 @@ Qué se decidió, por qué y cuándo. Si algo cambia, se añade una entrada nuev
 - Dónde se ve: tarjeta en Inicio (hoy y media de 7 días) y pestaña Perfil → Pasos y calorías (gráficas de 30 días e instrucciones del atajo).
 - La IA recibe los pasos y calorías de los últimos 7 días: muchos pasos (>15.000) cansan las piernas antes de una sesión dura.
 - Limitación de iOS: Salud solo se lee con el iPhone desbloqueado; si la automatización falla, se pulsa el atajo a mano.
+
+## Fuerza tipo Hevy
+*2026-10-10*
+
+- La fuerza deja de ser solo un añadido del plan de carrera: rutinas propias con cualquier material, registro en vivo como Hevy y un chat con la IA que crea programas. También para quien no corre.
+- **Ejercicios**: se importa [free-exercise-db](https://github.com/yuhonas/free-exercise-db) (dominio público, ~870 ejercicios con fotos, material y músculos), traducida al español, más los ejercicios de corredor que falten. Las fotos se sirven desde un CDN.
+- **Orden**: 4.1 catálogo y material → 4.2 rutinas y entreno en vivo → 4.3 progreso → 4.4 chat IA → 4.5 usuarios solo fuerza.
+- **IA**: para crear programas se usa un modelo más capaz en OpenRouter; los ajustes diarios siguen con `gpt-4o-mini`.
+- **Extras**, todos: mapa de músculos, entrenos de fuerza en el feed, medidas corporales y calculadora de discos.
+- El libro de Helms (PDF de David) solo se usa para resumir ideas con palabras propias; no se copia texto ni se sube el PDF.
+
+## Catálogo de ejercicios y material
+*2026-10-10*
+
+- **896 ejercicios**: los 876 de free-exercise-db (commit `f00c92c`), traducidos al español a mano, más 20 de corredor que faltaban:
+  - plancha Copenhague, gemelo excéntrico, sóleo con rodilla flexionada, peso muerto rumano a una pierna;
+  - pogo, multisaltos, skipping A, avión de cadera, almeja con banda, tibial contra la pared;
+  - bajada de escalón, Pallof con banda, bird dog, swing con kettlebell, hip thrust a una pierna;
+  - sentadilla isométrica en pared, flexión de rodillas, búlgara sin peso, gemelo a una pierna y colgarse de la barra.
+- Las instrucciones se reescribieron en 2-4 pasos cortos. Al traducir se afinó el **material** de cada ejercicio: banco, jaula, cajón, barra de dominadas y otros.
+- Cómo se genera: `node scripts/build-exercises.mjs` junta `scripts/exercises/es.json` (traducción) y `extra.json` (los propios) y crea `src/lib/strength/catalog.json` (~400 KB, solo en el servidor). Al navegador llega solo lo necesario para listar.
+- Las fotos se cargan desde jsDelivr, fijadas al commit, y no se guardan en el repositorio. En la ficha se alternan las dos fotos (posición inicial y final) como un gif.
+- **Material**: lugares (`db.places`) con 16 tipos de material; uno está marcado como «ahora» (`activePlaceId`). Hay botones rápidos para Gimnasio, Casa y Sin material. El peso corporal siempre cuenta.
+- **Ejercicios propios**: en `db.customExercises` (id `c_…`), con músculos, material y pasos. Se pueden editar y borrar.
+- **Páginas nuevas**:
+  - `/fuerza`;
+  - `/fuerza/ejercicios`: búsqueda sin tildes y filtros de músculo, tipo, lugar y material, que se guardan en la URL; muestra 40 cada vez;
+  - `/fuerza/ejercicios/[id]`;
+  - `/fuerza/ejercicios/nuevo` (también sirve para editar con `?editar=`);
+  - `/fuerza/material`.
+- «Fuerza» se añade al menú (7 iconos en el móvil) y hay un enlace desde Perfil → Fuerza.
+

@@ -173,3 +173,26 @@ body {
 .recharts-surface:focus {
   outline: none;
 }
+
+/* Fotos de ejercicio: la primera se funde sobre la segunda, como un gif de la posición inicial y final */
+@keyframes exercise-frame {
+  0%,
+  42% {
+    opacity: 1;
+  }
+  50%,
+  92% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+.exercise-frame {
+  animation: exercise-frame 2.6s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .exercise-frame {
+    animation: none;
+  }
+}

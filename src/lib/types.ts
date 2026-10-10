@@ -1,4 +1,5 @@
 // Modelo de datos de la app. Todas las fechas de calendario son "YYYY-MM-DD" (hora local del atleta).
+import type { Equipment, ExerciseCategory, Muscle } from "./strength/labels";
 
 export type Sex = "male" | "female";
 export type Level = "nuevo" | "principiante" | "intermedio" | "avanzado";
@@ -188,6 +189,29 @@ export interface Db {
   routesSynced?: boolean; // ya se trajeron de Strava los recorridos de lo sincronizado antes de guardar mapas
   coach?: CoachState;
   unavailableDates?: string[]; // fechas concretas sin poder entrenar (futuras: no planificar; pasadas: "no pude")
+  places?: GymPlace[]; // dónde entrena fuerza y con qué material
+  activePlaceId?: string;
+  customExercises?: CustomExercise[]; // ejercicios creados por el usuario (además del catálogo)
+}
+
+/** Un sitio donde se entrena fuerza y el material que hay. */
+export interface GymPlace {
+  id: string;
+  name: string;
+  equipment: Equipment[];
+  notes?: string; // p. ej. «mancuernas de 2 a 20 kg, kettlebell de 16»
+}
+
+/** Ejercicio creado por el usuario. */
+export interface CustomExercise {
+  id: string; // "c_…"
+  name: string;
+  cat: ExerciseCategory;
+  eq: Equipment[];
+  muscles: Muscle[];
+  secondary: Muscle[];
+  steps: string[];
+  createdAt: string;
 }
 
 export interface CoachState {

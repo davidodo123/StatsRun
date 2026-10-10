@@ -410,6 +410,9 @@ function Fuerza({ db, today }: { db: Db; today: string }) {
             <p className="text-sm text-ink-2">{db.plan ? "No hay sesiones de fuerza próximas." : "Sin plan activo."}</p>
           )}
           <p className="mt-3 text-xs text-muted">La fuerza reduce lesiones y mejora la economía de carrera (ver el estudio de entrenamiento).</p>
+          <Link href="/fuerza" className="btn btn-ghost mt-3 w-full">
+            Ejercicios y material →
+          </Link>
         </Card>
       </div>
       <Card title="Historial de fuerza">

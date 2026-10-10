@@ -7,6 +7,7 @@ import { logout } from "@/app/auth-actions";
 const ITEMS = [
   { href: "/", label: "Inicio", icon: "M3 12l9-8 9 8M5 10v10h5v-6h4v6h5V10" },
   { href: "/plan", label: "Plan", icon: "M7 3v3M17 3v3M4 8h16M5 5h14a1 1 0 011 1v13a1 1 0 01-1 1H5a1 1 0 01-1-1V6a1 1 0 011-1z" },
+  { href: "/fuerza", label: "Fuerza", icon: "M6 7v10M18 7v10M3 10v4M21 10v4M6 12h12" },
   { href: "/registrar", label: "Registrar", icon: "M12 5v14M5 12h14" },
   { href: "/estadisticas", label: "Stats", icon: "M4 20V10M10 20V4M16 20v-7M22 20H2" },
   { href: "/amigos", label: "Amigos", icon: "M9 11a4 4 0 100-8 4 4 0 000 8zm-7 10a7 7 0 0114 0M16 3.1a4 4 0 010 7.8M22 21a7 7 0 00-4-6.3" },

@@ -70,6 +70,40 @@ Detalle en [[2026-10-09]].
 
 ---
 
+## 🏋️ Fase 4 · Fuerza tipo Hevy — *alcance decidido 2026-10-10* → [[Decisiones#Fuerza tipo Hevy]]
+
+Idea: la fuerza deja de ser un añadido del plan de carrera. Cada uno monta las rutinas que quiera con el material que tenga (gimnasio, mancuernas en casa, una kettlebell o sin peso), las registra en vivo como en Hevy y puede pedirle a la IA un programa de fuerza, solo o encajado con su plan de carrera. Sirve también para quien no corre.
+
+Base: [[Estudio entrenamiento#6. La Pirámide de Entrenamiento (Helms, Valdez, Morgan)]], [[Estudio entrenamiento#7. Fuerza para corredores]], [[Estudio entrenamiento#9.6 Fuerza para corredores]] y el libro de Helms (Niveles 2-4, guía rápida y modelos de progresión), más una búsqueda nueva → §10 del estudio.
+
+### 4.1 · Catálogo de ejercicios y material — *hecho 2026-10-10, pendiente de que David lo compruebe* → [[Decisiones#Catálogo de ejercicios y material]]
+- [x] Base de datos de ejercicios de todo tipo: barra, mancuernas, kettlebell, máquinas, poleas, bandas, peso corporal, pliometría; con músculos, material, imágenes e instrucciones en español
+- [x] Ejercicios propios (crear los que falten)
+- [x] Mi material: lugares («Casa: mancuernas hasta 20 kg y kettlebell 16 kg», «Gimnasio», «Sin material»)
+- [x] Buscar y filtrar por músculo y material
+
+### 4.2 · Rutinas y entreno en vivo
+- [ ] Crear y editar rutinas (carpetas)
+- [ ] Empezar entreno (vacío o desde rutina): series con «anterior», kg, repeticiones, RIR y ✓; tipos de serie (calentamiento, normal, descendente, al fallo)
+- [ ] Temporizador de descanso, superseries, notas por ejercicio
+- [ ] Se guarda como actividad de fuerza (cuenta en la carga, el feed y los logros)
+
+### 4.3 · Progreso
+- [ ] Por ejercicio: 1RM estimado, mejor serie, volumen, historial y récords
+- [ ] Progresión doble: peso y repeticiones propuestos al empezar
+- [ ] Series por músculo a la semana y mapa de músculos
+- [ ] Medidas corporales (peso, % de grasa, perímetros) y calculadora de discos
+
+### 4.4 · Entrenador IA de fuerza (chat)
+- [ ] Chat en la sección Fuerza: pregunta objetivo, días, material, nivel y lesiones, y crea un programa (rutinas + semanas + progresión)
+- [ ] Con plan de carrera: encaja la fuerza en el plan (hasta 3 días; pierna, posterior + pliometría, superior + core; nunca antes de la tirada larga o de una sesión clave)
+- [ ] El planificador usa las rutinas del programa en lugar de las plantillas fijas `STRENGTH`
+
+### 4.5 · Usuarios que solo hacen fuerza
+- [ ] Alta sin carrera ni plan de running; Inicio y menú según lo que haga cada uno
+
+---
+
 ## 🔧 Pendientes técnicos
 
 - [x] Rotar el secreto de Google: el nuevo está en `.env.local` y en Vercel, y el antiguo se borró → [[Configuración#Google Cloud]]
