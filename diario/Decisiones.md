@@ -408,3 +408,17 @@ Qué se decidió, por qué y cuándo. Si algo cambia, se añade una entrada nuev
   - cuatro cajas con borde: cumplimiento, tiempo previsto, VDOT y km del plan;
   - al pasar el ratón, borde naranja (el cambio de fondo hacía desaparecer las cajas).
 
+## Progresión doble y récords de fuerza
+*2026-10-10*
+
+- David comprobó las fases 2, 3, 4.1 y 4.2 y quiso seguir con 4.3 tal como se propuso.
+- **Progresión doble** al empezar un entreno (`nextTarget` en `strength/workouts.ts`), mirando la última vez que hiciste cada ejercicio:
+  - si llegaste al **tope del rango en todas las series efectivas** → sube el peso y vuelve al mínimo de repeticiones;
+  - si no → mismo peso y una repetición más;
+  - el rango sale de la nota «Rango 8-12» (la ponen las rutinas de la IA) o de las repeticiones de la rutina: +2 si son 6 o menos (fuerza), +4 si son más (p. ej. 8 → 8-12);
+  - cuánto sube: 2,5 kg (barra, máquinas, lastre), 2 kg (mancuernas), 4 kg (kettlebell);
+  - sin peso (peso corporal sin lastre): una repetición más;
+  - si la rutina ya pide más peso que el que hiciste, manda la rutina.
+  - Se ve como texto bajo cada ejercicio («↑ Sube a 65 kg…» en naranja) y como valores en gris; al marcar ✓ sin escribir se apunta eso.
+- **Récords** (`strengthRecords`): más peso (o lastre) que nunca en un ejercicio; sin peso, más repeticiones en una serie. La primera vez que haces un ejercicio no cuenta. Sale la etiqueta 🏆 «Récord en Sentadilla» (o «3 récords de fuerza») en la sesión y en el feed, y en el detalle «🏆 Récord: 62.5 kg (antes 60 kg)» junto al ejercicio. Así, al subir de peso con la progresión, sale récord.
+

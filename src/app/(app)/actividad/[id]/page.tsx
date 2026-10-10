@@ -15,7 +15,7 @@ import { requireUserId } from "@/lib/session";
 import { WEEKDAYS, shortDate, todayLocal, weekday } from "@/lib/dates";
 import { fmtDuration, fmtKm, fmtNum, fmtPace } from "@/lib/format";
 import { SetBadge } from "@/components/RoutineEditor";
-import { estimate1RM, fmtLoad, setLoad, workoutReps, workoutSets, workoutVolume } from "@/lib/strength/workouts";
+import { estimate1RM, fmtLoad, setLoad, strengthRecords, type StrengthRecord, workoutReps, workoutSets, workoutVolume } from "@/lib/strength/workouts";
 import type { Workout } from "@/lib/types";
 
 export const metadata: Metadata = { title: "Sesión" };
@@ -75,7 +75,7 @@ async function Content({ params, searchParams }: { params: PageProps<"/actividad
         <div className="space-y-4 lg:col-span-2">
           {tags.length > 0 && <TagChips tags={tags} />}
           {a.workout ? (
-            <WorkoutCard workout={a.workout} />
+            <WorkoutCard workout={a.workout} records={strengthRecords(db.activities).get(a.id) ?? []} />
           ) : a.route ? (
             <RouteReplay route={a.route} distanceKm={a.distanceM / 1000} movingSec={a.movingSec}>
               <RouteMap route={a.route} label={`Mapa de ${a.name}`} />
@@ -119,11 +119,12 @@ async function Content({ params, searchParams }: { params: PageProps<"/actividad
 }
 
 /** Ejercicios y series de un entreno de fuerza. */
-function WorkoutCard({ workout }: { workout: Workout }) {
+function WorkoutCard({ workout, records }: { workout: Workout; records: StrengthRecord[] }) {
   return (
     <Card title="Ejercicios">
       <div className="space-y-4">
         {workout.exercises.map((e, i) => {
+          const rec = records.find((r) => r.exerciseId === e.exerciseId);
           const best = Math.max(0, ...e.sets.filter((s) => s.type !== "calentamiento").map((s) => estimate1RM(setLoad(e, s), s.reps) ?? 0));
           return (
             <section key={i}>
@@ -133,6 +134,11 @@ function WorkoutCard({ workout }: { workout: Workout }) {
                 </Link>
                 {best > 0 && <span className="shrink-0 text-xs text-muted">1RM est. {fmtNum(best, 1)} kg</span>}
               </div>
+              {rec && (
+                <p className="mt-1 inline-flex items-center gap-1 rounded-full bg-accent/15 px-2 py-0.5 text-xs font-semibold text-accent">
+                  🏆 Récord: {rec.kind === "peso" ? `${fmtLoad(e.bw, rec.value)} (antes ${fmtLoad(e.bw, rec.prev)})` : `${rec.value} reps (antes ${rec.prev})`}
+                </p>
+              )}
               <table className="mt-1 w-full text-sm">
                 <tbody>
                   {e.sets.map((s, j) => (

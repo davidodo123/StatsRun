@@ -4,6 +4,7 @@ import type { Activity, Db } from "../types";
 import { diffDays } from "../dates";
 import { BEST_DISTANCES } from "./profile";
 import { activityLoad } from "./load";
+import { strengthRecords } from "../strength/workouts";
 
 export type TagKind = "record" | "first" | "longest" | "climb" | "pace" | "load";
 
@@ -32,6 +33,7 @@ export function activityTags(acts: Activity[], loadOf?: (a: Activity) => number)
   let runsSeen = 0;
   let actsSeen = 0;
   const runs: Activity[] = [];
+  const lifts = strengthRecords(acts);
 
   for (const a of sorted) {
     const isRun = a.sport === "run" && a.distanceM > 0 && a.movingSec > 0;
@@ -61,6 +63,8 @@ export function activityTags(acts: Activity[], loadOf?: (a: Activity) => number)
       runs.push(a);
       runsSeen++;
     }
+    const recs = lifts.get(a.id);
+    if (recs) add(a, { kind: "record", label: recs.length === 1 ? `Récord en ${recs[0].name}` : `${recs.length} récords de fuerza`, icon: "🏆" });
     if (loadOf) {
       const load = loadOf(a);
       if (actsSeen >= 5 && load > maxLoad * 1.0001) add(a, { kind: "load", label: "Mayor carga", icon: "💪" });

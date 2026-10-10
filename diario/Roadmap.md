@@ -24,7 +24,7 @@ Detalle en [[2026-10-09]].
 
 ---
 
-## ⏳ Fase 2 · Importante — *hecha 2026-10-09, pendiente de que David la compruebe* → [[Decisiones#Amigos, sesiones compartidas y mapas]]
+## ✅ Fase 2 · Importante — *hecha 2026-10-09, comprobada 2026-10-10* → [[Decisiones#Amigos, sesiones compartidas y mapas]]
 
 - [x] Añadir amigos: **buscar perfiles** por nombre o @usuario con **solicitud de amistad** (el código de amigo sigue sirviendo)
 - [x] Sección de sesiones de amigos: «Actividad de tus amigos» (14 días)
@@ -35,7 +35,7 @@ Detalle en [[2026-10-09]].
 
 ## 🔮 Fase 3 · Futuro
 
-### Perfil — *hecho 2026-10-09, pendiente de que David lo compruebe* → [[Decisiones#Perfil con pestañas]]
+### Perfil — *hecho 2026-10-09, comprobado 2026-10-10* → [[Decisiones#Perfil con pestañas]]
 - [x] Mejores tiempos
 - [x] Sesiones recientes
 - [x] Apartados Running y Fuerza
@@ -64,7 +64,7 @@ Detalle en [[2026-10-09]].
 - [ ] Desacople aeróbico (Pa:FC) en tiradas largas — necesita los streams de Strava
 - [ ] VFC (HRV) diaria si se conecta con la app de Salud
 
-### Experiencias de la app — *hecho 2026-10-09, pendiente de comprobar* → [[Decisiones#Etiquetas y repetición del recorrido]]
+### Experiencias de la app — *hecho 2026-10-09, comprobado 2026-10-10* → [[Decisiones#Etiquetas y repetición del recorrido]]
 - [x] Flyover estilo Strava con la ruta seguida (repetición animada en 2D, cámara que sigue al corredor)
 - [x] Etiquetas: nuevo récord, primer 5K/10K…, carrera más larga, más desnivel, mejor ritmo del mes, mayor carga
 
@@ -76,21 +76,21 @@ Idea: la fuerza deja de ser un añadido del plan de carrera. Cada uno monta las 
 
 Base: [[Estudio entrenamiento#6. La Pirámide de Entrenamiento (Helms, Valdez, Morgan)]], [[Estudio entrenamiento#7. Fuerza para corredores]], [[Estudio entrenamiento#9.6 Fuerza para corredores]] y el libro de Helms (Niveles 2-4, guía rápida y modelos de progresión), más una búsqueda nueva → §10 del estudio.
 
-### 4.1 · Catálogo de ejercicios y material — *hecho 2026-10-10, pendiente de que David lo compruebe* → [[Decisiones#Catálogo de ejercicios y material]]
+### 4.1 · Catálogo de ejercicios y material — *hecho y comprobado 2026-10-10* → [[Decisiones#Catálogo de ejercicios y material]]
 - [x] Base de datos de ejercicios de todo tipo: barra, mancuernas, kettlebell, máquinas, poleas, bandas, peso corporal, pliometría; con músculos, material, imágenes e instrucciones en español
 - [x] Ejercicios propios (crear los que falten)
 - [x] Mi material: lugares («Casa: mancuernas hasta 20 kg y kettlebell 16 kg», «Gimnasio», «Sin material»)
 - [x] Buscar y filtrar por músculo y material
 
-### 4.2 · Rutinas y entreno en vivo — *hecho 2026-10-10 con el diseño de Hevy que pidió David, pendiente de comprobar* → [[Decisiones#Rutinas y entreno en vivo]]
+### 4.2 · Rutinas y entreno en vivo — *hecho 2026-10-10 con el diseño de Hevy que pidió David, comprobado* → [[Decisiones#Rutinas y entreno en vivo]]
 - [x] Crear, editar, duplicar y borrar rutinas (las carpetas quedan para más adelante)
 - [x] Empezar entreno (vacío o desde rutina): series con «anterior», kg, repeticiones, RIR y ✓; tipos de serie (calentamiento, normal, descendente, al fallo)
 - [/] Temporizador de descanso ✓ · superseries y notas por ejercicio pendientes
 - [x] Se guarda como actividad de fuerza (cuenta en la carga, el feed y los logros)
 
-### 4.3 · Progreso
-- [ ] Por ejercicio: 1RM estimado, mejor serie, volumen, historial y récords
-- [ ] Progresión doble: peso y repeticiones propuestos al empezar
+### 4.3 · Progreso — *en marcha 2026-10-10* → [[Decisiones#Progresión doble y récords de fuerza]]
+- [/] Por ejercicio: 1RM estimado, mejor serie, volumen, historial y récords — *récords hechos (etiqueta 🏆 y aviso en la sesión); falta la página por ejercicio*
+- [x] Progresión doble: peso y repeticiones propuestos al empezar — *pendiente de comprobar*
 - [ ] Series por músculo a la semana y mapa de músculos
 - [ ] Medidas corporales (peso, % de grasa, perímetros) y calculadora de discos
 

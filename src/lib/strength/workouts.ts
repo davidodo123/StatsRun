@@ -1,4 +1,5 @@
 // Rutinas y entrenos de fuerza: validación de lo que llega del navegador, volumen, historial y «anterior».
+import type { Equipment } from "./labels";
 import type { Activity, RoutineExercise, RoutineSet, SetType, Workout, WorkoutExercise, WorkoutSet } from "../types";
 
 export const SET_TYPES: SetType[] = ["normal", "calentamiento", "descendente", "fallo"];
@@ -101,6 +102,83 @@ const withWorkout = (acts: Activity[]) => acts.filter((a): a is Activity & { wor
 export function lastSets(acts: Activity[]): Record<string, WorkoutExercise> {
   const out: Record<string, WorkoutExercise> = {};
   for (const a of withWorkout(acts)) for (const e of a.workout.exercises) out[e.exerciseId] ??= e;
+  return out;
+}
+
+// ---------- Progresión doble ----------
+
+/** Cuánto se sube de una vez según el material (mancuernas y kettlebells van de 2 en 2 o de 4 en 4). */
+const increment = (eq: readonly Equipment[]) => (eq.includes("kettlebell") ? 4 : eq.includes("mancuernas") ? 2 : 2.5);
+
+export interface Suggestion {
+  kg?: number;
+  reps: number;
+  up?: boolean; // toca subir de peso
+  text: string;
+}
+
+/**
+ * Progresión doble: si la última vez llegaste al tope del rango en todas las series efectivas, sube el peso
+ * y vuelve al mínimo; si no, el mismo peso con una repetición más. El rango sale de las notas («Rango 8-12»)
+ * o de las repeticiones de la rutina (+2 si son pocas, +4 si no). Sin peso, solo una repetición más.
+ */
+export function nextTarget(last: WorkoutExercise | undefined, plan: RoutineSet | undefined, notes: string | undefined, eq: readonly Equipment[]): Suggestion | undefined {
+  const sets = (last?.sets ?? []).filter((s) => working(s) && s.reps);
+  if (!sets.length) return undefined;
+  const reps = sets.map((s) => s.reps!);
+  const lastKg = Math.max(...sets.map((s) => s.kg ?? 0));
+  // si la rutina ya pide más peso que el que hiciste, manda la rutina
+  if (plan?.kg && plan.kg > lastKg) return undefined;
+  if (!lastKg) {
+    const r = Math.min(...reps) + 1;
+    return { reps: r, text: `Busca ${r} repeticiones: una más que la última vez.` };
+  }
+  const range = notes?.match(/Rango (\d+)-(\d+)/);
+  const lo = range ? Number(range[1]) : (plan?.reps ?? reps[0]);
+  const hi = range ? Number(range[2]) : lo + (lo <= 6 ? 2 : 4);
+  if (reps.every((r) => r >= hi)) {
+    const kg = Math.round((lastKg + increment(eq)) / 0.25) * 0.25;
+    return { kg, reps: lo, up: true, text: `Sube a ${fmtNum(kg)} kg: hiciste ${hi} o más en todas las series.` };
+  }
+  const r = Math.min(hi, Math.min(...reps) + 1);
+  return { kg: lastKg, reps: r, text: `Mismo peso y busca ${r} repeticiones (rango ${lo}-${hi}); al llegar a ${hi} en todas, sube.` };
+}
+
+const fmtNum = (n: number) => n.toLocaleString("es-ES", { maximumFractionDigits: 2 });
+
+// ---------- Récords ----------
+
+export interface StrengthRecord {
+  exerciseId: string;
+  name: string;
+  kind: "peso" | "reps"; // más peso (o lastre) que nunca; sin peso, más repeticiones en una serie
+  value: number;
+  prev: number;
+}
+
+/** Récords de fuerza por actividad, en orden cronológico: la primera vez que haces un ejercicio no cuenta. */
+export function strengthRecords(acts: Activity[]): Map<string, StrengthRecord[]> {
+  const best = new Map<string, { kg?: number; reps?: number }>();
+  const out = new Map<string, StrengthRecord[]>();
+  for (const a of withWorkout(acts).reverse()) {
+    const top = new Map<string, { name: string; kg: number; reps: number }>();
+    for (const e of a.workout.exercises) {
+      const sets = e.sets.filter((s) => working(s) && s.reps);
+      if (!sets.length) continue;
+      const t = top.get(e.exerciseId) ?? { name: e.name, kg: 0, reps: 0 };
+      t.kg = Math.max(t.kg, ...sets.map((s) => s.kg ?? 0));
+      t.reps = Math.max(t.reps, ...sets.filter((s) => !s.kg).map((s) => s.reps!));
+      top.set(e.exerciseId, t);
+    }
+    const recs: StrengthRecord[] = [];
+    for (const [exerciseId, t] of top) {
+      const b = best.get(exerciseId) ?? {};
+      if (t.kg > 0 && b.kg !== undefined && t.kg > b.kg) recs.push({ exerciseId, name: t.name, kind: "peso", value: t.kg, prev: b.kg });
+      else if (!t.kg && t.reps && b.reps !== undefined && t.reps > b.reps) recs.push({ exerciseId, name: t.name, kind: "reps", value: t.reps, prev: b.reps });
+      best.set(exerciseId, { kg: t.kg > 0 ? Math.max(b.kg ?? 0, t.kg) : b.kg, reps: t.reps ? Math.max(b.reps ?? 0, t.reps) : b.reps });
+    }
+    if (recs.length) out.set(a.id, recs);
+  }
   return out;
 }
 

@@ -7,8 +7,8 @@ import { ExerciseThumb } from "./ExerciseMedia";
 import { BodyChip, LoadSwitch, RestChip, SetBadge, onlyBody } from "./RoutineEditor";
 import { finishWorkout } from "@/app/strength-actions";
 import type { Equipment, ExerciseSummary } from "@/lib/strength/labels";
-import { SET_TYPES, SET_TYPE_SHORT, fmtLoad } from "@/lib/strength/workouts";
-import type { Routine, SetType, WorkoutExercise, WorkoutSet } from "@/lib/types";
+import { SET_TYPES, SET_TYPE_SHORT, fmtLoad, nextTarget, type Suggestion } from "@/lib/strength/workouts";
+import type { Routine, RoutineSet, SetType, WorkoutExercise, WorkoutSet } from "@/lib/types";
 
 interface LiveSet {
   type: SetType;
@@ -23,6 +23,7 @@ interface LiveExercise {
   restSec: number;
   bw?: boolean; // con peso corporal: los kg son lastre
   sets: LiveSet[];
+  hint?: Pick<Suggestion, "text" | "up">; // progresión doble respecto a la última vez
 }
 interface Live {
   startedAt: number; // epoch ms
@@ -68,18 +69,29 @@ const localIso = (ms: number) => {
 const fmtPrev = (bw: boolean | undefined, s?: WorkoutSet) => (s ? `${bw || s.kg ? `${fmtLoad(bw, s.kg)} × ` : ""}${s.reps ?? "–"}` : "–");
 let keySeq = 0;
 
-function fromRoutine(routine: Routine | undefined): Live {
+type Suggest = (exerciseId: string, plan?: RoutineSet, notes?: string) => Suggestion | undefined;
+
+/** Series de un ejercicio con lo que toca hoy: lo de la rutina, salvo que la progresión doble proponga otra cosa. */
+function liveExercise(exerciseId: string, sets: RoutineSet[], suggest: Suggest, extra: Pick<LiveExercise, "restSec" | "bw">, notes?: string): LiveExercise {
+  const sug = suggest(exerciseId, sets.find((s) => s.type !== "calentamiento"), notes);
+  return {
+    key: keySeq++,
+    exerciseId,
+    ...extra,
+    ...(sug ? { hint: { text: sug.text, up: sug.up } } : {}),
+    sets: sets.map((s) => {
+      const warm = s.type === "calentamiento";
+      return { type: s.type ?? "normal", kg: "", reps: "", done: false, target: sug && !warm ? { kg: sug.kg ?? s.kg, reps: sug.reps } : { kg: s.kg, reps: s.reps } };
+    }),
+  };
+}
+
+function fromRoutine(routine: Routine | undefined, suggest: Suggest): Live {
   return {
     startedAt: Date.now(),
     routineId: routine?.id,
     name: routine?.name ?? "Entreno",
-    exercises: (routine?.exercises ?? []).map((e) => ({
-      key: keySeq++,
-      exerciseId: e.exerciseId,
-      restSec: e.restSec ?? 90,
-      bw: e.bw,
-      sets: e.sets.map((s) => ({ type: s.type ?? "normal", kg: "", reps: "", done: false, target: { kg: s.kg, reps: s.reps } })),
-    })),
+    exercises: (routine?.exercises ?? []).map((e) => liveExercise(e.exerciseId, e.sets, suggest, { restSec: e.restSec ?? 90, bw: e.bw }, e.notes)),
   };
 }
 
@@ -99,6 +111,7 @@ export function WorkoutLogger({
 }) {
   const router = useRouter();
   const byId = new Map(exercises.map((x) => [x.id, x]));
+  const suggest: Suggest = (id, plan, notes) => nextTarget(previous[id], plan, notes, byId.get(id)?.eq ?? []);
   const [w, setW] = useState<Live>();
   const [resumed, setResumed] = useState(false);
   const [now, setNow] = useState(() => Date.now());
@@ -118,7 +131,7 @@ export function WorkoutLogger({
     if (stored?.exercises && Date.now() - stored.startedAt < 12 * 3600_000) {
       setW(stored);
       setResumed(stored.routineId !== routine?.id || Boolean(stored.exercises.some((e) => e.sets.some((s) => s.done))));
-    } else setW(fromRoutine(routine));
+    } else setW(fromRoutine(routine, suggest));
     /* eslint-enable react-hooks/set-state-in-effect */
     // eslint-disable-next-line react-hooks/exhaustive-deps -- solo al cambiar de rutina, no cada vez que llega el objeto
   }, [routine?.id]);
@@ -157,7 +170,7 @@ export function WorkoutLogger({
   };
 
   const restart = () => {
-    setW(fromRoutine(routine));
+    setW(fromRoutine(routine, suggest));
     setResumed(false);
     setRest(undefined);
   };
@@ -245,6 +258,7 @@ export function WorkoutLogger({
               <RestChip value={e.restSec} onChange={(restSec) => update(e.key, (y) => ({ ...y, restSec }))} />
               <LoadSwitch bw={Boolean(e.bw)} onChange={(bw) => update(e.key, (y) => ({ ...y, bw }))} />
             </div>
+            {e.hint && <p className={`mt-2 text-xs ${e.hint.up ? "font-semibold text-accent" : "text-ink-2"}`}>{e.hint.up ? "↑ " : ""}{e.hint.text}</p>}
             {e.bw && !bodyKg && <p className="mt-1 text-xs text-muted">Pon tu peso en Perfil para contar el peso corporal en el volumen.</p>}
             <table className="mt-2 w-full table-fixed text-sm">
               <thead>
@@ -321,7 +335,7 @@ export function WorkoutLogger({
         + Añadir ejercicio
       </button>
       <p className="text-center text-xs text-muted">
-        En gris, lo de la rutina o la última vez: si no escribes nada, al marcar ✓ se apunta eso. Toca el número de serie para marcarla como {SET_TYPE_SHORT.calentamiento} (calentamiento), {SET_TYPE_SHORT.descendente} o {SET_TYPE_SHORT.fallo}.
+        En gris, lo que toca hoy (la rutina con la progresión doble, o la última vez): si no escribes nada, al marcar ✓ se apunta eso. Toca el número de serie para marcarla como {SET_TYPE_SHORT.calentamiento} (calentamiento), {SET_TYPE_SHORT.descendente} o {SET_TYPE_SHORT.fallo}.
       </p>
 
       {rest && restLeft > 0 && (
@@ -355,7 +369,7 @@ export function WorkoutLogger({
           onAdd={(ids) => {
             edit((cur) => ({
               ...cur,
-              exercises: [...cur.exercises, ...ids.map((exerciseId) => ({ key: keySeq++, exerciseId, restSec: 90, bw: onlyBody(byId.get(exerciseId)), sets: [0, 1, 2].map(() => ({ type: "normal" as SetType, kg: "", reps: "", done: false })) }))],
+              exercises: [...cur.exercises, ...ids.map((exerciseId) => liveExercise(exerciseId, [{}, {}, {}], suggest, { restSec: 90, bw: onlyBody(byId.get(exerciseId)) }))],
             }));
             setPicking(false);
           }}

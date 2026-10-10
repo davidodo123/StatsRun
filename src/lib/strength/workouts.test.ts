@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cleanRoutineExercises, cleanWorkout, estimate1RM, fmtLoad, lastSets, routineHistory, workoutReps, workoutSets, workoutVolume } from "./workouts";
+import { cleanRoutineExercises, cleanWorkout, estimate1RM, fmtLoad, lastSets, nextTarget, routineHistory, strengthRecords, workoutReps, workoutSets, workoutVolume } from "./workouts";
 import type { Activity } from "../types";
 
 const act = (id: string, date: string, workout: Activity["workout"], movingSec = 3600): Activity => ({
@@ -82,5 +82,25 @@ describe("rutinas y entrenos", () => {
     expect(lastSets(acts).Barbell_Squat.sets).toEqual([{ kg: 95, reps: 5 }]);
     expect(lastSets(acts).Pushups.sets).toEqual([{ reps: 20 }]);
     expect(routineHistory(acts, "r1", "2026-10-02")).toEqual([{ date: "2026-10-05", volume: 475, reps: 5, minutes: 45 }]);
+  });
+
+  it("progresión doble: sube el peso al llegar al tope del rango en todas las series", () => {
+    const ex = (reps: number[], kg = 60, bw = false) => ({ exerciseId: "Barbell_Squat", name: "Sentadilla", bw, sets: [{ type: "calentamiento" as const, kg: 40, reps: 5 }, ...reps.map((r) => ({ kg, reps: r }))] });
+    expect(nextTarget(ex([12, 12, 12]), { reps: 8, kg: 60 }, undefined, ["barra"])).toMatchObject({ kg: 62.5, reps: 8, up: true });
+    expect(nextTarget(ex([10, 9, 8]), { reps: 8, kg: 60 }, undefined, ["barra"])).toMatchObject({ kg: 60, reps: 9 });
+    expect(nextTarget(ex([6, 6, 6]), { reps: 4 }, "Rango 4-6: …", ["mancuernas"])).toMatchObject({ kg: 62, reps: 4, up: true });
+    expect(nextTarget(ex([10, 10], 0, true), undefined, undefined, ["dominadas"])).toMatchObject({ reps: 11 });
+    expect(nextTarget(ex([12, 12]), { reps: 8, kg: 70 }, undefined, ["barra"])).toBeUndefined(); // la rutina ya pide más
+    expect(nextTarget(undefined, { reps: 8 }, undefined, ["barra"])).toBeUndefined();
+  });
+
+  it("récord al subir de peso; la primera vez no cuenta", () => {
+    const sq = (kg: number) => ({ exercises: [{ exerciseId: "Barbell_Squat", name: "Sentadilla", sets: [{ type: "calentamiento" as const, kg: kg + 50, reps: 1 }, { kg, reps: 5 }] }] });
+    const pull = (reps: number) => ({ exercises: [{ exerciseId: "Pullups", name: "Dominadas", bw: true, sets: [{ reps }] }] });
+    const recs = strengthRecords([act("a", "2026-10-01", sq(60)), act("b", "2026-10-03", sq(60)), act("c", "2026-10-05", sq(62.5)), act("d", "2026-10-06", pull(8)), act("e", "2026-10-08", pull(9))]);
+    expect(recs.has("a")).toBe(false);
+    expect(recs.has("b")).toBe(false);
+    expect(recs.get("c")).toEqual([{ exerciseId: "Barbell_Squat", name: "Sentadilla", kind: "peso", value: 62.5, prev: 60 }]);
+    expect(recs.get("e")?.[0]).toMatchObject({ kind: "reps", value: 9, prev: 8 });
   });
 });
