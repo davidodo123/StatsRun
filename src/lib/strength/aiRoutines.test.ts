@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { exerciseListForAi, routinesFromAi } from "./aiRoutines";
+import { equipmentFromText, exerciseListForAi, routinesFromAi } from "./aiRoutines";
 
 describe("rutinas de la IA de fuerza", () => {
   it("el catálogo para la IA no incluye halterofilia ni strongman", () => {
@@ -46,5 +46,16 @@ describe("rutinas de la IA de fuerza", () => {
     expect(upper.name).toBe("Superior · Base");
     expect(upper.phases).toEqual(["base"]);
     expect(upper.exercises[1].sets).toHaveLength(3); // 9 series no: se queda en 3 por defecto
+  });
+
+  it("entiende el material escrito y acorta la lista que se manda", () => {
+    const eq = equipmentFromText("Kettlebel de 16, mancuernas de 15-18 kg, cinta elástica y barra de dominadas");
+    expect(eq.sort()).toEqual(["bandas", "corporal", "dominadas", "kettlebell", "mancuernas"]);
+    expect(equipmentFromText("nada, solo mi cuerpo")).toEqual(["corporal"]);
+    expect(equipmentFromText("voy al gimnasio")).toContain("maquinas");
+    const full = exerciseListForAi().split("\n").length;
+    const home = exerciseListForAi(eq).split("\n").length;
+    expect(home).toBeLessThan(full / 2);
+    expect(exerciseListForAi(eq)).not.toContain("Barbell_Squat |");
   });
 });

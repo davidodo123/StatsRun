@@ -28,7 +28,8 @@ export function coachConfig() {
 export const strengthModel = () => process.env.OPENROUTER_STRENGTH_MODEL || "openai/gpt-4o";
 
 /** Llamada a OpenRouter que devuelve el primer objeto JSON de la respuesta. */
-export async function chatJson<T>(system: string, user: string, temperature = 0.4, modelOverride?: string): Promise<T> {
+// sin «max_tokens», OpenRouter reserva el máximo del modelo (16 k) y con poco saldo responde 402
+export async function chatJson<T>(system: string, user: string, temperature = 0.4, modelOverride?: string, maxTokens = 3500): Promise<T> {
   const { apiKey, model: defaultModel } = coachConfig();
   const model = modelOverride ?? defaultModel;
   const res = await fetch(API, {
@@ -42,6 +43,7 @@ export async function chatJson<T>(system: string, user: string, temperature = 0.
     body: JSON.stringify({
       model,
       temperature,
+      max_tokens: maxTokens,
       response_format: { type: "json_object" },
       messages: [
         { role: "system", content: system },
@@ -50,6 +52,7 @@ export async function chatJson<T>(system: string, user: string, temperature = 0.
     }),
     signal: AbortSignal.timeout(150_000),
   });
+  if (res.status === 402) throw new Error("NO_CREDITS");
   if (!res.ok) throw new Error(`OpenRouter ${res.status}: ${(await res.text()).slice(0, 300)}`);
   const json = await res.json();
   const content: string = json.choices?.[0]?.message?.content ?? "";
@@ -402,7 +405,8 @@ async function run(uid: string): Promise<CoachResult> {
     }, uid);
     return { ok: true, changed, message: ai.summary ?? "Plan revisado." };
   } catch (e) {
-    const message = (e as Error).message;
+    const raw = (e as Error).message;
+    const message = raw === "NO_CREDITS" ? "sin saldo en OpenRouter (recarga créditos en openrouter.ai/settings/credits)" : raw;
     await updateDb((d) => {
       d.coach = { ...d.coach, updatedAt: d.coach?.updatedAt ?? new Date().toISOString(), model, summary: d.coach?.summary ?? "", changed: d.coach?.changed ?? 0, error: message };
     }, uid);

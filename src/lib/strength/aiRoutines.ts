@@ -13,8 +13,39 @@ export const BLOCK_PHASES: Record<"base" | "fuerza", Phase[]> = { base: ["base"]
 // solo fuerza y pliometría, sin halterofilia, powerlifting ni strongman: lo útil para un corredor
 const CANDIDATES = CATALOG.filter((x) => (x.cat === "fuerza" || x.cat === "pliometria") && x.level !== "avanzado");
 
-/** Catálogo compacto para el prompt: «id | nombre | material | músculos». */
-export const exerciseListForAi = () => CANDIDATES.map((x) => `${x.id} | ${x.name} | ${x.eq.join(",")} | ${x.muscles.join(",")}`).join("\n");
+/** Catálogo compacto para el prompt («id | nombre | material | músculos»), solo con lo que se puede hacer con ese material. */
+export const exerciseListForAi = (equipment?: Equipment[]) =>
+  CANDIDATES.filter((x) => !equipment || canDo(x.eq, equipment))
+    .map((x) => `${x.id} | ${x.name} | ${x.eq.join(",")} | ${x.muscles.join(",")}`)
+    .join("\n");
+
+// lo que el atleta escribe → códigos de material (sin tildes ni mayúsculas)
+const EQUIPMENT_WORDS: [Equipment, RegExp][] = [
+  ["mancuernas", /mancuern|dumbbell/],
+  ["kettlebell", /kettle|ketel|ketter|pesa rusa|pesas rusas/],
+  ["bandas", /banda|cinta|goma|elastic|liga/],
+  ["dominadas", /dominad|barra fija|pull ?up/],
+  ["banco", /banco|silla|sofa/],
+  ["cajon", /cajon|step|escalon|caja/],
+  ["barra", /barra (olimpica|con discos|y discos|de pesas)|discos/],
+  ["barraZ", /barra z|barra ez/],
+  ["jaula", /jaula|rack|soporte/],
+  ["maquinas", /maquina|gimnasio|gym/],
+  ["poleas", /polea|gimnasio|gym/],
+  ["balon", /balon medicinal|medicine ball|slam ball/],
+  ["fitball", /fitball|pelota grande|bola de pilates|fit ball/],
+  ["rodillo", /rodillo|foam/],
+  ["otro", /trx|anilla|paralela|trineo|chaleco/],
+];
+
+/** Material que se entiende en el texto del atleta (el peso corporal siempre). */
+export function equipmentFromText(text: string): Equipment[] {
+  const t = text.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
+  const gym = /gimnasio|gym/.test(t);
+  const found = EQUIPMENT_WORDS.filter(([, re]) => re.test(t)).map(([e]) => e);
+  // en un gimnasio hay de todo
+  return gym ? EQUIPMENT.map((e) => e.id) : ["corporal", ...found.filter((e, i) => found.indexOf(e) === i)];
+}
 
 export const STRENGTH_SYSTEM = `Eres un preparador de fuerza para corredores, con base científica. Creas rutinas de fuerza en casa para que un corredor prepare su carrera y esté fuerte, con el material que tiene.
 
@@ -55,7 +86,7 @@ export function strengthRequest(db: Db, material: string, ability: string, today
     materialQueTiene: material,
     loQuePuedeHacerOSuRutina: ability,
     rutinasAPedir: kinds.flatMap((kind) => (["base", "fuerza"] as const).map((block) => ({ kind, block }))),
-    ejerciciosDisponibles: "id | nombre | material | músculos\n" + exerciseListForAi(),
+    ejerciciosDisponibles: "id | nombre | material | músculos\n" + exerciseListForAi(equipmentFromText(material)),
   };
 }
 
@@ -71,8 +102,9 @@ const num = (v: unknown, min: number, max: number) => {
 };
 
 /** Valida la respuesta: material conocido, ejercicios que existen y que puede hacer, números razonables. */
-export function routinesFromAi(reply: AiStrengthReply, now: string): { equipment: Equipment[]; summary: string; routines: Routine[] } {
-  const equipment = [...new Set(["corporal", ...(Array.isArray(reply.equipment) ? reply.equipment : [])].map(String).filter((e) => EQ_IDS.has(e)))] as Equipment[];
+export function routinesFromAi(reply: AiStrengthReply, now: string, detected: Equipment[] = []): { equipment: Equipment[]; summary: string; routines: Routine[] } {
+  // lo que entendió la IA más lo que se leyó en el texto
+  const equipment = [...new Set(["corporal", ...detected, ...(Array.isArray(reply.equipment) ? reply.equipment : [])].map(String).filter((e) => EQ_IDS.has(e)))] as Equipment[];
   const byId = new Map(CANDIDATES.map((x) => [x.id, x]));
   const routines: Routine[] = [];
   for (const raw of Array.isArray(reply.routines) ? reply.routines.slice(0, 8) : []) {

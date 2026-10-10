@@ -390,4 +390,9 @@ Qué se decidió, por qué y cuándo. Si algo cambia, se añade una entrada nuev
 - **Instrucciones de la IA**: estudio §6, §7 y §9.6, más la pirámide de Helms en resumen propio. RPE 7-8 (RIR 2-3) sin fallo; dosis mínima eficaz; unilaterales si hay poco peso; respetar lesiones; descansos por tipo; progresión doble; 4-7 ejercicios y 30-50 min.
 - **Modelo**: `OPENROUTER_STRENGTH_MODEL` (por defecto `openai/gpt-4o`), más capaz que el de los reajustes (`gpt-4o-mini`). Unos céntimos por petición. La página tiene `maxDuration = 180` porque puede tardar un minuto.
 - En local no hay clave de OpenRouter: la respuesta real de la IA solo se puede probar en producción. La validación está cubierta con tests.
+- **Primer intento en producción: error 402 de OpenRouter** («requested up to 16384 tokens, but can only afford 3673»). Sin `max_tokens`, OpenRouter reserva el máximo del modelo, y la cuenta tenía poco saldo. Arreglos:
+  - `chatJson` manda `max_tokens` (3.500 por defecto);
+  - `equipmentFromText` lee el material escrito (mancuernas, kettlebell, cinta o banda, barra de dominadas, banco, cajón, gimnasio…) y solo se manda a la IA lo que se puede hacer con él. La lista de ejercicios pasa de ~50.000 a ~16.000 caracteres (212 ejercicios con el material de David). Ese material se suma al que entienda la IA;
+  - si no hay saldo para `gpt-4o`, se reintenta con `gpt-4o-mini` (unas 16 veces más barato). Si tampoco llega: «Tu cuenta de OpenRouter no tiene saldo suficiente…». El entrenador diario también muestra ese aviso en lenguaje claro.
+  - Coste aproximado por petición: ~5 céntimos con `gpt-4o`, ~0,3 con `gpt-4o-mini`.
 

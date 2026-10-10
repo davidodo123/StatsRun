@@ -7,7 +7,7 @@ import { after } from "next/server";
 import { readDbNow, updateDb } from "@/lib/db";
 import { requireUserId } from "@/lib/session";
 import { adaptWithAI, chatJson, coachConfig, strengthModel } from "@/lib/coach";
-import { STRENGTH_SYSTEM, routinesFromAi, strengthRequest, type AiStrengthReply } from "@/lib/strength/aiRoutines";
+import { STRENGTH_SYSTEM, equipmentFromText, routinesFromAi, strengthRequest, type AiStrengthReply } from "@/lib/strength/aiRoutines";
 import { todayLocal } from "@/lib/dates";
 import { findExercise } from "@/lib/strength/catalog";
 import { cleanRoutineExercises, cleanWorkout } from "@/lib/strength/workouts";
@@ -250,13 +250,27 @@ export async function generateStrengthRoutines(_: StrengthCoachForm, fd: FormDat
   });
 
   let result: ReturnType<typeof routinesFromAi>;
+  let used = model;
   try {
     const db = await readDbNow();
-    const reply = await chatJson<AiStrengthReply>(STRENGTH_SYSTEM, JSON.stringify(strengthRequest(db, material, ability, today)), 0.3, model);
-    result = routinesFromAi(reply, now);
+    const request = JSON.stringify(strengthRequest(db, material, ability, today));
+    let reply: AiStrengthReply;
+    try {
+      reply = await chatJson<AiStrengthReply>(STRENGTH_SYSTEM, request, 0.3, model, 3500);
+    } catch (e) {
+      // sin saldo para el modelo bueno: se intenta con el barato (unas 16 veces menos)
+      if ((e as Error).message !== "NO_CREDITS" || model === coachConfig().model) throw e;
+      used = coachConfig().model;
+      reply = await chatJson<AiStrengthReply>(STRENGTH_SYSTEM, request, 0.3, used, 3500);
+    }
+    result = routinesFromAi(reply, now, equipmentFromText(material));
     if (!result.routines.length) throw new Error("no propuso ninguna rutina válida con tu material");
   } catch (e) {
-    const error = `La IA no pudo crear las rutinas: ${(e as Error).message}`.slice(0, 300);
+    const msg = (e as Error).message;
+    const error =
+      msg === "NO_CREDITS"
+        ? "Tu cuenta de OpenRouter no tiene saldo suficiente. Recarga créditos en openrouter.ai/settings/credits y vuelve a intentarlo."
+        : `La IA no pudo crear las rutinas: ${msg}`.slice(0, 300);
     await updateDb((d) => {
       if (d.strengthCoach) d.strengthCoach.error = error;
     });
@@ -272,7 +286,7 @@ export async function generateStrengthRoutines(_: StrengthCoachForm, fd: FormDat
     if (home) home.equipment = result.equipment;
     else if (places.length < MAX_PLACES) places.push({ id: newId(), name: "Casa", equipment: result.equipment, notes: material.slice(0, 200) });
     d.activePlaceId = (home ?? places.find((p) => p.name === "Casa"))?.id ?? d.activePlaceId;
-    d.strengthCoach = { material, ability, updatedAt: now, model, summary: result.summary };
+    d.strengthCoach = { material, ability, updatedAt: now, model: used, summary: result.summary };
     syncPlanRoutines(d);
   });
   refresh();
