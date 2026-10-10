@@ -44,6 +44,7 @@ const fmtPace = (s?: number) => (s && isFinite(s) ? `${Math.floor(s / 60)}:${Str
 const MONTHS = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
 const dayLabel = (d: string) => `${Number(d.slice(8, 10))} ${MONTHS[Number(d.slice(5, 7)) - 1]}`;
 const monthLabel = (m: string) => `${MONTHS[Number(m.slice(5, 7)) - 1]} ${m.slice(2, 4)}`;
+const dec = (v: number, d: number) => v.toLocaleString("es-ES", { minimumFractionDigits: d, maximumFractionDigits: d });
 const kShort = (v: number) => (Math.abs(v) >= 1000 ? `${(v / 1000).toLocaleString("es-ES", { maximumFractionDigits: 1 })}k` : String(Math.round(v * 100) / 100));
 
 /** Marcas «redondas» del eje (1, 2, 5 × 10ⁿ). */
@@ -308,7 +309,7 @@ export function TrendLine({
   xKey?: string;
   xFormat?: "day" | "month";
 }) {
-  const f = (v: number) => (format === "pace" ? fmtPace(v) : format === "dec2" ? v.toFixed(2) : format === "dec1" ? v.toFixed(1) : Math.round(v).toString());
+  const f = (v: number) => (format === "pace" ? fmtPace(v) : format === "dec2" ? dec(v, 2) : format === "dec1" ? dec(v, 1) : Math.round(v).toString());
   const stroke = { s1: S1, s2: S2, s3: "var(--series-3)" }[color];
   const xf = xFormat === "month" ? monthLabel : dayLabel;
   const values = data.map((d) => (typeof d[dataKey] === "number" ? (d[dataKey] as number) : null));

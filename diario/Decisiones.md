@@ -437,3 +437,12 @@ Qué se decidió, por qué y cuándo. Si algo cambia, se añade una entrada nuev
   - **Precarga de páginas en el service worker** (navigation preload): la página se pide sin esperar a que arranque el service worker.
 - **Pendiente con más impacto**: Vercel y Upstash están en **iad1 (Washington)** y David usa la app desde España: cada petición cruza el Atlántico (~100 ms ida y vuelta, varias por página). Moverlo a Europa (Vercel `fra1`/`cdg1` + base nueva de Upstash en Europa y copiar los datos) lo notaría mucho. Necesita hacerlo David en los paneles. **Descartado (2026-10-10):** al crear la base en Frankfurt desde Vercel solo salían planes de pago (Pay As You Go o fijos) y David prefiere seguir con la actual, que es gratis.
 
+## Progreso por ejercicio
+*2026-10-10*
+
+- Va en la **ficha de cada ejercicio** (`/fuerza/ejercicios/[id]`), arriba, solo si lo has hecho alguna vez. Se llega desde el entreno, la sesión o el buscador.
+- **Cajas**: 1RM estimado (Epley, mejor serie de 1-12 repeticiones), más peso (con sus repeticiones), mejor volumen en una sesión y nº de sesiones. Sin peso (peso corporal sin lastre): mejor serie y más repeticiones en una sesión.
+- **Evolución**: gráfica con 1RM estimado, más peso, volumen o repeticiones por sesión; periodo de 3 meses, 1 año o todo.
+- **Historial**: las 10 últimas sesiones con todas las series efectivas y el 1RM de cada día; trofeo en las que hubo récord.
+- Los kilos se escriben con coma («62,5 kg»), también en los ejes de las gráficas.
+

@@ -85,8 +85,10 @@ const working = (s: WorkoutSet) => s.type !== "calentamiento";
 /** Carga de una serie: con peso corporal, el peso del perfil más el lastre. */
 export const setLoad = (e: Pick<WorkoutExercise, "bw" | "bodyKg">, s: WorkoutSet) => (e.bw ? (e.bodyKg ?? 0) : 0) + (s.kg ?? 0);
 
+const fmtNum = (n: number) => n.toLocaleString("es-ES", { maximumFractionDigits: 2 });
+
 /** Texto de la carga: «PC», «PC + 10 kg» o «80 kg». */
-export const fmtLoad = (bw: boolean | undefined, kg?: number) => (bw ? (kg ? `PC + ${kg} kg` : "PC") : kg !== undefined ? `${kg} kg` : "–");
+export const fmtLoad = (bw: boolean | undefined, kg?: number) => (bw ? (kg ? `PC + ${fmtNum(kg)} kg` : "PC") : kg !== undefined ? `${fmtNum(kg)} kg` : "–");
 
 /** Kilos totales movidos (series efectivas: sin calentamiento). */
 export const workoutVolume = (w: Workout) => Math.round(w.exercises.reduce((t, e) => t + e.sets.filter(working).reduce((s, x) => s + setLoad(e, x) * (x.reps ?? 0), 0), 0));
@@ -144,7 +146,6 @@ export function nextTarget(last: WorkoutExercise | undefined, plan: RoutineSet |
   return { kg: lastKg, reps: r, text: `Mismo peso y busca ${r} repeticiones (rango ${lo}-${hi}); al llegar a ${hi} en todas, sube.` };
 }
 
-const fmtNum = (n: number) => n.toLocaleString("es-ES", { maximumFractionDigits: 2 });
 
 // ---------- Récords ----------
 
@@ -180,6 +181,48 @@ export function strengthRecords(acts: Activity[]): Map<string, StrengthRecord[]>
     if (recs.length) out.set(a.id, recs);
   }
   return out;
+}
+
+// ---------- Progreso de un ejercicio ----------
+
+export interface ExercisePoint {
+  activityId: string;
+  date: string;
+  bw?: boolean;
+  sets: WorkoutSet[]; // series efectivas (sin calentamiento)
+  oneRm?: number; // mejor 1RM estimado de la sesión
+  topKg: number; // más peso (o lastre) de la sesión
+  best?: WorkoutSet; // la serie con mejor 1RM (o más repeticiones, sin peso)
+  volume: number;
+  reps: number;
+  maxReps: number;
+}
+
+/** Cada sesión en que se hizo un ejercicio, de la más antigua a la más reciente. */
+export function exerciseHistory(acts: Activity[], exerciseId: string): ExercisePoint[] {
+  return withWorkout(acts)
+    .reverse()
+    .flatMap((a) => {
+      const all = a.workout.exercises.filter((e) => e.exerciseId === exerciseId);
+      const pairs = all.flatMap((e) => e.sets.filter((s) => working(s) && s.reps).map((s) => ({ e, s })));
+      if (!pairs.length) return [];
+      const rm = (p: (typeof pairs)[number]) => estimate1RM(setLoad(p.e, p.s), p.s.reps) ?? 0;
+      const top = pairs.reduce((b, p) => (rm(p) > rm(b) || (rm(p) === rm(b) && (p.s.reps ?? 0) > (b.s.reps ?? 0)) ? p : b));
+      return [
+        {
+          activityId: a.id,
+          date: a.date,
+          bw: all.some((e) => e.bw),
+          sets: pairs.map((p) => p.s),
+          oneRm: rm(top) || undefined,
+          topKg: Math.max(...pairs.map((p) => p.s.kg ?? 0)),
+          best: top.s,
+          volume: Math.round(pairs.reduce((t, p) => t + setLoad(p.e, p.s) * p.s.reps!, 0)),
+          reps: pairs.reduce((t, p) => t + p.s.reps!, 0),
+          maxReps: Math.max(...pairs.map((p) => p.s.reps!)),
+        },
+      ];
+    });
 }
 
 export interface RoutinePoint {

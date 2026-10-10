@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cleanRoutineExercises, cleanWorkout, estimate1RM, fmtLoad, lastSets, nextTarget, routineHistory, strengthRecords, workoutReps, workoutSets, workoutVolume } from "./workouts";
+import { cleanRoutineExercises, cleanWorkout, estimate1RM, fmtLoad, exerciseHistory, lastSets, nextTarget, routineHistory, strengthRecords, workoutReps, workoutSets, workoutVolume } from "./workouts";
 import type { Activity } from "../types";
 
 const act = (id: string, date: string, workout: Activity["workout"], movingSec = 3600): Activity => ({
@@ -64,6 +64,7 @@ describe("rutinas y entrenos", () => {
     expect(fmtLoad(true, 10)).toBe("PC + 10 kg");
     expect(fmtLoad(true)).toBe("PC");
     expect(fmtLoad(false, 80)).toBe("80 kg");
+    expect(fmtLoad(false, 62.5)).toBe("62,5 kg");
     expect(cleanRoutineExercises([{ exerciseId: "Pushups", bw: true, sets: [{}] }], () => true)[0].bw).toBe(true);
   });
 
@@ -103,4 +104,13 @@ describe("rutinas y entrenos", () => {
     expect(recs.get("c")).toEqual([{ exerciseId: "Barbell_Squat", name: "Sentadilla", kind: "peso", value: 62.5, prev: 60 }]);
     expect(recs.get("e")?.[0]).toMatchObject({ kind: "reps", value: 9, prev: 8 });
   });
+
+  it("historial de un ejercicio: 1RM, más peso, volumen y repeticiones por sesión", () => {
+    const sq = (sets: { kg: number; reps: number }[]) => ({ exercises: [{ exerciseId: "Barbell_Squat", name: "Sentadilla", sets: [{ type: "calentamiento" as const, kg: 100, reps: 3 }, ...sets] }] });
+    const h = exerciseHistory([act("b", "2026-10-05", sq([{ kg: 62.5, reps: 8 }, { kg: 60, reps: 12 }])), act("a", "2026-10-01", sq([{ kg: 60, reps: 10 }])), act("c", "2026-10-06", { exercises: [] })], "Barbell_Squat");
+    expect(h.map((p) => p.activityId)).toEqual(["a", "b"]);
+    expect(h[1]).toMatchObject({ topKg: 62.5, volume: 1220, reps: 20, maxReps: 12, oneRm: 82 });
+    expect(h[1].best).toEqual({ kg: 60, reps: 12 });
+  });
 });
+

@@ -89,7 +89,7 @@ Base: [[Estudio entrenamiento#6. La Pirámide de Entrenamiento (Helms, Valdez, M
 - [x] Se guarda como actividad de fuerza (cuenta en la carga, el feed y los logros)
 
 ### 4.3 · Progreso — *en marcha 2026-10-10; el resto, aparcado para más adelante (lo pidió David)* → [[Decisiones#Progresión doble y récords de fuerza]]
-- [/] Por ejercicio: 1RM estimado, mejor serie, volumen, historial y récords — *récords hechos (etiqueta 🏆 y aviso en la sesión); falta la página por ejercicio*
+- [x] Por ejercicio: 1RM estimado, mejor serie, volumen, historial y récords — *en la ficha de cada ejercicio; pendiente de comprobar* → [[Decisiones#Progreso por ejercicio]]
 - [x] Progresión doble: peso y repeticiones propuestos al empezar — *pendiente de comprobar*
 - [ ] Series por músculo a la semana y mapa de músculos
 - [ ] Medidas corporales (peso, % de grasa, perímetros) y calculadora de discos

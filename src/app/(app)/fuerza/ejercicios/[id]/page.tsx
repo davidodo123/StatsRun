@@ -2,11 +2,16 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
-import { Card, Loading, PageHeader, Pill } from "@/components/ui";
+import { Card, Loading, PageHeader, Pill, Stat } from "@/components/ui";
 import { ExerciseAnimation } from "@/components/ExerciseMedia";
 import { deleteCustomExercise } from "@/app/strength-actions";
 import { getDb } from "@/lib/db";
+import { ExerciseChart } from "@/components/ExerciseChart";
+import { Icon } from "@/components/icons";
+import { shortDate, todayLocal } from "@/lib/dates";
+import { fmtNum } from "@/lib/format";
 import { CATALOG, activePlace, findExercise } from "@/lib/strength/catalog";
+import { exerciseHistory, fmtLoad, strengthRecords, type ExercisePoint } from "@/lib/strength/workouts";
 import { CATEGORY_LABEL, EQUIPMENT, MUSCLE_LABEL, canDo } from "@/lib/strength/labels";
 
 const BY_ID = new Map(CATALOG.map((x) => [x.id, x.name]));
@@ -30,6 +35,8 @@ async function Content({ params }: { params: PageProps<"/fuerza/ejercicios/[id]"
   if (!x) notFound();
   const place = activePlace(db);
   const ok = place && canDo(x.eq, place.equipment);
+  const history = exerciseHistory(db.activities, x.id);
+  const records = strengthRecords(db.activities);
 
   return (
     <>
@@ -60,6 +67,7 @@ async function Content({ params }: { params: PageProps<"/fuerza/ejercicios/[id]"
           )
         }
       />
+      {history.length > 0 && <Progress history={history} records={(id) => records.get(id)?.some((r) => r.exerciseId === x.id)} />}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <div className="space-y-4">
           <ExerciseAnimation x={x} />
@@ -110,3 +118,61 @@ async function Content({ params }: { params: PageProps<"/fuerza/ejercicios/[id]"
     </>
   );
 }
+
+const maxBy = (h: ExercisePoint[], f: (p: ExercisePoint) => number) => h.reduce((b, p) => (f(p) > f(b) ? p : b));
+const setText = (p: ExercisePoint, s: ExercisePoint["sets"][number]) => `${p.bw || s.kg ? `${fmtLoad(p.bw, s.kg)} × ` : ""}${s.reps}`;
+
+/** Récords, evolución e historial de un ejercicio. */
+function Progress({ history, records }: { history: ExercisePoint[]; records: (activityId: string) => boolean | undefined }) {
+  const weighted = history.some((p) => p.topKg > 0);
+  const last = history[history.length - 1];
+  const rm = maxBy(history, (p) => p.oneRm ?? 0);
+  const heavy = maxBy(history, (p) => p.topKg);
+  const vol = maxBy(history, (p) => p.volume);
+  const reps = maxBy(history, (p) => p.maxReps);
+  const heavySet = heavy.sets.filter((s) => (s.kg ?? 0) === heavy.topKg).reduce((b, s) => ((s.reps ?? 0) > (b.reps ?? 0) ? s : b));
+  return (
+    <div className="mb-4 space-y-4">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        {weighted ? (
+          <>
+            {rm.oneRm ? <Stat label="1RM estimado" value={fmtNum(rm.oneRm, 1)} unit="kg" sub={shortDate(rm.date)} hint="Fórmula de Epley con tu mejor serie de 1-12 repeticiones" /> : null}
+            <Stat label="Más peso" value={fmtLoad(heavy.bw, heavy.topKg)} sub={`× ${heavySet.reps} · ${shortDate(heavy.date)}`} />
+            <Stat label="Mejor volumen" value={fmtNum(vol.volume)} unit="kg" sub={shortDate(vol.date)} />
+          </>
+        ) : (
+          <>
+            <Stat label="Mejor serie" value={reps.maxReps} unit="reps" sub={shortDate(reps.date)} />
+            <Stat label="Más repeticiones en una sesión" value={maxBy(history, (p) => p.reps).reps} unit="reps" />
+          </>
+        )}
+        <Stat label="Sesiones" value={history.length} sub={`Última: ${shortDate(last.date)}`} />
+      </div>
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <Card title="Evolución">
+          <ExerciseChart points={history} today={todayLocal()} />
+        </Card>
+        <Card title="Historial" subtitle={history.length > 10 ? "Las 10 últimas sesiones" : undefined}>
+          <ul className="divide-y divide-line">
+            {history
+              .slice(-10)
+              .reverse()
+              .map((p) => (
+                <li key={p.activityId} className="py-2">
+                  <div className="flex items-baseline justify-between gap-2">
+                    <Link href={`/actividad/${p.activityId}`} className="inline-flex items-center gap-1 text-sm font-semibold hover:text-accent">
+                      {shortDate(p.date)}
+                      {records(p.activityId) && <Icon name="trophy" className="h-3.5 w-3.5 text-accent" />}
+                    </Link>
+                    {p.oneRm ? <span className="text-xs text-muted">1RM est. {fmtNum(p.oneRm, 1)} kg</span> : null}
+                  </div>
+                  <p className="tabular text-xs text-ink-2">{p.sets.map((s) => setText(p, s)).join(" · ")}</p>
+                </li>
+              ))}
+          </ul>
+        </Card>
+      </div>
+    </div>
+  );
+}
+
