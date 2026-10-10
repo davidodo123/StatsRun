@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 import { logout } from "@/app/auth-actions";
 
 const ITEMS = [
@@ -17,17 +18,95 @@ const ITEMS = [
   { href: "/ajustes", label: "Datos", icon: "M12 15V3m0 0L8 7m4-4l4 4M4 15v4a1 1 0 001 1h14a1 1 0 001-1v-4" },
 ];
 
-function Icon({ d }: { d: string }) {
+function Icon({ d, className = "h-5 w-5" }: { d: string; className?: string }) {
   return (
-    <svg viewBox="0 0 24 24" className="h-5 w-5 shrink-0" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+    <svg viewBox="0 0 24 24" className={`${className} shrink-0`} fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
       <path d={d} />
     </svg>
   );
 }
 
+// en el móvil caben 5 secciones con holgura; el resto va en «Más»
+const MOBILE_MAIN = ["/", "/plan", "/fuerza", "/registrar", "/perfil"];
+const MORE_ICON = "M5 12h.01M12 12h.01M19 12h.01";
+const LONG_LABEL: Record<string, string> = { "/estadisticas": "Estadísticas", "/herramientas": "Calculadoras", "/ajustes": "Importar / demo" };
+
+/** Móvil: barra inferior con las 5 secciones principales y un panel «Más» con el resto. */
+function MobileNav({ active }: { active: (href: string) => boolean }) {
+  const [more, setMore] = useState(false);
+  const main = ITEMS.filter((i) => MOBILE_MAIN.includes(i.href));
+  const rest = ITEMS.filter((i) => !MOBILE_MAIN.includes(i.href));
+  const restActive = rest.some((i) => active(i.href));
+  const tab = "flex flex-1 flex-col items-center justify-center gap-1 pb-1.5 pt-2.5 text-[11px] font-medium";
+  return (
+    <>
+      {more && (
+        <div className="fixed inset-0 z-40 md:hidden" onClick={() => setMore(false)}>
+          <div className="absolute inset-0 bg-black/40" />
+          <div
+            className="absolute inset-x-3 bottom-[calc(4.75rem+env(safe-area-inset-bottom))] rounded-2xl border border-line bg-surface p-2 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="grid grid-cols-3 gap-1">
+              {rest.map((it) => (
+                <Link
+                  key={it.href}
+                  href={it.href}
+                  onClick={() => setMore(false)}
+                  className={`flex flex-col items-center gap-1.5 rounded-xl px-1 py-3 text-xs font-medium ${active(it.href) ? "bg-surface-2 text-accent" : "text-ink-2 hover:bg-surface-2"}`}
+                >
+                  <Icon d={it.icon} className="h-6 w-6" />
+                  {LONG_LABEL[it.href] ?? it.label}
+                </Link>
+              ))}
+            </div>
+            <form action={logout} className="mt-1 border-t border-line pt-1">
+              <button className="w-full rounded-xl py-2.5 text-sm font-medium text-ink-2 hover:bg-surface-2">Cerrar sesión</button>
+            </form>
+          </div>
+        </div>
+      )}
+      <nav className="fixed inset-x-0 bottom-0 z-40 flex border-t border-line bg-surface/95 px-1 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden">
+        {main.map((it) => (
+          <Link key={it.href} href={it.href} className={`${tab} ${active(it.href) ? "text-accent" : "text-muted"}`}>
+            <Icon d={it.icon} className="h-6 w-6" />
+            {it.label}
+          </Link>
+        ))}
+        <button type="button" onClick={() => setMore((m) => !m)} aria-expanded={more} className={`${tab} ${more || restActive ? "text-accent" : "text-muted"}`}>
+          <Icon d={MORE_ICON} className="h-6 w-6" />
+          Más
+        </button>
+      </nav>
+    </>
+  );
+}
+
 /** Menú con la sección actual resaltada. Va dentro de <Suspense fallback={<NavView />}>: la ruta solo se conoce al pedir la página. */
 export function Nav() {
-  return <NavView path={usePathname()} />;
+  const path = usePathname();
+  const query = useSearchParams().toString();
+  // páginas visitadas en esta pestaña: para volver al sitio de antes tras borrar algo
+  useEffect(() => {
+    const url = query ? `${path}?${query}` : path;
+    try {
+      const list = JSON.parse(sessionStorage.getItem(VISITED) ?? "[]") as string[];
+      if (list.at(-1) !== url) sessionStorage.setItem(VISITED, JSON.stringify([...list, url].slice(-30)));
+    } catch {}
+  }, [path, query]);
+  return <NavView path={path} />;
+}
+
+const VISITED = "rio-visitadas";
+
+/** Última página visitada que no cumpla `skip` (p. ej. las del entreno que se acaba de borrar). */
+export function lastVisited(skip: (url: string) => boolean, fallback: string): string {
+  try {
+    const list = JSON.parse(sessionStorage.getItem(VISITED) ?? "[]") as string[];
+    return [...list].reverse().find((u) => !skip(u)) ?? fallback;
+  } catch {
+    return fallback;
+  }
 }
 
 /** Menú sin sección resaltada (el que se prerenderiza) o con ella. */
@@ -60,19 +139,7 @@ export function NavView({ path }: { path?: string }) {
           <button className="w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-ink-2 hover:bg-surface-2">Cerrar sesión</button>
         </form>
       </nav>
-      {/* Móvil: barra inferior */}
-      <nav className="fixed inset-x-0 bottom-0 z-40 flex justify-around border-t border-line bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden">
-        {ITEMS.filter((i) => i.href !== "/herramientas" && i.href !== "/ajustes" && i.href !== "/carreras").map((it) => (
-          <Link
-            key={it.href}
-            href={it.href}
-            className={`flex flex-1 flex-col items-center gap-0.5 py-2 text-[10px] font-medium ${active(it.href) ? "text-accent" : "text-muted"}`}
-          >
-            <Icon d={it.icon} />
-            {it.label}
-          </Link>
-        ))}
-      </nav>
+      <MobileNav active={active} />
     </>
   );
 }

@@ -11,7 +11,7 @@ import { Card, Loading, Notice, PageHeader, Status } from "@/components/ui";
 import { fmtDuration, fmtPace } from "@/lib/format";
 import { WEEKDAYS, diffDays, shortDate, weekday } from "@/lib/dates";
 import type { PlannedSession } from "@/lib/types";
-import { deleteActivity } from "@/app/actions";
+import { DeleteActivityButton } from "@/components/DeleteActivityButton";
 import { getFriends } from "@/lib/auth";
 import { TagChips } from "@/components/ActivityItem";
 import { tagsForDb } from "@/lib/engine/tags";
@@ -119,10 +119,9 @@ async function Content({ searchParams }: { searchParams: PageProps<"/registrar">
           friends={friends.map((f) => ({ id: f.id, name: f.name, username: f.username }))}
         />
         {editing && (
-          <form action={deleteActivity} className="mt-4 border-t border-line pt-4">
-            <input type="hidden" name="id" value={editing.id} />
-            <button className="text-sm text-ink-2 underline hover:text-critical">Borrar este entreno</button>
-          </form>
+          <div className="mt-4 border-t border-line pt-4">
+            <DeleteActivityButton id={editing.id} />
+          </div>
         )}
       </Card>
 

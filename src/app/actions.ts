@@ -485,5 +485,6 @@ export async function deleteActivity(fd: FormData): Promise<void> {
   await updateDb((db) => {
     db.activities = db.activities.filter((a) => a.id !== id);
   });
-  redirect("/registrar");
+  // la vuelta a la página de antes la hace el botón (DeleteActivityButton), que sabe de dónde se venía
+  refresh();
 }

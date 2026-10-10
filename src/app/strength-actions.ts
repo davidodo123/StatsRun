@@ -3,7 +3,13 @@
 
 import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
-import { updateDb } from "@/lib/db";
+import { after } from "next/server";
+import { readDbNow, updateDb } from "@/lib/db";
+import { requireUserId } from "@/lib/session";
+import { adaptWithAI, coachConfig } from "@/lib/coach";
+import { todayLocal } from "@/lib/dates";
+import { findExercise } from "@/lib/strength/catalog";
+import { cleanRoutineExercises, cleanWorkout } from "@/lib/strength/workouts";
 import { CATEGORIES, EQUIPMENT, MUSCLES, PLACE_PRESETS, type Equipment, type ExerciseCategory, type Muscle } from "@/lib/strength/labels";
 import type { FormState } from "./actions";
 
@@ -115,3 +121,102 @@ export async function deleteCustomExercise(fd: FormData): Promise<void> {
   });
   redirect("/fuerza/ejercicios");
 }
+
+// ---------- Rutinas ----------
+
+const MAX_ROUTINES = 50;
+
+/** Guarda una rutina desde el editor (llega como objeto, no como formulario). */
+export async function saveRoutine(input: { id?: string; name?: string; notes?: string; exercises?: unknown }): Promise<FormState> {
+  const db = await readDbNow();
+  const name = String(input.name ?? "").trim().slice(0, 60);
+  const exercises = cleanRoutineExercises(input.exercises, (id) => Boolean(findExercise(db, id)));
+  if (!name) return { error: "Ponle un nombre a la rutina." };
+  if (!exercises.length) return { error: "Añade al menos un ejercicio." };
+
+  let id = String(input.id ?? "");
+  let error: string | undefined;
+  await updateDb((d) => {
+    const list = (d.routines ??= []);
+    const now = new Date().toISOString();
+    const notes = String(input.notes ?? "").trim().slice(0, 300) || undefined;
+    const i = list.findIndex((r) => r.id === id);
+    if (i >= 0) list[i] = { ...list[i], name, notes, exercises, updatedAt: now };
+    else if (list.length >= MAX_ROUTINES) error = `Como máximo ${MAX_ROUTINES} rutinas.`;
+    else {
+      id = newId("r_");
+      list.push({ id, name, notes, exercises, createdAt: now, updatedAt: now });
+    }
+  });
+  if (error) return { error };
+  redirect(`/fuerza/rutinas/${id}`);
+}
+
+export async function duplicateRoutine(fd: FormData): Promise<void> {
+  const id = String(fd.get("id") ?? "");
+  await updateDb((db) => {
+    const src = db.routines?.find((r) => r.id === id);
+    if (!src || db.routines!.length >= MAX_ROUTINES) return;
+    const now = new Date().toISOString();
+    db.routines!.push({ ...structuredClone(src), id: newId("r_"), name: `${src.name} (copia)`.slice(0, 60), createdAt: now, updatedAt: now });
+  });
+  refresh();
+}
+
+export async function deleteRoutine(fd: FormData): Promise<void> {
+  const id = String(fd.get("id") ?? "");
+  await updateDb((db) => {
+    db.routines = (db.routines ?? []).filter((r) => r.id !== id);
+  });
+  redirect("/fuerza");
+}
+
+// ---------- Entreno en vivo ----------
+
+/** Guarda el entreno terminado como actividad de fuerza (cuenta en la carga, el plan y el feed). */
+export async function finishWorkout(input: {
+  name?: string;
+  startLocal?: string;
+  durationSec?: number;
+  rpe?: number;
+  feelings?: string;
+  workout?: unknown;
+}): Promise<FormState> {
+  const db = await readDbNow();
+  const workout = cleanWorkout(input.workout, (id) => findExercise(db, id)?.name, db.profile?.weightKg);
+  const startLocal = String(input.startLocal ?? "");
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/.test(startLocal) || startLocal.slice(0, 10) > todayLocal()) return { error: "Fecha del entreno no válida." };
+  const durationSec = Math.round(Math.min(Math.max(Number(input.durationSec) || 0, 60), 6 * 3600));
+  const rpe = Number(input.rpe);
+  const routineName = workout.routineId ? db.routines?.find((r) => r.id === workout.routineId)?.name : undefined;
+  const id = `fuerza-${Date.now().toString(36)}`;
+
+  await updateDb((d) => {
+    d.activities = [
+      ...d.activities,
+      {
+        id,
+        source: "manual" as const,
+        name: String(input.name ?? "").trim().slice(0, 80) || routineName || "Entreno de fuerza",
+        sport: "strength" as const,
+        sportRaw: "strength",
+        date: startLocal.slice(0, 10),
+        startLocal,
+        distanceM: 0,
+        movingSec: durationSec,
+        elapsedSec: durationSec,
+        elevationGainM: 0,
+        rpe: rpe >= 1 && rpe <= 10 ? Math.round(rpe) : undefined,
+        feelings: String(input.feelings ?? "").trim().slice(0, 1000) || undefined,
+        workout,
+      },
+    ].sort((a, b) => a.startLocal.localeCompare(b.startLocal));
+  });
+  // la IA reajusta los próximos días con la nueva carga
+  if (coachConfig().configured) {
+    const uid = await requireUserId();
+    after(() => adaptWithAI(uid).then(() => undefined));
+  }
+  redirect(`/actividad/${id}`);
+}
+

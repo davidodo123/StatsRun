@@ -108,6 +108,18 @@ body {
   background: var(--bg);
   color: var(--text);
   font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  /* nada puede ensanchar la página: en el iPhone se movía todo hacia los lados */
+  overflow-x: hidden;
+  overflow-x: clip;
+}
+
+/* En móvil, los campos a 16 px: con menos, Safari del iPhone hace zoom al tocarlos y la página se descuadra */
+@media (max-width: 767px) {
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
 }
 
 .tabular {

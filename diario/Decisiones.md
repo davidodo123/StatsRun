@@ -244,3 +244,74 @@ Qué se decidió, por qué y cuándo. Si algo cambia, se añade una entrada nuev
   - `/fuerza/material`.
 - «Fuerza» se añade al menú (7 iconos en el móvil) y hay un enlace desde Perfil → Fuerza.
 
+## Rutinas y entreno en vivo
+*2026-10-10*
+
+- A David no le gustó la primera portada de Fuerza. Mandó capturas de Hevy y se rehízo igual:
+  - «Empezar entrenamiento vacío»;
+  - Rutinas, con «Nueva rutina» y «Explorar» (la biblioteca);
+  - tarjetas de rutina con sus ejercicios y «Empezar rutina».
+- **Ficha de rutina** (`/fuerza/rutinas/[id]`):
+  - «Comenzar rutina»;
+  - gráfica de volumen, repeticiones o duración de cada vez que se hizo (último mes, 3 meses o año);
+  - tabla SERIE · KG · REPS de cada ejercicio;
+  - «Editar rutina».
+- **Editor** (`/fuerza/rutinas/nueva` y `/[id]/editar`):
+  - filas de kg y repeticiones (añadir y quitar);
+  - descanso por ejercicio, reordenar y quitar ejercicios;
+  - al tocar el número de serie cambia de tipo: calentamiento (C), descendente (D) o al fallo (F);
+  - selector de ejercicios a pantalla completa, de varios a la vez, filtrado por tu material.
+- **Entreno en vivo** (`/fuerza/entreno?rutina=…`):
+  - cabecera con duración, volumen y series;
+  - columnas SERIE · ANTERIOR · KG · REPS · ✓;
+  - en gris, lo de la rutina o lo de la última vez: si no se escribe nada, al marcar ✓ se apunta eso;
+  - «Anterior» empareja calentamiento con calentamiento y series efectivas con efectivas;
+  - al marcar ✓ empieza el descanso (barra con −15, +15 y Saltar);
+  - «Terminar» pide nombre, RPE y cómo te has sentido.
+- El entreno en curso se guarda en el **navegador** (`localStorage`): si se cierra la app o se bloquea el iPhone, sigue donde estaba durante 12 h. Al guardar se borra.
+- Al terminar se crea una **actividad de fuerza** con `workout` (solo las series marcadas):
+  - cuenta en la carga (sRPE con el RPE), el plan, el feed y los logros;
+  - la IA reajusta los próximos días;
+  - la página de la actividad enseña los ejercicios, las series, el volumen y el 1RM estimado (Epley, hasta 12 repeticiones).
+- El volumen no cuenta las series de calentamiento.
+- Problemas encontrados al probar:
+  - varios ✓ seguidos se pisaban: ahora el estado se actualiza siempre sobre el más reciente;
+  - al guardar, Next volvía a renderizar la página y el entreno se recreaba en el navegador: ahora el efecto depende del id de la rutina y, tras guardar, ya no se escribe.
+- Tras probarlo, David pide terminar cuando quiera y poder pausar:
+  - **Terminar** ya no exige series marcadas. Se guardan las marcadas con ✓ aunque no lleven kg ni repeticiones (p. ej. flexiones sin peso). Si no hay ninguna, se guarda igual el entreno con su duración.
+  - **Pausa**: «⏸ Pausa» / «▶ Reanudar» en la cabecera. Para el cronómetro y el descanso, y la duración guardada descuenta el tiempo en pausa (`pausedMs`).
+
+## Borrar un entreno vuelve a donde estabas
+*2026-10-10*
+
+- Antes, al borrar un entreno siempre se iba a Registrar. Ahora se vuelve a la última página visitada que no sea de ese entreno (Perfil, Inicio, Fuerza…). Si no hay ninguna, va a Perfil → Actividades.
+- El menú (`Nav`) apunta en `sessionStorage` las últimas 30 páginas de la pestaña. `DeleteActivityButton` borra, se salta la ficha y la edición del entreno borrado y vuelve a la página anterior.
+- Además pide confirmación antes de borrar.
+
+## Peso corporal en los ejercicios
+*2026-10-10*
+
+- David pide que en KG se pueda elegir el peso corporal, tomando el peso del perfil.
+- Va **por ejercicio**: selector «⚖ Peso: Kg / Peso corporal» junto al descanso, en el editor de rutinas y en el entreno en vivo.
+  - Con peso corporal, la columna pasa a **+KG**: el lastre opcional (chaleco, cinturón, mochila).
+  - Carga de la serie = peso del perfil + lastre. Se muestra como «PC» o «PC + 10 kg».
+- Los ejercicios que solo usan el cuerpo (con barra de dominadas, banco o cajón como mucho) empiezan con peso corporal al añadirlos.
+- Al guardar el entreno se apunta el peso del perfil de ese día (`bodyKg`). El volumen y el 1RM estimado se calculan con la carga real y no cambian si luego cambias de peso.
+- Sin peso en el perfil, se avisa: «Pon tu peso en Perfil para contarlo en el volumen».
+- Rediseño (petición de David, «se ve mal»):
+  - **Descanso**: chip redondeado ⏱, también editable durante el entreno.
+  - **Peso**: control segmentado **[Kg | Peso corporal]** en lugar del desplegable.
+  - Con peso corporal, la tabla tiene una columna **PESO** con el chip fijo «PC» (y tus kg del perfil en el entreno) y otra **LASTRE** para el peso añadido (+0 si no llevas).
+
+## Arreglos de la versión móvil
+*2026-10-10*
+
+- **La página se movía hacia los lados en el iPhone.** En Chrome nada se salía de ancho. La causa probable es que los campos tenían letra de menos de 16 px y Safari hace zoom al tocarlos. Arreglos:
+  - en móvil, `input`, `select` y `textarea` van a 16 px;
+  - `body` recorta lo que se salga de ancho (`overflow-x: clip`, con `hidden` como respaldo).
+- **Barra inferior.** Con 7 iconos quedaba estrecha. Ahora:
+  - es más alta (iconos de 24 px y texto de 11 px) y tiene 5 secciones: Inicio, Plan, Fuerza, Registrar y Perfil;
+  - «Más» abre un panel con Estadísticas, Amigos, Carreras, Calculadoras, Importar y **Cerrar sesión**, que antes no estaba en el móvil;
+  - el hueco inferior de la página y la barra de descanso del entreno se ajustan a la nueva altura.
+- El atajo de Salud funciona. iOS pide permiso para «enviar muestras médicas a la web»: hay que darle a **«Permitir siempre»**, si no, la automatización nocturna se queda esperando la respuesta.
+

@@ -107,6 +107,7 @@ export interface Activity {
   route?: string; // recorrido GPS como encoded polyline (lib/route.ts)
   with?: string[]; // ids de los amigos con los que se hizo la sesión
   sharedFrom?: string; // "<idUsuario>:<idActividad>" si se copió de la sesión de un amigo
+  workout?: Workout; // entreno de fuerza registrado en vivo: ejercicios y series
 }
 
 export type SessionType =
@@ -192,6 +193,52 @@ export interface Db {
   places?: GymPlace[]; // dónde entrena fuerza y con qué material
   activePlaceId?: string;
   customExercises?: CustomExercise[]; // ejercicios creados por el usuario (además del catálogo)
+  routines?: Routine[]; // rutinas de fuerza
+}
+
+export type SetType = "normal" | "calentamiento" | "descendente" | "fallo";
+
+/** Serie de una rutina: lo que toca (kg y repeticiones orientativos). */
+export interface RoutineSet {
+  type?: SetType; // sin tipo = normal
+  kg?: number;
+  reps?: number;
+}
+
+export interface RoutineExercise {
+  exerciseId: string;
+  sets: RoutineSet[];
+  bw?: boolean; // con peso corporal: los kg de cada serie son lastre añadido
+  restSec?: number; // descanso entre series
+  notes?: string;
+}
+
+export interface Routine {
+  id: string;
+  name: string;
+  exercises: RoutineExercise[];
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** Serie hecha en un entreno. */
+export interface WorkoutSet extends RoutineSet {
+  rir?: number; // repeticiones en reserva
+}
+
+export interface WorkoutExercise {
+  exerciseId: string;
+  name: string; // nombre al hacerlo (por si luego se borra un ejercicio propio)
+  sets: WorkoutSet[];
+  bw?: boolean; // con peso corporal: carga = bodyKg + kg de la serie (lastre)
+  bodyKg?: number; // peso del perfil el día del entreno
+  notes?: string;
+}
+
+export interface Workout {
+  routineId?: string;
+  exercises: WorkoutExercise[];
 }
 
 /** Un sitio donde se entrena fuerza y el material que hay. */

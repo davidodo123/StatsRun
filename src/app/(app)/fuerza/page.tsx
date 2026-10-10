@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
-import { Card, Loading, PageHeader } from "@/components/ui";
+import { Loading, PageHeader } from "@/components/ui";
+import { deleteRoutine, duplicateRoutine } from "@/app/strength-actions";
 import { getDb } from "@/lib/db";
-import { CATALOG, activePlace } from "@/lib/strength/catalog";
-import { EQUIPMENT, canDo } from "@/lib/strength/labels";
+import { activePlace, findExercise } from "@/lib/strength/catalog";
+import { workoutSets, workoutVolume } from "@/lib/strength/workouts";
+import { fmtDuration } from "@/lib/format";
+import { WEEKDAYS, shortDate, weekday } from "@/lib/dates";
 
 export const metadata: Metadata = { title: "Fuerza" };
 
@@ -19,65 +22,98 @@ export default function StrengthPage() {
 async function Content() {
   const db = await getDb();
   const place = activePlace(db);
-  const doable = place ? CATALOG.filter((x) => canDo(x.eq, place.equipment)).length : CATALOG.length;
-  const custom = db.customExercises?.length ?? 0;
+  const routines = db.routines ?? [];
+  const recent = db.activities
+    .filter((a) => a.workout)
+    .sort((a, b) => b.startLocal.localeCompare(a.startLocal))
+    .slice(0, 5);
 
   return (
     <>
-      <PageHeader title="Fuerza" subtitle="Tus ejercicios, tu material y, pronto, tus rutinas y entrenos en vivo." />
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <Card title="Mi material" subtitle="Dónde entrenas y qué tienes. Los ejercicios y las rutinas se adaptan a ello." action={<Link href="/fuerza/material" className="text-sm font-medium text-accent">Gestionar →</Link>}>
-          {place ? (
-            <>
-              <p className="text-sm">
-                Ahora: <strong>{place.name}</strong>
-                {db.places!.length > 1 && <span className="text-muted"> · {db.places!.length} lugares</span>}
-              </p>
-              <ul className="mt-2 flex flex-wrap gap-1.5">
-                {place.equipment.map((e) => {
-                  const it = EQUIPMENT.find((q) => q.id === e)!;
-                  return (
-                    <li key={e} className="rounded-full bg-surface-2 px-2.5 py-1 text-xs">
-                      {it.icon} {it.label}
-                    </li>
-                  );
-                })}
-              </ul>
-              {place.notes && <p className="mt-2 text-xs text-ink-2">{place.notes}</p>}
-            </>
-          ) : (
-            <p className="text-sm text-ink-2">
-              Aún no has dicho con qué entrenas. <Link href="/fuerza/material" className="font-medium text-accent">Añade tu casa, tu gimnasio o «sin material»</Link>.
-            </p>
-          )}
-        </Card>
-        <Card title="Ejercicios" subtitle="Biblioteca con fotos e instrucciones en español, más los que crees tú." action={<Link href="/fuerza/ejercicios" className="text-sm font-medium text-accent">Ver todos →</Link>}>
-          <div className="grid grid-cols-3 gap-2 text-center">
-            <Count n={CATALOG.length + custom} label="en total" />
-            <Count n={doable + custom} label={place ? `en ${place.name}` : "con cualquier material"} />
-            <Count n={custom} label="propios" />
-          </div>
-          <Link href="/fuerza/ejercicios/nuevo" className="btn btn-ghost mt-3 w-full">
-            + Crear ejercicio
-          </Link>
-        </Card>
-      </div>
-      <Card className="mt-4" title="Próximamente">
-        <ul className="list-inside list-disc space-y-1 text-sm text-ink-2">
-          <li>Rutinas propias y entreno en vivo: series, kilos, repeticiones y descanso.</li>
-          <li>Progreso por ejercicio, récords y mapa de músculos.</li>
-          <li>Entrenador IA de fuerza que te monta un programa con tu material y tu plan de carrera.</li>
-        </ul>
-      </Card>
-    </>
-  );
-}
+      <PageHeader title="Fuerza" />
+      <Link href="/fuerza/entreno" className="flex items-center gap-3 rounded-2xl border border-line bg-surface p-4 font-semibold hover:bg-surface-2">
+        <span className="text-2xl leading-none">+</span> Empezar entrenamiento vacío
+      </Link>
 
-function Count({ n, label }: { n: number; label: string }) {
-  return (
-    <div className="rounded-xl bg-surface-2 p-2">
-      <div className="tabular text-xl font-bold">{n}</div>
-      <div className="truncate text-[11px] text-muted">{label}</div>
-    </div>
+      <div className="mt-6 flex items-center justify-between">
+        <h2 className="text-lg font-bold">Rutinas</h2>
+        <Link href="/fuerza/material" className="text-xs text-ink-2 hover:text-ink">
+          {place ? `📍 ${place.name} · cambiar` : "📍 Añadir mi material"}
+        </Link>
+      </div>
+      <div className="mt-3 grid grid-cols-2 gap-3">
+        <Link href="/fuerza/rutinas/nueva" className="flex items-center justify-center gap-2 rounded-2xl border border-line bg-surface p-3 font-medium hover:bg-surface-2">
+          📋 Nueva rutina
+        </Link>
+        <Link href="/fuerza/ejercicios" className="flex items-center justify-center gap-2 rounded-2xl border border-line bg-surface p-3 font-medium hover:bg-surface-2">
+          🔍 Explorar
+        </Link>
+      </div>
+
+      <p className="mt-5 text-sm text-muted">Mis rutinas ({routines.length})</p>
+      <div className="mt-2 grid grid-cols-1 gap-3 lg:grid-cols-2">
+        {routines.map((r) => (
+          <section key={r.id} className="rounded-2xl border border-line bg-surface p-4">
+            <div className="flex items-start justify-between gap-2">
+              <Link href={`/fuerza/rutinas/${r.id}`} className="min-w-0 text-lg font-bold hover:text-accent">
+                {r.name}
+              </Link>
+              <details className="relative">
+                <summary className="cursor-pointer list-none px-2 text-xl leading-none text-ink-2" aria-label={`Opciones de ${r.name}`}>
+                  ⋯
+                </summary>
+                <div className="absolute right-0 z-20 mt-1 w-40 overflow-hidden rounded-xl border border-line bg-surface text-sm shadow-lg">
+                  <Link href={`/fuerza/rutinas/${r.id}/editar`} className="block px-3 py-2 hover:bg-surface-2">
+                    Editar rutina
+                  </Link>
+                  <form action={duplicateRoutine}>
+                    <input type="hidden" name="id" value={r.id} />
+                    <button className="w-full px-3 py-2 text-left hover:bg-surface-2">Duplicar</button>
+                  </form>
+                  <form action={deleteRoutine}>
+                    <input type="hidden" name="id" value={r.id} />
+                    <button className="w-full px-3 py-2 text-left text-critical hover:bg-surface-2">Borrar</button>
+                  </form>
+                </div>
+              </details>
+            </div>
+            <p className="mt-1 line-clamp-2 text-sm text-ink-2">{r.exercises.map((e) => findExercise(db, e.exerciseId)?.name ?? "¿?").join(", ")}</p>
+            <Link href={`/fuerza/entreno?rutina=${r.id}`} className="btn mt-3 w-full">
+              Empezar rutina
+            </Link>
+          </section>
+        ))}
+        {!routines.length && (
+          <p className="rounded-2xl border border-dashed border-line p-4 text-sm text-ink-2">
+            Aún no tienes rutinas. Crea una con tus ejercicios, series, kilos y repeticiones, o empieza un entreno vacío y ve añadiendo.
+          </p>
+        )}
+      </div>
+
+      {recent.length > 0 && (
+        <>
+          <p className="mt-6 text-sm text-muted">Últimos entrenos</p>
+          <ul className="mt-2 divide-y divide-line rounded-2xl border border-line bg-surface">
+            {recent.map((a) => (
+              <li key={a.id}>
+                <Link href={`/actividad/${encodeURIComponent(a.id)}`} className="flex items-center justify-between gap-3 p-3 hover:bg-surface-2">
+                  <span className="min-w-0">
+                    <strong className="block truncate text-sm">{a.name}</strong>
+                    <span className="text-xs text-muted">
+                      {WEEKDAYS[weekday(a.date)].slice(0, 3)} {shortDate(a.date)} · {fmtDuration(a.movingSec)}
+                    </span>
+                  </span>
+                  <span className="shrink-0 text-right text-xs text-ink-2">
+                    {workoutVolume(a.workout!).toLocaleString("es-ES")} kg
+                    <br />
+                    {workoutSets(a.workout!)} series
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+    </>
   );
 }

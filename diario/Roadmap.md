@@ -82,11 +82,11 @@ Base: [[Estudio entrenamiento#6. La Pirámide de Entrenamiento (Helms, Valdez, M
 - [x] Mi material: lugares («Casa: mancuernas hasta 20 kg y kettlebell 16 kg», «Gimnasio», «Sin material»)
 - [x] Buscar y filtrar por músculo y material
 
-### 4.2 · Rutinas y entreno en vivo
-- [ ] Crear y editar rutinas (carpetas)
-- [ ] Empezar entreno (vacío o desde rutina): series con «anterior», kg, repeticiones, RIR y ✓; tipos de serie (calentamiento, normal, descendente, al fallo)
-- [ ] Temporizador de descanso, superseries, notas por ejercicio
-- [ ] Se guarda como actividad de fuerza (cuenta en la carga, el feed y los logros)
+### 4.2 · Rutinas y entreno en vivo — *hecho 2026-10-10 con el diseño de Hevy que pidió David, pendiente de comprobar* → [[Decisiones#Rutinas y entreno en vivo]]
+- [x] Crear, editar, duplicar y borrar rutinas (las carpetas quedan para más adelante)
+- [x] Empezar entreno (vacío o desde rutina): series con «anterior», kg, repeticiones, RIR y ✓; tipos de serie (calentamiento, normal, descendente, al fallo)
+- [/] Temporizador de descanso ✓ · superseries y notas por ejercicio pendientes
+- [x] Se guarda como actividad de fuerza (cuenta en la carga, el feed y los logros)
 
 ### 4.3 · Progreso
 - [ ] Por ejercicio: 1RM estimado, mejor serie, volumen, historial y récords

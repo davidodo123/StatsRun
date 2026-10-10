@@ -14,6 +14,9 @@ import { publicActivity } from "@/lib/feed";
 import { requireUserId } from "@/lib/session";
 import { WEEKDAYS, shortDate, todayLocal, weekday } from "@/lib/dates";
 import { fmtDuration, fmtKm, fmtNum, fmtPace } from "@/lib/format";
+import { SetBadge } from "@/components/RoutineEditor";
+import { estimate1RM, fmtLoad, setLoad, workoutReps, workoutSets, workoutVolume } from "@/lib/strength/workouts";
+import type { Workout } from "@/lib/types";
 
 export const metadata: Metadata = { title: "Sesión" };
 
@@ -71,7 +74,9 @@ async function Content({ params, searchParams }: { params: PageProps<"/actividad
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <div className="space-y-4 lg:col-span-2">
           {tags.length > 0 && <TagChips tags={tags} />}
-          {a.route ? (
+          {a.workout ? (
+            <WorkoutCard workout={a.workout} />
+          ) : a.route ? (
             <RouteReplay route={a.route} distanceKm={a.distanceM / 1000} movingSec={a.movingSec}>
               <RouteMap route={a.route} label={`Mapa de ${a.name}`} />
             </RouteReplay>
@@ -90,6 +95,7 @@ async function Content({ params, searchParams }: { params: PageProps<"/actividad
             {a.avgHr && <Stat label="FC media" value={Math.round(a.avgHr)} unit="ppm" sub={a.maxHr ? `Máx. ${Math.round(a.maxHr)}` : undefined} />}
             {a.avgCadence && <Stat label="Cadencia" value={Math.round(a.avgCadence)} unit="ppm" />}
             {a.steps && <Stat label="Pasos" value={fmtNum(a.steps)} />}
+            {a.workout && <Stat label="Volumen" value={fmtNum(workoutVolume(a.workout))} unit="kg" sub={`${workoutSets(a.workout)} series · ${workoutReps(a.workout)} reps`} />}
             {a.rpe && <Stat label="Esfuerzo (RPE)" value={a.rpe} unit="/10" />}
           </div>
         </div>
@@ -111,3 +117,44 @@ async function Content({ params, searchParams }: { params: PageProps<"/actividad
     </>
   );
 }
+
+/** Ejercicios y series de un entreno de fuerza. */
+function WorkoutCard({ workout }: { workout: Workout }) {
+  return (
+    <Card title="Ejercicios">
+      <div className="space-y-4">
+        {workout.exercises.map((e, i) => {
+          const best = Math.max(0, ...e.sets.filter((s) => s.type !== "calentamiento").map((s) => estimate1RM(setLoad(e, s), s.reps) ?? 0));
+          return (
+            <section key={i}>
+              <div className="flex items-baseline justify-between gap-2">
+                <Link href={`/fuerza/ejercicios/${e.exerciseId}`} className="truncate font-semibold text-accent">
+                  {e.name}
+                </Link>
+                {best > 0 && <span className="shrink-0 text-xs text-muted">1RM est. {fmtNum(best, 1)} kg</span>}
+              </div>
+              <table className="mt-1 w-full text-sm">
+                <tbody>
+                  {e.sets.map((s, j) => (
+                    <tr key={j} className={j % 2 ? "bg-surface-2" : ""}>
+                      <td className="w-14 py-1">
+                        <SetBadge type={s.type ?? "normal"} n={e.sets.slice(0, j + 1).filter((y) => y.type !== "calentamiento").length} />
+                      </td>
+                      <td className="tabular py-1">
+                        {e.bw || s.kg ? `${fmtLoad(e.bw, s.kg)} × ` : ""}
+                        {s.reps ?? "–"} reps
+                      </td>
+                      <td className="py-1 text-right text-xs text-muted">{s.rir !== undefined ? `RIR ${s.rir}` : ""}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {e.notes && <p className="mt-1 text-xs text-ink-2">{e.notes}</p>}
+            </section>
+          );
+        })}
+      </div>
+    </Card>
+  );
+}
+
