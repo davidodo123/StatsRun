@@ -422,3 +422,18 @@ Qué se decidió, por qué y cuándo. Si algo cambia, se añade una entrada nuev
   - Se ve como texto bajo cada ejercicio («↑ Sube a 65 kg…» en naranja) y como valores en gris; al marcar ✓ sin escribir se apunta eso.
 - **Récords** (`strengthRecords`): más peso (o lastre) que nunca en un ejercicio; sin peso, más repeticiones en una serie. La primera vez que haces un ejercicio no cuenta. Sale la etiqueta 🏆 «Récord en Sentadilla» (o «3 récords de fuerza») en la sesión y en el feed, y en el detalle «🏆 Récord: 62.5 kg (antes 60 kg)» junto al ejercicio. Así, al subir de peso con la progresión, sale récord.
 
+## Sin emojis y app más rápida
+*2026-10-10*
+
+- David quiere la app **sin emojis** y lo más rápida posible. El resto de 4.3 (página de progreso por ejercicio, mapa de músculos, medidas, discos) queda aparcado.
+- **Emojis → iconos SVG** dibujados en el mismo estilo que el menú (`src/components/icons.tsx`, `Icon` + `ICON_PATHS`):
+  - deportes en la lista de actividades, etiquetas de sesión, logros, botones (pausa, reproducir, descanso), marcadores del mapa de la carrera;
+  - donde el icono no aportaba nada, solo texto: sensaciones («Muy fácil»…), material, banderas de las carreras (ahora el país en texto), «Ajustar con IA»;
+  - los títulos de planes ya guardados con 🏁 o 🏃 se limpian al leer los datos (`parseDb`), y a las dos IA se les pide «sin emojis».
+- **Rendimiento** (medido en un servidor de producción local con un año de datos: el servidor responde en 15-90 ms, así que el cuello está en lo que se descarga y en la distancia):
+  - **Recharts fuera**: las gráficas son SVG propio (`charts.tsx`, mismas funciones y tooltips al tocar). Eran unos 400 KB de JS (≈110 KB comprimidos) que el iPhone tenía que descargar y ejecutar en Inicio, Perfil, Estadísticas y las rutinas.
+  - **Lista de ejercicios en el JS**: los 896 ejercicios iban dentro de cada página de Ejercicios, Entreno y editor de rutinas. Ahora van en un archivo JS (`summaries.json`, lo genera `build-exercises.mjs`) que el service worker guarda en caché; en cada página solo viajan los ejercicios propios. Ejercicios: 211 → 66 KB; Entreno: 183 → 39 KB. En el entreno, la lista ya no se recalcula cada segundo con el reloj.
+  - **Caché de navegación de 30 s** (`staleTimes.dynamic`): volver a una pestaña vista hace poco es instantáneo. Todas las acciones que guardan refrescan, así que no se ven datos viejos.
+  - **Precarga de páginas en el service worker** (navigation preload): la página se pide sin esperar a que arranque el service worker.
+- **Pendiente con más impacto**: Vercel y Upstash están en **iad1 (Washington)** y David usa la app desde España: cada petición cruza el Atlántico (~100 ms ida y vuelta, varias por página). Moverlo a Europa (Vercel `fra1`/`cdg1` + base nueva de Upstash en Europa y copiar los datos) lo notaría mucho. Necesita hacerlo David en los paneles; se deja propuesto.
+

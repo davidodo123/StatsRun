@@ -66,7 +66,7 @@ async function Content() {
                   const it = EQUIPMENT.find((q) => q.id === e)!;
                   return (
                     <li key={e} className="rounded-full bg-surface-2 px-2.5 py-1 text-xs">
-                      {it.icon} {it.label}
+                      {it.label}
                     </li>
                   );
                 })}

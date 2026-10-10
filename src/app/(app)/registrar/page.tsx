@@ -38,7 +38,7 @@ function fromSession(s: PlannedSession, today: string): ActivityFormInitial {
   return {
     sessionId: s.id,
     sport: s.type === "strength" ? "strength" : "run",
-    name: s.title.replace(/^🏁\s*/, ""),
+    name: s.title,
     date: s.date <= today ? s.date : today,
     time: "07:00",
     distanceKm: s.distanceKm || undefined,

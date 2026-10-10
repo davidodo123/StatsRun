@@ -110,10 +110,14 @@ export function kvUpdate<T>(key: string, empty: () => T, fn: (doc: T) => void | 
   });
 }
 
+const EMOJI = /[\p{Extended_Pictographic}\uFE0F]\s*/gu;
+
 function parseDb(raw: string | undefined): Db {
   if (!raw) return { activities: [] };
   const db = JSON.parse(raw) as Db;
   db.activities ??= [];
+  // los planes antiguos llevaban emojis en los títulos (🏁, 🏃)
+  for (const s of db.plan?.weeks.flatMap((w) => w.sessions) ?? []) s.title = s.title.replace(EMOJI, "").trim();
   return db;
 }
 

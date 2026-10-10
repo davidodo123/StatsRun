@@ -44,7 +44,7 @@ export function StrengthCoachCard({
         />
       </label>
       <button className="btn w-full" disabled={pending}>
-        {pending ? "Creando tus rutinas… (≈ 30-60 s)" : list.length ? "↻ Rehacer mis rutinas con IA" : "✦ Crear mis rutinas con IA"}
+        {pending ? "Creando tus rutinas… (≈ 30-60 s)" : list.length ? "↻ Rehacer mis rutinas con IA" : "Crear mis rutinas con IA"}
       </button>
       {state.error && <p className="font-medium text-critical">✕ {state.error}</p>}
       {(state.message || summary) && <p className="text-ink-2">{state.message || summary}</p>}

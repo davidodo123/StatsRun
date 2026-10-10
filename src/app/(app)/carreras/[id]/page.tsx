@@ -40,7 +40,7 @@ async function RaceBody({ params }: { params: PageProps<"/carreras/[id]">["param
         ← Carreras
       </Link>
       <PageHeader
-        title={race ? `${race.flag} ${race.name}` : "Carrera personalizada"}
+        title={race ? race.name : "Carrera personalizada"}
         subtitle={race ? `${race.city}, ${race.country} · normalmente en ${MONTHS[race.month] || "cualquier fecha"}` : "Introduce los datos de tu carrera."}
       />
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">

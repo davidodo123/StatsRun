@@ -4,7 +4,7 @@ import { Suspense } from "react";
 import { Loading, PageHeader } from "@/components/ui";
 import { ExerciseBrowser, type BrowserFilters } from "@/components/ExerciseBrowser";
 import { getDb } from "@/lib/db";
-import { activePlace, allExercises, summarize } from "@/lib/strength/catalog";
+import { activePlace, customSummaries } from "@/lib/strength/catalog";
 
 export const metadata: Metadata = { title: "Ejercicios" };
 
@@ -44,7 +44,7 @@ async function Content({ searchParams }: { searchParams: PageProps<"/fuerza/ejer
           </Link>
         }
       />
-      <ExerciseBrowser exercises={allExercises(db).map(summarize)} places={places} initial={initial} />
+      <ExerciseBrowser custom={customSummaries(db)} places={places} initial={initial} />
       <p className="mt-4 text-xs text-muted">
         Fotos e instrucciones originales de{" "}
         <a href="https://github.com/yuhonas/free-exercise-db" className="underline" target="_blank" rel="noreferrer">

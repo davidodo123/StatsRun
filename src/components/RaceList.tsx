@@ -41,9 +41,7 @@ export function RaceList({ races }: { races: Race[] }) {
         {shown.map((r) => (
           <Link key={r.id} href={`/carreras/${r.id}`} className="group rounded-2xl border border-line bg-surface p-4 transition hover:border-accent">
             <div className="flex items-start justify-between gap-2">
-              <span className="text-2xl" aria-hidden>
-                {r.flag}
-              </span>
+              <span className="text-xs font-semibold uppercase tracking-wide text-muted">{r.country}</span>
               <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${PROFILE_TONE[r.profile]}`}>{r.profile}</span>
             </div>
             <h3 className="mt-2 font-semibold leading-snug group-hover:text-accent">{r.name}</h3>

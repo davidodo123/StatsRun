@@ -42,11 +42,11 @@ export interface ActivityFormInitial {
 }
 
 const FEELS: { value: Feel; label: string }[] = [
-  { value: "muy_facil", label: "😌 Muy fácil" },
-  { value: "facil", label: "🙂 Fácil" },
-  { value: "bien", label: "👍 Bien" },
-  { value: "duro", label: "😓 Duro" },
-  { value: "muy_duro", label: "🥵 Muy duro" },
+  { value: "muy_facil", label: "Muy fácil" },
+  { value: "facil", label: "Fácil" },
+  { value: "bien", label: "Bien" },
+  { value: "duro", label: "Duro" },
+  { value: "muy_duro", label: "Muy duro" },
 ];
 
 export function ActivityForm({

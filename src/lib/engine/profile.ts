@@ -3,6 +3,7 @@ import type { Activity } from "../types";
 import { addDays, diffDays, mondayOf } from "../dates";
 import type { SessionMatch } from "./planner";
 import { runs } from "./stats";
+import type { IconName } from "../../components/icons";
 
 const isStrength = (a: Activity) => a.sport === "strength";
 const inWindow = (a: Activity, today: string, from: number, to: number) => a.date <= today && diffDays(today, a.date) >= from && diffDays(today, a.date) < to;
@@ -147,7 +148,7 @@ export type AchievementGroup = "Distancia" | "Volumen" | "Ritmo" | "Constancia" 
 export interface Achievement {
   id: string;
   group: AchievementGroup;
-  icon: string;
+  icon: IconName;
   title: string;
   detail: string;
   unlocked: boolean;
@@ -191,12 +192,12 @@ export function achievements(acts: Activity[], matches?: Map<string, SessionMatc
 
   // distancia en una sola carrera
   const longest = rs.length ? Math.max(...rs.map((a) => a.distanceM)) / 1000 : 0;
-  add({ id: "first-run", group: "Distancia", icon: "👟", title: "Primera carrera", detail: "Registra tu primera carrera.", date: rs[0]?.date });
+  add({ id: "first-run", group: "Distancia", icon: "shoe", title: "Primera carrera", detail: "Registra tu primera carrera.", date: rs[0]?.date });
   for (const [km, title, icon] of [
-    [5, "5 km seguidos", "🥉"],
-    [10, "10 km seguidos", "🥈"],
-    [21.0975, "Media maratón", "🥇"],
-    [42.195, "Maratón", "🏅"],
+    [5, "5 km seguidos", "medal"],
+    [10, "10 km seguidos", "medal"],
+    [21.0975, "Media maratón", "medal"],
+    [42.195, "Maratón", "trophy"],
   ] as const) {
     const first = rs.find((a) => a.distanceM >= km * 970);
     add({ id: `dist-${km}`, group: "Distancia", icon, title, detail: `Corre ${km < 21 ? km : km.toFixed(1)} km en una sola salida.`, date: first?.date, progress: longest / km });
@@ -205,17 +206,17 @@ export function achievements(acts: Activity[], matches?: Map<string, SessionMatc
   // volumen acumulado
   for (const km of [50, 100, 250, 500, 1000]) {
     const r = reachedOn(rs, (a) => a.distanceM / 1000, km);
-    add({ id: `total-${km}`, group: "Volumen", icon: km >= 500 ? "🌍" : "📈", title: `${km} km en total`, detail: `Acumula ${km} km corriendo.`, date: r.date, progress: r.total / km });
+    add({ id: `total-${km}`, group: "Volumen", icon: km >= 500 ? "globe" : "trend", title: `${km} km en total`, detail: `Acumula ${km} km corriendo.`, date: r.date, progress: r.total / km });
   }
   const weekKm = new Map<string, number>();
   for (const a of rs) weekKm.set(mondayOf(a.date), (weekKm.get(mondayOf(a.date)) ?? 0) + a.distanceM / 1000);
   const bestWeek = Math.max(0, ...weekKm.values());
   for (const km of [30, 50]) {
     const week = [...weekKm.entries()].sort(([a], [b]) => a.localeCompare(b)).find(([, v]) => v >= km)?.[0];
-    add({ id: `week-${km}`, group: "Volumen", icon: "🗓️", title: `Semana de ${km} km`, detail: `Corre ${km} km en una misma semana (lunes a domingo).`, date: week, progress: bestWeek / km });
+    add({ id: `week-${km}`, group: "Volumen", icon: "calendar", title: `Semana de ${km} km`, detail: `Corre ${km} km en una misma semana (lunes a domingo).`, date: week, progress: bestWeek / km });
   }
   const climb = reachedOn(sorted, (a) => a.elevationGainM, 1000);
-  add({ id: "climb-1000", group: "Volumen", icon: "⛰️", title: "1.000 m de desnivel", detail: "Acumula 1.000 m de desnivel positivo.", date: climb.date, progress: climb.total / 1000 });
+  add({ id: "climb-1000", group: "Volumen", icon: "mountain", title: "1.000 m de desnivel", detail: "Acumula 1.000 m de desnivel positivo.", date: climb.date, progress: climb.total / 1000 });
 
   // ritmo (tiempos estimados con el ritmo medio)
   const bt = bestTimes(sorted);
@@ -226,21 +227,21 @@ export function achievements(acts: Activity[], matches?: Map<string, SessionMatc
   ] as const) {
     const t = bt.find((b) => b.label === label);
     const first = rs.find((a) => a.distanceM >= (label === "5K" ? 5 : 10) * 970 && (a.movingSec / a.distanceM) * (label === "5K" ? 5000 : 10000) < limitSec);
-    add({ id: `pace-${label}-${limitSec}`, group: "Ritmo", icon: "⚡", title, detail: "Según el ritmo medio de una carrera de esa distancia o más.", date: first?.date, progress: t ? limitSec / t.timeSec : 0 });
+    add({ id: `pace-${label}-${limitSec}`, group: "Ritmo", icon: "bolt", title, detail: "Según el ritmo medio de una carrera de esa distancia o más.", date: first?.date, progress: t ? limitSec / t.timeSec : 0 });
   }
 
   // constancia
   for (const days of [7, 30]) {
     const s = streakReached(sorted, days);
-    add({ id: `streak-${days}`, group: "Constancia", icon: "🔥", title: `Racha de ${days} días`, detail: `Entrena ${days} días seguidos (cualquier deporte).`, date: s.date, progress: s.best / days });
+    add({ id: `streak-${days}`, group: "Constancia", icon: "flame", title: `Racha de ${days} días`, detail: `Entrena ${days} días seguidos (cualquier deporte).`, date: s.date, progress: s.best / days });
   }
   const early = rs.find((a) => Number(a.startLocal.slice(11, 13)) < 7 && a.startLocal.length >= 13);
-  add({ id: "early", group: "Constancia", icon: "🌅", title: "Madrugador", detail: "Sal a correr antes de las 7:00.", date: early?.date });
+  add({ id: "early", group: "Constancia", icon: "sunrise", title: "Madrugador", detail: "Sal a correr antes de las 7:00.", date: early?.date });
 
   // fuerza
   const strength = sorted.filter(isStrength);
   for (const n of [1, 10, 50]) {
-    add({ id: `strength-${n}`, group: "Fuerza", icon: "🏋️", title: n === 1 ? "Primera sesión de fuerza" : `${n} sesiones de fuerza`, detail: "La fuerza reduce lesiones y mejora la economía de carrera.", date: strength[n - 1]?.date, progress: strength.length / n });
+    add({ id: `strength-${n}`, group: "Fuerza", icon: "dumbbell", title: n === 1 ? "Primera sesión de fuerza" : `${n} sesiones de fuerza`, detail: "La fuerza reduce lesiones y mejora la economía de carrera.", date: strength[n - 1]?.date, progress: strength.length / n });
   }
 
   // plan
@@ -248,7 +249,7 @@ export function achievements(acts: Activity[], matches?: Map<string, SessionMatc
     const ms = [...matches.values()];
     const done = ms.filter((m) => m.status === "done").sort((a, b) => a.session.date.localeCompare(b.session.date));
     for (const n of [10, 50]) {
-      add({ id: `plan-${n}`, group: "Plan", icon: "✅", title: `${n} sesiones del plan`, detail: `Completa ${n} sesiones de tu plan.`, date: done[n - 1]?.session.date, progress: done.length / n });
+      add({ id: `plan-${n}`, group: "Plan", icon: "checkCircle", title: `${n} sesiones del plan`, detail: `Completa ${n} sesiones de tu plan.`, date: done[n - 1]?.session.date, progress: done.length / n });
     }
     const byWeek = new Map<string, SessionMatch[]>();
     for (const m of ms) if (m.session.type !== "race") byWeek.set(mondayOf(m.session.date), [...(byWeek.get(mondayOf(m.session.date)) ?? []), m]);
@@ -256,7 +257,7 @@ export function achievements(acts: Activity[], matches?: Map<string, SessionMatc
       .filter(([, list]) => list.length > 0 && list.every((m) => m.status === "done"))
       .map(([w, list]) => list.reduce((d, m) => (m.session.date > d ? m.session.date : d), w))
       .sort()[0];
-    add({ id: "plan-perfect-week", group: "Plan", icon: "💯", title: "Semana perfecta", detail: "Completa todas las sesiones de una semana del plan.", date: perfect });
+    add({ id: "plan-perfect-week", group: "Plan", icon: "star", title: "Semana perfecta", detail: "Completa todas las sesiones de una semana del plan.", date: perfect });
   }
 
   return out;

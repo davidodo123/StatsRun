@@ -68,7 +68,7 @@ REGLAS:
 - Crea una rutina por cada combinación pedida de tipo ("kind") y bloque ("block").
 - "reps" es un rango como "8-12" o un número. "kg" solo si usa peso externo (si no, omítelo). "bw": true si es con peso corporal (los "kg" serían lastre).
 
-Responde SOLO con JSON:
+Sin emojis en ningún texto. Responde SOLO con JSON:
 {"equipment": ["corporal", ...], "summary": "2-4 frases: cómo has planteado la fuerza para su carrera y con su material", "routines": [{"kind": "pierna", "block": "base", "name": "Pierna · Base", "exercises": [{"id": "...", "sets": 3, "reps": "8-12", "kg": 16, "bw": false, "restSec": 90, "notes": "..."}]}]}`;
 
 /** Lo que se le pide: material, capacidad, lesiones, carrera y qué rutinas hacen falta. */

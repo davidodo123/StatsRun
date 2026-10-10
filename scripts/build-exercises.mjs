@@ -76,4 +76,7 @@ for (const { imgFrom, ...x } of extra) out.push({ ...x, img: imgFrom ? (imgCount
 out.sort((a, b) => a.name.localeCompare(b.name, "es"));
 
 await writeFile(new URL("../src/lib/strength/catalog.json", import.meta.url), JSON.stringify(out) + "\n");
+// lo justo para listar en el navegador: va en el JS (que el móvil guarda en caché), no en cada página
+const summaries = out.map(({ id, name, cat, eq, muscles, img, imgId }) => ({ id, name, cat, eq, muscles, img, ...(imgId ? { imgId } : {}) }));
+await writeFile(new URL("../src/lib/strength/summaries.json", import.meta.url), JSON.stringify(summaries) + "\n");
 console.log(`${out.length} ejercicios`);

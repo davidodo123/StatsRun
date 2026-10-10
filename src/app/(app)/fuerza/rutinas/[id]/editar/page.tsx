@@ -4,7 +4,7 @@ import { Suspense } from "react";
 import { Loading } from "@/components/ui";
 import { RoutineEditor } from "@/components/RoutineEditor";
 import { getDb } from "@/lib/db";
-import { activePlace, allExercises, summarize } from "@/lib/strength/catalog";
+import { activePlace, customSummaries } from "@/lib/strength/catalog";
 
 export const metadata: Metadata = { title: "Editar rutina" };
 
@@ -20,5 +20,5 @@ async function Content({ params }: { params: PageProps<"/fuerza/rutinas/[id]/edi
   const [{ id }, db] = await Promise.all([params, getDb()]);
   const routine = db.routines?.find((r) => r.id === id);
   if (!routine) notFound();
-  return <RoutineEditor routine={routine} exercises={allExercises(db).map(summarize)} available={activePlace(db)?.equipment} />;
+  return <RoutineEditor routine={routine} custom={customSummaries(db)} available={activePlace(db)?.equipment} />;
 }

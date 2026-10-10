@@ -690,7 +690,7 @@ function raceSession(goal: Goal, pace: number, predicted: number): PlannedSessio
   return mk(
     goal.date,
     "race",
-    `🏁 ${goal.name}`,
+    goal.name,
     `Tiempo previsto: ${fmtDuration(predicted)} (${fmtPace(pace)} /km medio).`,
     [
       `Salida: primeros 3-5 km algo más lentos (${fmtPaceRange(start)}) — no te dejes llevar.`,
@@ -709,12 +709,12 @@ function tuneUpSession(r: TuneUpRace, p: TrainingPaces, vdot: number): PlannedSe
   if (r.priority === "B") {
     const predicted = r.targetTimeSec ?? raceTimeFromVdot(vdot, r.distanceKm);
     const s = raceSession({ name: r.name, distanceKm: r.distanceKm, date: r.date }, predicted / r.distanceKm, predicted);
-    return { ...s, title: `🏁 ${r.name} · carrera B`, description: `Carrera de preparación a tope. ${s.description} Sirve para medir tu forma y ensayar el día de la principal.` };
+    return { ...s, title: `${r.name} · carrera B`, description: `Carrera de preparación a tope. ${s.description} Sirve para medir tu forma y ensayar el día de la principal.` };
   }
   return mk(
     r.date,
     "race",
-    `🏃 ${r.name} · carrera C`,
+    `${r.name} · carrera C`,
     "Carrera como entreno de calidad: disfruta del ambiente sin vaciarte; la importante es la principal.",
     [
       "Calienta 10-15′ suave",

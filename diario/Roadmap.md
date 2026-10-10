@@ -88,7 +88,7 @@ Base: [[Estudio entrenamiento#6. La Pirámide de Entrenamiento (Helms, Valdez, M
 - [/] Temporizador de descanso ✓ · superseries y notas por ejercicio pendientes
 - [x] Se guarda como actividad de fuerza (cuenta en la carga, el feed y los logros)
 
-### 4.3 · Progreso — *en marcha 2026-10-10* → [[Decisiones#Progresión doble y récords de fuerza]]
+### 4.3 · Progreso — *en marcha 2026-10-10; el resto, aparcado para más adelante (lo pidió David)* → [[Decisiones#Progresión doble y récords de fuerza]]
 - [/] Por ejercicio: 1RM estimado, mejor serie, volumen, historial y récords — *récords hechos (etiqueta 🏆 y aviso en la sesión); falta la página por ejercicio*
 - [x] Progresión doble: peso y repeticiones propuestos al empezar — *pendiente de comprobar*
 - [ ] Series por músculo a la semana y mapa de músculos
@@ -104,6 +104,13 @@ Base: [[Estudio entrenamiento#6. La Pirámide de Entrenamiento (Helms, Valdez, M
 - [ ] Alta sin carrera ni plan de running; Inicio y menú según lo que haga cada uno
 
 ---
+
+## ⚡ Repaso de rendimiento y sin emojis — *hecho 2026-10-10, pendiente de comprobar* → [[Decisiones#Sin emojis y app más rápida]]
+- [x] Quitar todos los emojis: iconos SVG propios (`components/icons.tsx`)
+- [x] Gráficas sin Recharts (SVG propio): unos 400 KB menos de JS en Inicio, Perfil, Estadísticas y rutinas
+- [x] Lista de ejercicios en el JS en caché en vez de en cada página (Ejercicios 211 → 66 KB, Entreno 183 → 39 KB)
+- [x] Caché de navegación de 30 s y precarga de páginas en el service worker
+- [ ] Mover Vercel y Redis a Europa (ahora en EE. UU., iad1) → necesita una base nueva en Upstash y migrar los datos
 
 ## 🔧 Pendientes técnicos
 

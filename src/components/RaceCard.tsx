@@ -5,7 +5,7 @@ import { applyCourseToPlan, removeCourse } from "@/app/actions";
 import { fmtKm } from "@/lib/format";
 import type { CourseMarker, Goal } from "@/lib/types";
 
-const MARKER_LABEL: Record<CourseMarker["kind"], string> = { salida: "▶ Salida", meta: "⚑ Meta", agua: "💧 Avituallamiento", km: "• Puntos kilométricos" };
+const MARKER_LABEL: Record<CourseMarker["kind"], string> = { salida: "Salida", meta: "Meta", agua: "Avituallamiento", km: "Puntos kilométricos" };
 
 /** Recorrido oficial (KMZ/KML/GPX) de la carrera objetivo: mapa, distancia y desnivel. */
 export function RaceCard({ goal }: { goal: Goal }) {

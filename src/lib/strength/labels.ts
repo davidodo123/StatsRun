@@ -1,22 +1,22 @@
 // Fuerza: material, músculos y categorías de los ejercicios (compartido entre servidor y cliente).
 
 export const EQUIPMENT = [
-  { id: "corporal", label: "Peso corporal", icon: "🤸" },
-  { id: "mancuernas", label: "Mancuernas", icon: "🏋️" },
-  { id: "barra", label: "Barra y discos", icon: "🏋️‍♂️" },
-  { id: "barraZ", label: "Barra Z", icon: "〰️" },
-  { id: "kettlebell", label: "Kettlebell", icon: "🔔" },
-  { id: "bandas", label: "Bandas elásticas", icon: "🎗️" },
-  { id: "banco", label: "Banco", icon: "🛋️" },
-  { id: "dominadas", label: "Barra de dominadas", icon: "🪜" },
-  { id: "cajon", label: "Cajón o escalón", icon: "📦" },
-  { id: "jaula", label: "Jaula o soportes", icon: "🗄️" },
-  { id: "maquinas", label: "Máquinas", icon: "⚙️" },
-  { id: "poleas", label: "Poleas", icon: "🔗" },
-  { id: "balon", label: "Balón medicinal", icon: "🏐" },
-  { id: "fitball", label: "Fitball", icon: "⚪" },
-  { id: "rodillo", label: "Rodillo de espuma", icon: "🧻" },
-  { id: "otro", label: "Otro (TRX, anillas, paralelas, trineo…)", icon: "➕" },
+  { id: "corporal", label: "Peso corporal" },
+  { id: "mancuernas", label: "Mancuernas" },
+  { id: "barra", label: "Barra y discos" },
+  { id: "barraZ", label: "Barra Z" },
+  { id: "kettlebell", label: "Kettlebell" },
+  { id: "bandas", label: "Bandas elásticas" },
+  { id: "banco", label: "Banco" },
+  { id: "dominadas", label: "Barra de dominadas" },
+  { id: "cajon", label: "Cajón o escalón" },
+  { id: "jaula", label: "Jaula o soportes" },
+  { id: "maquinas", label: "Máquinas" },
+  { id: "poleas", label: "Poleas" },
+  { id: "balon", label: "Balón medicinal" },
+  { id: "fitball", label: "Fitball" },
+  { id: "rodillo", label: "Rodillo de espuma" },
+  { id: "otro", label: "Otro (TRX, anillas, paralelas, trineo…)" },
 ] as const;
 export type Equipment = (typeof EQUIPMENT)[number]["id"];
 export const EQUIPMENT_LABEL = Object.fromEntries(EQUIPMENT.map((e) => [e.id, e.label])) as Record<Equipment, string>;

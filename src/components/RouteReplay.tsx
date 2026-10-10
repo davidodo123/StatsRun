@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { decodePolyline, project, routeView } from "../lib/route";
 import { tileUrl } from "./RouteMap";
+import { Icon } from "./icons";
 
 const TILE = 256;
 
@@ -69,7 +70,8 @@ export function RouteReplay({ route, distanceKm, movingSec, children }: { route:
       <div className="relative">
         {children}
         <button type="button" onClick={play} className="btn absolute bottom-2 left-2 px-3 py-1.5 text-xs shadow-lg">
-          ▶ Reproducir recorrido
+          <Icon name="play" className="mr-1 h-3 w-3 align-[-1px]" />
+          Reproducir recorrido
         </button>
       </div>
     );
@@ -111,7 +113,8 @@ export function RouteReplay({ route, distanceKm, movingSec, children }: { route:
         {(p * distanceKm).toFixed(2)} km · {fmtTime(p * movingSec)}
       </div>
       <button type="button" onClick={() => setPlaying(false)} className="btn absolute bottom-2 left-2 px-3 py-1.5 text-xs shadow-lg">
-        ⏹ Parar
+        <Icon name="stop" className="mr-1 h-3 w-3 align-[-1px]" />
+        Parar
       </button>
     </div>
   );

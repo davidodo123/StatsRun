@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { ExerciseThumb } from "./ExerciseMedia";
-import { CATEGORIES, EQUIPMENT, MUSCLES, MUSCLE_LABEL, canDo, type Equipment, type ExerciseSummary } from "@/lib/strength/labels";
+import { CATEGORIES, EQUIPMENT, EQUIPMENT_LABEL, MUSCLES, MUSCLE_LABEL, canDo, type Equipment, type ExerciseSummary } from "@/lib/strength/labels";
+import { withCustom } from "@/lib/strength/exerciseList";
 import type { GymPlace } from "@/lib/types";
 
 export interface BrowserFilters {
@@ -19,9 +20,10 @@ const PAGE = 40;
 const norm = (s: string) => s.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
 
 /** Lista de ejercicios con búsqueda y filtros (los filtros se guardan en la URL para volver atrás sin perderlos). */
-export function ExerciseBrowser({ exercises, places, initial }: { exercises: ExerciseSummary[]; places: GymPlace[]; initial: BrowserFilters }) {
+export function ExerciseBrowser({ custom, places, initial }: { custom: ExerciseSummary[]; places: GymPlace[]; initial: BrowserFilters }) {
   const [f, setF] = useState(initial);
   const [shown, setShown] = useState(PAGE);
+  const exercises = useMemo(() => withCustom(custom), [custom]);
   const index = useMemo(() => exercises.map((x) => ({ x, key: norm(x.name) })), [exercises]);
 
   const set = (patch: Partial<BrowserFilters>) => {
@@ -99,7 +101,7 @@ export function ExerciseBrowser({ exercises, places, initial }: { exercises: Exe
                   {x.custom && <span className="ml-1.5 rounded bg-accent px-1.5 py-0.5 text-[10px] font-semibold text-accent-ink">Propio</span>}
                 </span>
                 <span className="block truncate text-xs text-muted">
-                  {x.muscles.map((m) => MUSCLE_LABEL[m]).join(", ")} · {x.eq.map((e) => EQUIPMENT.find((q) => q.id === e)?.icon).join(" ")}
+                  {x.muscles.map((m) => MUSCLE_LABEL[m]).join(", ")} · {x.eq.map((e) => EQUIPMENT_LABEL[e]).join(", ")}
                 </span>
               </span>
             </Link>

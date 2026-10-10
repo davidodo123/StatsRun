@@ -17,10 +17,11 @@ import { fmtDuration, fmtKm, fmtNum, fmtPace } from "@/lib/format";
 import { SetBadge } from "@/components/RoutineEditor";
 import { estimate1RM, fmtLoad, setLoad, strengthRecords, type StrengthRecord, workoutReps, workoutSets, workoutVolume } from "@/lib/strength/workouts";
 import type { Workout } from "@/lib/types";
+import { Icon } from "@/components/icons";
 
 export const metadata: Metadata = { title: "Sesión" };
 
-const FEEL: Record<string, string> = { muy_facil: "😌 Muy fácil", facil: "🙂 Fácil", bien: "👍 Bien", duro: "😓 Duro", muy_duro: "🥵 Muy duro" };
+const FEEL: Record<string, string> = { muy_facil: "Muy fácil", facil: "Fácil", bien: "Bien", duro: "Duro", muy_duro: "Muy duro" };
 
 export default function ActivityPage({ params, searchParams }: PageProps<"/actividad/[id]">) {
   return (
@@ -136,7 +137,7 @@ function WorkoutCard({ workout, records }: { workout: Workout; records: Strength
               </div>
               {rec && (
                 <p className="mt-1 inline-flex items-center gap-1 rounded-full bg-accent/15 px-2 py-0.5 text-xs font-semibold text-accent">
-                  🏆 Récord: {rec.kind === "peso" ? `${fmtLoad(e.bw, rec.value)} (antes ${fmtLoad(e.bw, rec.prev)})` : `${rec.value} reps (antes ${rec.prev})`}
+                  <Icon name="trophy" className="h-3.5 w-3.5" /> Récord: {rec.kind === "peso" ? `${fmtLoad(e.bw, rec.value)} (antes ${fmtLoad(e.bw, rec.prev)})` : `${rec.value} reps (antes ${rec.prev})`}
                 </p>
               )}
               <table className="mt-1 w-full text-sm">

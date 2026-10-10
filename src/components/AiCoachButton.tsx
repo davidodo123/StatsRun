@@ -8,7 +8,7 @@ export function AiCoachButton() {
   return (
     <form action={action} className="space-y-2">
       <button className="btn" disabled={pending}>
-        {pending ? "La IA está revisando…" : "✦ Ajustar con IA ahora"}
+        {pending ? "La IA está revisando…" : "Ajustar con IA ahora"}
       </button>
       {state.error && <p className="text-sm font-medium text-critical">✕ {state.error}</p>}
       {state.message && <p className="text-sm font-medium text-good-ink">✓ {state.message}</p>}

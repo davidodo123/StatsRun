@@ -1,14 +1,15 @@
 import { decodePolyline, routeView } from "../lib/route";
 import type { CourseMarker } from "../lib/types";
+import { ICON_PATHS, type IconName } from "./icons";
 
 // Teselas de OpenStreetMap: uso ligero permitido con atribución (https://operations.osmfoundation.org/policies/tiles/).
 export const tileUrl = (z: number, x: number, y: number) => `https://tile.openstreetmap.org/${z}/${x}/${y}.png`;
 
-const MARKER: Record<CourseMarker["kind"], { icon: string; label: string; fill: string }> = {
-  salida: { icon: "▶", label: "Salida", fill: "#16a34a" },
-  meta: { icon: "⚑", label: "Meta", fill: "#111111" },
-  agua: { icon: "💧", label: "Avituallamiento", fill: "#2563eb" },
-  km: { icon: "•", label: "Punto kilométrico", fill: "#6b7280" },
+const MARKER: Record<CourseMarker["kind"], { icon?: IconName; label: string; fill: string }> = {
+  salida: { icon: "play", label: "Salida", fill: "#16a34a" },
+  meta: { icon: "flag", label: "Meta", fill: "#111111" },
+  agua: { icon: "droplet", label: "Avituallamiento", fill: "#2563eb" },
+  km: { label: "Punto kilométrico", fill: "#6b7280" },
 };
 
 /**
@@ -61,9 +62,11 @@ export function RouteMap({
               <g key={i} transform={`translate(${x.toFixed(1)},${y.toFixed(1)})`}>
                 <title>{m.name || s.label}</title>
                 <circle r={11} fill={s.fill} stroke="white" strokeWidth={2.5} />
-                <text textAnchor="middle" dominantBaseline="central" fontSize={11} fill="white">
-                  {s.icon}
-                </text>
+                {s.icon ? (
+                  <path d={ICON_PATHS[s.icon]} transform="translate(-6.5,-6.5) scale(0.54)" fill="none" stroke="white" strokeWidth={2.6} strokeLinecap="round" strokeLinejoin="round" />
+                ) : (
+                  <circle r={2.5} fill="white" />
+                )}
               </g>
             );
           })}

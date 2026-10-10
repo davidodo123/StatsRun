@@ -37,7 +37,6 @@ export function ExerciseForm({ exercise }: { exercise?: CustomExercise }) {
           {EQUIPMENT.map((e) => (
             <label key={e.id} className="flex items-center gap-1.5 rounded-full border border-line px-3 py-1 text-xs has-checked:border-accent has-checked:bg-surface-2">
               <input type="checkbox" name="eq" value={e.id} defaultChecked={eq.has(e.id)} className="sr-only" />
-              <span aria-hidden>{e.icon}</span>
               {e.label}
             </label>
           ))}

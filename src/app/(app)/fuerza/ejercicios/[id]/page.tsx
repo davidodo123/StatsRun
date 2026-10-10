@@ -90,7 +90,7 @@ async function Content({ params }: { params: PageProps<"/fuerza/ejercicios/[id]"
                 const has = !place || e === "corporal" || place.equipment.includes(e);
                 return (
                   <li key={e} className={`rounded-full px-2.5 py-1 text-xs ${has ? "bg-surface-2" : "border border-critical text-critical"}`}>
-                    {it.icon} {it.label}
+                    {it.label}
                   </li>
                 );
               })}

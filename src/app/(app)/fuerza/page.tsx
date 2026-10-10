@@ -8,6 +8,7 @@ import { activePlace, findExercise } from "@/lib/strength/catalog";
 import { workoutSets, workoutVolume } from "@/lib/strength/workouts";
 import { fmtDuration } from "@/lib/format";
 import { WEEKDAYS, shortDate, weekday } from "@/lib/dates";
+import { Icon } from "@/components/icons";
 
 export const metadata: Metadata = { title: "Fuerza" };
 
@@ -38,15 +39,16 @@ async function Content() {
       <div className="mt-6 flex items-center justify-between">
         <h2 className="text-lg font-bold">Rutinas</h2>
         <Link href="/fuerza/material" className="text-xs text-ink-2 hover:text-ink">
-          {place ? `📍 ${place.name} · cambiar` : "📍 Añadir mi material"}
+          <Icon name="pin" className="mr-1 h-3.5 w-3.5 align-[-2px]" />
+          {place ? `${place.name} · cambiar` : "Añadir mi material"}
         </Link>
       </div>
       <div className="mt-3 grid grid-cols-2 gap-3">
         <Link href="/fuerza/rutinas/nueva" className="flex items-center justify-center gap-2 rounded-2xl border border-line bg-surface p-3 font-medium hover:bg-surface-2">
-          📋 Nueva rutina
+          <Icon name="list" /> Nueva rutina
         </Link>
         <Link href="/fuerza/ejercicios" className="flex items-center justify-center gap-2 rounded-2xl border border-line bg-surface p-3 font-medium hover:bg-surface-2">
-          🔍 Explorar
+          <Icon name="search" /> Explorar
         </Link>
       </div>
 

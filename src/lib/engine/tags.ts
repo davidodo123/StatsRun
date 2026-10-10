@@ -5,13 +5,14 @@ import { diffDays } from "../dates";
 import { BEST_DISTANCES } from "./profile";
 import { activityLoad } from "./load";
 import { strengthRecords } from "../strength/workouts";
+import type { IconName } from "../../components/icons";
 
 export type TagKind = "record" | "first" | "longest" | "climb" | "pace" | "load";
 
 export interface ActivityTag {
   kind: TagKind;
   label: string;
-  icon: string;
+  icon: IconName;
 }
 
 /** Mínimo de carreras previas para que «la más larga» o «más desnivel» signifique algo. */
@@ -43,20 +44,20 @@ export function activityTags(acts: Activity[], loadOf?: (a: Activity) => number)
       const covered = BEST_DISTANCES.filter((d) => a.distanceM >= d.km * 970);
       for (const d of covered.reverse()) {
         const prev = bestPace.get(d.label);
-        if (prev === undefined) add(a, { kind: "first", label: `Primer ${d.label}`, icon: "🎉" });
-        else if (pace < prev) add(a, { kind: "record", label: `Récord ${d.label}`, icon: "🏆" });
+        if (prev === undefined) add(a, { kind: "first", label: `Primer ${d.label}`, icon: "sparkle" });
+        else if (pace < prev) add(a, { kind: "record", label: `Récord ${d.label}`, icon: "trophy" });
         else continue;
         break;
       }
       for (const d of covered) bestPace.set(d.label, Math.min(bestPace.get(d.label) ?? Infinity, pace));
 
-      if (runsSeen >= MIN_HISTORY && a.distanceM > longest) add(a, { kind: "longest", label: "Tu carrera más larga", icon: "📏" });
-      if (runsSeen >= MIN_HISTORY && a.elevationGainM >= 50 && a.elevationGainM > climb) add(a, { kind: "climb", label: "Más desnivel", icon: "⛰️" });
+      if (runsSeen >= MIN_HISTORY && a.distanceM > longest) add(a, { kind: "longest", label: "Tu carrera más larga", icon: "ruler" });
+      if (runsSeen >= MIN_HISTORY && a.elevationGainM >= 50 && a.elevationGainM > climb) add(a, { kind: "climb", label: "Más desnivel", icon: "mountain" });
 
       // mejor ritmo de los últimos 30 días (carreras de 3 km o más, con al menos 3 en la ventana)
       const window = runs.filter((r) => r.distanceM >= 3000 && diffDays(a.date, r.date) < 30);
       if (a.distanceM >= 3000 && window.length >= MIN_HISTORY && window.every((r) => pace < r.movingSec / r.distanceM))
-        add(a, { kind: "pace", label: "Mejor ritmo del mes", icon: "⚡" });
+        add(a, { kind: "pace", label: "Mejor ritmo del mes", icon: "bolt" });
 
       longest = Math.max(longest, a.distanceM);
       climb = Math.max(climb, a.elevationGainM);
@@ -64,10 +65,10 @@ export function activityTags(acts: Activity[], loadOf?: (a: Activity) => number)
       runsSeen++;
     }
     const recs = lifts.get(a.id);
-    if (recs) add(a, { kind: "record", label: recs.length === 1 ? `Récord en ${recs[0].name}` : `${recs.length} récords de fuerza`, icon: "🏆" });
+    if (recs) add(a, { kind: "record", label: recs.length === 1 ? `Récord en ${recs[0].name}` : `${recs.length} récords de fuerza`, icon: "trophy" });
     if (loadOf) {
       const load = loadOf(a);
-      if (actsSeen >= 5 && load > maxLoad * 1.0001) add(a, { kind: "load", label: "Mayor carga", icon: "💪" });
+      if (actsSeen >= 5 && load > maxLoad * 1.0001) add(a, { kind: "load", label: "Mayor carga", icon: "flame" });
       maxLoad = Math.max(maxLoad, load);
     }
     actsSeen++;

@@ -23,7 +23,6 @@ export function PlaceForm({ place }: { place?: GymPlace }) {
           {EQUIPMENT.map((e) => (
             <label key={e.id} className="flex items-center gap-2 rounded-lg border border-line px-3 py-2 text-sm has-checked:border-accent has-checked:bg-surface-2">
               <input type="checkbox" name="eq" value={e.id} defaultChecked={has.has(e.id)} disabled={e.id === "corporal"} />
-              <span aria-hidden>{e.icon}</span>
               {e.label}
             </label>
           ))}

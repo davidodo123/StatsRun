@@ -3,7 +3,7 @@
 // - Estáticos de Next (_next/static, con hash en el nombre) e iconos: de la caché primero, para abrir rápido.
 // No se guarda en caché ninguna página con datos del usuario.
 // subir la versión al cambiar offline.html o los iconos: renueva la caché en los móviles con la app instalada
-const VERSION = "v2";
+const VERSION = "v3";
 const STATIC = `pacelab-static-${VERSION}`;
 const PRECACHE = ["/offline.html", "/icon.svg", "/icon-192.png", "/icon-512.png", "/apple-touch-icon.png"];
 
@@ -17,6 +17,8 @@ self.addEventListener("activate", (event) => {
     caches
       .keys()
       .then((keys) => Promise.all(keys.filter((k) => k.startsWith("pacelab-") && k !== STATIC).map((k) => caches.delete(k))))
+      // la petición de la página sale a la vez que arranca el service worker, sin esperarle
+      .then(() => self.registration.navigationPreload?.enable())
       .then(() => self.clients.claim()),
   );
 });
@@ -28,7 +30,15 @@ self.addEventListener("fetch", (event) => {
   if (url.origin !== self.location.origin) return;
 
   if (req.mode === "navigate") {
-    event.respondWith(fetch(req).catch(() => caches.match("/offline.html")));
+    event.respondWith(
+      (async () => {
+        try {
+          return (await event.preloadResponse) || (await fetch(req));
+        } catch {
+          return caches.match("/offline.html");
+        }
+      })(),
+    );
     return;
   }
 

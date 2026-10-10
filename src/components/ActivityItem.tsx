@@ -5,9 +5,10 @@ import { shortDate } from "@/lib/dates";
 import { fmtDuration, fmtKm, fmtPace } from "@/lib/format";
 import type { Activity } from "@/lib/types";
 import type { ActivityTag } from "@/lib/engine/tags";
+import { Icon, type IconName } from "./icons";
 
 export const SPORT_LABEL: Record<Activity["sport"], string> = { run: "Correr", ride: "Bici", swim: "Natación", walk: "Caminar", strength: "Fuerza", other: "Otros" };
-const SPORT_ICON: Record<Activity["sport"], string> = { run: "🏃", ride: "🚴", swim: "🏊", walk: "🚶", strength: "🏋️", other: "⚡" };
+const SPORT_ICON: Record<Activity["sport"], IconName> = { run: "run", ride: "bike", swim: "swim", walk: "walk", strength: "dumbbell", other: "bolt" };
 
 /** «con Ana y Leo» a partir de los ids de `with` (los que no se conocen cuentan como «otra persona»). */
 export function withText(ids: string[] | undefined, names: Map<string, string>): string | undefined {
@@ -25,7 +26,7 @@ export function TagChips({ tags }: { tags: ActivityTag[] }) {
           key={t.label}
           className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ${t.kind === "record" ? "bg-accent text-accent-ink" : "bg-surface-2 text-ink-2"}`}
         >
-          <span aria-hidden>{t.icon}</span>
+          <Icon name={t.icon} className="h-3 w-3" />
           {t.label}
         </span>
       ))}
@@ -58,7 +59,9 @@ export function ActivityItem({
         {a.route ? (
           <RouteMap route={a.route} width={64} height={48} tiles={false} label={`Recorrido de ${a.name}`} />
         ) : (
-          <span className="grid h-12 w-16 place-items-center rounded-md bg-surface-2 text-xl">{SPORT_ICON[a.sport]}</span>
+          <span className="grid h-12 w-16 place-items-center rounded-md bg-surface-2 text-accent">
+            <Icon name={SPORT_ICON[a.sport]} className="h-6 w-6" />
+          </span>
         )}
       </Link>
       <span className="min-w-0 flex-1">
@@ -72,7 +75,7 @@ export function ActivityItem({
           {a.sport === "run" && a.distanceM > 0 && ` · ${fmtPace(a.movingSec / (a.distanceM / 1000))}/km`}
           {a.avgHr && ` · ${Math.round(a.avgHr)} ppm`}
         </span>
-        {together && <span className="block text-xs text-ink-2">👥 {together}</span>}
+        {together && <span className="flex items-center gap-1 text-xs text-ink-2"><Icon name="users" className="h-3.5 w-3.5" /> {together}</span>}
         {tags && tags.length > 0 && <TagChips tags={tags} />}
       </span>
       {action}

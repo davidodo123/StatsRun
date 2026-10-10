@@ -130,7 +130,7 @@ REGLAS:
 - Las SENSACIONES ("sensacion", "comoSeSintio") comparadas con "sesionPlanificada" explican el diagnóstico: cítalas en "summary" (ej.: "Como el jueves las series se te hicieron fáciles…").
 - Usa los ritmos proporcionados (min:seg /km) en los pasos de carrera.
 - Escribe en español, pasos breves y accionables.
-Responde SOLO con JSON: {"summary": "2-4 frases explicando el diagnóstico, qué has cambiado y por qué", "sessions": [{"id","date","type","title","description","steps":[...],"distanceKm","durationMin","reason"} | {"id","remove":true,"reason"}]}.
+Sin emojis en ningún texto. Responde SOLO con JSON: {"summary": "2-4 frases explicando el diagnóstico, qué has cambiado y por qué", "sessions": [{"id","date","type","title","description","steps":[...],"distanceKm","durationMin","reason"} | {"id","remove":true,"reason"}]}.
 Incluye solo las sesiones que cambies.`;
 
 const pace = (sec: number) => `${Math.floor(sec / 60)}:${String(Math.round(sec % 60)).padStart(2, "0")}`;

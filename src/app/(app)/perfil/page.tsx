@@ -23,6 +23,7 @@ import { ActivityItem } from "@/components/ActivityItem";
 import { tagsForDb } from "@/lib/engine/tags";
 import { getFriends } from "@/lib/auth";
 import { requireUserId } from "@/lib/session";
+import { Icon } from "@/components/icons";
 
 export const metadata: Metadata = { title: "Perfil" };
 
@@ -173,9 +174,7 @@ function Resumen({ db, stats, matches, today }: { db: Db; stats: Stats; matches?
             <ul className="grid grid-cols-3 gap-2">
               {unlocked.slice(0, 6).map((a) => (
                 <li key={a.id} className="rounded-xl bg-surface-2 p-2 text-center" title={a.detail}>
-                  <span className="block text-2xl" aria-hidden>
-                    {a.icon}
-                  </span>
+                  <Icon name={a.icon} className="mx-auto mb-1 block h-7 w-7 text-accent" />
                   <span className="block text-[11px] font-medium leading-tight">{a.title}</span>
                 </li>
               ))}
@@ -499,9 +498,7 @@ function Logros({ list }: { list: Achievement[] }) {
               .filter((a) => a.group === g)
               .map((a) => (
                 <li key={a.id} className={`flex gap-3 rounded-xl border p-3 ${a.unlocked ? "border-accent bg-surface-2" : "border-line"}`}>
-                  <span className={`text-2xl ${a.unlocked ? "" : "opacity-30 grayscale"}`} aria-hidden>
-                    {a.icon}
-                  </span>
+                  <Icon name={a.icon} className={`h-7 w-7 ${a.unlocked ? "text-accent" : "text-muted opacity-40"}`} />
                   <span className="min-w-0 flex-1">
                     <span className="flex items-center gap-1.5 text-sm font-semibold">
                       {a.title}
@@ -618,7 +615,7 @@ function Salud({ db }: { db: Db }) {
                 </ul>
               </ShortcutStep>
               <ShortcutStep n={6} img="6-resultado" w={600} h={393} title="Pruébalo">
-                Añade <strong className="text-ink">Mostrar resultado</strong> y pulsa ▶. La primera vez pide permiso para leer Salud: <em>Permitir</em>. Tiene que salir{" "}
+                Añade <strong className="text-ink">Mostrar resultado</strong> y pulsa <Icon name="play" className="h-3 w-3 align-[-1px]" />. La primera vez pide permiso para leer Salud: <em>Permitir</em>. Tiene que salir{" "}
                 <code>&quot;ok&quot; : true</code> con tus pasos (justo después de medianoche saldrá 0). Si sale 0 de día, revisa Ajustes → Salud → Acceso a datos →
                 Atajos.
               </ShortcutStep>

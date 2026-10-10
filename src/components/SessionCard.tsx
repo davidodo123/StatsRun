@@ -5,6 +5,7 @@ import { fmtPaceRange } from "@/lib/format";
 import { WEEKDAYS, shortDate, weekday } from "@/lib/dates";
 import { Status } from "./ui";
 import { skipSession } from "@/app/actions";
+import { Icon } from "./icons";
 
 type Kind = "suave" | "calidad" | "larga" | "fuerza" | "carrera";
 
@@ -70,7 +71,7 @@ export function SessionCard({
           )}
           <span>· {kind.label}</span>
           {s.zone && <span>· {s.zone}</span>}
-          {s.aiAdjusted && <span className="text-accent">· ✦ Ajustada por IA</span>}
+          {s.aiAdjusted && <span className="text-accent">· Ajustada por IA</span>}
         </div>
         <h3 className="mt-0.5 font-semibold leading-snug">{s.title}</h3>
         <p className="text-xs text-ink-2 tabular">
@@ -100,7 +101,8 @@ export function SessionCard({
           <div className="mt-2 flex flex-wrap items-center gap-3">
             {!readOnly && s.type === "strength" && match?.status !== "done" && (match?.status !== "missed") && (
               <Link href={s.routineId ? `/fuerza/entreno?rutina=${s.routineId}` : "/fuerza/entreno"} className="rounded-md bg-accent px-2 py-1 text-xs font-semibold text-accent-ink">
-                ▶ {s.routineId ? "Empezar rutina" : "Empezar entreno"}
+                <Icon name="play" className="mr-1 h-3 w-3 align-[-1px]" />
+                {s.routineId ? "Empezar rutina" : "Empezar entreno"}
               </Link>
             )}
             {canLog &&

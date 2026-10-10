@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useSyncExternalStore } from "react";
+import { Icon } from "./icons";
 
 /** Registra el service worker (solo en producción: en desarrollo la caché serviría código viejo). */
 export function ServiceWorkerRegister() {
@@ -86,7 +87,7 @@ export function InstallBanner() {
         <p className="font-semibold">Instala Run-In-Out en tu móvil</p>
         {ios ? (
           <p className="text-xs text-ink-2">
-            En Safari pulsa <strong>Compartir</strong> <span aria-hidden>⎋</span> y luego <strong>«Añadir a pantalla de inicio»</strong>.
+            En Safari pulsa <strong>Compartir</strong> <Icon name="share" className="h-3.5 w-3.5 align-[-2px]" /> y luego <strong>«Añadir a pantalla de inicio»</strong>.
           </p>
         ) : (
           <p className="text-xs text-ink-2">Ábrela como una app, a pantalla completa y desde tu pantalla de inicio.</p>

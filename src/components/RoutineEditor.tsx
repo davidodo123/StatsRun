@@ -1,13 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useTransition } from "react";
+import { useState, useTransition, useMemo } from "react";
 import { ExercisePicker } from "./ExercisePicker";
 import { ExerciseThumb } from "./ExerciseMedia";
 import { saveRoutine } from "@/app/strength-actions";
+import { withCustom } from "@/lib/strength/exerciseList";
 import type { Equipment, ExerciseSummary } from "@/lib/strength/labels";
 import { REST_OPTIONS, SET_TYPES, SET_TYPE_SHORT, restLabel } from "@/lib/strength/workouts";
 import type { Routine, RoutineSet, SetType } from "@/lib/types";
+import { Icon } from "./icons";
 
 interface Row {
   type: SetType;
@@ -26,8 +28,9 @@ const toRow = (s: RoutineSet): Row => ({ type: s.type ?? "normal", kg: s.kg?.toS
 let keySeq = 0;
 
 /** Crear o editar una rutina: ejercicios con sus series (kg y repeticiones) y el descanso. */
-export function RoutineEditor({ routine, exercises, available }: { routine?: Routine; exercises: ExerciseSummary[]; available?: Equipment[] }) {
-  const byId = new Map(exercises.map((x) => [x.id, x]));
+export function RoutineEditor({ routine, custom, available }: { routine?: Routine; custom: ExerciseSummary[]; available?: Equipment[] }) {
+  const exercises = useMemo(() => withCustom(custom), [custom]);
+  const byId = useMemo(() => new Map(exercises.map((x) => [x.id, x])), [exercises]);
   const [name, setName] = useState(routine?.name ?? "");
   const [notes, setNotes] = useState(routine?.notes ?? "");
   const [items, setItems] = useState<Item[]>(
@@ -194,7 +197,7 @@ export function RestChip({ value, onChange }: { value: number; onChange: (sec: n
         aria-label="Descanso entre series"
         className="inline-flex items-center gap-1.5 rounded-full border border-line bg-surface-2 px-3 py-1 text-xs font-semibold text-accent"
       >
-        ⏱ {restLabel(value)}
+        <Icon name="timer" className="h-3.5 w-3.5" /> {restLabel(value)}
         <span className={`text-[10px] transition ${open ? "rotate-180" : ""}`}>▾</span>
       </button>
       {open && (

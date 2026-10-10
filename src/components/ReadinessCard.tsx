@@ -1,5 +1,6 @@
 import { Card, Status } from "@/components/ui";
 import { PHASE_LABEL, type Readiness, type SelyePhase } from "@/lib/engine/readiness";
+import { Icon } from "./icons";
 
 const ORDER: SelyePhase[] = ["desentrenamiento", "alarma", "adaptacion", "agotamiento", "supercompensacion"];
 
@@ -55,7 +56,7 @@ export function ReadinessCard({ r }: { r: Readiness }) {
         <div className="flex flex-wrap gap-1.5">
           {(Object.keys(CHECK_LABEL) as (keyof Readiness["check"])[]).map((k) => (
             <span key={k} className={`rounded-full border px-2 py-0.5 text-xs ${r.check[k] ? "border-warning text-ink" : "border-line text-muted"}`}>
-              {r.check[k] ? "⚠ " : "✓ "}
+              <Icon name={r.check[k] ? "alert" : "check"} className="mr-1 h-3 w-3 align-[-1px]" />
               {CHECK_LABEL[k]}
             </span>
           ))}

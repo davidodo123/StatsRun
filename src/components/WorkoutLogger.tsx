@@ -1,14 +1,16 @@
 "use client";
 
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { ExercisePicker } from "./ExercisePicker";
 import { ExerciseThumb } from "./ExerciseMedia";
 import { BodyChip, LoadSwitch, RestChip, SetBadge, onlyBody } from "./RoutineEditor";
 import { finishWorkout } from "@/app/strength-actions";
+import { withCustom } from "@/lib/strength/exerciseList";
 import type { Equipment, ExerciseSummary } from "@/lib/strength/labels";
 import { SET_TYPES, SET_TYPE_SHORT, fmtLoad, nextTarget, type Suggestion } from "@/lib/strength/workouts";
 import type { Routine, RoutineSet, SetType, WorkoutExercise, WorkoutSet } from "@/lib/types";
+import { Icon } from "./icons";
 
 interface LiveSet {
   type: SetType;
@@ -98,19 +100,21 @@ function fromRoutine(routine: Routine | undefined, suggest: Suggest): Live {
 /** Entreno en vivo, como en Hevy: anterior, kg, reps y ✓ por serie, con descanso y duración. */
 export function WorkoutLogger({
   routine,
-  exercises,
+  custom,
   previous,
   available,
   bodyKg,
 }: {
   routine?: Routine;
-  exercises: ExerciseSummary[];
+  custom: ExerciseSummary[];
   previous: Record<string, WorkoutExercise>;
   available?: Equipment[];
   bodyKg?: number; // peso del perfil, para los ejercicios con peso corporal
 }) {
   const router = useRouter();
-  const byId = new Map(exercises.map((x) => [x.id, x]));
+  // el reloj repinta cada segundo: la lista y el índice se calculan una vez
+  const exercises = useMemo(() => withCustom(custom), [custom]);
+  const byId = useMemo(() => new Map(exercises.map((x) => [x.id, x])), [exercises]);
   const suggest: Suggest = (id, plan, notes) => nextTarget(previous[id], plan, notes, byId.get(id)?.eq ?? []);
   const [w, setW] = useState<Live>();
   const [resumed, setResumed] = useState(false);
@@ -217,7 +221,8 @@ export function WorkoutLogger({
         </div>
         <div className="mt-2 grid grid-cols-4 items-center text-center">
           <button type="button" onClick={togglePause} className={`mx-auto rounded-full px-3 py-1.5 text-sm font-semibold ${paused ? "bg-accent text-accent-ink" : "bg-surface-2"}`} aria-pressed={paused}>
-            {paused ? "▶ Reanudar" : "⏸ Pausa"}
+            <Icon name={paused ? "play" : "pause"} className="mr-1 h-3.5 w-3.5 align-[-2px]" />
+            {paused ? "Reanudar" : "Pausa"}
           </button>
           <Metric label={paused ? "En pausa" : "Duración"} value={fmtClock(elapsed)} accent />
           <Metric label="Volumen" value={`${volume.toLocaleString("es-ES")} kg`} />

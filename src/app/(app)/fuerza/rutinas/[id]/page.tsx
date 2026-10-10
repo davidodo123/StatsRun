@@ -12,6 +12,7 @@ import { requireUserId } from "@/lib/session";
 import { findExercise } from "@/lib/strength/catalog";
 import { fmtLoad, restLabel, routineHistory } from "@/lib/strength/workouts";
 import { addDays, todayLocal } from "@/lib/dates";
+import { Icon } from "@/components/icons";
 
 export const metadata: Metadata = { title: "Rutina" };
 
@@ -61,7 +62,7 @@ async function Content({ params }: { params: PageProps<"/fuerza/rutinas/[id]">["
                 {x && <ExerciseThumb x={x} className="h-12 w-12 rounded-full" />}
                 <span className="min-w-0">
                   <strong className="block truncate text-accent">{x?.name ?? "Ejercicio borrado"}</strong>
-                  {e.restSec ? <span className="text-xs text-muted">⏱ {restLabel(e.restSec)} de descanso</span> : null}
+                  {e.restSec ? <span className="inline-flex items-center gap-1 text-xs text-muted"><Icon name="timer" className="h-3.5 w-3.5" /> {restLabel(e.restSec)} de descanso</span> : null}
                 </span>
               </Link>
               <table className="mt-2 w-full text-sm">
