@@ -461,3 +461,13 @@ Qué se decidió, por qué y cuándo. Si algo cambia, se añade una entrada nuev
 - **Superseries**: entre dos ejercicios del editor, «Hacer superserie con el siguiente». Los enlazados seguidos comparten número (`superset`) y llevan borde naranja y «Superserie A, B…». En el entreno, al marcar una serie de un ejercicio que no es el último de la superserie no salta el descanso («sin descanso, sigue con el siguiente»); se descansa al acabar la ronda. Una superserie de un solo ejercicio se descarta al guardar.
 - **Carpetas**: campo «Carpeta» en la rutina (con las que ya tienes como sugerencia). En Fuerza, las rutinas sin carpeta arriba y luego cada carpeta desplegable con su número. Las rutinas del entrenador IA van a la carpeta «Entrenador IA».
 
+## Chat con el entrenador de fuerza
+*2026-10-10*
+
+- Página **Fuerza → Entrenador de fuerza** (`/fuerza/entrenador`): conversación con la IA para pedir rutinas, resolver dudas (progresión, molestias, cómo encajarla con la carrera). Sirve corras o no.
+- **Qué sabe de ti** (`chatContext`): perfil (edad, sexo, peso, altura, lesiones, sesiones de fuerza), si corres y tu carrera, tus lugares y material, tus rutinas, lo entrenado en las últimas 4 semanas (sesiones y mejor serie por ejercicio) y tus últimas medidas. Más los últimos 12 mensajes.
+- **Rutinas**: solo las propone si se las pides o hacen falta. Se validan igual que las del plan (`exercisesFromAi`, compartida): ejercicios del catálogo que puedes hacer con tu material, rango de repeticiones en la nota para la progresión doble, superseries opcionales. Salen como tarjetas en la respuesta con «Guardar»: van a tus rutinas, carpeta «Entrenador IA», y no se borran al volver a pedirlas (las del plan sí se sustituyen).
+- **Prompt**: Helms y Schoenfeld para ganar músculo o fuerza (10-20 series por músculo y semana, 2 veces por semana, 6-15 reps a 1-3 RIR; mantener ≈ un tercio) y las reglas de corredores (Balsalobre, Blagrove, Lauersen). Sin emojis.
+- **Modelo y coste**: el de fuerza (`gpt-4o`, con reintento en `gpt-4o-mini` sin saldo). Con gimnasio completo se mandan ~670 ejercicios (≈10 000 tokens, unos 2,5 céntimos por mensaje); con material de casa, ~150 (menos de 1 céntimo). La conversación guarda los últimos 40 mensajes; «Empezar una conversación nueva» la borra (las rutinas guardadas se quedan).
+- En local no se puede probar la respuesta real (no hay clave de OpenRouter); probado con una conversación de ejemplo y el guardado de rutinas.
+

@@ -4,7 +4,7 @@ import { STRENGTH_KINDS, type StrengthKind } from "../engine/planner";
 import type { Db, Phase, Routine, RoutineExercise, RoutineSet } from "../types";
 import { addDays } from "../dates";
 import { CATALOG } from "./catalog";
-import { EQUIPMENT, canDo, type Equipment } from "./labels";
+import { EQUIPMENT, canDo, type Equipment, type Exercise } from "./labels";
 
 const EQ_IDS = new Set<string>(EQUIPMENT.map((e) => e.id));
 const KINDS: StrengthKind[] = ["pierna", "posterior", "superior", "completo"];
@@ -101,6 +101,38 @@ const num = (v: unknown, min: number, max: number) => {
   return Number.isFinite(n) && n >= min && n <= max ? n : undefined;
 };
 
+/**
+ * Ejercicios que propone la IA, validados: que existan en `byId`, que se puedan hacer con `equipment`,
+ * sin repetir y con números razonables. El rango de repeticiones («8-12») queda en la nota para la progresión doble.
+ */
+export function exercisesFromAi(list: unknown, byId: Map<string, Exercise>, equipment?: Equipment[]): RoutineExercise[] {
+  const exercises: RoutineExercise[] = [];
+  for (const e of Array.isArray(list) ? list.slice(0, 10) : []) {
+    const ex = (e ?? {}) as Record<string, unknown>;
+    const x = typeof ex.id === "string" ? byId.get(ex.id) : undefined;
+    if (!x || (equipment && !canDo(x.eq, equipment)) || exercises.some((y) => y.exerciseId === x.id)) continue;
+    const [lo, hi] = String(ex.reps ?? "").split(/[-–a]/).map((s) => num(s.trim(), 1, 100));
+    const sets = Math.round(num(ex.sets, 1, 6) ?? 3);
+    const kg = num(ex.kg, 0.5, 300);
+    const bw = ex.bw === true || (!kg && x.eq.every((q) => q === "corporal" || q === "dominadas" || q === "banco" || q === "cajon"));
+    const set: RoutineSet = {};
+    if (lo) set.reps = Math.round(lo);
+    if (kg && !bw) set.kg = Math.round(kg * 2) / 2;
+    const item: RoutineExercise = { exerciseId: x.id, sets: Array.from({ length: sets }, () => ({ ...set })), restSec: Math.round((num(ex.restSec, 0, 300) ?? 90) / 15) * 15 };
+    if (bw) item.bw = true;
+    const notes = [hi && lo && hi > lo ? `Rango ${lo}-${hi}: cuando llegues a ${hi} en todas las series, sube peso o dificultad.` : "", typeof ex.notes === "string" ? ex.notes.trim() : ""].filter(Boolean).join(" ");
+    if (notes) item.notes = notes.slice(0, 200);
+    const ss = num(ex.superset, 1, 9);
+    if (ss) item.superset = Math.round(ss);
+    exercises.push(item);
+  }
+  // superserie de un solo ejercicio o no seguidos: fuera
+  return exercises.map((ex, i, all) => {
+    if (ex.superset && all[i - 1]?.superset !== ex.superset && all[i + 1]?.superset !== ex.superset) delete ex.superset;
+    return ex;
+  });
+}
+
 /** Valida la respuesta: material conocido, ejercicios que existen y que puede hacer, números razonables. */
 export function routinesFromAi(reply: AiStrengthReply, now: string, detected: Equipment[] = []): { equipment: Equipment[]; summary: string; routines: Routine[] } {
   // lo que entendió la IA más lo que se leyó en el texto
@@ -112,24 +144,7 @@ export function routinesFromAi(reply: AiStrengthReply, now: string, detected: Eq
     const kind = KINDS.includes(r.kind as StrengthKind) ? (r.kind as StrengthKind) : undefined;
     const block = r.block === "fuerza" ? "fuerza" : r.block === "base" ? "base" : undefined;
     if (!kind || !block) continue;
-    const exercises: RoutineExercise[] = [];
-    for (const e of Array.isArray(r.exercises) ? r.exercises.slice(0, 8) : []) {
-      const ex = (e ?? {}) as Record<string, unknown>;
-      const x = typeof ex.id === "string" ? byId.get(ex.id) : undefined;
-      if (!x || !canDo(x.eq, equipment) || exercises.some((y) => y.exerciseId === x.id)) continue;
-      const [lo, hi] = String(ex.reps ?? "").split(/[-–a]/).map((s) => num(s.trim(), 1, 100));
-      const sets = Math.round(num(ex.sets, 1, 6) ?? 3);
-      const kg = num(ex.kg, 0.5, 300);
-      const bw = ex.bw === true || (!kg && x.eq.every((q) => q === "corporal" || q === "dominadas" || q === "banco" || q === "cajon"));
-      const set: RoutineSet = {};
-      if (lo) set.reps = Math.round(lo);
-      if (kg && !bw) set.kg = Math.round(kg * 2) / 2;
-      const item: RoutineExercise = { exerciseId: x.id, sets: Array.from({ length: sets }, () => ({ ...set })), restSec: Math.round((num(ex.restSec, 0, 300) ?? 90) / 15) * 15 };
-      if (bw) item.bw = true;
-      const notes = [hi && lo && hi > lo ? `Rango ${lo}-${hi}: cuando llegues a ${hi} en todas las series, sube peso o dificultad.` : "", typeof ex.notes === "string" ? ex.notes.trim() : ""].filter(Boolean).join(" ");
-      if (notes) item.notes = notes.slice(0, 200);
-      exercises.push(item);
-    }
+    const exercises = exercisesFromAi(r.exercises, byId, equipment);
     if (exercises.length < 2) continue;
     const name = typeof r.name === "string" && r.name.trim() ? r.name.trim().slice(0, 60) : `${kind[0].toUpperCase()}${kind.slice(1)} · ${block === "base" ? "Base" : "Fuerza"}`;
     routines.push({ id: `r_ia_${kind}_${block}`, name, exercises, folder: "Entrenador IA", source: "ia", kind, phases: BLOCK_PHASES[block], createdAt: now, updatedAt: now });

@@ -79,6 +79,15 @@ async function Content() {
       <Link href="/fuerza/entreno" className="flex items-center gap-3 rounded-2xl border border-line bg-surface p-4 font-semibold hover:bg-surface-2">
         <span className="text-2xl leading-none">+</span> Empezar entrenamiento vacío
       </Link>
+      <Link href="/fuerza/entrenador" className="mt-3 flex items-center gap-3 rounded-2xl border border-line bg-surface p-4 hover:border-accent">
+        <span className="grid h-9 w-9 place-items-center rounded-full bg-accent text-accent-ink">
+          <Icon name="sparkle" className="h-5 w-5" />
+        </span>
+        <span className="min-w-0">
+          <strong className="block">Entrenador de fuerza</strong>
+          <span className="text-xs text-ink-2">Pídele una rutina para tus objetivos o pregúntale lo que quieras</span>
+        </span>
+      </Link>
 
       <div className="mt-6 flex items-center justify-between">
         <h2 className="text-lg font-bold">Rutinas</h2>

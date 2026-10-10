@@ -7,6 +7,7 @@ import { after } from "next/server";
 import { readDbNow, updateDb } from "@/lib/db";
 import { requireUserId } from "@/lib/session";
 import { adaptWithAI, chatJson, coachConfig, strengthModel } from "@/lib/coach";
+import { CHAT_SYSTEM, chatContext, chatEquipment, chatExerciseList, chatHistory, chatReplyFromAi, type AiChatReply } from "@/lib/strength/chat";
 import { STRENGTH_SYSTEM, equipmentFromText, routinesFromAi, strengthRequest, type AiStrengthReply } from "@/lib/strength/aiRoutines";
 import { todayLocal } from "@/lib/dates";
 import { findExercise } from "@/lib/strength/catalog";
@@ -343,5 +344,72 @@ export async function generateStrengthRoutines(_: StrengthCoachForm, fd: FormDat
     message: result.summary || `${result.routines.length} rutinas creadas.`,
     routines: result.routines.map((r) => ({ id: r.id, name: r.name })),
   };
+}
+
+// ---------- Chat con el entrenador de fuerza ----------
+
+const MAX_CHAT = 40;
+
+export async function sendStrengthChat(_: FormState, fd: FormData): Promise<FormState> {
+  const message = text(fd, "message", 1500);
+  if (message.length < 2) return { error: "Escribe tu pregunta." };
+  if (!coachConfig().configured) return { error: "La IA no está configurada (falta OPENROUTER_API_KEY)." };
+  const now = new Date().toISOString();
+  const db = await readDbNow();
+  const history = db.strengthChat ?? [];
+  const equipment = chatEquipment(db);
+  const request = JSON.stringify({
+    contexto: chatContext(db, todayLocal()),
+    conversacion: chatHistory(history),
+    ejerciciosDisponibles: "id | nombre\n" + chatExerciseList(equipment),
+    mensaje: message,
+  });
+  let reply: ReturnType<typeof chatReplyFromAi>;
+  try {
+    let raw: AiChatReply;
+    try {
+      raw = await chatJson<AiChatReply>(CHAT_SYSTEM, request, 0.4, strengthModel(), 3000);
+    } catch (e) {
+      // sin saldo para el modelo bueno: se intenta con el barato
+      if ((e as Error).message !== "NO_CREDITS" || strengthModel() === coachConfig().model) throw e;
+      raw = await chatJson<AiChatReply>(CHAT_SYSTEM, request, 0.4, coachConfig().model, 3000);
+    }
+    reply = chatReplyFromAi(raw, equipment, now);
+    if (!reply.text) throw new Error("respuesta vacía");
+  } catch (e) {
+    const msg = (e as Error).message;
+    return { error: msg === "NO_CREDITS" ? "Tu cuenta de OpenRouter no tiene saldo suficiente. Recarga créditos en openrouter.ai/settings/credits." : `La IA no ha podido responder: ${msg}`.slice(0, 300) };
+  }
+  await updateDb((d) => {
+    d.strengthChat = [
+      ...(d.strengthChat ?? []),
+      { role: "user" as const, text: message, at: now },
+      { role: "assistant" as const, text: reply.text, at: new Date().toISOString(), ...(reply.routines.length ? { routines: reply.routines } : {}) },
+    ].slice(-MAX_CHAT);
+  });
+  refresh();
+  return { ok: true };
+}
+
+/** Guarda como rutinas propias las que propuso la IA en un mensaje (carpeta «Entrenador IA»). */
+export async function saveChatRoutines(fd: FormData): Promise<void> {
+  const at = text(fd, "at", 40);
+  await updateDb((d) => {
+    const m = d.strengthChat?.find((x) => x.at === at && x.role === "assistant");
+    if (!m?.routines?.length || m.saved) return;
+    const list = (d.routines ??= []);
+    const now = new Date().toISOString();
+    for (const r of m.routines) if (list.length < MAX_ROUTINES) list.push({ ...structuredClone(r), id: newId("r_"), createdAt: now, updatedAt: now });
+    m.saved = true;
+    syncPlanRoutines(d);
+  });
+  refresh();
+}
+
+export async function clearStrengthChat(): Promise<void> {
+  await updateDb((d) => {
+    d.strengthChat = undefined;
+  });
+  refresh();
 }
 

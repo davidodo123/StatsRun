@@ -199,6 +199,7 @@ export interface Db {
   customExercises?: CustomExercise[]; // ejercicios creados por el usuario (además del catálogo)
   routines?: Routine[]; // rutinas de fuerza
   strengthCoach?: StrengthCoachState; // lo que el atleta le contó a la IA de fuerza y su última respuesta
+  strengthChat?: StrengthChatMessage[]; // conversación con el entrenador de fuerza (sección Fuerza)
 }
 
 export type SetType = "normal" | "calentamiento" | "descendente" | "fallo";
@@ -281,6 +282,15 @@ export interface CustomExercise {
   secondary: Muscle[];
   steps: string[];
   createdAt: string;
+}
+
+/** Un mensaje del chat de fuerza; los de la IA pueden traer rutinas propuestas para guardar. */
+export interface StrengthChatMessage {
+  role: "user" | "assistant";
+  text: string;
+  at: string;
+  routines?: Routine[];
+  saved?: boolean; // ya guardó las rutinas propuestas
 }
 
 export interface StrengthCoachState {
