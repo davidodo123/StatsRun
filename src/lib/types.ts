@@ -216,6 +216,7 @@ export interface RoutineExercise {
   bw?: boolean; // con peso corporal: los kg de cada serie son lastre añadido
   restSec?: number; // descanso entre series
   notes?: string;
+  superset?: number; // mismo número en ejercicios seguidos = superserie (se alternan y se descansa al acabar la ronda)
 }
 
 export interface Routine {
@@ -223,6 +224,7 @@ export interface Routine {
   name: string;
   exercises: RoutineExercise[];
   notes?: string;
+  folder?: string; // carpeta en la que se agrupa (Gimnasio, Casa…)
   source?: "ia"; // creada por el entrenador IA de fuerza (se sustituye al volver a pedirla)
   kind?: "pierna" | "posterior" | "superior" | "completo"; // hueco del plan para el que está hecha
   phases?: Phase[]; // fases del plan en que se usa (sin fases = cualquiera)

@@ -20,5 +20,5 @@ async function Content({ params }: { params: PageProps<"/fuerza/rutinas/[id]/edi
   const [{ id }, db] = await Promise.all([params, getDb()]);
   const routine = db.routines?.find((r) => r.id === id);
   if (!routine) notFound();
-  return <RoutineEditor routine={routine} custom={customSummaries(db)} available={activePlace(db)?.equipment} />;
+  return <RoutineEditor routine={routine} custom={customSummaries(db)} available={activePlace(db)?.equipment} folders={[...new Set((db.routines ?? []).flatMap((r) => (r.folder ? [r.folder] : [])))]} />;
 }

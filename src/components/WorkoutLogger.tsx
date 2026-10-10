@@ -8,7 +8,7 @@ import { BodyChip, LoadSwitch, RestChip, SetBadge, onlyBody } from "./RoutineEdi
 import { finishWorkout } from "@/app/strength-actions";
 import { withCustom } from "@/lib/strength/exerciseList";
 import type { Equipment, ExerciseSummary } from "@/lib/strength/labels";
-import { SET_TYPES, SET_TYPE_SHORT, fmtLoad, nextTarget, platesFor, type Suggestion } from "@/lib/strength/workouts";
+import { SET_TYPES, SET_TYPE_SHORT, fmtLoad, nextTarget, platesFor, supersetLetters, type Suggestion } from "@/lib/strength/workouts";
 import type { Routine, RoutineSet, SetType, WorkoutExercise, WorkoutSet } from "@/lib/types";
 import { Icon } from "./icons";
 
@@ -26,6 +26,8 @@ interface LiveExercise {
   bw?: boolean; // con peso corporal: los kg son lastre
   sets: LiveSet[];
   hint?: Pick<Suggestion, "text" | "up">; // progresión doble respecto a la última vez
+  notes?: string;
+  superset?: number;
 }
 interface Live {
   startedAt: number; // epoch ms
@@ -74,8 +76,8 @@ let keySeq = 0;
 type Suggest = (exerciseId: string, plan?: RoutineSet, notes?: string) => Suggestion | undefined;
 
 /** Series de un ejercicio con lo que toca hoy: lo de la rutina, salvo que la progresión doble proponga otra cosa. */
-function liveExercise(exerciseId: string, sets: RoutineSet[], suggest: Suggest, extra: Pick<LiveExercise, "restSec" | "bw">, notes?: string): LiveExercise {
-  const sug = suggest(exerciseId, sets.find((s) => s.type !== "calentamiento"), notes);
+function liveExercise(exerciseId: string, sets: RoutineSet[], suggest: Suggest, extra: Pick<LiveExercise, "restSec" | "bw" | "notes" | "superset">): LiveExercise {
+  const sug = suggest(exerciseId, sets.find((s) => s.type !== "calentamiento"), extra.notes);
   return {
     key: keySeq++,
     exerciseId,
@@ -93,7 +95,7 @@ function fromRoutine(routine: Routine | undefined, suggest: Suggest): Live {
     startedAt: Date.now(),
     routineId: routine?.id,
     name: routine?.name ?? "Entreno",
-    exercises: (routine?.exercises ?? []).map((e) => liveExercise(e.exerciseId, e.sets, suggest, { restSec: e.restSec ?? 90, bw: e.bw }, e.notes)),
+    exercises: (routine?.exercises ?? []).map((e) => liveExercise(e.exerciseId, e.sets, suggest, { restSec: e.restSec ?? 90, bw: e.bw, notes: e.notes, superset: e.superset })),
   };
 }
 
@@ -167,6 +169,7 @@ export function WorkoutLogger({
   const doneSets = done.map((d) => d.s);
   const volume = Math.round(done.reduce((t, { e, s }) => t + ((e.bw ? (bodyKg ?? 0) : 0) + (num(s.kg) ?? 0)) * (num(s.reps) ?? 0), 0));
   const paused = Boolean(w.pausedAt);
+  const letters = supersetLetters(w.exercises);
   const elapsed = Math.max(0, Math.floor(((w.pausedAt ?? now) - w.startedAt - (w.pausedMs ?? 0)) / 1000));
   const togglePause = () => {
     setRest(undefined);
@@ -196,7 +199,7 @@ export function WorkoutLogger({
         feelings: String(fd.get("feelings") ?? ""),
         workout: {
           routineId: w.routineId,
-          exercises: w.exercises.map((e) => ({ exerciseId: e.exerciseId, bw: e.bw, sets: e.sets.map((s) => ({ type: s.type, kg: s.kg, reps: s.reps, done: s.done })) })),
+          exercises: w.exercises.map((e) => ({ exerciseId: e.exerciseId, bw: e.bw, notes: e.notes, sets: e.sets.map((s) => ({ type: s.type, kg: s.kg, reps: s.reps, done: s.done })) })),
         },
       });
       // si se guardó, la acción redirige y no vuelve aquí
@@ -239,8 +242,11 @@ export function WorkoutLogger({
         </div>
       )}
 
-      {w.exercises.map((e) => {
+      {w.exercises.map((e, i) => {
         const x = byId.get(e.exerciseId);
+        const letter = letters[i];
+        // en superserie se pasa al siguiente ejercicio de la ronda; se descansa al acabarla
+        const restAfter = !e.superset || w.exercises[i + 1]?.superset !== e.superset;
         const last = previous[e.exerciseId];
         const prev = last?.sets ?? [];
         // con barra, los discos por lado de la próxima serie (barra olímpica de 20 kg)
@@ -248,7 +254,13 @@ export function WorkoutLogger({
         const nextKg = next ? (num(next.kg) ?? next.target?.kg) : undefined;
         const plates = nextKg && nextKg > 20 ? platesFor(nextKg) : undefined;
         return (
-          <section key={e.key} className="rounded-2xl border border-line bg-surface p-3">
+          <section key={e.key} className={`rounded-2xl border bg-surface p-3 ${letter ? "border-accent" : "border-line"}`}>
+            {letter && (
+              <p className="mb-2 inline-flex items-center gap-1 text-xs font-semibold text-accent">
+                <Icon name="link" className="h-3.5 w-3.5" /> Superserie {letter}
+                {!restAfter && <span className="font-normal text-muted"> · sin descanso, sigue con el siguiente</span>}
+              </p>
+            )}
             <div className="flex items-center gap-3">
               {x && <ExerciseThumb x={x} className="h-11 w-11" />}
               <a href={`/fuerza/ejercicios/${e.exerciseId}`} target="_blank" rel="noreferrer" className="min-w-0 flex-1 truncate font-semibold text-accent">
@@ -267,6 +279,14 @@ export function WorkoutLogger({
               <RestChip value={e.restSec} onChange={(restSec) => update(e.key, (y) => ({ ...y, restSec }))} />
               <LoadSwitch bw={Boolean(e.bw)} onChange={(bw) => update(e.key, (y) => ({ ...y, bw }))} />
             </div>
+            <input
+              className="input mt-2 py-1.5 text-sm"
+              placeholder="Nota (agarre, asiento, sensaciones…)"
+              value={e.notes ?? ""}
+              onChange={(ev) => update(e.key, (y) => ({ ...y, notes: ev.target.value }))}
+              maxLength={200}
+              aria-label="Nota del ejercicio"
+            />
             {e.hint && <p className={`mt-2 text-xs ${e.hint.up ? "font-semibold text-accent" : "text-ink-2"}`}>{e.hint.up ? "↑ " : ""}{e.hint.text}</p>}
             {plates && (
               <p className="mt-1 text-xs text-ink-2">
@@ -299,7 +319,7 @@ export function WorkoutLogger({
                     if (s.done) return setRow({ done: false });
                     // sin escribir nada, vale lo que se ve en gris (rutina o última vez)
                     setRow({ done: true, kg: s.kg || (kgHint?.toString() ?? ""), reps: s.reps || (repsHint?.toString() ?? "") });
-                    if (e.restSec && s.type !== "calentamiento") setRest({ until: Date.now() + e.restSec * 1000, total: e.restSec });
+                    if (e.restSec && s.type !== "calentamiento" && restAfter) setRest({ until: Date.now() + e.restSec * 1000, total: e.restSec });
                   };
                   return (
                     <tr key={j} className={s.done ? "bg-good/15" : j % 2 ? "bg-surface-2" : ""}>

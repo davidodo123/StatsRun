@@ -454,3 +454,10 @@ Qué se decidió, por qué y cuándo. Si algo cambia, se añade una entrada nuev
 - **Calculadora de discos**: en Calculadoras (peso total + barra de 20, 15, 10 o 7 kg → discos por lado con colores de competición; avisa si no se llega exacto) y, en el entreno, cada ejercicio con barra dice los discos por lado de la próxima serie (barra de 20). Discos: 25, 20, 15, 10, 5, 2,5 y 1,25 kg.
 - **Medidas corporales** (`/fuerza/medidas`, botón «Medidas» en Fuerza): peso, % de grasa, cintura, cadera, pecho, brazo y muslo; una entrada por día, todas opcionales; gráfica por medida e historial con borrar. El peso más reciente se copia al perfil (cuenta para los ejercicios con peso corporal y para el plan).
 
+## Superseries, notas y carpetas
+*2026-10-10*
+
+- **Notas por ejercicio**: en el editor de rutinas (agarre, asiento, técnica…) y en el entreno, donde salen las de la rutina y se pueden cambiar; se guardan con el entreno y se ven en la sesión.
+- **Superseries**: entre dos ejercicios del editor, «Hacer superserie con el siguiente». Los enlazados seguidos comparten número (`superset`) y llevan borde naranja y «Superserie A, B…». En el entreno, al marcar una serie de un ejercicio que no es el último de la superserie no salta el descanso («sin descanso, sigue con el siguiente»); se descansa al acabar la ronda. Una superserie de un solo ejercicio se descarta al guardar.
+- **Carpetas**: campo «Carpeta» en la rutina (con las que ya tienes como sugerencia). En Fuerza, las rutinas sin carpeta arriba y luego cada carpeta desplegable con su número. Las rutinas del entrenador IA van a la carpeta «Entrenador IA».
+

@@ -22,19 +22,31 @@ interface Item {
   restSec: number;
   bw: boolean; // con peso corporal (los kg son lastre)
   sets: Row[];
+  notes: string;
+  linkNext: boolean; // en superserie con el siguiente
 }
 
 const toRow = (s: RoutineSet): Row => ({ type: s.type ?? "normal", kg: s.kg?.toString() ?? "", reps: s.reps?.toString() ?? "" });
 let keySeq = 0;
 
 /** Crear o editar una rutina: ejercicios con sus series (kg y repeticiones) y el descanso. */
-export function RoutineEditor({ routine, custom, available }: { routine?: Routine; custom: ExerciseSummary[]; available?: Equipment[] }) {
+export function RoutineEditor({ routine, custom, available, folders = [] }: { routine?: Routine; custom: ExerciseSummary[]; available?: Equipment[]; folders?: string[] }) {
   const exercises = useMemo(() => withCustom(custom), [custom]);
   const byId = useMemo(() => new Map(exercises.map((x) => [x.id, x])), [exercises]);
   const [name, setName] = useState(routine?.name ?? "");
   const [notes, setNotes] = useState(routine?.notes ?? "");
+  const [folder, setFolder] = useState(routine?.folder ?? "");
   const [items, setItems] = useState<Item[]>(
-    () => routine?.exercises.map((e) => ({ key: keySeq++, exerciseId: e.exerciseId, restSec: e.restSec ?? 90, bw: Boolean(e.bw), sets: e.sets.map(toRow) })) ?? [],
+    () =>
+      routine?.exercises.map((e, i, all) => ({
+        key: keySeq++,
+        exerciseId: e.exerciseId,
+        restSec: e.restSec ?? 90,
+        bw: Boolean(e.bw),
+        sets: e.sets.map(toRow),
+        notes: e.notes ?? "",
+        linkNext: Boolean(e.superset && all[i + 1]?.superset === e.superset),
+      })) ?? [],
   );
   const [picking, setPicking] = useState(false);
   const [error, setError] = useState<string>();
@@ -49,13 +61,20 @@ export function RoutineEditor({ routine, custom, available }: { routine?: Routin
       [next[i], next[j]] = [next[j], next[i]];
       return next;
     });
+  // nº de superserie de cada ejercicio: los enlazados seguidos comparten número
+  const group: (number | undefined)[] = [];
+  items.forEach((it, i) => {
+    const prev = items[i - 1];
+    group.push(prev?.linkNext ? group[i - 1] : it.linkNext && i < items.length - 1 ? i + 1 : undefined);
+  });
   const save = () =>
     start(async () => {
       const res = await saveRoutine({
         id: routine?.id,
         name,
         notes,
-        exercises: items.map((it) => ({ exerciseId: it.exerciseId, restSec: it.restSec, bw: it.bw, sets: it.sets })),
+        folder,
+        exercises: items.map((it, i) => ({ exerciseId: it.exerciseId, restSec: it.restSec, bw: it.bw, sets: it.sets, notes: it.notes, superset: group[i] })),
       });
       if (res?.error) setError(res.error);
     });
@@ -74,83 +93,110 @@ export function RoutineEditor({ routine, custom, available }: { routine?: Routin
       {error && <p className="text-sm font-medium text-critical">✕ {error}</p>}
       <input className="input text-lg font-semibold" placeholder="Nombre de la rutina" value={name} onChange={(e) => setName(e.target.value)} maxLength={60} aria-label="Nombre de la rutina" />
       <textarea className="input min-h-16 text-sm" placeholder="Notas (opcional)" value={notes} onChange={(e) => setNotes(e.target.value)} maxLength={300} aria-label="Notas" />
+      <label className="flex items-center gap-2">
+        <Icon name="folder" className="h-4 w-4 text-muted" />
+        <input className="input text-sm" list="carpetas" placeholder="Carpeta (opcional): Gimnasio, Casa, Verano…" value={folder} onChange={(e) => setFolder(e.target.value)} maxLength={30} aria-label="Carpeta" />
+        <datalist id="carpetas">
+          {folders.map((f) => (
+            <option key={f} value={f} />
+          ))}
+        </datalist>
+      </label>
 
       {items.map((it, i) => {
         const x = byId.get(it.exerciseId);
+        const inSet = group[i] !== undefined;
+        const last = i === items.length - 1;
         return (
-          <section key={it.key} className="rounded-2xl border border-line bg-surface p-3">
-            <div className="flex items-center gap-3">
-              {x && <ExerciseThumb x={x} className="h-11 w-11" />}
-              <strong className="min-w-0 flex-1 truncate text-accent">{x?.name ?? it.exerciseId}</strong>
-              <button type="button" className="px-1 text-muted disabled:opacity-30" onClick={() => move(i, -1)} disabled={i === 0} aria-label="Subir">
-                ↑
-              </button>
-              <button type="button" className="px-1 text-muted disabled:opacity-30" onClick={() => move(i, 1)} disabled={i === items.length - 1} aria-label="Bajar">
-                ↓
-              </button>
-              <button type="button" className="px-1 text-muted hover:text-critical" onClick={() => setItems((l) => l.filter((y) => y.key !== it.key))} aria-label="Quitar ejercicio">
-                ✕
-              </button>
-            </div>
-            <div className="mt-3 flex flex-wrap items-center gap-2">
-              <RestChip value={it.restSec} onChange={(restSec) => update(it.key, (y) => ({ ...y, restSec }))} />
-              <LoadSwitch bw={it.bw} onChange={(bw) => update(it.key, (y) => ({ ...y, bw }))} />
-            </div>
-            <table className="mt-2 w-full text-sm">
-              <thead>
-                <tr className="text-xs text-muted">
-                  <th className="w-14 py-1 text-left font-medium">SERIE</th>
-                  {it.bw && <th className="w-16 py-1 font-medium">PESO</th>}
-                  <th className="py-1 font-medium">{it.bw ? "LASTRE" : "KG"}</th>
-                  <th className="py-1 font-medium">REPS</th>
-                  <th className="w-8" />
-                </tr>
-              </thead>
-              <tbody>
-                {it.sets.map((s, j) => {
-                  const n = it.sets.slice(0, j + 1).filter((y) => y.type !== "calentamiento").length;
-                  const setRow = (patch: Partial<Row>) => update(it.key, (y) => ({ ...y, sets: y.sets.map((r, k) => (k === j ? { ...r, ...patch } : r)) }));
-                  return (
-                    <tr key={j} className={j % 2 ? "bg-surface-2" : ""}>
-                      <td className="py-1">
-                        <SetBadge type={s.type} n={n} onClick={() => setRow({ type: SET_TYPES[(SET_TYPES.indexOf(s.type) + 1) % SET_TYPES.length] })} />
-                      </td>
-                      {it.bw && (
-                        <td className="px-1 py-1">
-                          <BodyChip />
+          <div key={it.key}>
+            <section className={`rounded-2xl border bg-surface p-3 ${inSet ? "border-accent" : "border-line"}`}>
+              <div className="flex items-center gap-3">
+                {x && <ExerciseThumb x={x} className="h-11 w-11" />}
+                <strong className="min-w-0 flex-1 truncate text-accent">{x?.name ?? it.exerciseId}</strong>
+                <button type="button" className="px-1 text-muted disabled:opacity-30" onClick={() => move(i, -1)} disabled={i === 0} aria-label="Subir">
+                  ↑
+                </button>
+                <button type="button" className="px-1 text-muted disabled:opacity-30" onClick={() => move(i, 1)} disabled={i === items.length - 1} aria-label="Bajar">
+                  ↓
+                </button>
+                <button type="button" className="px-1 text-muted hover:text-critical" onClick={() => setItems((l) => l.filter((y) => y.key !== it.key))} aria-label="Quitar ejercicio">
+                  ✕
+                </button>
+              </div>
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <RestChip value={it.restSec} onChange={(restSec) => update(it.key, (y) => ({ ...y, restSec }))} />
+                <LoadSwitch bw={it.bw} onChange={(bw) => update(it.key, (y) => ({ ...y, bw }))} />
+              </div>
+              <table className="mt-2 w-full text-sm">
+                <thead>
+                  <tr className="text-xs text-muted">
+                    <th className="w-14 py-1 text-left font-medium">SERIE</th>
+                    {it.bw && <th className="w-16 py-1 font-medium">PESO</th>}
+                    <th className="py-1 font-medium">{it.bw ? "LASTRE" : "KG"}</th>
+                    <th className="py-1 font-medium">REPS</th>
+                    <th className="w-8" />
+                  </tr>
+                </thead>
+                <tbody>
+                  {it.sets.map((s, j) => {
+                    const n = it.sets.slice(0, j + 1).filter((y) => y.type !== "calentamiento").length;
+                    const setRow = (patch: Partial<Row>) => update(it.key, (y) => ({ ...y, sets: y.sets.map((r, k) => (k === j ? { ...r, ...patch } : r)) }));
+                    return (
+                      <tr key={j} className={j % 2 ? "bg-surface-2" : ""}>
+                        <td className="py-1">
+                          <SetBadge type={s.type} n={n} onClick={() => setRow({ type: SET_TYPES[(SET_TYPES.indexOf(s.type) + 1) % SET_TYPES.length] })} />
                         </td>
-                      )}
-                      <td className="px-1 py-1">
-                        <input className="input py-1.5 text-center" inputMode="decimal" placeholder={it.bw ? "+0" : "–"} value={s.kg} onChange={(e) => setRow({ kg: e.target.value })} aria-label={`${it.bw ? "Lastre" : "Kg"} serie ${j + 1}`} />
-                      </td>
-                      <td className="px-1 py-1">
-                        <input className="input py-1.5 text-center" inputMode="numeric" placeholder="–" value={s.reps} onChange={(e) => setRow({ reps: e.target.value })} aria-label={`Repeticiones serie ${j + 1}`} />
-                      </td>
-                      <td className="text-center">
-                        <button type="button" className="text-muted hover:text-critical disabled:opacity-30" disabled={it.sets.length === 1} onClick={() => update(it.key, (y) => ({ ...y, sets: y.sets.filter((_, k) => k !== j) }))} aria-label="Quitar serie">
-                          −
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-            <button
-              type="button"
-              className="btn btn-ghost mt-2 w-full py-1.5 text-sm"
-              onClick={() => update(it.key, (y) => ({ ...y, sets: [...y.sets, { ...(y.sets.at(-1) ?? { kg: "", reps: "" }), type: "normal" }] }))}
-            >
-              + Añadir serie
-            </button>
-          </section>
+                        {it.bw && (
+                          <td className="px-1 py-1">
+                            <BodyChip />
+                          </td>
+                        )}
+                        <td className="px-1 py-1">
+                          <input className="input py-1.5 text-center" inputMode="decimal" placeholder={it.bw ? "+0" : "–"} value={s.kg} onChange={(e) => setRow({ kg: e.target.value })} aria-label={`${it.bw ? "Lastre" : "Kg"} serie ${j + 1}`} />
+                        </td>
+                        <td className="px-1 py-1">
+                          <input className="input py-1.5 text-center" inputMode="numeric" placeholder="–" value={s.reps} onChange={(e) => setRow({ reps: e.target.value })} aria-label={`Repeticiones serie ${j + 1}`} />
+                        </td>
+                        <td className="text-center">
+                          <button type="button" className="text-muted hover:text-critical disabled:opacity-30" disabled={it.sets.length === 1} onClick={() => update(it.key, (y) => ({ ...y, sets: y.sets.filter((_, k) => k !== j) }))} aria-label="Quitar serie">
+                            −
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+              <button
+                type="button"
+                className="btn btn-ghost mt-2 w-full py-1.5 text-sm"
+                onClick={() => update(it.key, (y) => ({ ...y, sets: [...y.sets, { ...(y.sets.at(-1) ?? { kg: "", reps: "" }), type: "normal" }] }))}
+              >
+                + Añadir serie
+              </button>
+              <input className="input mt-2 py-1.5 text-sm" placeholder="Nota del ejercicio (agarre, asiento, técnica…)" value={it.notes} onChange={(e) => update(it.key, (y) => ({ ...y, notes: e.target.value }))} maxLength={200} aria-label="Nota del ejercicio" />
+            </section>
+            {!last && (
+              <div className="flex justify-center py-1.5">
+                <button
+                  type="button"
+                  onClick={() => update(it.key, (y) => ({ ...y, linkNext: !y.linkNext }))}
+                  aria-pressed={it.linkNext}
+                  className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${it.linkNext ? "bg-accent text-accent-ink" : "text-muted hover:text-ink"}`}
+                >
+                  <Icon name="link" className="h-3.5 w-3.5" />
+                  {it.linkNext ? "En superserie con el siguiente" : "Hacer superserie con el siguiente"}
+                </button>
+              </div>
+            )}
+          </div>
         );
       })}
 
       <button type="button" className="btn w-full" onClick={() => setPicking(true)}>
         + Añadir ejercicio
       </button>
-      <p className="text-center text-xs text-muted">Toca el número de serie para marcarla como calentamiento (C), descendente (D) o al fallo (F).</p>
+      <p className="text-center text-xs text-muted">Toca el número de serie para marcarla como calentamiento (C), descendente (D) o al fallo (F). En una superserie se alternan los ejercicios y se descansa al acabar la ronda.</p>
 
       {picking && (
         <ExercisePicker
@@ -158,7 +204,7 @@ export function RoutineEditor({ routine, custom, available }: { routine?: Routin
           available={available}
           onClose={() => setPicking(false)}
           onAdd={(ids) => {
-            setItems((l) => [...l, ...ids.map((exerciseId) => ({ key: keySeq++, exerciseId, restSec: 90, bw: onlyBody(byId.get(exerciseId)), sets: [0, 1, 2].map(() => ({ type: "normal" as SetType, kg: "", reps: "" })) }))]);
+            setItems((l) => [...l, ...ids.map((exerciseId) => ({ key: keySeq++, exerciseId, restSec: 90, bw: onlyBody(byId.get(exerciseId)), sets: [0, 1, 2].map(() => ({ type: "normal" as SetType, kg: "", reps: "" })), notes: "", linkNext: false }))]);
             setPicking(false);
           }}
         />

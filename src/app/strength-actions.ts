@@ -182,7 +182,7 @@ export async function deleteCustomExercise(fd: FormData): Promise<void> {
 const MAX_ROUTINES = 50;
 
 /** Guarda una rutina desde el editor (llega como objeto, no como formulario). */
-export async function saveRoutine(input: { id?: string; name?: string; notes?: string; exercises?: unknown }): Promise<FormState> {
+export async function saveRoutine(input: { id?: string; name?: string; notes?: string; folder?: string; exercises?: unknown }): Promise<FormState> {
   const db = await readDbNow();
   const name = String(input.name ?? "").trim().slice(0, 60);
   const exercises = cleanRoutineExercises(input.exercises, (id) => Boolean(findExercise(db, id)));
@@ -195,12 +195,13 @@ export async function saveRoutine(input: { id?: string; name?: string; notes?: s
     const list = (d.routines ??= []);
     const now = new Date().toISOString();
     const notes = String(input.notes ?? "").trim().slice(0, 300) || undefined;
+    const folder = String(input.folder ?? "").trim().slice(0, 30) || undefined;
     const i = list.findIndex((r) => r.id === id);
-    if (i >= 0) list[i] = { ...list[i], name, notes, exercises, updatedAt: now };
+    if (i >= 0) list[i] = { ...list[i], name, notes, folder, exercises, updatedAt: now };
     else if (list.length >= MAX_ROUTINES) error = `Como máximo ${MAX_ROUTINES} rutinas.`;
     else {
       id = newId("r_");
-      list.push({ id, name, notes, exercises, createdAt: now, updatedAt: now });
+      list.push({ id, name, notes, folder, exercises, createdAt: now, updatedAt: now });
     }
     syncPlanRoutines(d);
   });

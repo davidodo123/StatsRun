@@ -50,9 +50,26 @@ export function cleanRoutineExercises(raw: unknown, exists: (id: string) => bool
       const rest = numIn(r.restSec, 0, 600, 5);
       if (rest !== undefined) ex.restSec = rest;
       if (typeof r.notes === "string" && r.notes.trim()) ex.notes = r.notes.trim().slice(0, 200);
+      const ss = numIn(r.superset, 1, 99, 1);
+      if (ss) ex.superset = ss;
       if (!ex.sets.length) ex.sets.push({});
       return ex;
+    })
+    .map((ex, i, all) => {
+      // una superserie necesita al menos dos ejercicios seguidos
+      if (ex.superset && all[i - 1]?.superset !== ex.superset && all[i + 1]?.superset !== ex.superset) delete ex.superset;
+      return ex;
     });
+}
+
+/** Letra de cada superserie (A, B…) por orden de aparición; sin superserie, undefined. */
+export function supersetLetters(list: { superset?: number }[]): (string | undefined)[] {
+  const seen = new Map<number, string>();
+  return list.map((e) => {
+    if (!e.superset) return undefined;
+    if (!seen.has(e.superset)) seen.set(e.superset, String.fromCharCode(65 + seen.size));
+    return seen.get(e.superset);
+  });
 }
 
 /** Entreno terminado: solo las series marcadas como hechas (aunque no lleven kg ni repeticiones, p. ej. sin peso). */

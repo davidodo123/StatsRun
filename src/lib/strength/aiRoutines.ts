@@ -132,7 +132,7 @@ export function routinesFromAi(reply: AiStrengthReply, now: string, detected: Eq
     }
     if (exercises.length < 2) continue;
     const name = typeof r.name === "string" && r.name.trim() ? r.name.trim().slice(0, 60) : `${kind[0].toUpperCase()}${kind.slice(1)} · ${block === "base" ? "Base" : "Fuerza"}`;
-    routines.push({ id: `r_ia_${kind}_${block}`, name, exercises, source: "ia", kind, phases: BLOCK_PHASES[block], createdAt: now, updatedAt: now });
+    routines.push({ id: `r_ia_${kind}_${block}`, name, exercises, folder: "Entrenador IA", source: "ia", kind, phases: BLOCK_PHASES[block], createdAt: now, updatedAt: now });
   }
   return { equipment, summary: typeof reply.summary === "string" ? reply.summary.trim().slice(0, 800) : "", routines };
 }

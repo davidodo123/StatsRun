@@ -17,5 +17,5 @@ export default function NewRoutinePage() {
 
 async function Content() {
   const db = await getDb();
-  return <RoutineEditor custom={customSummaries(db)} available={activePlace(db)?.equipment} />;
+  return <RoutineEditor custom={customSummaries(db)} available={activePlace(db)?.equipment} folders={[...new Set((db.routines ?? []).flatMap((r) => (r.folder ? [r.folder] : [])))]} />;
 }

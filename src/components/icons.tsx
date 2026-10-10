@@ -35,6 +35,8 @@ export const ICON_PATHS = {
   alert: "M12 3l10 18H2L12 3zM12 10v5M12 18h.01",
   droplet: "M12 3s-6 7-6 11a6 6 0 0012 0c0-4-6-11-6-11z",
   share: "M12 3v12M8 7l4-4 4 4M5 12v8h14v-8",
+  link: "M10 14a4 4 0 005.7 0l3-3a4 4 0 00-5.7-5.7l-1 1M14 10a4 4 0 00-5.7 0l-3 3a4 4 0 005.7 5.7l1-1",
+  folder: "M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z",
 } as const;
 
 export type IconName = keyof typeof ICON_PATHS;

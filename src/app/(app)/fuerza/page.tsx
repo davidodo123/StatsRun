@@ -30,6 +30,39 @@ async function Content() {
     .filter((a) => a.workout)
     .sort((a, b) => b.startLocal.localeCompare(a.startLocal))
     .slice(0, 5);
+  const folders = [...new Set(routines.flatMap((r) => (r.folder ? [r.folder] : [])))].sort((a, b) => a.localeCompare(b, "es"));
+  const loose = routines.filter((r) => !r.folder);
+  const card = (r: (typeof routines)[number]) => (
+    <section key={r.id} className="rounded-2xl border border-line bg-surface p-4">
+      <div className="flex items-start justify-between gap-2">
+        <Link href={`/fuerza/rutinas/${r.id}`} className="min-w-0 text-lg font-bold hover:text-accent">
+          {r.name}
+        </Link>
+        <details className="relative">
+          <summary className="cursor-pointer list-none px-2 text-xl leading-none text-ink-2" aria-label={`Opciones de ${r.name}`}>
+            ⋯
+          </summary>
+          <div className="absolute right-0 z-20 mt-1 w-40 overflow-hidden rounded-xl border border-line bg-surface text-sm shadow-lg">
+            <Link href={`/fuerza/rutinas/${r.id}/editar`} className="block px-3 py-2 hover:bg-surface-2">
+              Editar rutina
+            </Link>
+            <form action={duplicateRoutine}>
+              <input type="hidden" name="id" value={r.id} />
+              <button className="w-full px-3 py-2 text-left hover:bg-surface-2">Duplicar</button>
+            </form>
+            <form action={deleteRoutine}>
+              <input type="hidden" name="id" value={r.id} />
+              <button className="w-full px-3 py-2 text-left text-critical hover:bg-surface-2">Borrar</button>
+            </form>
+          </div>
+        </details>
+      </div>
+      <p className="mt-1 line-clamp-2 text-sm text-ink-2">{r.exercises.map((e) => findExercise(db, e.exerciseId)?.name ?? "¿?").join(", ")}</p>
+      <Link href={`/fuerza/entreno?rutina=${r.id}`} className="btn mt-3 w-full">
+        Empezar rutina
+      </Link>
+    </section>
+  );
   const sets = muscleSets(db.activities, addDays(todayLocal(), -6), (id) => findExercise(db, id));
   const worked = MUSCLES.filter((m) => sets[m.id]).sort((a, b) => sets[b.id]! - sets[a.id]!);
 
@@ -64,44 +97,26 @@ async function Content() {
       </div>
 
       <p className="mt-5 text-sm text-muted">Mis rutinas ({routines.length})</p>
-      <div className="mt-2 grid grid-cols-1 gap-3 lg:grid-cols-2">
-        {routines.map((r) => (
-          <section key={r.id} className="rounded-2xl border border-line bg-surface p-4">
-            <div className="flex items-start justify-between gap-2">
-              <Link href={`/fuerza/rutinas/${r.id}`} className="min-w-0 text-lg font-bold hover:text-accent">
-                {r.name}
-              </Link>
-              <details className="relative">
-                <summary className="cursor-pointer list-none px-2 text-xl leading-none text-ink-2" aria-label={`Opciones de ${r.name}`}>
-                  ⋯
-                </summary>
-                <div className="absolute right-0 z-20 mt-1 w-40 overflow-hidden rounded-xl border border-line bg-surface text-sm shadow-lg">
-                  <Link href={`/fuerza/rutinas/${r.id}/editar`} className="block px-3 py-2 hover:bg-surface-2">
-                    Editar rutina
-                  </Link>
-                  <form action={duplicateRoutine}>
-                    <input type="hidden" name="id" value={r.id} />
-                    <button className="w-full px-3 py-2 text-left hover:bg-surface-2">Duplicar</button>
-                  </form>
-                  <form action={deleteRoutine}>
-                    <input type="hidden" name="id" value={r.id} />
-                    <button className="w-full px-3 py-2 text-left text-critical hover:bg-surface-2">Borrar</button>
-                  </form>
-                </div>
-              </details>
-            </div>
-            <p className="mt-1 line-clamp-2 text-sm text-ink-2">{r.exercises.map((e) => findExercise(db, e.exerciseId)?.name ?? "¿?").join(", ")}</p>
-            <Link href={`/fuerza/entreno?rutina=${r.id}`} className="btn mt-3 w-full">
-              Empezar rutina
-            </Link>
-          </section>
-        ))}
-        {!routines.length && (
-          <p className="rounded-2xl border border-dashed border-line p-4 text-sm text-ink-2">
-            Aún no tienes rutinas. Crea una con tus ejercicios, series, kilos y repeticiones, o empieza un entreno vacío y ve añadiendo.
-          </p>
-        )}
-      </div>
+      {loose.length > 0 && <div className="mt-2 grid grid-cols-1 gap-3 lg:grid-cols-2">{loose.map(card)}</div>}
+      {folders.map((f) => {
+        const list = routines.filter((r) => r.folder === f);
+        return (
+          <details key={f} open className="group mt-4">
+            <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-semibold">
+              <Icon name="folder" className="h-4 w-4 text-muted" />
+              {f}
+              <span className="font-normal text-muted">({list.length})</span>
+              <span className="text-muted transition group-open:rotate-90">›</span>
+            </summary>
+            <div className="mt-2 grid grid-cols-1 gap-3 lg:grid-cols-2">{list.map(card)}</div>
+          </details>
+        );
+      })}
+      {!routines.length && (
+        <p className="mt-2 rounded-2xl border border-dashed border-line p-4 text-sm text-ink-2">
+          Aún no tienes rutinas. Crea una con tus ejercicios, series, kilos y repeticiones, o empieza un entreno vacío y ve añadiendo.
+        </p>
+      )}
 
       {recent.length > 0 && (
         <>

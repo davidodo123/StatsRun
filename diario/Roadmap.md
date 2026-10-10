@@ -83,12 +83,12 @@ Base: [[Estudio entrenamiento#6. La Pirámide de Entrenamiento (Helms, Valdez, M
 - [x] Buscar y filtrar por músculo y material
 
 ### 4.2 · Rutinas y entreno en vivo — *hecho 2026-10-10 con el diseño de Hevy que pidió David, comprobado* → [[Decisiones#Rutinas y entreno en vivo]]
-- [x] Crear, editar, duplicar y borrar rutinas (las carpetas quedan para más adelante)
+- [x] Crear, editar, duplicar y borrar rutinas, y carpetas (hechas 2026-10-10)
 - [x] Empezar entreno (vacío o desde rutina): series con «anterior», kg, repeticiones, RIR y ✓; tipos de serie (calentamiento, normal, descendente, al fallo)
-- [/] Temporizador de descanso ✓ · superseries y notas por ejercicio pendientes
+- [x] Temporizador de descanso, superseries y notas por ejercicio — *superseries y notas hechas 2026-10-10, pendientes de comprobar* → [[Decisiones#Superseries, notas y carpetas]]
 - [x] Se guarda como actividad de fuerza (cuenta en la carga, el feed y los logros)
 
-### 4.3 · Progreso — *hecho 2026-10-10, pendiente de comprobar* → [[Decisiones#Progresión doble y récords de fuerza]]
+### 4.3 · Progreso — *hecho y comprobado 2026-10-10* → [[Decisiones#Progresión doble y récords de fuerza]]
 - [x] Por ejercicio: 1RM estimado, mejor serie, volumen, historial y récords — *en la ficha de cada ejercicio; pendiente de comprobar* → [[Decisiones#Progreso por ejercicio]]
 - [x] Progresión doble: peso y repeticiones propuestos al empezar — *pendiente de comprobar*
 - [x] Series por músculo a la semana y mapa de músculos (portada de Fuerza) → [[Decisiones#Series por músculo, medidas y discos]]

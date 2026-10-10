@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cleanRoutineExercises, cleanWorkout, estimate1RM, fmtLoad, exerciseHistory, lastSets, muscleSets, nextTarget, platesFor, routineHistory, strengthRecords, workoutReps, workoutSets, workoutVolume } from "./workouts";
+import { cleanRoutineExercises, cleanWorkout, estimate1RM, fmtLoad, exerciseHistory, lastSets, muscleSets, nextTarget, platesFor, supersetLetters, routineHistory, strengthRecords, workoutReps, workoutSets, workoutVolume } from "./workouts";
 import type { Activity } from "../types";
 
 const act = (id: string, date: string, workout: Activity["workout"], movingSec = 3600): Activity => ({
@@ -125,6 +125,21 @@ describe("rutinas y entrenos", () => {
     expect(platesFor(61)).toEqual({ side: [20], left: 0.5 });
     expect(platesFor(20)).toEqual({ side: [], left: 0 });
     expect(platesFor(50, 15)).toEqual({ side: [15, 2.5], left: 0 });
+  });
+
+  it("superseries: solo con ejercicios seguidos, y su letra", () => {
+    const out = cleanRoutineExercises(
+      [
+        { exerciseId: "a", sets: [{}], superset: 3 },
+        { exerciseId: "b", sets: [{}], superset: 3 },
+        { exerciseId: "c", sets: [{}], superset: 5 },
+        { exerciseId: "d", sets: [{}], superset: 7 },
+        { exerciseId: "e", sets: [{}], superset: 7 },
+      ],
+      () => true,
+    );
+    expect(out.map((e) => e.superset)).toEqual([3, 3, undefined, 7, 7]);
+    expect(supersetLetters(out)).toEqual(["A", "A", undefined, "B", "B"]);
   });
 });
 
