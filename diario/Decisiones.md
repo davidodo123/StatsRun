@@ -361,3 +361,17 @@ Qué se decidió, por qué y cuándo. Si algo cambia, se añade una entrada nuev
   - la tirada larga se elige con chips, solo entre los días marcados; si se desmarca ese día, pasa al último que quede;
   - las sesiones de fuerza se meten como **número con − / +, de 0 a 4** («Recomendado: 2-3»). Con 4, la cuarta es otra de tren superior.
 
+## Ejercicios ocultos, rutinas cortas y desplegables
+*2026-10-10*
+
+- **«Desaparecían» ejercicios al añadir**: el buscador (`ExercisePicker`) venía con «Mi material» activado y ocultaba todo lo que tu lugar no tiene. Ahora empieza desactivado. Si lo activas, avisa: «N ejercicios ocultos porque necesitan material que no tienes · Ver todos».
+- **Rutina corta en el plan** (decisión de David: «rutina + completar»):
+  - la sesión empieza con los ejercicios de tu rutina y añade, marcadas con «+», las líneas de la plantilla del plan cuyo patrón no cubre: empuje, tirón, vertical, hombro, core, sentadilla, bisagra, gemelo, aductor o pliometría;
+  - los patrones de la rutina salen de los músculos principales de sus ejercicios; los de la plantilla, de su texto;
+  - ejemplo: «Pecho» (solo flexiones) + remo, press de hombro, dominadas y core.
+- **Desplegables en toda la web**:
+  - sin el aspecto del sistema: flecha naranja propia, fondo y bordes de la app;
+  - en Chrome, la lista abierta también lleva el diseño (`appearance: base-select`: tarjeta redondeada y opción elegida en naranja); en el iPhone se abre la rueda nativa;
+  - el periodo de la gráfica de rutinas es un chip (`select-chip`);
+  - los filtros de Explorar tienen textos cortos («Músculo: todos») para que quepan en el móvil.
+

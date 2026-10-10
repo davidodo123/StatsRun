@@ -27,7 +27,7 @@ export function RoutineChart({ points, today }: { points: RoutinePoint[]; today:
   return (
     <div>
       <div className="flex justify-end">
-        <select className="bg-transparent text-sm font-medium text-accent" value={months} onChange={(e) => setMonths(Number(e.target.value))} aria-label="Periodo">
+        <select className="select-chip text-sm font-medium text-accent" value={months} onChange={(e) => setMonths(Number(e.target.value))} aria-label="Periodo">
           {RANGES.map((r) => (
             <option key={r.months} value={r.months}>
               {r.label}

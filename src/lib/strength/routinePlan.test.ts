@@ -61,6 +61,12 @@ describe("fuerza en el plan", () => {
     expect(byKind.superior.routineId).toBe("r_pecho");
     expect(byKind.pierna.routineId).toBe("r_pierna");
     expect(byKind.pierna.title).toBe("Pierna");
+    // rutina corta de pecho: se completa con remo, hombro, dominadas y core, sin repetir el empuje
+    const sup: string[] = byKind.superior.steps;
+    expect(sup[0]).toBe("2 × 12-15 Flexiones con peso corporal");
+    expect(sup.some((x) => x.startsWith("+ ") && /remo/i.test(x))).toBe(true);
+    expect(sup.some((x) => x.startsWith("+ ") && /dominada/i.test(x))).toBe(true);
+    expect(sup.some((x) => x.startsWith("+ ") && /press de banca|flexiones/i.test(x))).toBe(false);
     // en afinamiento se queda la activación, sin rutina
     const taper = p.weeks.find((w) => w.phase === "taper")!;
     expect(taper.sessions.filter((s) => s.type === "strength").every((s) => !s.routineId)).toBe(true);

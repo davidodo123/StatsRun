@@ -219,3 +219,71 @@ body {
   -webkit-appearance: none;
   margin: 0;
 }
+
+/* Desplegables: flecha propia y colores de la app (sin el aspecto del sistema).
+   En navegadores con «appearance: base-select» (Chrome) también la lista abierta lleva el diseño de la app;
+   en el iPhone se abre la rueda nativa, que ya encaja. */
+select.input,
+select.select-chip {
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23e8743b' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.8rem center;
+  background-size: 0.95rem;
+  padding-right: 2.3rem;
+}
+select.select-chip {
+  border: 1px solid var(--border);
+  border-radius: 9999px;
+  background-color: var(--surface-2);
+  padding: 0.3rem 2rem 0.3rem 0.85rem;
+  background-position: right 0.6rem center;
+  background-size: 0.8rem;
+}
+select option {
+  background-color: var(--surface);
+  color: var(--text);
+}
+@supports (appearance: base-select) {
+  select.input,
+  select.select-chip,
+  select.input::picker(select),
+  select.select-chip::picker(select) {
+    appearance: base-select;
+  }
+  select.input::picker-icon,
+  select.select-chip::picker-icon {
+    display: none;
+  }
+  select.input::picker(select),
+  select.select-chip::picker(select) {
+    margin-top: 0.35rem;
+    padding: 0.3rem;
+    border: 1px solid var(--border);
+    border-radius: 0.85rem;
+    background: var(--surface);
+    box-shadow: 0 12px 32px rgb(0 0 0 / 0.35);
+  }
+  select.input option,
+  select.select-chip option {
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.55rem;
+    font-size: 0.9rem;
+  }
+  select.input option:hover,
+  select.select-chip option:hover {
+    background: var(--surface-2);
+  }
+  select.input option:checked,
+  select.select-chip option:checked {
+    background: var(--accent);
+    color: var(--accent-ink);
+    font-weight: 600;
+  }
+  select.input option::checkmark,
+  select.select-chip option::checkmark {
+    display: none;
+  }
+}

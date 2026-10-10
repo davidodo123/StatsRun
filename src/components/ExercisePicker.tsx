@@ -21,14 +21,15 @@ export function ExercisePicker({
 }) {
   const [q, setQ] = useState("");
   const [muscle, setMuscle] = useState("");
-  const [onlyMine, setOnlyMine] = useState(Boolean(available));
+  // apagado de inicio: con él encendido «desaparecían» los ejercicios que tu lugar no tiene
+  const [onlyMine, setOnlyMine] = useState(false);
   const [picked, setPicked] = useState<string[]>([]);
   const [shown, setShown] = useState(PAGE);
   const index = useMemo(() => exercises.map((x) => ({ x, key: norm(x.name) })), [exercises]);
   const words = norm(q).split(/\s+/).filter(Boolean);
-  const list = index
-    .filter(({ x, key }) => words.every((w) => key.includes(w)) && (!muscle || x.muscles.includes(muscle as ExerciseSummary["muscles"][number])) && (!onlyMine || !available || canDo(x.eq, available)))
-    .map(({ x }) => x);
+  const matching = index.filter(({ x, key }) => words.every((w) => key.includes(w)) && (!muscle || x.muscles.includes(muscle as ExerciseSummary["muscles"][number])));
+  const list = matching.filter(({ x }) => !onlyMine || !available || canDo(x.eq, available)).map(({ x }) => x);
+  const hidden = matching.length - list.length;
   const toggle = (id: string) => setPicked((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id]));
 
   return (
@@ -59,6 +60,11 @@ export function ExercisePicker({
           )}
         </div>
       </div>
+      {hidden > 0 && (
+        <button type="button" onClick={() => setOnlyMine(false)} className="border-b border-line bg-surface-2 px-3 py-2 text-left text-xs text-ink-2">
+          {hidden} ejercicios ocultos porque necesitan material que no tienes. <span className="font-semibold text-accent">Ver todos</span>
+        </button>
+      )}
       <ul className="flex-1 divide-y divide-line overflow-y-auto">
         {list.slice(0, shown).map((x) => {
           const on = picked.includes(x.id);

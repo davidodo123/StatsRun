@@ -51,7 +51,7 @@ export function ExerciseBrowser({ exercises, places, initial }: { exercises: Exe
       <input className="input" type="search" placeholder="Buscar ejercicio…" value={f.q} onChange={(e) => set({ q: e.target.value })} aria-label="Buscar ejercicio" />
       <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
         <select className="input text-sm" value={f.muscle} onChange={(e) => set({ muscle: e.target.value })} aria-label="Músculo">
-          <option value="">Todos los músculos</option>
+          <option value="">Músculo: todos</option>
           {MUSCLES.map((m) => (
             <option key={m.id} value={m.id}>
               {m.label}
@@ -59,7 +59,7 @@ export function ExerciseBrowser({ exercises, places, initial }: { exercises: Exe
           ))}
         </select>
         <select className="input text-sm" value={f.cat} onChange={(e) => set({ cat: e.target.value })} aria-label="Tipo">
-          <option value="">Todos los tipos</option>
+          <option value="">Tipo: todos</option>
           {CATEGORIES.map((c) => (
             <option key={c.id} value={c.id}>
               {c.label}
@@ -68,18 +68,18 @@ export function ExerciseBrowser({ exercises, places, initial }: { exercises: Exe
           <option value="propios">Mis ejercicios</option>
         </select>
         <select className="input text-sm" value={f.place} onChange={(e) => set({ place: e.target.value })} aria-label="Lugar">
-          <option value="">Con cualquier material</option>
+          <option value="">Lugar: cualquiera</option>
           {places.map((p) => (
             <option key={p.id} value={p.id}>
-              Lo que hay en {p.name}
+              En {p.name}
             </option>
           ))}
         </select>
         <select className="input text-sm" value={f.eq} onChange={(e) => set({ eq: e.target.value })} aria-label="Material">
-          <option value="">Que use cualquier cosa</option>
+          <option value="">Material: todo</option>
           {EQUIPMENT.map((e) => (
             <option key={e.id} value={e.id}>
-              Con {e.label.toLowerCase()}
+              {e.label}
             </option>
           ))}
         </select>

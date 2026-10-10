@@ -13,6 +13,50 @@ export interface RoutineForPlan {
   zone: RoutineZone;
   steps: string[];
   durationMin: number;
+  covers: Pattern[]; // patrones de movimiento que ya trabaja
+}
+
+/** Patrón de movimiento: para completar una rutina corta con lo que le falta de la plantilla del plan. */
+export type Pattern = "empuje" | "tiron" | "vertical" | "hombro" | "core" | "sentadilla" | "bisagra" | "gemelo" | "aductor" | "pliometria";
+
+const MUSCLE_PATTERN: Partial<Record<Muscle, Pattern>> = {
+  pecho: "empuje",
+  triceps: "empuje",
+  espalda: "tiron",
+  biceps: "tiron",
+  trapecio: "tiron",
+  dorsal: "vertical",
+  hombros: "hombro",
+  abdomen: "core",
+  lumbar: "core",
+  cuadriceps: "sentadilla",
+  isquios: "bisagra",
+  gluteos: "bisagra",
+  gemelos: "gemelo",
+  aductores: "aductor",
+};
+
+// qué trabaja cada línea de las plantillas del plan (por su texto)
+const STEP_PATTERNS: [Pattern, RegExp][] = [
+  ["pliometria", /salto|pogo|comba|multisalto|pliometr/i],
+  ["vertical", /dominada|jalón/i],
+  ["hombro", /press de hombro|press militar/i],
+  ["empuje", /flexion|press de banca|press con mancuernas/i],
+  ["tiron", /remo/i],
+  ["core", /core|plancha|dead bug|pallof|rueda/i],
+  ["sentadilla", /sentadilla|búlgara|step-up|zancada/i],
+  ["bisagra", /peso muerto|hip thrust|puente|nórdico/i],
+  ["gemelo", /gemelo|sóleo/i],
+  ["aductor", /copenhague/i],
+];
+export const stepPatterns = (step: string) => STEP_PATTERNS.filter(([, re]) => re.test(step)).map(([p]) => p);
+
+/** Líneas de la plantilla que la rutina no cubre (las de pauta general, sin patrón, no se repiten). */
+export function complementSteps(template: string[], covers: Pattern[]): string[] {
+  return template.filter((s) => {
+    const p = stepPatterns(s);
+    return p.length > 0 && p.some((x) => !covers.includes(x));
+  });
 }
 
 const LOWER = new Set<Muscle>(["cuadriceps", "isquios", "gluteos", "gemelos", "aductores", "abductores"]);
@@ -50,12 +94,21 @@ export function routinesForPlan(db: Pick<Db, "routines" | "customExercises">): R
       return `${work.length || e.sets.length} × ${reps || "?"} ${x?.name ?? "ejercicio"}${load}`;
     });
     const sets = r.exercises.reduce((t, e) => t + e.sets.length, 0);
+    const covers = [
+      ...new Set(
+        exercises.flatMap(({ x }) => [
+          ...(x?.muscles ?? []).map((m) => MUSCLE_PATTERN[m]).filter((p): p is Pattern => Boolean(p)),
+          ...(x?.cat === "pliometria" ? (["pliometria"] as Pattern[]) : []),
+        ]),
+      ),
+    ];
     return {
       id: r.id,
       name: r.name,
       zone: routineZone(exercises.map(({ x }) => x?.muscles ?? [])),
       steps,
       durationMin: Math.min(120, Math.max(20, Math.round(sets * 2.5 + 5))),
+      covers,
     };
   });
 }
@@ -83,12 +136,19 @@ export function applyStrengthRoutines(plan: Plan, routines: RoutineForPlan[], to
       const options = routines.filter((r) => r.zone === zone);
       const r = options[turn[zone]++ % options.length];
       const maintenance = w.phase === "especifico" || w.recovery;
+      // rutina corta: se completa con lo que le falta de la plantilla de esa zona (remo, hombro, core…)
+      const extra = complementSteps(base.steps, r.covers);
+      const steps = [...r.steps, ...extra.map((s) => `+ ${s}`)];
+      if (maintenance) steps.push(w.recovery ? "Semana de descarga: la mitad de series, mismo peso." : "Fase específica: 1-2 series menos por ejercicio, lejos del fallo.");
+      const minutes = r.durationMin + extra.length * 6;
       return {
         ...base,
         title: r.name,
-        description: `Tu rutina «${r.name}». ${base.description}`,
-        steps: maintenance ? [...r.steps, w.recovery ? "Semana de descarga: la mitad de series, mismo peso." : "Fase específica: 1-2 series menos por ejercicio, lejos del fallo."] : r.steps,
-        durationMin: maintenance ? Math.round(r.durationMin * 0.7) : r.durationMin,
+        description: extra.length
+          ? `Tu rutina «${r.name}» y, marcado con +, lo que le falta del plan para trabajar ${s.strengthKind === "superior" ? "todo el tren superior" : "toda la pierna"}. ${base.description}`
+          : `Tu rutina «${r.name}». ${base.description}`,
+        steps,
+        durationMin: Math.min(120, maintenance ? Math.round(minutes * 0.7) : minutes),
         routineId: r.id,
       };
     });
