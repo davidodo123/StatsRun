@@ -1,5 +1,5 @@
 // Rutinas y entrenos de fuerza: validación de lo que llega del navegador, volumen, historial y «anterior».
-import type { Equipment } from "./labels";
+import type { Equipment, Muscle } from "./labels";
 import type { Activity, RoutineExercise, RoutineSet, SetType, Workout, WorkoutExercise, WorkoutSet } from "../types";
 
 export const SET_TYPES: SetType[] = ["normal", "calentamiento", "descendente", "fallo"];
@@ -180,6 +180,43 @@ export function strengthRecords(acts: Activity[]): Map<string, StrengthRecord[]>
     }
     if (recs.length) out.set(a.id, recs);
   }
+  return out;
+}
+
+// ---------- Discos ----------
+
+/** Discos habituales de un gimnasio (kg). */
+export const PLATES = [25, 20, 15, 10, 5, 2.5, 1.25];
+
+/** Discos por lado para cargar `total` kg en una barra de `bar` kg (de los más grandes a los más pequeños). */
+export function platesFor(total: number, bar = 20, available: readonly number[] = PLATES): { side: number[]; left: number } {
+  let rest = Math.round(((total - bar) / 2) * 100) / 100;
+  const side: number[] = [];
+  if (rest <= 0) return { side, left: 0 };
+  for (const p of [...available].sort((a, b) => b - a))
+    while (rest >= p - 1e-9) {
+      side.push(p);
+      rest = Math.round((rest - p) * 100) / 100;
+    }
+  return { side, left: rest };
+}
+
+// ---------- Series por músculo ----------
+
+/**
+ * Series efectivas por músculo desde una fecha: 1 para cada músculo principal del ejercicio y ½ para los que
+ * ayudan (la forma habitual de contar el volumen, como en Helms o Hevy).
+ */
+export function muscleSets(acts: Activity[], since: string, musclesOf: (id: string) => { muscles: Muscle[]; secondary: Muscle[] } | undefined): Partial<Record<Muscle, number>> {
+  const out: Partial<Record<Muscle, number>> = {};
+  for (const a of withWorkout(acts).filter((x) => x.date >= since))
+    for (const e of a.workout.exercises) {
+      const m = musclesOf(e.exerciseId);
+      const n = e.sets.filter(working).length;
+      if (!m || !n) continue;
+      for (const k of m.muscles) out[k] = (out[k] ?? 0) + n;
+      for (const k of m.secondary) if (!m.muscles.includes(k)) out[k] = (out[k] ?? 0) + n / 2;
+    }
   return out;
 }
 

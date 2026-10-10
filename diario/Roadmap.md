@@ -88,11 +88,11 @@ Base: [[Estudio entrenamiento#6. La Pirámide de Entrenamiento (Helms, Valdez, M
 - [/] Temporizador de descanso ✓ · superseries y notas por ejercicio pendientes
 - [x] Se guarda como actividad de fuerza (cuenta en la carga, el feed y los logros)
 
-### 4.3 · Progreso — *en marcha 2026-10-10; el resto, aparcado para más adelante (lo pidió David)* → [[Decisiones#Progresión doble y récords de fuerza]]
+### 4.3 · Progreso — *hecho 2026-10-10, pendiente de comprobar* → [[Decisiones#Progresión doble y récords de fuerza]]
 - [x] Por ejercicio: 1RM estimado, mejor serie, volumen, historial y récords — *en la ficha de cada ejercicio; pendiente de comprobar* → [[Decisiones#Progreso por ejercicio]]
 - [x] Progresión doble: peso y repeticiones propuestos al empezar — *pendiente de comprobar*
-- [ ] Series por músculo a la semana y mapa de músculos
-- [ ] Medidas corporales (peso, % de grasa, perímetros) y calculadora de discos
+- [x] Series por músculo a la semana y mapa de músculos (portada de Fuerza) → [[Decisiones#Series por músculo, medidas y discos]]
+- [x] Medidas corporales (peso, % de grasa, perímetros) y calculadora de discos
 
 ### 4.4 · Entrenador IA de fuerza (chat)
 - [x] En el plan: «Fuerza con IA» (material + lo que sabe hacer) → rutinas base y fuerza por tipo que el plan coloca solas → [[Decisiones#Fuerza con IA en el plan]]

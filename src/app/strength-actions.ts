@@ -12,7 +12,7 @@ import { todayLocal } from "@/lib/dates";
 import { findExercise } from "@/lib/strength/catalog";
 import { cleanRoutineExercises, cleanWorkout } from "@/lib/strength/workouts";
 import { applyStrengthRoutines, routinesForPlan } from "@/lib/strength/routinePlan";
-import type { Db } from "@/lib/types";
+import type { BodyMeasurement, Db } from "@/lib/types";
 
 /** Tras cambiar las rutinas, las sesiones de fuerza del plan se rehacen con ellas. */
 function syncPlanRoutines(d: Db) {
@@ -55,6 +55,53 @@ export async function savePlace(_: FormState, fd: FormData): Promise<FormState> 
   if (error) return { error };
   refresh();
   return { ok: true, message: id ? "Guardado." : "Lugar añadido." };
+}
+
+// ---------- Medidas corporales ----------
+
+const MEASURE_FIELDS = ["weightKg", "fatPct", "waistCm", "hipCm", "chestCm", "armCm", "thighCm"] as const;
+const MEASURE_RANGE: Record<(typeof MEASURE_FIELDS)[number], [number, number]> = {
+  weightKg: [25, 300],
+  fatPct: [2, 70],
+  waistCm: [40, 200],
+  hipCm: [40, 200],
+  chestCm: [40, 200],
+  armCm: [10, 80],
+  thighCm: [20, 120],
+};
+
+export async function saveMeasurement(_: FormState, fd: FormData): Promise<FormState> {
+  const date = text(fd, "date", 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || date > todayLocal()) return { error: "Fecha no válida." };
+  const m: BodyMeasurement = { date };
+  for (const k of MEASURE_FIELDS) {
+    const raw = text(fd, k, 10).replace(",", ".");
+    if (!raw) continue;
+    const n = Number(raw);
+    const [lo, hi] = MEASURE_RANGE[k];
+    if (!Number.isFinite(n) || n < lo || n > hi) return { error: `Revisa el valor de ${k === "fatPct" ? "% de grasa" : k === "weightKg" ? "peso" : "los perímetros"}.` };
+    m[k] = Math.round(n * 10) / 10;
+  }
+  if (Object.keys(m).length === 1) return { error: "Apunta al menos una medida." };
+  await updateDb((db) => {
+    const list = (db.measurements ??= []).filter((x) => x.date !== date);
+    list.push(m);
+    list.sort((a, b) => a.date.localeCompare(b.date));
+    db.measurements = list.slice(-1000);
+    // el peso más reciente pasa al perfil (cuenta para el peso corporal en fuerza y para la IA)
+    const latest = [...list].reverse().find((x) => x.weightKg);
+    if (latest?.weightKg && db.profile) db.profile.weightKg = latest.weightKg;
+  });
+  refresh();
+  return { ok: true, message: "Medidas guardadas." };
+}
+
+export async function deleteMeasurement(fd: FormData): Promise<void> {
+  const date = text(fd, "date", 10);
+  await updateDb((db) => {
+    db.measurements = (db.measurements ?? []).filter((x) => x.date !== date);
+  });
+  refresh();
 }
 
 export async function addPresetPlace(fd: FormData): Promise<void> {

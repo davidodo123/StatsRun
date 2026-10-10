@@ -8,7 +8,7 @@ import { BodyChip, LoadSwitch, RestChip, SetBadge, onlyBody } from "./RoutineEdi
 import { finishWorkout } from "@/app/strength-actions";
 import { withCustom } from "@/lib/strength/exerciseList";
 import type { Equipment, ExerciseSummary } from "@/lib/strength/labels";
-import { SET_TYPES, SET_TYPE_SHORT, fmtLoad, nextTarget, type Suggestion } from "@/lib/strength/workouts";
+import { SET_TYPES, SET_TYPE_SHORT, fmtLoad, nextTarget, platesFor, type Suggestion } from "@/lib/strength/workouts";
 import type { Routine, RoutineSet, SetType, WorkoutExercise, WorkoutSet } from "@/lib/types";
 import { Icon } from "./icons";
 
@@ -243,6 +243,10 @@ export function WorkoutLogger({
         const x = byId.get(e.exerciseId);
         const last = previous[e.exerciseId];
         const prev = last?.sets ?? [];
+        // con barra, los discos por lado de la próxima serie (barra olímpica de 20 kg)
+        const next = !e.bw && x?.eq.includes("barra") ? e.sets.find((s) => !s.done) : undefined;
+        const nextKg = next ? (num(next.kg) ?? next.target?.kg) : undefined;
+        const plates = nextKg && nextKg > 20 ? platesFor(nextKg) : undefined;
         return (
           <section key={e.key} className="rounded-2xl border border-line bg-surface p-3">
             <div className="flex items-center gap-3">
@@ -264,6 +268,12 @@ export function WorkoutLogger({
               <LoadSwitch bw={Boolean(e.bw)} onChange={(bw) => update(e.key, (y) => ({ ...y, bw }))} />
             </div>
             {e.hint && <p className={`mt-2 text-xs ${e.hint.up ? "font-semibold text-accent" : "text-ink-2"}`}>{e.hint.up ? "↑ " : ""}{e.hint.text}</p>}
+            {plates && (
+              <p className="mt-1 text-xs text-ink-2">
+                Discos por lado para {fmtLoad(false, nextKg)}: <strong>{plates.side.map((p) => p.toLocaleString("es-ES")).join(" + ")}</strong>
+                {plates.left > 0 && ` (+${plates.left.toLocaleString("es-ES")} sin disco)`} · barra de 20
+              </p>
+            )}
             {e.bw && !bodyKg && <p className="mt-1 text-xs text-muted">Pon tu peso en Perfil para contar el peso corporal en el volumen.</p>}
             <table className="mt-2 w-full table-fixed text-sm">
               <thead>

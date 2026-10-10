@@ -446,3 +446,11 @@ Qué se decidió, por qué y cuándo. Si algo cambia, se añade una entrada nuev
 - **Historial**: las 10 últimas sesiones con todas las series efectivas y el 1RM de cada día; trofeo en las que hubo récord.
 - Los kilos se escriben con coma («62,5 kg»), también en los ejes de las gráficas.
 
+## Series por músculo, medidas y discos
+*2026-10-10*
+
+- **Series por músculo** (portada de Fuerza, últimos 7 días): 1 serie para cada músculo principal del ejercicio y ½ para los que ayudan, sin calentamientos (`muscleSets`). Barra por músculo hasta 20 series con la franja 10-20 en verde (Helms, para ganar músculo); se aclara que para mantener (lo normal corriendo) basta con en torno a un tercio.
+- **Mapa del cuerpo** (`MuscleMap`): dibujo esquemático en SVG, delante y detrás, con cada músculo en naranja más intenso cuantas más series (pleno a partir de 10); lo no trabajado, en gris.
+- **Calculadora de discos**: en Calculadoras (peso total + barra de 20, 15, 10 o 7 kg → discos por lado con colores de competición; avisa si no se llega exacto) y, en el entreno, cada ejercicio con barra dice los discos por lado de la próxima serie (barra de 20). Discos: 25, 20, 15, 10, 5, 2,5 y 1,25 kg.
+- **Medidas corporales** (`/fuerza/medidas`, botón «Medidas» en Fuerza): peso, % de grasa, cintura, cadera, pecho, brazo y muslo; una entrada por día, todas opcionales; gráfica por medida e historial con borrar. El peso más reciente se copia al perfil (cuenta para los ejercicios con peso corporal y para el plan).
+

@@ -7,7 +7,7 @@ export const metadata: Metadata = { title: "Calculadoras" };
 export default function ToolsPage() {
   return (
     <>
-      <PageHeader title="Calculadoras" subtitle="VDOT, ritmos de entrenamiento, predicciones, zonas y conversión de ritmo." />
+      <PageHeader title="Calculadoras" subtitle="VDOT, ritmos de entrenamiento, predicciones, zonas, conversión de ritmo y discos de la barra." />
       <Calculators />
     </>
   );

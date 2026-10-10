@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cleanRoutineExercises, cleanWorkout, estimate1RM, fmtLoad, exerciseHistory, lastSets, nextTarget, routineHistory, strengthRecords, workoutReps, workoutSets, workoutVolume } from "./workouts";
+import { cleanRoutineExercises, cleanWorkout, estimate1RM, fmtLoad, exerciseHistory, lastSets, muscleSets, nextTarget, platesFor, routineHistory, strengthRecords, workoutReps, workoutSets, workoutVolume } from "./workouts";
 import type { Activity } from "../types";
 
 const act = (id: string, date: string, workout: Activity["workout"], movingSec = 3600): Activity => ({
@@ -111,6 +111,20 @@ describe("rutinas y entrenos", () => {
     expect(h.map((p) => p.activityId)).toEqual(["a", "b"]);
     expect(h[1]).toMatchObject({ topKg: 62.5, volume: 1220, reps: 20, maxReps: 12, oneRm: 82 });
     expect(h[1].best).toEqual({ kg: 60, reps: 12 });
+  });
+
+  it("series por músculo: 1 por principal y ½ por los que ayudan, sin calentamientos ni fechas viejas", () => {
+    const w = (sets: number) => ({ exercises: [{ exerciseId: "Barbell_Squat", name: "Sentadilla", sets: [{ type: "calentamiento" as const }, ...Array(sets).fill({ kg: 60, reps: 5 })] }] });
+    const info = () => ({ muscles: ["cuadriceps" as const], secondary: ["gluteos" as const, "isquios" as const] });
+    expect(muscleSets([act("a", "2026-10-01", w(3)), act("b", "2026-10-08", w(4))], "2026-10-04", info)).toEqual({ cuadriceps: 4, gluteos: 2, isquios: 2 });
+  });
+
+  it("discos por lado", () => {
+    expect(platesFor(100)).toEqual({ side: [25, 15], left: 0 });
+    expect(platesFor(62.5)).toEqual({ side: [20, 1.25], left: 0 });
+    expect(platesFor(61)).toEqual({ side: [20], left: 0.5 });
+    expect(platesFor(20)).toEqual({ side: [], left: 0 });
+    expect(platesFor(50, 15)).toEqual({ side: [15, 2.5], left: 0 });
   });
 });
 

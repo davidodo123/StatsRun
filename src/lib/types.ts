@@ -187,6 +187,7 @@ export interface Db {
   healthTokenHash?: string; // sha256 de la clave personal con la que el atajo envía los datos
   plan?: Plan;
   pastPlans?: ArchivedPlan[]; // planes terminados o sustituidos, del más reciente al más antiguo
+  measurements?: BodyMeasurement[]; // medidas corporales, por fecha (una por día)
   activities: Activity[];
   strava?: StravaAuth;
   lastSync?: string;  dismissedShared?: string[]; // sesiones compartidas por amigos que no se quieren añadir ("<idUsuario>:<idActividad>")
@@ -246,6 +247,18 @@ export interface WorkoutExercise {
 export interface Workout {
   routineId?: string;
   exercises: WorkoutExercise[];
+}
+
+/** Medidas corporales de un día (todas opcionales). */
+export interface BodyMeasurement {
+  date: string;
+  weightKg?: number;
+  fatPct?: number;
+  waistCm?: number;
+  hipCm?: number;
+  chestCm?: number;
+  armCm?: number;
+  thighCm?: number;
 }
 
 /** Un sitio donde se entrena fuerza y el material que hay. */

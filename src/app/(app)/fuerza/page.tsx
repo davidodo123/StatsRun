@@ -5,9 +5,11 @@ import { Loading, PageHeader } from "@/components/ui";
 import { deleteRoutine, duplicateRoutine } from "@/app/strength-actions";
 import { getDb } from "@/lib/db";
 import { activePlace, findExercise } from "@/lib/strength/catalog";
-import { workoutSets, workoutVolume } from "@/lib/strength/workouts";
+import { muscleSets, workoutSets, workoutVolume } from "@/lib/strength/workouts";
+import { MUSCLES } from "@/lib/strength/labels";
+import { MuscleMap } from "@/components/MuscleMap";
 import { fmtDuration } from "@/lib/format";
-import { WEEKDAYS, shortDate, weekday } from "@/lib/dates";
+import { WEEKDAYS, addDays, shortDate, todayLocal, weekday } from "@/lib/dates";
 import { Icon } from "@/components/icons";
 
 export const metadata: Metadata = { title: "Fuerza" };
@@ -28,10 +30,19 @@ async function Content() {
     .filter((a) => a.workout)
     .sort((a, b) => b.startLocal.localeCompare(a.startLocal))
     .slice(0, 5);
+  const sets = muscleSets(db.activities, addDays(todayLocal(), -6), (id) => findExercise(db, id));
+  const worked = MUSCLES.filter((m) => sets[m.id]).sort((a, b) => sets[b.id]! - sets[a.id]!);
 
   return (
     <>
-      <PageHeader title="Fuerza" />
+      <PageHeader
+        title="Fuerza"
+        action={
+          <Link href="/fuerza/medidas" className="btn btn-ghost">
+            Medidas
+          </Link>
+        }
+      />
       <Link href="/fuerza/entreno" className="flex items-center gap-3 rounded-2xl border border-line bg-surface p-4 font-semibold hover:bg-surface-2">
         <span className="text-2xl leading-none">+</span> Empezar entrenamiento vacío
       </Link>
@@ -94,6 +105,33 @@ async function Content() {
 
       {recent.length > 0 && (
         <>
+          <p className="mt-6 text-sm text-muted">Series por músculo · últimos 7 días</p>
+          <section className="mt-2 grid grid-cols-1 gap-4 rounded-2xl border border-line bg-surface p-4 md:grid-cols-2">
+            <MuscleMap sets={sets} />
+            <div>
+              {worked.length ? (
+                <ul className="space-y-1.5">
+                  {worked.map((m) => (
+                    <li key={m.id} className="grid grid-cols-[7rem_1fr_2.5rem] items-center gap-2 text-xs">
+                      <span className="truncate">{m.label}</span>
+                      {/* escala hasta 20 series; la franja marca 10-20, lo que Helms propone para ganar músculo */}
+                      <span className="relative h-2.5 overflow-hidden rounded-full bg-surface-2">
+                        <span className="absolute inset-y-0 left-1/2 right-0 bg-good/20" aria-hidden />
+                        <span className="absolute inset-y-0 left-0 rounded-full bg-accent" style={{ width: `${Math.min(100, (sets[m.id]! / 20) * 100)}%` }} />
+                      </span>
+                      <span className="tabular text-right text-ink-2">{sets[m.id]!.toLocaleString("es-ES")}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm text-ink-2">Esta semana aún no has entrenado fuerza.</p>
+              )}
+              <p className="mt-3 text-xs text-muted">
+                Cuenta 1 serie para el músculo principal y ½ para los que ayudan. Franja verde: 10-20 series a la semana, lo que se recomienda para ganar músculo; para mantenerlo (lo habitual si corres) basta con mucho menos, en torno a un tercio.
+              </p>
+            </div>
+          </section>
+
           <p className="mt-6 text-sm text-muted">Últimos entrenos</p>
           <ul className="mt-2 divide-y divide-line rounded-2xl border border-line bg-surface">
             {recent.map((a) => (

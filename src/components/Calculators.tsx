@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Card } from "./ui";
+import { PlateCalc } from "./PlateCalc";
 import { hrZones, raceTimeFromVdot, riegel, trainingPaces, vdotFromRace, flatEquivalentKm, heatFactor } from "@/lib/engine/physiology";
 import { fmtDuration, fmtPace, fmtPaceRange, parseTime } from "@/lib/format";
 
@@ -176,6 +177,8 @@ export function Calculators() {
         )}
         <p className="mt-3 text-xs text-muted">El desnivel indicado se refiere a un maratón y se escala para cada distancia.</p>
       </Card>
+
+      <PlateCalc />
     </div>
   );
 }
