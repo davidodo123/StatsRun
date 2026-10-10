@@ -32,6 +32,8 @@ export function parseTime(input: string): number | undefined {
   const parts = input.trim().split(":").map((p) => p.trim());
   if (!parts.length || parts.some((p) => p === "" || isNaN(Number(p)))) return undefined;
   const nums = parts.map(Number);
+  // sin negativos, y minutos y segundos por debajo de 60 (salvo el primer número: «90» o «90:00» valen)
+  if (nums.some((n) => n < 0) || nums.slice(1).some((n) => n >= 60)) return undefined;
   if (nums.length === 1) return nums[0] * 60;
   if (nums.length === 2) return nums[0] * 60 + nums[1];
   if (nums.length === 3) return nums[0] * 3600 + nums[1] * 60 + nums[2];

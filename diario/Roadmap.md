@@ -112,6 +112,13 @@ Base: [[Estudio entrenamiento#6. La Pirámide de Entrenamiento (Helms, Valdez, M
 - [x] Caché de navegación de 30 s y precarga de páginas en el service worker
 - [-] ~~Mover Vercel y Redis a Europa~~: descartado, la base de Upstash en Europa no tiene plan gratis en Vercel y David prefiere seguir gratis en iad1
 
+## 🧪 Batería de pruebas — *hecha 2026-10-10* → [[Decisiones#Batería de pruebas completa]]
+- [x] Tests de la lógica: 236 (antes 96), con 120 combinaciones del planificador
+- [x] Recorrido de todas las páginas en Chrome (móvil claro y oscuro, ordenador; usuario con datos, vacío, sin sesión y enlaces rotos)
+- [x] Flujos de uso reales, también con la IA de verdad
+- [ ] Revocar la clave de OpenRouter de local que se pegó en el chat y crear otra
+- [ ] Recargar saldo en OpenRouter: gpt-4o responde «sin saldo» y la fuerza con IA usa el modelo barato
+
 ## 🔧 Pendientes técnicos
 
 - [x] Rotar el secreto de Google: el nuevo está en `.env.local` y en Vercel, y el antiguo se borró → [[Configuración#Google Cloud]]

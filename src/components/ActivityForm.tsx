@@ -5,6 +5,7 @@ import { useActionState, useState } from "react";
 import { saveActivity, type FormState } from "@/app/actions";
 import type { Activity, Feel, PlannedSession } from "@/lib/types";
 import { fmtDuration, fmtPace, parseTime } from "@/lib/format";
+import { keepForm } from "./keepForm";
 
 const RPE: Record<number, string> = {
   1: "Muy muy suave",
@@ -78,7 +79,7 @@ export function ActivityForm({
   const derivedSec = !sec && km > 0 && typedPace ? typedPace * km : undefined;
 
   return (
-    <form action={action} className="space-y-5">
+    <form onSubmit={keepForm(action)} className="space-y-5">
       {initial.id && <input type="hidden" name="id" value={initial.id} />}
       {initial.sessionId && <input type="hidden" name="sessionId" value={initial.sessionId} />}
 

@@ -5,13 +5,14 @@ import { savePlace } from "@/app/strength-actions";
 import type { FormState } from "@/app/actions";
 import { EQUIPMENT } from "@/lib/strength/labels";
 import type { GymPlace } from "@/lib/types";
+import { keepForm } from "./keepForm";
 
 /** Alta o edición de un lugar: nombre y material que hay. */
 export function PlaceForm({ place }: { place?: GymPlace }) {
   const [state, action, pending] = useActionState<FormState, FormData>(savePlace, {});
   const has = new Set(place?.equipment ?? ["corporal"]);
   return (
-    <form action={action} className="space-y-3">
+    <form onSubmit={keepForm(action)} className="space-y-3">
       {place && <input type="hidden" name="id" value={place.id} />}
       <label className="field">
         Nombre

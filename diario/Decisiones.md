@@ -471,3 +471,30 @@ Qué se decidió, por qué y cuándo. Si algo cambia, se añade una entrada nuev
 - **Modelo y coste**: el de fuerza (`gpt-4o`, con reintento en `gpt-4o-mini` sin saldo). Con gimnasio completo se mandan ~670 ejercicios (≈10 000 tokens, unos 2,5 céntimos por mensaje); con material de casa, ~150 (menos de 1 céntimo). La conversación guarda los últimos 40 mensajes; «Empezar una conversación nueva» la borra (las rutinas guardadas se quedan).
 - En local no se puede probar la respuesta real (no hay clave de OpenRouter); probado con una conversación de ejemplo y el guardado de rutinas.
 
+## Batería de pruebas completa
+*2026-10-10*
+
+David pidió probar «todos los casos posibles». Tres capas:
+
+1. **Tests de la lógica (Vitest): 96 → 236.**
+   - `basics.test.ts`: fechas (meses, años, bisiestos, cambio de hora), formatos, fisiología (VDOT ida y vuelta, zonas, IMC, calor, desnivel), semáforos de carga, importación (deporte por nombre, no duplicar la misma sesión por dos vías) y sesión firmada (tokens manipulados, caducados o mal formados).
+   - `planFuzz.test.ts`: **120 combinaciones** de nivel, distancia, semanas hasta la carrera, días disponibles, día de tirada, fuerza 0-4 y día de inicio. En todas: carrera el último día y una vez, nada en el pasado, una sesión de carrera por día y solo en sus días, fuerza ≤ lo pedido y nunca la víspera de la carrera, la de pierna no la víspera de la tirada si había otro día, tirada larga +10 % como mucho, el afinamiento no carga más que la semana más dura, ninguna sesión vacía.
+   - `robustness.test.ts`: datos basura o malintencionados del navegador (rutinas, entrenos) y respuestas de la IA mal formadas; cálculos con cero actividades.
+2. **Recorrido en Chrome** de 41 páginas × 3 vistas (móvil claro, móvil oscuro, ordenador) con un usuario completo (un año de demo, carrera con mapa, fuerza, rutinas con carpeta y superserie, medidas, plan anterior, chat), más usuario vacío, sin sesión y enlaces que no existen. Se mira: estado HTTP, errores de JavaScript, peticiones fallidas, desborde horizontal e imágenes rotas.
+3. **Flujos de uso** (rellenar y pulsar como una persona, y comprobar lo guardado): registrar (y validaciones), editar y borrar, entreno en vivo hasta guardar, editar/duplicar rutinas y quitar superserie, medidas, material, ejercicio propio, perfil, generar plan de una carrera (archiva el anterior), y con la **IA real**: chat de fuerza, fuerza con IA del plan y ajuste diario.
+
+**Fallos encontrados y arreglados:**
+- `parseTime` aceptaba tiempos negativos («-5») y segundos ≥ 60 («45:75»).
+- **Afinamiento más duro que el pico**: si ya corrías más de lo que pide la distancia, la primera semana partía de tu volumen (p. ej. 90 km) y el afinamiento se calculaba sobre él (77 km frente a 55 de pico). Ahora el volumen no pasa del pico del plan.
+- **Tirada larga del afinamiento** calculada sobre tu tirada más larga *antes* del plan (20 km) y no sobre la del plan (10 km): saltaba a 18,5 km la semana antes de la carrera. Ahora baja desde la más larga del plan.
+- **«Tirada larga 0 km»** en la semana de la carrera de algunos planes cortos: ahora ese día es un rodaje suave.
+- **Fuerza de pierna el domingo antes de una tirada larga el lunes**: la fuerza solo miraba su semana; ahora tiene en cuenta los días clave del principio de la siguiente.
+- **Los formularios se vaciaban tras un error** (React 19 limpia `<form action>` al acabar, también si vuelve con error): se perdía lo escrito (nombre, sensaciones, material para la IA…). Nueva función `keepForm` en todos los formularios con texto; Registrar y Medidas se limpian solo tras guardar bien.
+- Respuestas de la IA nulas o con tipos raros podían romper el chat, la fuerza con IA o el ajuste diario: protegidas.
+- Faltaban `favicon.ico` (404 en cada visita) y páginas propias de **404** («No lo encontramos», en español y con el estilo de la app) y de **error** («Algo ha fallado» + Reintentar).
+- La IA (con el modelo barato) proponía rutinas de 3 ejercicios: el prompt exige ahora 5-7 (sale con 4-5 con `gpt-4o-mini`).
+
+**Visto y correcto:** todas las páginas sin errores de JavaScript ni desbordes en móvil; sin sesión todo lleva a «Entrar»; no se guarda nada con fecha futura (el navegador lo impide y el servidor también). Las páginas de algo que no existe responden 200 con el 404 dentro (es lo normal en Next cuando ya empezó a enviar la página).
+
+**Pendiente de David:** la cuenta de OpenRouter no tiene saldo para `gpt-4o` (la app cae a `gpt-4o-mini`, que funciona). Y conviene revocar la clave de local que se pegó en el chat.
+

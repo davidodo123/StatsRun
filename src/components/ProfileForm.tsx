@@ -5,6 +5,7 @@ import { saveProfile, type FormState } from "@/app/actions";
 import type { Profile } from "@/lib/types";
 import { WEEKDAYS } from "@/lib/dates";
 import { availableDaysOf } from "@/lib/engine/planner";
+import { keepForm } from "./keepForm";
 
 function fmtT(sec?: number) {
   if (!sec) return "";
@@ -26,7 +27,7 @@ export function ProfileForm({ profile }: { profile?: Profile }) {
   const p = profile;
   const avail = availableDaysOf(p ?? { daysPerWeek: 4, longRunDay: 6 });
   return (
-    <form action={action} className="space-y-6">
+    <form onSubmit={keepForm(action)} className="space-y-6">
       <fieldset className="rounded-2xl border border-line bg-surface p-4 md:p-5">
         <legend className="px-1 text-sm font-semibold">Datos físicos</legend>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">

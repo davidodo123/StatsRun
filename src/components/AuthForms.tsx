@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { createAccount, linkAccount } from "@/app/auth-actions";
 import type { FormState } from "@/app/actions";
+import { keepForm } from "./keepForm";
 
 export function AuthShell({ title, subtitle, children }: { title: string; subtitle: string; children: React.ReactNode }) {
   return (
@@ -76,7 +77,7 @@ export function LinkPanel({ email }: { email: string }) {
     <AuthShell title="Primera vez con Google" subtitle={`Has entrado como ${email}.`}>
       <p className="text-sm font-semibold">¿Ya tenías cuenta con usuario y contraseña?</p>
       <p className="mt-1 text-xs text-ink-2">Escríbelos una única vez para conservar tus entrenos, tu plan y tus amigos. Después solo entrarás con Google.</p>
-      <form action={action} className="mt-4 space-y-4">
+      <form onSubmit={keepForm(action)} className="mt-4 space-y-4">
         <label className="field">
           Usuario
           <input className="input" name="username" autoComplete="username" autoCapitalize="none" required />

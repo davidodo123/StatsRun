@@ -3,12 +3,13 @@
 import { useActionState } from "react";
 import { deleteAccount } from "@/app/auth-actions";
 import type { FormState } from "@/app/actions";
+import { keepForm } from "./keepForm";
 
 /** Borrar la cuenta: hay que escribir BORRAR, porque no se puede deshacer. */
 export function DeleteAccountForm() {
   const [state, action, pending] = useActionState<FormState, FormData>(deleteAccount, {});
   return (
-    <form action={action} className="space-y-2">
+    <form onSubmit={keepForm(action)} className="space-y-2">
       <p className="text-sm text-ink-2">
         Se borran tu perfil, tu plan, todos tus entrenos y tus amistades, y se desconecta Strava. <strong className="text-ink">No se puede deshacer.</strong>
       </p>

@@ -3,11 +3,12 @@
 import { useActionState } from "react";
 import { addTuneUpRace, type FormState } from "@/app/actions";
 import { addDays } from "@/lib/dates";
+import { keepForm } from "./keepForm";
 
 export function TuneUpRaceForm({ today, maxDate }: { today: string; maxDate: string }) {
   const [state, action, pending] = useActionState<FormState, FormData>(addTuneUpRace, {});
   return (
-    <form action={action} className="space-y-3">
+    <form onSubmit={keepForm(action)} className="space-y-3">
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         <label className="field sm:col-span-2">
           Nombre

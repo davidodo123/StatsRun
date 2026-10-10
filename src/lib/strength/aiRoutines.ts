@@ -66,6 +66,7 @@ REGLAS:
 - Usa SOLO ejercicios de la lista ("id" exacto) cuyo material tenga el atleta. "corporal" siempre está disponible.
 - Primero traduce su material a estos códigos: ${EQUIPMENT.map((e) => `${e.id} (${e.label})`).join(", ")}.
 - Crea una rutina por cada combinación pedida de tipo ("kind") y bloque ("block").
+- CADA rutina lleva entre 5 y 7 ejercicios (nunca menos de 5): el principal, unilaterales o accesorios, gemelo y sóleo (en las de pierna), core y, en el bloque de fuerza, pliometría.
 - "reps" es un rango como "8-12" o un número. "kg" solo si usa peso externo (si no, omítelo). "bw": true si es con peso corporal (los "kg" serían lastre).
 
 Sin emojis en ningún texto. Responde SOLO con JSON:
@@ -134,7 +135,8 @@ export function exercisesFromAi(list: unknown, byId: Map<string, Exercise>, equi
 }
 
 /** Valida la respuesta: material conocido, ejercicios que existen y que puede hacer, números razonables. */
-export function routinesFromAi(reply: AiStrengthReply, now: string, detected: Equipment[] = []): { equipment: Equipment[]; summary: string; routines: Routine[] } {
+export function routinesFromAi(input: AiStrengthReply | null | undefined, now: string, detected: Equipment[] = []): { equipment: Equipment[]; summary: string; routines: Routine[] } {
+  const reply: AiStrengthReply = input && typeof input === "object" ? input : {};
   // lo que entendió la IA más lo que se leyó en el texto
   const equipment = [...new Set(["corporal", ...detected, ...(Array.isArray(reply.equipment) ? reply.equipment : [])].map(String).filter((e) => EQ_IDS.has(e)))] as Equipment[];
   const byId = new Map(CANDIDATES.map((x) => [x.id, x]));

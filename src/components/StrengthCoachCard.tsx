@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useActionState } from "react";
 import { generateStrengthRoutines, type StrengthCoachForm } from "@/app/strength-actions";
+import { keepForm } from "./keepForm";
 
 /** Le cuentas a la IA tu material y lo que sabes hacer, y crea tus rutinas de fuerza para la carrera. */
 export function StrengthCoachCard({
@@ -21,7 +22,7 @@ export function StrengthCoachCard({
   const [state, action, pending] = useActionState<StrengthCoachForm, FormData>(generateStrengthRoutines, {});
   const list = state.routines ?? routines;
   return (
-    <form action={action} className="space-y-3 text-sm">
+    <form onSubmit={keepForm(action)} className="space-y-3 text-sm">
       <label className="field">
         ¿Qué material tienes?
         <textarea

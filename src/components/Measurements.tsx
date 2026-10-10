@@ -6,6 +6,7 @@ import type { FormState } from "@/app/actions";
 import type { BodyMeasurement } from "@/lib/types";
 import { TrendLine } from "./charts";
 import { Card } from "./ui";
+import { keepForm } from "./keepForm";
 
 type Field = Exclude<keyof BodyMeasurement, "date">;
 const FIELDS: { id: Field; label: string; unit: string }[] = [
@@ -33,7 +34,8 @@ export function Measurements({ list, today }: { list: BodyMeasurement[]; today: 
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
       <Card title="Apuntar medidas" subtitle="Rellena solo las que tengas. Mejor por la mañana, en ayunas y siempre igual.">
-        <form action={action} className="space-y-3">
+        {/* tras guardar cambian los datos y el formulario se monta de nuevo, vacío */}
+        <form key={list.map((x) => Object.values(x).join()).join("|")} onSubmit={keepForm(action)} className="space-y-3">
           <label className="field">
             Fecha
             <input className="input" type="date" name="date" defaultValue={today} max={today} required />

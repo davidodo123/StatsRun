@@ -278,9 +278,9 @@ function applyAi(orig: PlannedSession, ai: AiSession, date: string, limits: Read
     ...orig,
     date,
     type: safeType,
-    title: ai.title?.trim().slice(0, 80) || orig.title,
+    title: (typeof ai.title === "string" && ai.title.trim().slice(0, 80)) || orig.title,
     // la nota «IA: …» se sustituye en cada revisión; si no, se acumulaba repetida
-    description: [(ai.description?.trim() || orig.description).replace(/\s*IA:[\s\S]*$/, ""), ai.reason?.trim() && `IA: ${ai.reason.trim()}`].filter(Boolean).join(" ").slice(0, 600),
+    description: [((typeof ai.description === "string" && ai.description.trim()) || orig.description).replace(/\s*IA:[\s\S]*$/, ""), typeof ai.reason === "string" && ai.reason.trim() && `IA: ${ai.reason.trim()}`].filter(Boolean).join(" ").slice(0, 600),
     steps: steps.length ? steps : orig.steps,
     distanceKm: isStrength ? 0 : Number.isFinite(km) && km >= 0 ? Math.round(Math.min(km, maxKm) * 10) / 10 : orig.distanceKm,
     durationMin: Number.isFinite(min) && min > 0 ? Math.round(Math.min(min, Math.max(orig.durationMin * 1.3, 20))) : orig.durationMin,
@@ -338,7 +338,7 @@ async function run(uid: string): Promise<CoachResult> {
 
   try {
     const ai = await chatJson<AiResponse>(SYSTEM, JSON.stringify(built.context));
-    const byId = new Map((ai.sessions ?? []).filter((s) => s && typeof s.id === "string").map((s) => [s.id, s]));
+    const byId = new Map((Array.isArray(ai?.sessions) ? ai.sessions : []).filter((s) => s && typeof s.id === "string").map((s) => [s.id, s]));
     let changed = 0;
     await updateDb((d) => {
       changed = 0; // la escritura puede reintentarse
@@ -401,9 +401,9 @@ async function run(uid: string): Promise<CoachResult> {
           .sort((a, b) => a.date.localeCompare(b.date) || (a.type === "strength" ? 1 : -1));
         w.targetKm = Math.round(w.sessions.reduce((x, y) => x + y.distanceKm, 0));
       }
-      d.coach = { updatedAt: new Date().toISOString(), model, summary: ai.summary?.trim().slice(0, 800) || "Plan revisado.", changed, verdict: built.readiness.verdict };
+      d.coach = { updatedAt: new Date().toISOString(), model, summary: (typeof ai.summary === "string" && ai.summary.trim().slice(0, 800)) || "Plan revisado.", changed, verdict: built.readiness.verdict };
     }, uid);
-    return { ok: true, changed, message: ai.summary ?? "Plan revisado." };
+    return { ok: true, changed, message: typeof ai.summary === "string" ? ai.summary : "Plan revisado." };
   } catch (e) {
     const raw = (e as Error).message;
     const message = raw === "NO_CREDITS" ? "sin saldo en OpenRouter (recarga créditos en openrouter.ai/settings/credits)" : raw;

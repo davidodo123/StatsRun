@@ -3,11 +3,12 @@
 import { useActionState } from "react";
 import { saveGoal, type FormState } from "@/app/actions";
 import type { Race } from "@/lib/races";
+import { keepForm } from "./keepForm";
 
 export function GoalForm({ race, defaultDate, hasProfile }: { race?: Race; defaultDate: string; hasProfile: boolean }) {
   const [state, action, pending] = useActionState<FormState, FormData>(saveGoal, {});
   return (
-    <form action={action} className="space-y-4">
+    <form onSubmit={keepForm(action)} className="space-y-4">
       {race && <input type="hidden" name="raceId" value={race.id} />}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {!race && (

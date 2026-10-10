@@ -304,7 +304,8 @@ export function generatePlan(input: PlanInput): Plan {
   const ramp = heavy || lvl === 0 ? 0.07 : 0.1;
   const vols: number[] = [];
   {
-    let v = startKm;
+    // si ya corre más de lo que pide la distancia, el plan no pasa de su pico (ni el afinamiento se calcula sobre más)
+    let v = Math.min(startKm, peak);
     for (let i = 0; i < buildWeeks; i++) {
       const isRecovery = buildWeeks >= 6 && i % 4 === 3 && i < buildWeeks - 1;
       if (isRecovery) {
@@ -317,7 +318,7 @@ export function generatePlan(input: PlanInput): Plan {
     const reached = Math.max(...vols, startKm);
     if (reached < peak * 0.92 && buildWeeks > 0)
       notes.push(`Volumen máximo ${Math.round(reached)} km/sem (respetando +${Math.round(ramp * 100)} %/semana). Ideal para la distancia: ~${Math.round(peak)} km.`);
-    const top = buildWeeks ? Math.max(...vols) : startKm;
+    const top = buildWeeks ? Math.max(...vols) : Math.min(startKm, peak);
     for (const f of taperFr) vols.push(top * f);
   }
 
@@ -337,6 +338,7 @@ export function generatePlan(input: PlanInput): Plan {
   const days = avail.length;
   const runWalkWeeks = lvl === 0 ? Math.min(6, Math.ceil(buildWeeks / 2)) : heavy && lvl === 1 ? 3 : 0;
   let longKmPrev = Math.max(input.longestRecentKm, lvl === 0 ? 3 : 5);
+  let peakLong = 0; // la tirada más larga del propio plan (el afinamiento baja desde ella, no desde el historial)
   let spikeLimited = false;
   const weeks: PlanWeek[] = [];
 
@@ -361,7 +363,10 @@ export function generatePlan(input: PlanInput): Plan {
     // el maratón necesita tiradas de 28-32 km aunque el volumen semanal sea moderado
     const longPct = (days <= 2 ? 0.45 : days <= 3 ? 0.4 : days === 4 ? 0.36 : days === 5 ? 0.32 : 0.28) + (cat === "marathon" ? 0.06 : 0);
     let longKm: number;
-    if (phase === "taper") longKm = isRaceWeek ? 0 : Math.min(longKmPrev * (vol / maxVol) * 1.1, vol * 0.4);
+    if (phase === "taper") {
+      const base = peakLong || Math.min(longKmPrev, LONG_CAP[cat][lvl]);
+      longKm = isRaceWeek ? 0 : Math.floor(Math.min(base * (vol / maxVol) * 1.1, vol * 0.4, base) * 2) / 2;
+    }
     else if (recovery) longKm = longKmPrev * 0.75;
     else {
       // pico de una sola sesión (Frandsen 2025, BJSM): no pasar de la más larga reciente + 10 %
@@ -371,6 +376,7 @@ export function generatePlan(input: PlanInput): Plan {
       // hacia abajo a medio km: la sesión se redondea a 0,5 km y no debe pasarse del tope
       longKm = Math.floor(Math.min(vol * longPct, LONG_CAP[cat][lvl], longKmPrev + step) * 2) / 2;
       longKmPrev = Math.max(longKmPrev, longKm);
+      peakLong = Math.max(peakLong, longKm);
     }
     longKm = Math.max(longKm, isRaceWeek ? 0 : 3);
 
@@ -392,7 +398,9 @@ export function generatePlan(input: PlanInput): Plan {
         continue;
       }
       let s: PlannedSession;
-      if (slot === "L") s = longRun(date, round1(longKm), ctx);
+      // en la semana de la carrera no hay tirada larga: ese día, rodaje suave
+      if (slot === "L" && isRaceWeek) s = easyRun(date, round1(Math.min(easyKm, 6)), paces, phase);
+      else if (slot === "L") s = longRun(date, round1(longKm), ctx);
       else if (slot === "Q1") s = quality1(date, round1(qKm), ctx);
       else if (slot === "Q2") s = quality2(date, round1(qKm), ctx);
       else if (slot === "R") s = recoveryRun(date, round1(Math.max(3, easyKm * 0.7)), paces);
@@ -404,7 +412,8 @@ export function generatePlan(input: PlanInput): Plan {
 
     // Fuerza: tipos según cuántas por semana y colocadas con el reparto de cargas (placeStrength)
     const nStrength = isRaceWeek ? 0 : phase === "taper" ? Math.min(1, profile.strengthPerWeek) : Math.min(4, profile.strengthPerWeek);
-    for (const [date, kind] of placeStrength(sessions, STRENGTH_KINDS[nStrength] ?? [])) sessions.push(strengthSession(date, phase, kind));
+    const nextKeys = layout.filter(([, sl]) => sl !== "E" && sl !== "R").map(([d]) => addDays(weekStart, 7 + d));
+    for (const [date, kind] of placeStrength(sessions, STRENGTH_KINDS[nStrength] ?? [], nextKeys)) sessions.push(strengthSession(date, phase, kind));
 
     sessions.sort((a, b) => a.date.localeCompare(b.date) || (a.type === "strength" ? 1 : -1));
     weeks.push({
@@ -859,9 +868,10 @@ export function strengthSession(date: string, phase: Phase, kind: StrengthKind):
  * la de pierna, el mismo día que una sesión dura (días duros, duros); la posterior con pliometría, en día suave;
  * ninguna de tren inferior el día antes de la tirada larga o de una sesión clave; la de tren superior, en cualquier hueco.
  */
-function placeStrength(run: PlannedSession[], kinds: StrengthKind[]): [string, StrengthKind][] {
+// `nextKeys`: días clave de la semana siguiente (una tirada larga el lunes también cuenta para el domingo)
+function placeStrength(run: PlannedSession[], kinds: StrengthKind[], nextKeys: string[] = []): [string, StrengthKind][] {
   const dates = [...new Set(run.filter((s) => s.type !== "race").map((s) => s.date))];
-  const keyDates = run.filter((s) => s.type === "long" || isHardSession(s.type)).map((s) => s.date);
+  const keyDates = [...run.filter((s) => s.type === "long" || isHardSession(s.type)).map((s) => s.date), ...nextKeys];
   const hardOn = (d: string) => run.some((s) => s.date === d && isHardSession(s.type));
   const beforeKey = (d: string) => keyDates.some((k) => diffDays(k, d) === 1);
   const used = new Set<string>();

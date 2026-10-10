@@ -5,13 +5,14 @@ import { saveCustomExercise } from "@/app/strength-actions";
 import type { FormState } from "@/app/actions";
 import { CATEGORIES, EQUIPMENT, MUSCLES } from "@/lib/strength/labels";
 import type { CustomExercise } from "@/lib/types";
+import { keepForm } from "./keepForm";
 
 /** Crear o editar un ejercicio propio. */
 export function ExerciseForm({ exercise }: { exercise?: CustomExercise }) {
   const [state, action, pending] = useActionState<FormState, FormData>(saveCustomExercise, {});
   const eq = new Set(exercise?.eq ?? ["corporal"]);
   return (
-    <form action={action} className="space-y-4">
+    <form onSubmit={keepForm(action)} className="space-y-4">
       {exercise && <input type="hidden" name="id" value={exercise.id} />}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <label className="field">

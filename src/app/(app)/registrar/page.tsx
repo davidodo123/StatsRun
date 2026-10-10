@@ -112,7 +112,7 @@ async function Content({ searchParams }: { searchParams: PageProps<"/registrar">
       )}
       <Card className="lg:col-span-2" title={editing ? "Editar entreno" : session ? "Registrar sesión del plan" : "Nuevo entreno"}>
         <ActivityForm
-          key={editing?.id ?? session?.id ?? "nuevo"}
+          key={editing?.id ?? session?.id ?? `nuevo-${savedId ?? ""}`}
           initial={initial}
           session={session}
           today={today}

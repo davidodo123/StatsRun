@@ -21,7 +21,7 @@ PRINCIPIOS (pirámide de Helms; Schoenfeld; para corredores, Balsalobre-Fernánd
 - Usa lo que sabes de él (perfil, material, sus rutinas y lo que ha entrenado) y dilo cuando te apoyes en ello.
 
 CUÁNDO PROPONER RUTINAS: solo si te las pide o si para responder hace falta una rutina nueva o cambiada. Si solo pregunta algo, contesta sin rutinas.
-- Usa SOLO ejercicios de la lista ("id" exacto) que pueda hacer con su material. 4-8 ejercicios por rutina.
+- Usa SOLO ejercicios de la lista ("id" exacto) que pueda hacer con su material. CADA rutina lleva entre 5 y 8 ejercicios (nunca menos de 5), salvo que pida algo más corto.
 - "reps" es un rango como "8-12" o un número; "kg" solo con peso externo y nunca más del que tiene; "bw": true si es con peso corporal (los "kg" serían lastre).
 - "superset": mismo número en ejercicios seguidos para hacerlos en superserie (opcional).
 - Descansos: básicos pesados 120-180 s, accesorios 60-90 s, core 45-60 s.
@@ -80,7 +80,8 @@ export interface AiChatReply {
 }
 
 /** Valida la respuesta: texto y, si hay, rutinas con ejercicios que existen y que puede hacer. */
-export function chatReplyFromAi(raw: AiChatReply, equipment: Equipment[], now: string): { text: string; routines: Routine[] } {
+export function chatReplyFromAi(input: AiChatReply | null | undefined, equipment: Equipment[], now: string): { text: string; routines: Routine[] } {
+  const raw = input && typeof input === "object" ? input : {};
   const text = typeof raw.reply === "string" ? raw.reply.trim().slice(0, 4000) : "";
   const routines: Routine[] = [];
   for (const r of Array.isArray(raw.routines) ? raw.routines.slice(0, 6) : []) {
