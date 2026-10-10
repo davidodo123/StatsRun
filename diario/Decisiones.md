@@ -402,4 +402,9 @@ Qué se decidió, por qué y cuándo. Si algo cambia, se añade una entrada nuev
 - Los 20 ejercicios de corredor no tenían foto (salía un emoji). Ahora usan la **foto de un ejercicio parecido** del catálogo (`imgFrom` en `extra.json`, que pasa a `imgId` en el catálogo). Ejemplos: peso muerto rumano a una pierna con mancuerna → el de kettlebell; pogo → salto cohete; Copenhague → plancha lateral. Lo mismo para dos ejercicios de kettlebell del catálogo sin foto. En la ficha se avisa: «Foto de un ejercicio parecido».
 - Solo queda uno sin foto (halo con kettlebell). Los que no tienen foto, y los ejercicios propios, llevan un **icono dibujado** según el tipo (pesa, rayo, estiramiento, corazón) en vez del emoji. La gráfica vacía de las rutinas también.
 - **Las rutinas de la IA no entraban en el plan de David**: su plan es anterior a los tipos de fuerza y sus sesiones no tenían `strengthKind`, así que se quedaban en «Fuerza general». Ahora `applyStrengthRoutines` les asigna el tipo por orden en la semana (con 2: pierna y superior; con 3: pierna, posterior y superior) y reciben las rutinas.
+- **Tarjeta del plan en marcha rediseñada**:
+  - ancho máximo (en el ordenador se estiraba a lo ancho);
+  - barra de avance por semanas, con un tramo por semana y siempre visible;
+  - cuatro cajas con borde: cumplimiento, tiempo previsto, VDOT y km del plan;
+  - al pasar el ratón, borde naranja (el cambio de fondo hacía desaparecer las cajas).
 
