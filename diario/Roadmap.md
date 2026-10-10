@@ -110,7 +110,7 @@ Base: [[Estudio entrenamiento#6. La Pirámide de Entrenamiento (Helms, Valdez, M
 - [x] Gráficas sin Recharts (SVG propio): unos 400 KB menos de JS en Inicio, Perfil, Estadísticas y rutinas
 - [x] Lista de ejercicios en el JS en caché en vez de en cada página (Ejercicios 211 → 66 KB, Entreno 183 → 39 KB)
 - [x] Caché de navegación de 30 s y precarga de páginas en el service worker
-- [ ] Mover Vercel y Redis a Europa (ahora en EE. UU., iad1) → necesita una base nueva en Upstash y migrar los datos
+- [-] ~~Mover Vercel y Redis a Europa~~: descartado, la base de Upstash en Europa no tiene plan gratis en Vercel y David prefiere seguir gratis en iad1
 
 ## 🔧 Pendientes técnicos
 
