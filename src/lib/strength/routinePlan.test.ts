@@ -89,4 +89,17 @@ describe("fuerza en el plan", () => {
     expect(pick("base", "superior")).toBe("sb");
     expect(pick("especifico", "superior")).toBe("sf");
   });
+
+  it("también rellena las sesiones de planes antiguos (sin tipo de fuerza)", () => {
+    const p = plan();
+    for (const w of p.weeks) for (const s of w.sessions) delete s.strengthKind;
+    const db: Pick<Db, "routines"> = {
+      routines: [{ id: "sup", name: "Superior", createdAt: "", updatedAt: "", exercises: [{ exerciseId: "Pushups", sets: [{ reps: 10 }] }, { exerciseId: "Pullups", sets: [{ reps: 5 }] }] }],
+    };
+    applyStrengthRoutines(p, routinesForPlan(db), today);
+    const week = p.weeks.find((w) => w.phase === "base" && !w.recovery && w.start > today)!;
+    const strength = week.sessions.filter((s) => s.type === "strength");
+    expect(strength.map((s) => s.strengthKind)).toEqual(["pierna", "posterior", "superior"]);
+    expect(strength.find((s) => s.strengthKind === "superior")?.routineId).toBe("sup");
+  });
 });

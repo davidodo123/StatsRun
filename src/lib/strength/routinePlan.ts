@@ -1,6 +1,6 @@
 // Mete las rutinas del usuario en las sesiones de fuerza del plan: las de pierna en los huecos de pierna,
 // las de tren superior en los de superior (el planificador decide qué tipo toca cada día).
-import { strengthSession, type StrengthKind } from "../engine/planner";
+import { STRENGTH_KINDS, strengthSession, type StrengthKind } from "../engine/planner";
 import type { Db, Phase, Plan } from "../types";
 import { findExercise } from "./catalog";
 import type { Muscle } from "./labels";
@@ -130,6 +130,14 @@ const WANTS: Record<StrengthKind, RoutineZone[]> = {
  */
 export function applyStrengthRoutines(plan: Plan, routines: RoutineForPlan[], today: string): void {
   const turn: Record<string, number> = {};
+  // planes creados antes de los tipos de fuerza: se asignan por orden en la semana (pierna, superior…)
+  for (const w of plan.weeks) {
+    const strength = w.sessions.filter((s) => s.type === "strength");
+    const kinds = STRENGTH_KINDS[Math.min(4, strength.length)] ?? [];
+    strength.forEach((s, i) => {
+      if (!s.strengthKind && kinds[i]) s.strengthKind = kinds[i];
+    });
+  }
   for (const w of plan.weeks)
     w.sessions = w.sessions.map((s) => {
       if (s.type !== "strength" || !s.strengthKind || s.date < today) return s;

@@ -68,7 +68,11 @@ const out = source.map((x) => {
     img: x.images.length,
   };
 });
-for (const x of extra) out.push({ ...x, img: 0 });
+// sin foto propia: la de un ejercicio parecido del catálogo (imgId)
+const PHOTO_FROM = { Kettlebell_Overhead_Triceps_Extension: "Standing_Dumbbell_Triceps_Extension", Kettlebell_Halo_With_Overhead_Extension: "Standing_Dumbbell_Triceps_Extension" };
+const imgCount = new Map(source.map((x) => [x.id, x.images.length]));
+for (const x of out) if (!x.img && PHOTO_FROM[x.id]) Object.assign(x, { img: imgCount.get(PHOTO_FROM[x.id]) ?? 0, imgId: PHOTO_FROM[x.id] });
+for (const { imgFrom, ...x } of extra) out.push({ ...x, img: imgFrom ? (imgCount.get(imgFrom) ?? 0) : 0, ...(imgFrom ? { imgId: imgFrom } : {}) });
 out.sort((a, b) => a.name.localeCompare(b.name, "es"));
 
 await writeFile(new URL("../src/lib/strength/catalog.json", import.meta.url), JSON.stringify(out) + "\n");

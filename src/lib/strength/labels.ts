@@ -71,11 +71,13 @@ export interface Exercise {
   steps: string[];
   /** Nº de fotos en free-exercise-db (0 = sin foto). */
   img: number;
+  /** Ejercicio del que se toman las fotos si no tiene propias (uno parecido). */
+  imgId?: string;
   custom?: boolean;
 }
 
 /** Lo justo para listar y filtrar en el navegador. */
-export type ExerciseSummary = Pick<Exercise, "id" | "name" | "cat" | "eq" | "muscles" | "img" | "custom">;
+export type ExerciseSummary = Pick<Exercise, "id" | "name" | "cat" | "eq" | "muscles" | "img" | "imgId" | "custom">;
 
 // fotos de free-exercise-db (dominio público), fijadas al commit con el que se generó el catálogo
 const IMG_BASE = "https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@f00c92c7dcf1216a928a52c3706c7ce8e2f71ed5/exercises";

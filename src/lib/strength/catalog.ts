@@ -19,7 +19,7 @@ export function findExercise(db: Pick<Db, "customExercises">, id: string): Exerc
   return custom ? fromCustom(custom) : BY_ID.get(id);
 }
 
-export const summarize = ({ id, name, cat, eq, muscles, img, custom }: Exercise): ExerciseSummary => ({ id, name, cat, eq, muscles, img, ...(custom ? { custom } : {}) });
+export const summarize = ({ id, name, cat, eq, muscles, img, imgId, custom }: Exercise): ExerciseSummary => ({ id, name, cat, eq, muscles, img, ...(imgId ? { imgId } : {}), ...(custom ? { custom } : {}) });
 
 /** Lugar activo (o el primero); sin lugares, undefined = sin filtrar por material. */
 export function activePlace(db: Pick<Db, "places" | "activePlaceId">): GymPlace | undefined {

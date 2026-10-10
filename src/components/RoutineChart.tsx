@@ -41,7 +41,9 @@ export function RoutineChart({ points, today }: { points: RoutinePoint[]; today:
         ) : (
           <div className="grid h-40 place-items-center text-center text-sm text-muted">
             <span>
-              <span className="block text-3xl">📊</span>
+              <svg viewBox="0 0 24 24" className="mx-auto mb-2 h-8 w-8 text-muted" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" aria-hidden>
+                <path d="M4 20V10M10 20V4M16 20v-7M22 20H2" />
+              </svg>
               No hay datos en este periodo
             </span>
           </div>

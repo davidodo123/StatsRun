@@ -396,3 +396,10 @@ Qué se decidió, por qué y cuándo. Si algo cambia, se añade una entrada nuev
   - si no hay saldo para `gpt-4o`, se reintenta con `gpt-4o-mini` (unas 16 veces más barato). Si tampoco llega: «Tu cuenta de OpenRouter no tiene saldo suficiente…». El entrenador diario también muestra ese aviso en lenguaje claro.
   - Coste aproximado por petición: ~5 céntimos con `gpt-4o`, ~0,3 con `gpt-4o-mini`.
 
+## Fotos de los ejercicios propios y rutinas de la IA en planes antiguos
+*2026-10-10*
+
+- Los 20 ejercicios de corredor no tenían foto (salía un emoji). Ahora usan la **foto de un ejercicio parecido** del catálogo (`imgFrom` en `extra.json`, que pasa a `imgId` en el catálogo). Ejemplos: peso muerto rumano a una pierna con mancuerna → el de kettlebell; pogo → salto cohete; Copenhague → plancha lateral. Lo mismo para dos ejercicios de kettlebell del catálogo sin foto. En la ficha se avisa: «Foto de un ejercicio parecido».
+- Solo queda uno sin foto (halo con kettlebell). Los que no tienen foto, y los ejercicios propios, llevan un **icono dibujado** según el tipo (pesa, rayo, estiramiento, corazón) en vez del emoji. La gráfica vacía de las rutinas también.
+- **Las rutinas de la IA no entraban en el plan de David**: su plan es anterior a los tipos de fuerza y sus sesiones no tenían `strengthKind`, así que se quedaban en «Fuerza general». Ahora `applyStrengthRoutines` les asigna el tipo por orden en la semana (con 2: pierna y superior; con 3: pierna, posterior y superior) y reciben las rutinas.
+
