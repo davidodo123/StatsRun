@@ -314,4 +314,50 @@ Qué se decidió, por qué y cuándo. Si algo cambia, se añade una entrada nuev
   - «Más» abre un panel con Estadísticas, Amigos, Carreras, Calculadoras, Importar y **Cerrar sesión**, que antes no estaba en el móvil;
   - el hueco inferior de la página y la barra de descanso del entreno se ajustan a la nueva altura.
 - El atajo de Salud funciona. iOS pide permiso para «enviar muestras médicas a la web»: hay que darle a **«Permitir siempre»**, si no, la automatización nocturna se queda esperando la respuesta.
+- **Nuevo diseño móvil** (petición de David):
+  - barra superior fija con el logo a la izquierda (lleva a Inicio) y Amigos a la derecha;
+  - barra inferior: Plan · Fuerza · **Registrar** (botón naranja más ancho, en el centro) · Perfil · Más;
+  - «Más» se queda con Estadísticas, Carreras, Calculadoras, Importar y Cerrar sesión;
+  - el contenido baja lo que ocupa la barra superior (contando la zona de la cámara del iPhone), y la cabecera fija del entreno en vivo se queda justo debajo de ella.
+
+## Pantalla de planes
+*2026-10-10*
+
+- David quiere que «Plan» abra primero una lista de planes con un botón «Crear plan», y que al pinchar un plan salga el detalle.
+- Decidido: **un plan en marcha + planes anteriores** (sigue habiendo un solo plan activo, el que manda en el calendario y en la IA).
+- Rutas:
+  - `/plan`: lista. Tarjeta del plan en marcha (semana actual y fase, cumplimiento, tiempo previsto, barra de avance), «+ Crear plan» (lleva a Carreras) y «Planes anteriores» con su cumplimiento;
+  - `/plan/actual`: el plan completo de antes, con «← Planes». «Borrar» pasa a ser **«Terminar plan»**;
+  - `/plan/anterior/[id]`: ficha de solo lectura con cumplimiento, km hechos de los previstos, VDOT y cada semana con sus sesiones (✓ hecha, ◐ a medias, ✕ sin hacer). Se puede borrar del historial.
+- **Cuándo se archiva** (`db.pastPlans`, como mucho 12): al crear un plan para **otra** carrera, o al pulsar «Terminar plan». Cambiar fecha u objetivo de la misma carrera rehace el plan sin archivarlo. Se guardan también sus carreras secundarias.
+- Los enlaces «Ver plan» (Inicio, Perfil, Registrar) y la vuelta tras registrar una sesión del plan van a `/plan/actual`.
+
+## Fuerza del plan con tus rutinas
+*2026-10-10*
+
+- David vio que el plan ponía la misma «Fuerza general» (solo tren inferior) y que la IA no usaba su rutina. Además, la nota «IA: …» se repetía en cada ajuste.
+- **Sesiones distintas** (`StrengthKind`, plantillas por fase y tipo en `planner.ts`). Hasta **3 a la semana** (perfil y `saveProfile`):
+  - 1 a la semana: cuerpo entero;
+  - 2: pierna + tren superior;
+  - 3: pierna pesada + cadena posterior con pliometría + tren superior y core;
+  - afinamiento: 1 de activación.
+- **Colocación** (`placeStrength`), por orden:
+  - la posterior elige primero: en día suave y no en víspera de tirada larga o de sesión clave; si no hay, con tempo, nunca con series, repeticiones o cuestas;
+  - la de pierna, el mismo día que una sesión dura y no en víspera de nada clave;
+  - la de tren superior, en cualquier hueco libre.
+- **Rutinas del usuario en el plan** (`lib/strength/routinePlan.ts`):
+  - cada rutina se clasifica como inferior, superior o completa según los músculos principales de sus ejercicios;
+  - los huecos de pierna y posterior usan las inferiores; los de superior, las superiores; si hay varias de la misma zona, se van turnando;
+  - la sesión toma el nombre de la rutina y sus ejercicios («2 × 12-15 Flexiones con peso corporal») y tiene el botón **«▶ Empezar rutina»**;
+  - en fase específica y en descarga: 1-2 series menos o la mitad. En afinamiento: activación;
+  - se aplica al rehacer el plan y cada vez que se crea, edita o borra una rutina.
+- **IA**: recibe `rutinasDeFuerza`, el tipo y la rutina de cada sesión, y un resumen de cada entreno de fuerza reciente (músculos, ejercicios, series y volumen). Reglas nuevas:
+  - respetar la rutina del atleta (solo quitar series o saltos);
+  - no cambiar tren superior por pierna;
+  - nada de calidad ni tirada larga el día después de pierna pesada.
+- Arreglado: la nota «IA: …» se sustituye en cada revisión en vez de acumularse, y «Semana de descarga» ya no se repite.
+- **Perfil → Disponibilidad rediseñado** (petición de David):
+  - los días son chips L M X J V S D, sin casilla y rellenos en naranja al marcarlos;
+  - la tirada larga se elige con chips, solo entre los días marcados; si se desmarca ese día, pasa al último que quede;
+  - las sesiones de fuerza se meten como **número con − / +, de 0 a 4** («Recomendado: 2-3»). Con 4, la cuarta es otra de tren superior.
 

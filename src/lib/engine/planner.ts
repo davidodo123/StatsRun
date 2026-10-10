@@ -402,13 +402,9 @@ export function generatePlan(input: PlanInput): Plan {
 
     if (isRaceWeek) sessions.push(raceSession(goal, racePaceFlat * courseFactor, predictedRace));
 
-    // Fuerza tras las sesiones de calidad (días duros, duros; días suaves, suaves)
-    const nStrength = isRaceWeek ? 0 : phase === "taper" ? Math.min(1, profile.strengthPerWeek) : profile.strengthPerWeek;
-    const hosts = [
-      ...sessions.filter((s) => s.type !== "long" && s.type !== "easy" && s.type !== "recovery" && s.type !== "race"),
-      ...sessions.filter((s) => s.type === "easy"),
-    ];
-    for (let k = 0; k < nStrength && k < hosts.length; k++) sessions.push(strengthSession(hosts[k].date, phase, k));
+    // Fuerza: tipos según cuántas por semana y colocadas con el reparto de cargas (placeStrength)
+    const nStrength = isRaceWeek ? 0 : phase === "taper" ? Math.min(1, profile.strengthPerWeek) : Math.min(4, profile.strengthPerWeek);
+    for (const [date, kind] of placeStrength(sessions, STRENGTH_KINDS[nStrength] ?? [])) sessions.push(strengthSession(date, phase, kind));
 
     sessions.sort((a, b) => a.date.localeCompare(b.date) || (a.type === "strength" ? 1 : -1));
     weeks.push({
@@ -733,38 +729,165 @@ function tuneUpSession(r: TuneUpRace, p: TrainingPaces, vdot: number): PlannedSe
   );
 }
 
-const STRENGTH: Record<Phase, { title: string; steps: string[] }> = {
+/**
+ * Tipo de sesión de fuerza. Con 1 a la semana, cuerpo entero; con 2, pierna y tren superior; con 3, pierna pesada,
+ * cadena posterior con pliometría y tren superior con core (estudio §7 y §9.6: 2-3 sesiones, cargas + pliometría).
+ */
+export type StrengthKind = "pierna" | "posterior" | "superior" | "completo";
+// con 4, la cuarta es otra de tren superior: no carga las piernas para correr
+export const STRENGTH_KINDS: Record<number, StrengthKind[]> = { 1: ["completo"], 2: ["pierna", "superior"], 3: ["pierna", "posterior", "superior"], 4: ["pierna", "posterior", "superior", "superior"] };
+export const isLowerKind = (k?: StrengthKind) => k === "pierna" || k === "posterior" || k === "completo";
+
+type Template = { title: string; steps: string[] };
+const ACTIVATION: Template = { title: "Activación ligera", steps: ["2 rondas: puente glúteo 12, plancha 30″, monster walk con banda 10/lado", "Movilidad 10′"] };
+
+const STRENGTH: Record<Phase, Record<StrengthKind, Template>> = {
   base: {
-    title: "Fuerza general",
-    steps: [
-      "3 × 8-12 sentadilla goblet a RPE 7 (te quedan 3 repeticiones)",
-      "3 × 8-10/pierna zancada o step-up a RPE 7",
-      "3 × 10-12 puente de glúteo o hip thrust a RPE 7",
-      "3 × 15 elevación de gemelos (rodilla recta) + 3 × 15 sentado (sóleo)",
-      "Core: plancha 3 × 40″, plancha lateral 2 × 30″/lado",
-      "Progresión: cuando hagas el máximo de repeticiones en todas las series, sube el peso",
-    ],
+    pierna: {
+      title: "Fuerza de pierna",
+      steps: [
+        "3 × 8-12 sentadilla goblet a RPE 7 (te quedan 3 repeticiones)",
+        "3 × 8-10/pierna zancada atrás o step-up a RPE 7",
+        "3 × 8-12 peso muerto rumano a RPE 7",
+        "3 × 15 elevación de gemelos (rodilla recta) + 3 × 15 sóleo (rodilla flexionada)",
+        "Plancha Copenhague 2 × 20″/lado",
+        "Progresión: cuando hagas el máximo de repeticiones en todas las series, sube el peso",
+      ],
+    },
+    posterior: {
+      title: "Cadena posterior y saltos",
+      steps: [
+        "Saltos suaves primero, frescos: comba 3 × 30″ + pogo 3 × 10",
+        "3 × 8-12 peso muerto rumano a RPE 7",
+        "3 × 10-12 hip thrust o puente de glúteo a RPE 7",
+        "3 × 3-5 curl nórdico (asistido si hace falta)",
+        "Plancha lateral 2 × 30″/lado",
+      ],
+    },
+    superior: {
+      title: "Tren superior y core",
+      steps: [
+        "3 × 8-15 flexiones (o press con mancuernas) a RPE 7",
+        "3 × 8-12 remo con mancuerna o remo invertido",
+        "3 × 8-12 press de hombro con mancuernas",
+        "3 × 6-10 dominada asistida o jalón",
+        "Core: dead bug 3 × 10 + press Pallof 3 × 10/lado",
+      ],
+    },
+    completo: {
+      title: "Fuerza general (cuerpo entero)",
+      steps: [
+        "3 × 8-12 sentadilla goblet a RPE 7",
+        "3 × 8-12 peso muerto rumano a RPE 7",
+        "3 × 8-15 flexiones y 3 × 8-12 remo",
+        "3 × 15 gemelo (rodilla recta) + 3 × 15 sóleo",
+        "Core: plancha 3 × 40″, plancha lateral 2 × 30″/lado",
+      ],
+    },
   },
   construccion: {
-    title: "Fuerza + pliometría",
-    steps: [
-      "Fuerza pesada (mejora la economía de carrera): 4 × 4-6 sentadilla o búlgara a RPE 7-8",
-      "3 × 5-6 peso muerto rumano a RPE 7-8, sin llegar al fallo",
-      "Pliometría: 3 × 6 saltos al cajón + 3 × 10 saltos a la comba, máxima calidad",
-      "3 × 12 gemelo excéntrico (bajada en 3″)",
-      "Core: dead bug 3 × 10, Pallof press 3 × 10/lado",
-    ],
+    pierna: {
+      title: "Fuerza pesada de pierna",
+      steps: [
+        "Fuerza pesada (mejora la economía de carrera): 4 × 4-6 sentadilla o búlgara a RPE 7-8",
+        "3 × 5/pierna step-up alto con carga",
+        "3 × 5-6 peso muerto rumano a RPE 7-8, sin llegar al fallo",
+        "4 × 6-8 gemelo de pie pesado + 3 × 10 sóleo sentado",
+        "Plancha Copenhague 3 × 20″/lado",
+      ],
+    },
+    posterior: {
+      title: "Cadena posterior + pliometría",
+      steps: [
+        "Pliometría primero y con calidad máxima: 3 × 5 saltos al cajón, 3 × 15 pogo, 3 × 20 m multisaltos",
+        "3 × 5-6 peso muerto rumano a RPE 7-8",
+        "3 × 6-8 hip thrust a RPE 8",
+        "3 × 4 curl nórdico",
+        "Lejos del día de series: la pliometría no se mezcla con cardio intenso",
+      ],
+    },
+    superior: {
+      title: "Tren superior y core",
+      steps: [
+        "3 × 6-8 press de banca o flexiones lastradas a RPE 7-8",
+        "3 × 6-8 remo con barra o mancuerna",
+        "3 × 5-8 dominadas (lastradas si te sobran)",
+        "2 × 8 press militar",
+        "Core antirrotación: press Pallof 3 × 10/lado + rueda abdominal 3 × 8",
+      ],
+    },
+    completo: {
+      title: "Fuerza + pliometría (cuerpo entero)",
+      steps: [
+        "Pliometría primero: 3 × 5 saltos al cajón + 3 × 15 pogo",
+        "4 × 4-6 sentadilla o búlgara a RPE 7-8",
+        "3 × 5-6 peso muerto rumano a RPE 7-8",
+        "3 × 6-8 remo y 3 × 8 flexiones",
+        "3 × 12 gemelo excéntrico (bajada en 3″)",
+      ],
+    },
   },
   especifico: {
-    title: "Fuerza de mantenimiento",
-    steps: ["2 × 5-6 sentadilla búlgara a RPE 7 (mismo peso que en construcción)", "2 × 5-6 peso muerto rumano a RPE 7", "2 × 6 saltos al cajón", "2 × 15 gemelo", "Core 10′", "Objetivo: mantener la fuerza ganada, nunca al fallo"],
+    pierna: {
+      title: "Mantenimiento de pierna",
+      steps: ["2 × 5-6 sentadilla búlgara a RPE 7 (mismo peso que en construcción)", "2 × 5-6 peso muerto rumano a RPE 7", "2 × 8 gemelo pesado + 2 × 12 sóleo", "Objetivo: mantener la fuerza ganada, nunca al fallo"],
+    },
+    posterior: {
+      title: "Mantenimiento posterior + reactividad",
+      steps: ["2 × 4 saltos al cajón + 2 × 15 pogo", "2 × 5 peso muerto rumano a RPE 7", "2 × 8 hip thrust", "Corto y explosivo: sin agujetas"],
+    },
+    superior: {
+      title: "Tren superior ligero y core",
+      steps: ["2 × 10 flexiones", "2 × 10 remo", "2 × 6 dominadas", "Core: plancha 2 × 40″ + Pallof 2 × 10/lado"],
+    },
+    completo: {
+      title: "Fuerza de mantenimiento",
+      steps: ["2 × 5-6 sentadilla búlgara a RPE 7 (mismo peso que en construcción)", "2 × 5-6 peso muerto rumano a RPE 7", "2 × 6 saltos al cajón", "2 × 15 gemelo", "Core 10′", "Objetivo: mantener la fuerza ganada, nunca al fallo"],
+    },
   },
-  taper: { title: "Activación ligera", steps: ["2 rondas: puente glúteo 12, plancha 30″, monster walk con banda 10/lado", "Movilidad 10′"] },
+  taper: { pierna: ACTIVATION, posterior: ACTIVATION, superior: ACTIVATION, completo: ACTIVATION },
 };
 
-function strengthSession(date: string, phase: Phase, k: number): PlannedSession {
-  const s = STRENGTH[phase];
-  return mk(date, "strength", s.title, k === 0 ? "Después de correr o en otro momento del día." : "Sesión complementaria.", s.steps, 0, phase === "taper" ? 20 : 35);
+export function strengthSession(date: string, phase: Phase, kind: StrengthKind): PlannedSession {
+  const s = STRENGTH[phase][kind];
+  const when = kind === "superior" ? "Tren superior: no carga las piernas para correr." : "Después de correr o en otro momento del día.";
+  return { ...mk(date, "strength", s.title, when, s.steps, 0, phase === "taper" ? 20 : 40), strengthKind: kind };
+}
+
+/**
+ * Coloca las sesiones de fuerza de la semana respetando el reparto de cargas:
+ * la de pierna, el mismo día que una sesión dura (días duros, duros); la posterior con pliometría, en día suave;
+ * ninguna de tren inferior el día antes de la tirada larga o de una sesión clave; la de tren superior, en cualquier hueco.
+ */
+function placeStrength(run: PlannedSession[], kinds: StrengthKind[]): [string, StrengthKind][] {
+  const dates = [...new Set(run.filter((s) => s.type !== "race").map((s) => s.date))];
+  const keyDates = run.filter((s) => s.type === "long" || isHardSession(s.type)).map((s) => s.date);
+  const hardOn = (d: string) => run.some((s) => s.date === d && isHardSession(s.type));
+  const beforeKey = (d: string) => keyDates.some((k) => diffDays(k, d) === 1);
+  const used = new Set<string>();
+  const out: [string, StrengthKind][] = [];
+  const pick = (...prefs: ((d: string) => boolean)[]) => {
+    for (const ok of prefs) {
+      const d = dates.find((x) => !used.has(x) && ok(x));
+      if (d) return d;
+    }
+  };
+  // la pliometría nunca con series, repeticiones o cuestas (interferencia, estudio §9.6): con tempo sí
+  const explosiveOn = (d: string) => run.some((s) => s.date === d && (s.type === "intervals" || s.type === "repetitions" || s.type === "hills"));
+  // la posterior elige primero: es la que menos huecos válidos tiene
+  const order = [...kinds].sort((a, b) => Number(b === "posterior") - Number(a === "posterior"));
+  for (const kind of order) {
+    const d =
+      kind === "superior"
+        ? pick((x) => !hardOn(x), () => true)
+        : kind === "posterior"
+          ? pick((x) => !hardOn(x) && !beforeKey(x), (x) => !explosiveOn(x) && !beforeKey(x), (x) => !explosiveOn(x))
+          : pick((x) => hardOn(x) && !beforeKey(x), (x) => !beforeKey(x), () => true);
+    if (!d) continue;
+    used.add(d);
+    out.push([d, kind]);
+  }
+  return out;
 }
 
 // ---------------- Cumplimiento ----------------
@@ -775,6 +898,16 @@ export interface SessionMatch {
   doneKm: number;
   compliance: number; // 0-1
   status: "done" | "partial" | "missed" | "upcoming" | "today";
+}
+
+/** Cumplimiento medio de las sesiones de carrera ya pasadas (0-1) y cuántas son. */
+export function planCompliance(plan: Plan, acts: Activity[], today: string): { compliance?: number; past: number; doneKm: number } {
+  const past = [...matchPlan(plan, acts, today).values()].filter((m) => m.session.type !== "strength" && m.session.date < today);
+  return {
+    compliance: past.length ? past.reduce((s, m) => s + m.compliance, 0) / past.length : undefined,
+    past: past.length,
+    doneKm: past.reduce((s, m) => s + m.doneKm, 0),
+  };
 }
 
 /** Empareja las sesiones planificadas con las actividades reales del mismo día. */

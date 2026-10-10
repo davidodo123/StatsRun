@@ -20,7 +20,7 @@ export interface Profile {
   daysPerWeek: number; // 2-7 (= nº de availableDays si se indican)
   availableDays?: number[]; // días de la semana en que puede entrenar (0 = lunes ... 6 = domingo)
   longRunDay: number; // 0 = lunes ... 6 = domingo
-  strengthPerWeek: number; // 0-2
+  strengthPerWeek: number; // 0-4
   injuries?: string;
 }
 
@@ -143,6 +143,8 @@ export interface PlannedSession {
   pace?: PaceRange;
   zone?: string;
   aiAdjusted?: boolean; // contenido reescrito por el entrenador IA
+  strengthKind?: "pierna" | "posterior" | "superior" | "completo"; // fuerza: qué trabaja
+  routineId?: string; // fuerza: rutina del usuario que toca ese día
 }
 
 export type Phase = "base" | "construccion" | "especifico" | "taper";
@@ -184,6 +186,7 @@ export interface Db {
   health?: DailyHealth[]; // pasos y calorías de cada día (Salud del iPhone, por Atajos)
   healthTokenHash?: string; // sha256 de la clave personal con la que el atajo envía los datos
   plan?: Plan;
+  pastPlans?: ArchivedPlan[]; // planes terminados o sustituidos, del más reciente al más antiguo
   activities: Activity[];
   strava?: StravaAuth;
   lastSync?: string;  dismissedShared?: string[]; // sesiones compartidas por amigos que no se quieren añadir ("<idUsuario>:<idActividad>")
@@ -259,6 +262,14 @@ export interface CustomExercise {
   secondary: Muscle[];
   steps: string[];
   createdAt: string;
+}
+
+/** Plan que ya no está en marcha: se guarda para consultarlo. */
+export interface ArchivedPlan {
+  id: string;
+  archivedAt: string;
+  plan: Plan;
+  races?: TuneUpRace[]; // carreras secundarias que tenía
 }
 
 export interface CoachState {

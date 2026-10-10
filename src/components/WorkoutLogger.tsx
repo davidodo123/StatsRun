@@ -192,7 +192,7 @@ export function WorkoutLogger({
 
   return (
     <div className="space-y-4 pb-20">
-      <div className="sticky top-0 z-30 -mx-4 border-b border-line bg-bg/95 px-4 py-2 backdrop-blur md:-mx-8 md:px-8">
+      <div className="sticky top-[calc(3.5rem+env(safe-area-inset-top))] z-30 md:top-0 -mx-4 border-b border-line bg-bg/95 px-4 py-2 backdrop-blur md:-mx-8 md:px-8">
         <div className="flex items-center justify-between gap-2">
           <button type="button" className="text-sm text-critical" onClick={discard}>
             Descartar

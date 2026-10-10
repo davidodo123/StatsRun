@@ -208,3 +208,14 @@ body {
     animation: none;
   }
 }
+
+/* Campos numéricos con botones − / + propios: sin las flechas del navegador */
+.no-spin {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+.no-spin::-webkit-outer-spin-button,
+.no-spin::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}

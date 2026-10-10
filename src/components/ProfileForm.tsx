@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { saveProfile, type FormState } from "@/app/actions";
 import type { Profile } from "@/lib/types";
 import { WEEKDAYS } from "@/lib/dates";
@@ -111,43 +111,13 @@ export function ProfileForm({ profile }: { profile?: Profile }) {
 
       <fieldset className="rounded-2xl border border-line bg-surface p-4 md:p-5">
         <legend className="px-1 text-sm font-semibold">Disponibilidad</legend>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
-          <div className="sm:col-span-2 md:col-span-3">
-            <p className="field">Días en los que puedes entrenar</p>
-            <div className="mt-2 grid grid-cols-7 gap-1.5">
-              {WEEKDAYS.map((d, i) => (
-                <label
-                  key={d}
-                  className="flex cursor-pointer flex-col items-center gap-1 rounded-xl border border-line px-1 py-2 text-xs font-semibold has-[:checked]:border-accent has-[:checked]:bg-surface-2"
-                >
-                  <input type="checkbox" name="availableDays" value={i} defaultChecked={avail.includes(i)} className="accent-[var(--accent)]" />
-                  <span className="sm:hidden">{d.slice(0, 2)}</span>
-                  <span className="hidden sm:inline">{d}</span>
-                </label>
-              ))}
-            </div>
-            <p className="mt-1 text-xs text-muted">
-              El plan solo pondrá carrera en esos días (mínimo 2). Para días sueltos en que no puedas (viajes, turnos), márcalos en la página del plan.
-            </p>
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <Availability initialDays={avail} initialLong={p?.longRunDay ?? 6} />
+          <div className="sm:col-span-2">
+            <p className="field">Sesiones de fuerza por semana</p>
+            <Stepper name="strengthPerWeek" initial={p?.strengthPerWeek ?? 2} min={0} max={4} />
+            <p className="mt-1 text-xs text-muted">Recomendado: 2-3 (Balsalobre 2016). El plan las reparte: pierna, cadena posterior y tren superior.</p>
           </div>
-          <label className="field">
-            Día de la tirada larga
-            <select className="input" name="longRunDay" defaultValue={p?.longRunDay ?? 6}>
-              {WEEKDAYS.map((d, i) => (
-                <option key={d} value={i}>
-                  {d}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="field">
-            Sesiones de fuerza / semana
-            <select className="input" name="strengthPerWeek" defaultValue={p?.strengthPerWeek ?? 1}>
-              <option value={0}>Ninguna</option>
-              <option value={1}>1</option>
-              <option value={2}>2 (recomendado)</option>
-            </select>
-          </label>
           <label className="field sm:col-span-2 md:col-span-3">
             Lesiones o molestias (opcional)
             <input className="input" name="injuries" defaultValue={p?.injuries} placeholder="Ej.: fascitis plantar en 2024, rodilla derecha sensible" />
@@ -165,3 +135,79 @@ export function ProfileForm({ profile }: { profile?: Profile }) {
     </form>
   );
 }
+
+const SHORT = ["L", "M", "X", "J", "V", "S", "D"];
+
+/** Días disponibles (chips) y día de la tirada larga, que tiene que ser uno de ellos. */
+function Availability({ initialDays, initialLong }: { initialDays: number[]; initialLong: number }) {
+  const [days, setDays] = useState(initialDays);
+  const [long, setLong] = useState(initialDays.includes(initialLong) ? initialLong : (initialDays.at(-1) ?? 6));
+  const toggle = (i: number) => {
+    const next = days.includes(i) ? days.filter((d) => d !== i) : [...days, i].sort((a, b) => a - b);
+    setDays(next);
+    // si se quita el día de la tirada larga, pasa al último día marcado
+    if (!next.includes(long) && next.length) setLong(next.at(-1)!);
+  };
+  const chip = (on: boolean) =>
+    `grid h-11 place-items-center rounded-xl border text-sm font-bold transition ${on ? "border-accent bg-accent text-accent-ink" : "border-line bg-surface-2 text-ink-2 hover:text-ink"}`;
+  return (
+    <>
+      <div className="sm:col-span-2">
+        <p className="field">Días en los que puedes entrenar</p>
+        <div className="mt-2 grid grid-cols-7 gap-1.5" role="group" aria-label="Días en los que puedes entrenar">
+          {WEEKDAYS.map((d, i) => (
+            <label key={d} className={`cursor-pointer ${chip(days.includes(i))}`} title={d}>
+              <input type="checkbox" name="availableDays" value={i} checked={days.includes(i)} onChange={() => toggle(i)} className="sr-only" aria-label={d} />
+              {SHORT[i]}
+            </label>
+          ))}
+        </div>
+        <p className="mt-1.5 text-xs text-muted">
+          {days.length} {days.length === 1 ? "día" : "días"} · el plan solo pondrá carrera en esos días (mínimo 2). Para días sueltos en que no puedas, márcalos en la página del plan.
+        </p>
+      </div>
+      <div className="sm:col-span-2">
+        <p className="field">Día de la tirada larga</p>
+        <div className="mt-2 flex flex-wrap gap-1.5" role="radiogroup" aria-label="Día de la tirada larga">
+          {days.map((i) => (
+            <label key={i} className={`cursor-pointer px-3 ${chip(long === i)}`}>
+              <input type="radio" name="longRunDay" value={i} checked={long === i} onChange={() => setLong(i)} className="sr-only" />
+              {WEEKDAYS[i]}
+            </label>
+          ))}
+          {!days.length && <span className="text-xs text-muted">Marca antes tus días.</span>}
+        </div>
+      </div>
+    </>
+  );
+}
+
+/** Número con botones − y + (y también se puede escribir). */
+function Stepper({ name, initial, min, max }: { name: string; initial: number; min: number; max: number }) {
+  const [v, setV] = useState(String(initial));
+  const n = Math.min(max, Math.max(min, Number(v) || 0));
+  const btn = "grid h-11 w-11 place-items-center rounded-xl border border-line bg-surface-2 text-xl font-bold disabled:opacity-30";
+  return (
+    <div className="mt-2 flex items-center gap-2">
+      <button type="button" className={btn} onClick={() => setV(String(n - 1))} disabled={n <= min} aria-label="Menos">
+        −
+      </button>
+      <input
+        className="input no-spin h-11 w-16 text-center text-lg font-bold"
+        name={name}
+        type="number"
+        inputMode="numeric"
+        min={min}
+        max={max}
+        value={v}
+        onChange={(e) => setV(e.target.value)}
+        onBlur={() => setV(String(n))}
+        aria-label="Sesiones de fuerza por semana"
+      />
+      <button type="button" className={btn} onClick={() => setV(String(n + 1))} disabled={n >= max} aria-label="Más">
+        +
+      </button>
+    </div>
+  );
+}
+

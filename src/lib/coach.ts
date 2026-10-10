@@ -9,7 +9,11 @@ import { availableDaysOf, isHardSession, matchPlan, recoveryDaysAfter } from "./
 import { trainingPaces } from "./engine/physiology";
 import { PHASE_LABEL, assessReadiness, type Readiness } from "./engine/readiness";
 import { WEEKDAYS, addDays, diffDays, todayLocal, weekday } from "./dates";
-import type { Db, PlannedSession, SessionType } from "./types";
+import type { Db, PlannedSession, SessionType, Workout } from "./types";
+import { findExercise } from "./strength/catalog";
+import { MUSCLE_LABEL } from "./strength/labels";
+import { routinesForPlan } from "./strength/routinePlan";
+import { workoutSets, workoutVolume } from "./strength/workouts";
 
 const API = "https://openrouter.ai/api/v1/chat/completions";
 const HORIZON_DAYS = 14;
@@ -102,7 +106,11 @@ PRINCIPIOS:
 - "pasosYCaloriasUltimos7Dias" (Salud del iPhone) es la actividad fuera de los entrenos: días de muchos pasos (más de ~15.000, p. ej. de pie en el trabajo o de viaje) también cansan las piernas; si coinciden antes de una sesión dura o de la tirada larga, menciónalo y no subas la carga.
 
 FUERZA ("strength", distanceKm 0) para corredores:
-- 2 sesiones/semana (1 en afinamiento). Multiarticulares (sentadilla o búlgara, peso muerto rumano, hip thrust, step-up), gemelo y sóleo, core antirrotación.
+- 1-3 sesiones/semana según "fuerzaPorSemana" (1 en afinamiento). Cada sesión trae "tipoFuerza": "pierna" (fuerza pesada de pierna), "posterior" (cadena posterior + pliometría), "superior" (tren superior y core) o "completo".
+- Si la sesión trae "rutina", es una rutina del propio atleta (sus ejercicios están en "rutinasDeFuerza"): respeta sus ejercicios. Puedes quitar series (descarga, fatiga) o quitar saltos (molestias), pero no la sustituyas por otra rutina ni inventes ejercicios. Nunca cambies una sesión de tren superior por una de pierna ni al revés.
+- Tren superior y core no cansan las piernas: no interfieren con la carrera y pueden ir cualquier día. La de pierna y la posterior sí: nunca el día antes de la tirada larga o de una sesión clave.
+- Mira "fuerza" en las actividades recientes (músculos, series, volumen): tras una sesión pesada de pierna (cuádriceps, isquios, glúteos), el día siguiente no pongas calidad ni tirada larga; si fue de tren superior, sigue con normalidad.
+- Multiarticulares (sentadilla o búlgara, peso muerto rumano, hip thrust, step-up), gemelo y sóleo, core antirrotación.
 - Intensidad por RPE/RIR: series a RPE 6-8 (2-4 repeticiones en reserva). Sin fallo en los multiarticulares; el fallo, solo en aislamiento y al final.
 - Base: 3 × 8-12 a RPE 7. Construcción: fuerza pesada 3-4 × 4-6 a RPE 7-8 + pliometría corta (mejora la economía de carrera). Específico: mantenimiento 2 × 5-6. Afinamiento: activación.
 - Progresión doble: primero repeticiones dentro del rango, luego más peso.
@@ -211,20 +219,34 @@ function buildContext(db: Db, today: string) {
         ritmo: a.sport === "run" && a.distanceM > 0 ? pace(a.movingSec / (a.distanceM / 1000)) : undefined,
         fcMedia: a.avgHr, rpe: a.rpe, sensacion: a.feel, comoSeSintio: a.feelings, notas: a.notes,
         sesionPlanificada: planned(a),
+        fuerza: a.workout && strengthSummary(db, a.workout),
       })),
     pasosYCaloriasUltimos7Dias: (db.health ?? [])
       .filter((d) => d.date <= today && diffDays(today, d.date) < 7)
       .map((d) => ({ fecha: d.date, pasos: d.steps, kcalActivas: d.activeKcal })),
+    rutinasDeFuerza: routinesForPlan(db).map((r) => ({ nombre: r.name, zona: r.zone, ejercicios: r.steps })),
     sesionesNoRealizadas: missed.map((m) => ({ fecha: m.session.date, tipo: m.session.type, titulo: m.session.title, planKm: m.session.distanceKm, hechoKm: +m.doneKm.toFixed(1), estado: m.status })),
     sesionesAAjustar: upcoming.map((s) => {
       const w = weekOf(s.date);
       return {
         id: s.id, date: s.date, dia: WEEKDAYS[weekday(s.date)], fase: w?.phase, semanaDescarga: w?.recovery, type: s.type, title: s.title,
         description: s.description, steps: s.steps, distanceKm: s.distanceKm, durationMin: s.durationMin,
+        tipoFuerza: s.strengthKind, rutina: s.routineId && db.routines?.find((r) => r.id === s.routineId)?.name,
       };
     }),
   };
   return { context, upcoming, freeDates, readiness };
+}
+
+/** Lo que trabajó un entreno de fuerza, para que la IA sepa si cargó las piernas. */
+function strengthSummary(db: Db, w: Workout) {
+  const muscles = [...new Set(w.exercises.flatMap((e) => findExercise(db, e.exerciseId)?.muscles ?? []))];
+  return {
+    musculos: muscles.map((m) => MUSCLE_LABEL[m]),
+    ejercicios: w.exercises.map((e) => `${e.name} (${e.sets.length} series)`),
+    series: workoutSets(w),
+    volumenKg: workoutVolume(w),
+  };
 }
 
 /** Valida y acota el contenido de una sesión propuesta por la IA frente a la original. */
@@ -250,7 +272,8 @@ function applyAi(orig: PlannedSession, ai: AiSession, date: string, limits: Read
     date,
     type: safeType,
     title: ai.title?.trim().slice(0, 80) || orig.title,
-    description: [ai.description?.trim() || orig.description, ai.reason?.trim() && `IA: ${ai.reason.trim()}`].filter(Boolean).join(" ").slice(0, 600),
+    // la nota «IA: …» se sustituye en cada revisión; si no, se acumulaba repetida
+    description: [(ai.description?.trim() || orig.description).replace(/\s*IA:[\s\S]*$/, ""), ai.reason?.trim() && `IA: ${ai.reason.trim()}`].filter(Boolean).join(" ").slice(0, 600),
     steps: steps.length ? steps : orig.steps,
     distanceKm: isStrength ? 0 : Number.isFinite(km) && km >= 0 ? Math.round(Math.min(km, maxKm) * 10) / 10 : orig.distanceKm,
     durationMin: Number.isFinite(min) && min > 0 ? Math.round(Math.min(min, Math.max(orig.durationMin * 1.3, 20))) : orig.durationMin,
@@ -337,7 +360,7 @@ async function run(uid: string): Promise<CoachResult> {
             ...s,
             distanceKm: Math.round(s.distanceKm * factor * 10) / 10,
             durationMin: Math.round(s.durationMin * factor),
-            description: `${s.description} Semana de descarga: volumen reducido.`.slice(0, 600),
+            description: (s.description.includes("Semana de descarga") ? s.description : `${s.description} Semana de descarga: volumen reducido.`).slice(0, 600),
             aiAdjusted: true,
           };
           changed++;

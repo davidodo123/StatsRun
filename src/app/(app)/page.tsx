@@ -147,7 +147,7 @@ async function Dashboard() {
             title="Próximos 7 días"
             action={
               plan && (
-                <Link href="/plan" className="text-xs font-semibold text-accent">
+                <Link href="/plan/actual" className="text-xs font-semibold text-accent">
                   Ver plan →
                 </Link>
               )

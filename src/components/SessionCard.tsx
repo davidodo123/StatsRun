@@ -98,6 +98,11 @@ export function SessionCard({
         )}
         {(st || canLog || (match && match.activities.length > 0)) && (
           <div className="mt-2 flex flex-wrap items-center gap-3">
+            {!readOnly && s.type === "strength" && match?.status !== "done" && (match?.status !== "missed") && (
+              <Link href={s.routineId ? `/fuerza/entreno?rutina=${s.routineId}` : "/fuerza/entreno"} className="rounded-md bg-accent px-2 py-1 text-xs font-semibold text-accent-ink">
+                ▶ {s.routineId ? "Empezar rutina" : "Empezar entreno"}
+              </Link>
+            )}
             {canLog &&
               (linked ? (
                 <Link href={`/registrar?editar=${encodeURIComponent(linked.id)}`} className="text-xs font-semibold text-accent">

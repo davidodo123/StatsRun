@@ -14,6 +14,7 @@ import { areFriends, getFriends } from "@/lib/auth";import { findRace } from "@/
 import { adaptWithAI, coachConfig } from "@/lib/coach";
 import { parseTime } from "@/lib/format";
 import { createHealthToken, revokeHealthToken } from "@/lib/healthToken";
+import { applyStrengthRoutines, routinesForPlan } from "@/lib/strength/routinePlan";
 import { addDays, diffDays, todayLocal } from "@/lib/dates";
 import type { Db, Feel, Goal, Level, Profile, Sex, TuneUpRace } from "@/lib/types";
 
@@ -66,7 +67,7 @@ export async function saveProfile(_: FormState, fd: FormData): Promise<FormState
     daysPerWeek: availableDays.length,
     availableDays,
     longRunDay,
-    strengthPerWeek: Math.min(2, Math.max(0, num(fd, "strengthPerWeek") ?? 1)),
+    strengthPerWeek: Math.round(Math.min(4, Math.max(0, num(fd, "strengthPerWeek") ?? 1))),
     injuries: String(fd.get("injuries") ?? "").trim() || undefined,
   };
   const prev = (await getDb()).profile;
@@ -122,13 +123,15 @@ export async function saveGoal(_: FormState, fd: FormData): Promise<FormState> {
     // misma carrera (cambio de fecha u objetivo): se conserva el recorrido subido
     const prev = db.goal;
     const same = prev && (goal.raceId ? prev.raceId === goal.raceId : prev.name === goal.name);
+    // otra carrera: el plan que había pasa a «Planes anteriores»
+    if (!same) archivePlan(db);
     db.goal = same && prev.course ? { ...goal, course: prev.course } : goal;
   });
   const db = await getDb();
   if (db.profile) {
     await rebuildPlan(db);
     await scheduleAiAdapt();
-    redirect("/plan");
+    redirect("/plan/actual");
   }
   refresh();
   return { ok: true, message: "Objetivo guardado. Completa tu perfil para generar el plan." };
@@ -155,6 +158,27 @@ export async function removeCourse(): Promise<void> {
   refresh();
 }
 
+const MAX_PAST_PLANS = 12;
+
+/** Guarda el plan en marcha en «Planes anteriores» (con sus carreras secundarias) y lo quita. */
+function archivePlan(db: Db) {
+  if (!db.plan) return;
+  const plan = db.plan;
+  db.pastPlans = [
+    { id: crypto.randomUUID().slice(0, 8), archivedAt: new Date().toISOString(), plan, races: (db.races ?? []).filter((r) => r.date <= plan.goal.date) },
+    ...(db.pastPlans ?? []),
+  ].slice(0, MAX_PAST_PLANS);
+  db.plan = undefined;
+}
+
+export async function deletePastPlan(fd: FormData): Promise<void> {
+  const id = String(fd.get("id") ?? "");
+  await updateDb((db) => {
+    db.pastPlans = (db.pastPlans ?? []).filter((p) => p.id !== id);
+  });
+  redirect("/plan");
+}
+
 async function rebuildPlan(db: Db) {
   if (!db.profile || !db.goal) return;
   const today = todayLocal();
@@ -177,6 +201,8 @@ async function rebuildPlan(db: Db) {
   // primero las carreras secundarias, para que lo que se mueva por días no disponibles las respete
   applyTuneUpRaces(plan, db.races ?? [], today);
   applyBlockedDates(plan, db.unavailableDates ?? [], availableDaysOf(db.profile), today);
+  // las sesiones de fuerza usan las rutinas del usuario (pierna en los huecos de pierna, superior en los de superior)
+  applyStrengthRoutines(plan, routinesForPlan(db), today);
   plan.notes.push(`VDOT tomado de: ${stats.vdot.source}.`);
   if (hasRecentData) plan.notes.push(`Volumen de partida según tus actividades: ${stats.totals.avgWeeklyKm6.toFixed(0)} km/semana (media 6 semanas).`);
   await updateDb((d) => {
@@ -252,12 +278,13 @@ export async function clearDemo(): Promise<void> {
   refresh();
 }
 
+/** Termina el plan en marcha: pasa a «Planes anteriores». */
 export async function clearPlan(): Promise<void> {
   await updateDb((db) => {
-    db.plan = undefined;
+    archivePlan(db);
     db.goal = undefined;
   });
-  refresh();
+  redirect("/plan");
 }
 
 // ---------- Carreras secundarias de la temporada ----------
@@ -429,7 +456,7 @@ export async function saveActivity(_: FormState, fd: FormData): Promise<FormStat
   });
   await scheduleAiAdapt();
   // nuevo: volver con el formulario limpio para no registrarlo dos veces
-  if (!existingId) redirect(sessionId ? "/plan?registrado=1" : `/registrar?guardado=${encodeURIComponent(id)}`);
+  if (!existingId) redirect(sessionId ? "/plan/actual?registrado=1" : `/registrar?guardado=${encodeURIComponent(id)}`);
   refresh();
   return { ok: true, message: "Entreno actualizado." };
 }

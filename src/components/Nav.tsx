@@ -26,20 +26,49 @@ function Icon({ d, className = "h-5 w-5" }: { d: string; className?: string }) {
   );
 }
 
-// en el móvil caben 5 secciones con holgura; el resto va en «Más»
-const MOBILE_MAIN = ["/", "/plan", "/fuerza", "/registrar", "/perfil"];
+// móvil: arriba el logo (Inicio) y Amigos; abajo 4 secciones con Registrar destacado en el centro, y el resto en «Más»
+const MOBILE_TOP = ["/", "/amigos"];
+const MOBILE_BOTTOM = ["/plan", "/fuerza", "/registrar", "/perfil"];
 const MORE_ICON = "M5 12h.01M12 12h.01M19 12h.01";
 const LONG_LABEL: Record<string, string> = { "/estadisticas": "Estadísticas", "/herramientas": "Calculadoras", "/ajustes": "Importar / demo" };
+const icon = (href: string) => ITEMS.find((i) => i.href === href)!.icon;
 
-/** Móvil: barra inferior con las 5 secciones principales y un panel «Más» con el resto. */
+function Logo({ compact }: { compact?: boolean }) {
+  return (
+    <>
+      <span className={`grid place-items-center rounded-lg bg-accent text-accent-ink ${compact ? "h-7 w-7 text-sm" : "h-8 w-8"}`}>▲</span>
+      {/* un solo bloque: el contenedor flex separaría «Run-In-» de «Out» */}
+      <span>
+        Run-In-<span className="text-accent">Out</span>
+      </span>
+    </>
+  );
+}
+
+/** Móvil: barra superior (logo = Inicio, Amigos) e inferior (Plan, Fuerza, Registrar, Perfil, Más). */
 function MobileNav({ active }: { active: (href: string) => boolean }) {
   const [more, setMore] = useState(false);
-  const main = ITEMS.filter((i) => MOBILE_MAIN.includes(i.href));
-  const rest = ITEMS.filter((i) => !MOBILE_MAIN.includes(i.href));
+  const bottom = ITEMS.filter((i) => MOBILE_BOTTOM.includes(i.href));
+  const rest = ITEMS.filter((i) => !MOBILE_BOTTOM.includes(i.href) && !MOBILE_TOP.includes(i.href));
   const restActive = rest.some((i) => active(i.href));
   const tab = "flex flex-1 flex-col items-center justify-center gap-1 pb-1.5 pt-2.5 text-[11px] font-medium";
   return (
     <>
+      <header className="fixed inset-x-0 top-0 z-40 border-b border-line bg-surface/95 pt-[env(safe-area-inset-top)] backdrop-blur md:hidden">
+        <div className="flex h-14 items-center justify-between px-4">
+          <Link href="/" className="flex items-center gap-2 text-lg font-bold tracking-tight" aria-label="Inicio">
+            <Logo compact />
+          </Link>
+          <Link
+            href="/amigos"
+            aria-label="Amigos"
+            className={`grid h-10 w-10 place-items-center rounded-full ${active("/amigos") ? "bg-surface-2 text-accent" : "text-ink-2 hover:bg-surface-2"}`}
+          >
+            <Icon d={icon("/amigos")} className="h-6 w-6" />
+          </Link>
+        </div>
+      </header>
+
       {more && (
         <div className="fixed inset-0 z-40 md:hidden" onClick={() => setMore(false)}>
           <div className="absolute inset-0 bg-black/40" />
@@ -66,13 +95,26 @@ function MobileNav({ active }: { active: (href: string) => boolean }) {
           </div>
         </div>
       )}
-      <nav className="fixed inset-x-0 bottom-0 z-40 flex border-t border-line bg-surface/95 px-1 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden">
-        {main.map((it) => (
-          <Link key={it.href} href={it.href} className={`${tab} ${active(it.href) ? "text-accent" : "text-muted"}`}>
-            <Icon d={it.icon} className="h-6 w-6" />
-            {it.label}
-          </Link>
-        ))}
+
+      <nav className="fixed inset-x-0 bottom-0 z-40 flex items-center border-t border-line bg-surface/95 px-1 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden">
+        {bottom.map((it) =>
+          it.href === "/registrar" ? (
+            <div key={it.href} className="flex flex-[1.6] justify-center px-1">
+              <Link
+                href={it.href}
+                className={`flex w-full items-center justify-center gap-1.5 rounded-full bg-accent py-2.5 text-sm font-bold text-accent-ink shadow-md ${active(it.href) ? "ring-2 ring-accent/40 ring-offset-2 ring-offset-surface" : ""}`}
+              >
+                <Icon d={it.icon} className="h-5 w-5" />
+                {it.label}
+              </Link>
+            </div>
+          ) : (
+            <Link key={it.href} href={it.href} className={`${tab} ${active(it.href) ? "text-accent" : "text-muted"}`}>
+              <Icon d={it.icon} className="h-6 w-6" />
+              {it.label}
+            </Link>
+          ),
+        )}
         <button type="button" onClick={() => setMore((m) => !m)} aria-expanded={more} className={`${tab} ${more || restActive ? "text-accent" : "text-muted"}`}>
           <Icon d={MORE_ICON} className="h-6 w-6" />
           Más
@@ -117,11 +159,7 @@ export function NavView({ path }: { path?: string }) {
       {/* Escritorio: barra lateral */}
       <nav className="sticky top-0 hidden h-screen w-56 shrink-0 flex-col gap-1 border-r border-line bg-surface p-4 md:flex">
         <Link href="/" className="mb-6 flex items-center gap-2 px-2 text-lg font-bold tracking-tight">
-          <span className="grid h-8 w-8 place-items-center rounded-lg bg-accent text-accent-ink">▲</span>
-          {/* un solo bloque: el contenedor flex separaría «Run-In-» de «Out» */}
-          <span>
-            Run-In-<span className="text-accent">Out</span>
-          </span>
+          <Logo />
         </Link>
         {ITEMS.map((it) => (
           <Link

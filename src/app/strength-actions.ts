@@ -10,6 +10,13 @@ import { adaptWithAI, coachConfig } from "@/lib/coach";
 import { todayLocal } from "@/lib/dates";
 import { findExercise } from "@/lib/strength/catalog";
 import { cleanRoutineExercises, cleanWorkout } from "@/lib/strength/workouts";
+import { applyStrengthRoutines, routinesForPlan } from "@/lib/strength/routinePlan";
+import type { Db } from "@/lib/types";
+
+/** Tras cambiar las rutinas, las sesiones de fuerza del plan se rehacen con ellas. */
+function syncPlanRoutines(d: Db) {
+  if (d.plan) applyStrengthRoutines(d.plan, routinesForPlan(d), todayLocal());
+}
 import { CATEGORIES, EQUIPMENT, MUSCLES, PLACE_PRESETS, type Equipment, type ExerciseCategory, type Muscle } from "@/lib/strength/labels";
 import type { FormState } from "./actions";
 
@@ -147,6 +154,7 @@ export async function saveRoutine(input: { id?: string; name?: string; notes?: s
       id = newId("r_");
       list.push({ id, name, notes, exercises, createdAt: now, updatedAt: now });
     }
+    syncPlanRoutines(d);
   });
   if (error) return { error };
   redirect(`/fuerza/rutinas/${id}`);
@@ -167,6 +175,7 @@ export async function deleteRoutine(fd: FormData): Promise<void> {
   const id = String(fd.get("id") ?? "");
   await updateDb((db) => {
     db.routines = (db.routines ?? []).filter((r) => r.id !== id);
+    syncPlanRoutines(db);
   });
   redirect("/fuerza");
 }

@@ -259,7 +259,7 @@ export function ActivityForm({
         {state.message && (
           <p className="text-sm font-medium text-good-ink">
             ✓ {state.message}{" "}
-            <Link href="/plan" className="underline">
+            <Link href="/plan/actual" className="underline">
               Ver plan
             </Link>
           </p>

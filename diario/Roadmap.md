@@ -97,7 +97,7 @@ Base: [[Estudio entrenamiento#6. La Pirámide de Entrenamiento (Helms, Valdez, M
 ### 4.4 · Entrenador IA de fuerza (chat)
 - [ ] Chat en la sección Fuerza: pregunta objetivo, días, material, nivel y lesiones, y crea un programa (rutinas + semanas + progresión)
 - [ ] Con plan de carrera: encaja la fuerza en el plan (hasta 3 días; pierna, posterior + pliometría, superior + core; nunca antes de la tirada larga o de una sesión clave)
-- [ ] El planificador usa las rutinas del programa en lugar de las plantillas fijas `STRENGTH`
+- [x] El planificador usa las rutinas del usuario (por zona) y plantillas distintas por tipo; hasta 3 días → [[Decisiones#Fuerza del plan con tus rutinas]]
 
 ### 4.5 · Usuarios que solo hacen fuerza
 - [ ] Alta sin carrera ni plan de running; Inicio y menú según lo que haga cada uno

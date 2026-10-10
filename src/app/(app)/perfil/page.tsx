@@ -223,7 +223,7 @@ function Preparacion({ db, matches, today }: { db: Db; matches?: Map<string, Ses
       title="Tu preparación"
       subtitle={`${plan.goal.name} · ${shortDate(plan.goal.date)}${plan.goal.targetTimeSec ? ` · objetivo ${fmtDuration(plan.goal.targetTimeSec)}` : ""}`}
       action={
-        <Link href="/plan" className="text-xs font-semibold text-accent">
+        <Link href="/plan/actual" className="text-xs font-semibold text-accent">
           Ver plan →
         </Link>
       }
