@@ -2,7 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { saveProfile, type FormState } from "@/app/actions";
-import type { Profile } from "@/lib/types";
+import { focusOf, type Focus, type Profile } from "@/lib/types";
 import { WEEKDAYS } from "@/lib/dates";
 import { availableDaysOf } from "@/lib/engine/planner";
 import { keepForm } from "./keepForm";
@@ -22,12 +22,35 @@ const LEVELS = [
   { v: "avanzado", l: "Avanzado", d: "3+ años, 50+ km/sem, entreno estructurado" },
 ];
 
-export function ProfileForm({ profile }: { profile?: Profile }) {
+const FOCUS: { v: Focus; l: string; d: string }[] = [
+  { v: "ambos", l: "Correr y fuerza", d: "Plan de carrera con su fuerza" },
+  { v: "running", l: "Solo correr", d: "Plan de carrera" },
+  { v: "fuerza", l: "Solo fuerza", d: "Rutinas, progreso y entrenador IA" },
+];
+
+export function ProfileForm({ profile, initialFocus }: { profile?: Profile; initialFocus?: Focus }) {
   const [state, action, pending] = useActionState<FormState, FormData>(saveProfile, {});
+  const [focus, setFocus] = useState<Focus>(initialFocus ?? focusOf(profile));
+  const runner = focus !== "fuerza";
   const p = profile;
   const avail = availableDaysOf(p ?? { daysPerWeek: 4, longRunDay: 6 });
   return (
     <form onSubmit={keepForm(action)} className="space-y-6">
+      <fieldset className="rounded-2xl border border-line bg-surface p-4 md:p-5">
+        <legend className="px-1 text-sm font-semibold">¿Qué entrenas?</legend>
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+          {FOCUS.map((f) => (
+            <label key={f.v} className="flex cursor-pointer gap-2 rounded-xl border border-line p-3 has-[:checked]:border-accent has-[:checked]:bg-surface-2">
+              <input type="radio" name="focus" value={f.v} checked={focus === f.v} onChange={() => setFocus(f.v)} className="mt-1 accent-[var(--accent)]" />
+              <span>
+                <span className="block text-sm font-semibold">{f.l}</span>
+                <span className="block text-xs text-ink-2">{f.d}</span>
+              </span>
+            </label>
+          ))}
+        </div>
+      </fieldset>
+
       <fieldset className="rounded-2xl border border-line bg-surface p-4 md:p-5">
         <legend className="px-1 text-sm font-semibold">Datos físicos</legend>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
@@ -66,58 +89,64 @@ export function ProfileForm({ profile }: { profile?: Profile }) {
         </div>
       </fieldset>
 
-      <fieldset className="rounded-2xl border border-line bg-surface p-4 md:p-5">
-        <legend className="px-1 text-sm font-semibold">Experiencia</legend>
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
-          {LEVELS.map((lv) => (
-            <label key={lv.v} className="flex cursor-pointer gap-2 rounded-xl border border-line p-3 has-[:checked]:border-accent has-[:checked]:bg-surface-2">
-              <input type="radio" name="level" value={lv.v} defaultChecked={(p?.level ?? "principiante") === lv.v} className="mt-1 accent-[var(--accent)]" />
-              <span>
-                <span className="block text-sm font-semibold">{lv.l}</span>
-                <span className="block text-xs text-ink-2">{lv.d}</span>
-              </span>
+      {runner && (
+        <fieldset className="rounded-2xl border border-line bg-surface p-4 md:p-5">
+          <legend className="px-1 text-sm font-semibold">Experiencia</legend>
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
+            {LEVELS.map((lv) => (
+              <label key={lv.v} className="flex cursor-pointer gap-2 rounded-xl border border-line p-3 has-[:checked]:border-accent has-[:checked]:bg-surface-2">
+                <input type="radio" name="level" value={lv.v} defaultChecked={(p?.level ?? "principiante") === lv.v} className="mt-1 accent-[var(--accent)]" />
+                <span>
+                  <span className="block text-sm font-semibold">{lv.l}</span>
+                  <span className="block text-xs text-ink-2">{lv.d}</span>
+                </span>
+              </label>
+            ))}
+          </div>
+          <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
+            <label className="field">
+              Años corriendo
+              <input className="input" name="yearsRunning" type="number" step="0.5" defaultValue={p?.yearsRunning ?? 0} />
             </label>
-          ))}
-        </div>
-        <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
-          <label className="field">
-            Años corriendo
-            <input className="input" name="yearsRunning" type="number" step="0.5" defaultValue={p?.yearsRunning ?? 0} />
-          </label>
-          <label className="field">
-            Km por semana actuales
-            <input className="input" name="weeklyKm" type="number" defaultValue={p?.weeklyKm ?? 0} />
-          </label>
-          <label className="field">
-            Tirada más larga reciente (km)
-            <input className="input" name="longestRunKm" type="number" step="0.5" defaultValue={p?.longestRunKm ?? 0} />
-          </label>
-          <label className="field">
-            Marca reciente: distancia
-            <select className="input" name="raceDistanceKm" defaultValue={p?.recentRace?.distanceKm ?? ""}>
-              <option value="">Ninguna</option>
-              <option value="5">5K</option>
-              <option value="10">10K</option>
-              <option value="21.0975">Media maratón</option>
-              <option value="42.195">Maratón</option>
-            </select>
-          </label>
-          <label className="field">
-            Marca reciente: tiempo
-            <input className="input" name="raceTime" placeholder="h:mm:ss o mm:ss" defaultValue={fmtT(p?.recentRace?.timeSec)} />
-          </label>
-        </div>
-        <p className="mt-2 text-xs text-muted">Si conectas Strava, el volumen y el VDOT se calculan con tus actividades reales.</p>
-      </fieldset>
+            <label className="field">
+              Km por semana actuales
+              <input className="input" name="weeklyKm" type="number" defaultValue={p?.weeklyKm ?? 0} />
+            </label>
+            <label className="field">
+              Tirada más larga reciente (km)
+              <input className="input" name="longestRunKm" type="number" step="0.5" defaultValue={p?.longestRunKm ?? 0} />
+            </label>
+            <label className="field">
+              Marca reciente: distancia
+              <select className="input" name="raceDistanceKm" defaultValue={p?.recentRace?.distanceKm ?? ""}>
+                <option value="">Ninguna</option>
+                <option value="5">5K</option>
+                <option value="10">10K</option>
+                <option value="21.0975">Media maratón</option>
+                <option value="42.195">Maratón</option>
+              </select>
+            </label>
+            <label className="field">
+              Marca reciente: tiempo
+              <input className="input" name="raceTime" placeholder="h:mm:ss o mm:ss" defaultValue={fmtT(p?.recentRace?.timeSec)} />
+            </label>
+          </div>
+          <p className="mt-2 text-xs text-muted">Si conectas Strava, el volumen y el VDOT se calculan con tus actividades reales.</p>
+        </fieldset>
+      )}
 
       <fieldset className="rounded-2xl border border-line bg-surface p-4 md:p-5">
-        <legend className="px-1 text-sm font-semibold">Disponibilidad</legend>
+        <legend className="px-1 text-sm font-semibold">{runner ? "Disponibilidad" : "Fuerza"}</legend>
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-          <Availability initialDays={avail} initialLong={p?.longRunDay ?? 6} />
+          {runner && <Availability initialDays={avail} initialLong={p?.longRunDay ?? 6} />}
           <div className="sm:col-span-2">
-            <p className="field">Sesiones de fuerza por semana</p>
-            <Stepper name="strengthPerWeek" initial={p?.strengthPerWeek ?? 2} min={0} max={4} />
-            <p className="mt-1 text-xs text-muted">Recomendado: 2-3 (Balsalobre 2016). El plan las reparte: pierna, cadena posterior y tren superior.</p>
+            <p className="field">{runner ? "Sesiones de fuerza por semana" : "Días de fuerza por semana"}</p>
+            <Stepper key={String(runner)} name="strengthPerWeek" initial={Math.min(runner ? 4 : 6, p?.strengthPerWeek ?? (runner ? 2 : 3))} min={runner ? 0 : 1} max={runner ? 4 : 6} />
+            <p className="mt-1 text-xs text-muted">
+              {runner
+                ? "Recomendado: 2-3 (Balsalobre 2016). El plan las reparte: pierna, cadena posterior y tren superior."
+                : "Para ganar músculo, cada músculo 2 veces por semana: con 3-4 días va bien. Te sirve de objetivo semanal."}
+            </p>
           </div>
           <label className="field sm:col-span-2 md:col-span-3">
             Lesiones o molestias (opcional)

@@ -20,9 +20,14 @@ export interface Profile {
   daysPerWeek: number; // 2-7 (= nº de availableDays si se indican)
   availableDays?: number[]; // días de la semana en que puede entrenar (0 = lunes ... 6 = domingo)
   longRunDay: number; // 0 = lunes ... 6 = domingo
-  strengthPerWeek: number; // 0-4
+  strengthPerWeek: number; // 0-4 con plan de carrera; hasta 6 si solo hace fuerza
   injuries?: string;
+  focus?: Focus; // qué entrena (sin indicar = los dos, como antes)
 }
+
+/** Qué entrena: solo correr, solo fuerza o los dos. Cambia el Inicio, el menú y el perfil. */
+export type Focus = "running" | "fuerza" | "ambos";
+export const focusOf = (p?: Pick<Profile, "focus">): Focus => p?.focus ?? "ambos";
 
 export interface Goal {
   raceId?: string;

@@ -11,6 +11,8 @@ import { fmtDuration, fmtKm, fmtNum } from "@/lib/format";
 import { healthSummary, todayMadrid } from "@/lib/health";
 import { addDays, diffDays, mondayOf, shortDate } from "@/lib/dates";
 import { loadDemo } from "@/app/actions";
+import { StrengthHome } from "@/components/StrengthHome";
+import { focusOf } from "@/lib/types";
 
 export default function Home() {
   return (
@@ -22,19 +24,24 @@ export default function Home() {
 
 async function Dashboard() {
   const { db, stats, matches, today } = await getAnalysis();
+  // quien solo hace fuerza ve su fuerza al entrar
+  if (db.profile && focusOf(db.profile) === "fuerza") return <StrengthHome title={`Hola, ${db.profile.name.split(" ")[0]}`} />;
 
   if (!db.profile || !stats)
     return (
       <div className="mx-auto max-w-2xl py-10 text-center">
         <p className="text-sm font-semibold uppercase tracking-widest text-accent">Run-In-Out</p>
-        <h1 className="mt-2 text-3xl font-bold tracking-tight md:text-4xl">Tu entrenador de running, con datos de verdad</h1>
+        <h1 className="mt-2 text-3xl font-bold tracking-tight md:text-4xl">Tu entrenador de running y fuerza, con datos de verdad</h1>
         <p className="mt-3 text-ink-2">
-          Planes periodizados según tu peso, experiencia y carrera objetivo, que se adaptan con tus actividades de Strava. Ritmos VDOT, forma y fatiga, predicciones y
-          decenas de estadísticas.
+          Planes de carrera periodizados que se adaptan a tus entrenos, y rutinas de fuerza como en un gimnasio: series, progreso y un entrenador con IA. Para correr, para
+          hacer fuerza o para las dos cosas.
         </p>
         <div className="mt-6 flex flex-wrap justify-center gap-3">
           <Link href="/perfil" className="btn">
-            Crear mi perfil
+            Quiero correr
+          </Link>
+          <Link href="/perfil?foco=fuerza" className="btn">
+            Solo quiero hacer fuerza
           </Link>
           <Link href="/registrar" className="btn btn-ghost">
             Registrar un entreno

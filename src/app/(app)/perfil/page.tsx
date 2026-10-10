@@ -17,7 +17,8 @@ import { achievements, bestTimes, periodAverages, profileAverages, strengthSumma
 import type { SessionMatch } from "@/lib/engine/planner";
 import { fmtDuration, fmtKm, fmtNum, fmtPace } from "@/lib/format";
 import { diffDays, mondayOf, shortDate } from "@/lib/dates";
-import type { Activity, Db, Phase } from "@/lib/types";
+import { focusOf, type Activity, type Db, type Focus, type Phase } from "@/lib/types";
+import { workoutVolume } from "@/lib/strength/workouts";
 import type { Stats } from "@/lib/engine/stats";
 import { ActivityItem } from "@/components/ActivityItem";
 import { tagsForDb } from "@/lib/engine/tags";
@@ -64,19 +65,24 @@ export default function PerfilPage({ searchParams }: PageProps<"/perfil">) {
 async function Content({ searchParams }: { searchParams: PageProps<"/perfil">["searchParams"] }) {
   const sp = await searchParams;
   const { db, stats, matches, today } = await getAnalysis();
-  const requested = typeof sp.tab === "string" ? sp.tab : "resumen";
+  // solo fuerza: sin Resumen ni Running (son de correr) y se abre en Fuerza
+  const focus = focusOf(db.profile);
+  const tabs = TABS.filter((t) => focus !== "fuerza" || (t.id !== "resumen" && t.id !== "running"));
+  const first = tabs[0].id;
+  const requested = typeof sp.tab === "string" ? sp.tab : first;
   // sin perfil solo tiene sentido el formulario
-  const tab: Tab = !db.profile || !stats ? "editar" : (TABS.find((t) => t.id === requested)?.id ?? "resumen");
+  const tab: Tab = !db.profile || !stats ? "editar" : (tabs.find((t) => t.id === requested)?.id ?? first);
+  const foco = sp.foco === "fuerza" || sp.foco === "running" || sp.foco === "ambos" ? (sp.foco as Focus) : undefined;
 
   return (
     <div className="space-y-4">
       {db.profile && stats && <ProfileHeader db={db} stats={stats} />}
       <nav className="-mx-4 overflow-x-auto px-4 md:mx-0 md:px-0" aria-label="Secciones del perfil">
         <div className="flex w-max gap-1 rounded-xl border border-line bg-surface p-1">
-          {TABS.map((t) => (
+          {tabs.map((t) => (
             <Link
               key={t.id}
-              href={t.id === "resumen" ? "/perfil" : `/perfil?tab=${t.id}`}
+              href={t.id === first ? "/perfil" : `/perfil?tab=${t.id}`}
               aria-current={t.id === tab ? "page" : undefined}
               className={`whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium ${t.id === tab ? "bg-accent text-accent-ink" : "text-ink-2 hover:bg-surface-2"}`}
             >
@@ -92,7 +98,7 @@ async function Content({ searchParams }: { searchParams: PageProps<"/perfil">["s
       {tab === "actividades" && <Actividades db={db} sport={typeof sp.deporte === "string" ? sp.deporte : "todos"} page={Number(sp.pagina) || 1} />}
       {tab === "logros" && <Logros list={achievements(db.activities, matches)} />}
       {tab === "salud" && <Salud db={db} />}
-      {tab === "editar" && <Editar db={db} today={today} />}
+      {tab === "editar" && <Editar db={db} today={today} initialFocus={foco} />}
     </div>
   );
 }
@@ -102,6 +108,19 @@ async function Content({ searchParams }: { searchParams: PageProps<"/perfil">["s
 function ProfileHeader({ db, stats }: { db: Db; stats: Stats }) {
   const p = db.profile!;
   const T = stats.totals;
+  const strengthOnly = focusOf(p) === "fuerza";
+  const lifts = db.activities.filter((a) => a.workout);
+  const cells = strengthOnly
+    ? [
+        ["Entrenos", fmtNum(lifts.length)],
+        ["Toneladas", fmtNum(lifts.reduce((t, a) => t + workoutVolume(a.workout!), 0) / 1000, 1)],
+        ["Horas", fmtNum(lifts.reduce((t, a) => t + a.movingSec, 0) / 3600)],
+      ]
+    : [
+        ["Km totales", fmtNum(T.allKm)],
+        ["Carreras", fmtNum(T.allRuns)],
+        ["Horas", fmtNum(T.allHours)],
+      ];
   const initials = p.name
     .split(" ")
     .map((x) => x[0])
@@ -116,23 +135,18 @@ function ProfileHeader({ db, stats }: { db: Db; stats: Stats }) {
       <div className="min-w-0 flex-1">
         <p className="truncate text-lg font-bold">{p.name}</p>
         <p className="text-xs text-ink-2">
-          {LEVEL[p.level]} · {p.age} años · VDOT {stats.vdot.vdot.toFixed(1)}
+          {strengthOnly ? "Fuerza" : `${LEVEL[p.level]} · `}
+          {strengthOnly ? ` · ${p.age} años` : `${p.age} años · VDOT ${stats.vdot.vdot.toFixed(1)}`}
           {db.goal && ` · Objetivo: ${db.goal.name}`}
         </p>
       </div>
       <dl className="grid w-full grid-cols-3 gap-2 text-center sm:w-auto sm:gap-6">
-        <div>
-          <dt className="text-[11px] text-muted">Km totales</dt>
-          <dd className="font-bold tabular">{fmtNum(T.allKm)}</dd>
-        </div>
-        <div>
-          <dt className="text-[11px] text-muted">Carreras</dt>
-          <dd className="font-bold tabular">{T.allRuns}</dd>
-        </div>
-        <div>
-          <dt className="text-[11px] text-muted">Horas</dt>
-          <dd className="font-bold tabular">{fmtNum(T.allHours)}</dd>
-        </div>
+        {cells.map(([label, value]) => (
+          <div key={label}>
+            <dt className="text-[11px] text-muted">{label}</dt>
+            <dd className="font-bold tabular">{value}</dd>
+          </div>
+        ))}
       </dl>
     </section>
   );
@@ -655,14 +669,14 @@ function ShortcutStep({ n, title, img, w, h, children }: { n: number; title: str
 
 // ---------------- Editar ----------------
 
-function Editar({ db, today }: { db: Db; today: string }) {
+function Editar({ db, today, initialFocus }: { db: Db; today: string; initialFocus?: Focus }) {
   const { profile } = db;
   const avg = profileAverages(db.activities, today);
   const outdated = profile && avg && (Math.abs(avg.weeklyKm - profile.weeklyKm) >= 3 || Math.abs(avg.longestRunKm - profile.longestRunKm) >= 2);
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
       <div className="lg:col-span-2">
-        <ProfileForm key={`${profile?.weeklyKm}-${profile?.longestRunKm}`} profile={profile} />
+        <ProfileForm key={`${profile?.weeklyKm}-${profile?.longestRunKm}-${profile?.focus}`} profile={profile} initialFocus={initialFocus} />
       </div>
       {profile && (
         <div className="space-y-4">

@@ -16,7 +16,7 @@ import { parseTime } from "@/lib/format";
 import { createHealthToken, revokeHealthToken } from "@/lib/healthToken";
 import { applyStrengthRoutines, routinesForPlan } from "@/lib/strength/routinePlan";
 import { addDays, diffDays, todayLocal } from "@/lib/dates";
-import type { Db, Feel, Goal, Level, Profile, Sex, TuneUpRace } from "@/lib/types";
+import type { Db, Feel, Focus, Goal, Level, Profile, Sex, TuneUpRace } from "@/lib/types";
 
 export interface FormState {
   ok?: boolean;
@@ -44,10 +44,19 @@ export async function saveProfile(_: FormState, fd: FormData): Promise<FormState
   if (!age || !weightKg || !heightCm || age < 10 || age > 100 || weightKg < 30 || weightKg > 250 || heightCm < 120 || heightCm > 230)
     return { error: "Revisa edad, peso y altura." };
 
-  const availableDays = [...new Set(fd.getAll("availableDays").map(Number))].filter((d) => d >= 0 && d <= 6).sort((a, b) => a - b);
-  if (availableDays.length < 2) return { error: "Marca al menos 2 días en los que puedas entrenar." };
-  const longRunDay = num(fd, "longRunDay") ?? 6;
-  if (!availableDays.includes(longRunDay)) return { error: "El día de la tirada larga tiene que ser uno de tus días disponibles." };
+  const focus: Focus = fd.get("focus") === "running" ? "running" : fd.get("focus") === "fuerza" ? "fuerza" : "ambos";
+  const prev = (await getDb()).profile;
+  // solo fuerza: no se piden los datos de correr y se conservan los que hubiera
+  const runner = focus !== "fuerza";
+  let availableDays = [...new Set(fd.getAll("availableDays").map(Number))].filter((d) => d >= 0 && d <= 6).sort((a, b) => a - b);
+  let longRunDay = num(fd, "longRunDay") ?? 6;
+  if (runner) {
+    if (availableDays.length < 2) return { error: "Marca al menos 2 días en los que puedas entrenar." };
+    if (!availableDays.includes(longRunDay)) return { error: "El día de la tirada larga tiene que ser uno de tus días disponibles." };
+  } else {
+    availableDays = prev?.availableDays ?? availableDaysOf(prev ?? { daysPerWeek: 4, longRunDay: 6 });
+    longRunDay = prev?.longRunDay ?? 6;
+  }
 
   const raceDist = num(fd, "raceDistanceKm");
   const raceTime = parseTime(String(fd.get("raceTime") ?? ""));
@@ -59,18 +68,18 @@ export async function saveProfile(_: FormState, fd: FormData): Promise<FormState
     heightCm,
     hrMax: num(fd, "hrMax"),
     hrRest: num(fd, "hrRest"),
-    level: (fd.get("level") as Level) ?? "principiante",
-    yearsRunning: num(fd, "yearsRunning") ?? 0,
-    weeklyKm: num(fd, "weeklyKm") ?? 0,
-    longestRunKm: num(fd, "longestRunKm") ?? 0,
-    recentRace: raceDist && raceTime ? { distanceKm: raceDist, timeSec: raceTime } : undefined,
+    level: runner ? ((fd.get("level") as Level) ?? "principiante") : (prev?.level ?? "nuevo"),
+    yearsRunning: runner ? (num(fd, "yearsRunning") ?? 0) : (prev?.yearsRunning ?? 0),
+    weeklyKm: runner ? (num(fd, "weeklyKm") ?? 0) : (prev?.weeklyKm ?? 0),
+    longestRunKm: runner ? (num(fd, "longestRunKm") ?? 0) : (prev?.longestRunKm ?? 0),
+    recentRace: runner ? (raceDist && raceTime ? { distanceKm: raceDist, timeSec: raceTime } : undefined) : prev?.recentRace,
     daysPerWeek: availableDays.length,
     availableDays,
     longRunDay,
-    strengthPerWeek: Math.round(Math.min(4, Math.max(0, num(fd, "strengthPerWeek") ?? 1))),
+    strengthPerWeek: Math.round(Math.min(runner ? 4 : 6, Math.max(0, num(fd, "strengthPerWeek") ?? 1))),
     injuries: String(fd.get("injuries") ?? "").trim() || undefined,
+    focus,
   };
-  const prev = (await getDb()).profile;
   await updateDb((db) => {
     db.profile = profile;
   });

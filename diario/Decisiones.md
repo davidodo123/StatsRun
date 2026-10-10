@@ -498,3 +498,13 @@ David pidió probar «todos los casos posibles». Tres capas:
 
 **Pendiente de David:** la cuenta de OpenRouter no tiene saldo para `gpt-4o` (la app cae a `gpt-4o-mini`, que funciona). Y conviene revocar la clave de local que se pegó en el chat.
 
+## Usuarios que solo hacen fuerza
+*2026-10-10*
+
+- Nuevo dato del perfil **«¿Qué entrenas?»** (`focus`): «Correr y fuerza», «Solo correr» o «Solo fuerza». Sin indicar cuenta como los dos, así que los perfiles que ya existían (el de David) no cambian.
+- **Alta**: la portada sin perfil ofrece «Quiero correr» y «Solo quiero hacer fuerza» (abre el perfil con «Solo fuerza» marcado). Con solo fuerza el formulario no pide experiencia corriendo, km, tirada ni días de carrera: solo datos físicos, lesiones y **días de fuerza por semana (1-6)**, que sirven de objetivo semanal. Los datos de correr que hubiera se conservan por si vuelve a correr.
+- **Inicio**: con solo fuerza, la portada de Fuerza con «Hola, …» (componente `StrengthHome`, el mismo que `/fuerza`).
+- **Menú** (`AppNav` lee el perfil en el servidor): con solo fuerza desaparecen Plan, Carreras y Estadísticas; la barra de abajo es **Fuerza · Entrenador · Entrenar (naranja, empieza un entreno) · Perfil · Más** (Amigos, Calculadoras, Registrar actividad, Datos). Se resalta la entrada más concreta (en `/fuerza/entrenador`, «Entrenador» y no «Fuerza»).
+- **Perfil**: sin las pestañas Resumen y Running; abre en Fuerza; la cabecera muestra entrenos, toneladas movidas y horas en vez de km, carreras y VDOT.
+- Probado con un alta real en el navegador (formulario, Inicio, menú, perfil y vuelta a «Correr y fuerza») y recorriendo sus páginas en móvil y ordenador; el usuario de los dos sigue igual.
+

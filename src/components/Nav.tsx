@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { logout } from "@/app/auth-actions";
+import type { Focus } from "@/lib/types";
 
 const ITEMS = [
   { href: "/", label: "Inicio", icon: "M3 12l9-8 9 8M5 10v10h5v-6h4v6h5V10" },
@@ -17,6 +18,15 @@ const ITEMS = [
   { href: "/perfil", label: "Perfil", icon: "M12 12a4 4 0 100-8 4 4 0 000 8zm-7 9a7 7 0 0114 0" },
   { href: "/ajustes", label: "Datos", icon: "M12 15V3m0 0L8 7m4-4l4 4M4 15v4a1 1 0 001 1h14a1 1 0 001-1v-4" },
 ];
+// solo fuerza: sin lo de correr (plan, carreras, estadísticas), con el entrenador y «Entrenar» en vez de «Registrar»
+const STRENGTH_ITEMS = [
+  ITEMS[0],
+  ITEMS[2],
+  { href: "/fuerza/entrenador", label: "Entrenador", icon: "M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3z" },
+  { href: "/fuerza/entreno", label: "Entrenar", icon: "M12 5v14M5 12h14" },
+  ...ITEMS.filter((i) => ["/amigos", "/perfil", "/herramientas", "/registrar", "/ajustes"].includes(i.href)),
+];
+const itemsFor = (focus?: Focus) => (focus === "fuerza" ? STRENGTH_ITEMS : ITEMS);
 
 function Icon({ d, className = "h-5 w-5" }: { d: string; className?: string }) {
   return (
@@ -29,8 +39,10 @@ function Icon({ d, className = "h-5 w-5" }: { d: string; className?: string }) {
 // móvil: arriba el logo (Inicio) y Amigos; abajo 4 secciones con Registrar destacado en el centro, y el resto en «Más»
 const MOBILE_TOP = ["/", "/amigos"];
 const MOBILE_BOTTOM = ["/plan", "/fuerza", "/registrar", "/perfil"];
+const STRENGTH_BOTTOM = ["/fuerza", "/fuerza/entrenador", "/fuerza/entreno", "/perfil"];
+const CTA = ["/registrar", "/fuerza/entreno"]; // el botón naranja de la barra de abajo
 const MORE_ICON = "M5 12h.01M12 12h.01M19 12h.01";
-const LONG_LABEL: Record<string, string> = { "/estadisticas": "Estadísticas", "/herramientas": "Calculadoras", "/ajustes": "Importar / demo" };
+const LONG_LABEL: Record<string, string> = { "/estadisticas": "Estadísticas", "/herramientas": "Calculadoras", "/ajustes": "Importar / demo", "/registrar": "Registrar actividad" };
 const icon = (href: string) => ITEMS.find((i) => i.href === href)!.icon;
 
 function Logo({ compact }: { compact?: boolean }) {
@@ -45,11 +57,13 @@ function Logo({ compact }: { compact?: boolean }) {
   );
 }
 
-/** Móvil: barra superior (logo = Inicio, Amigos) e inferior (Plan, Fuerza, Registrar, Perfil, Más). */
-function MobileNav({ active }: { active: (href: string) => boolean }) {
+/** Móvil: barra superior (logo = Inicio, Amigos) e inferior (Plan, Fuerza, Registrar, Perfil, Más; o la de fuerza). */
+function MobileNav({ active, focus }: { active: (href: string) => boolean; focus?: Focus }) {
   const [more, setMore] = useState(false);
-  const bottom = ITEMS.filter((i) => MOBILE_BOTTOM.includes(i.href));
-  const rest = ITEMS.filter((i) => !MOBILE_BOTTOM.includes(i.href) && !MOBILE_TOP.includes(i.href));
+  const items = itemsFor(focus);
+  const bottomHrefs = focus === "fuerza" ? STRENGTH_BOTTOM : MOBILE_BOTTOM;
+  const bottom = bottomHrefs.map((h) => items.find((i) => i.href === h)!);
+  const rest = items.filter((i) => !bottomHrefs.includes(i.href) && !MOBILE_TOP.includes(i.href));
   const restActive = rest.some((i) => active(i.href));
   const tab = "flex flex-1 flex-col items-center justify-center gap-1 pb-1.5 pt-2.5 text-[11px] font-medium";
   return (
@@ -98,7 +112,7 @@ function MobileNav({ active }: { active: (href: string) => boolean }) {
 
       <nav className="fixed inset-x-0 bottom-0 z-40 flex items-center border-t border-line bg-surface/95 px-1 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden">
         {bottom.map((it) =>
-          it.href === "/registrar" ? (
+          CTA.includes(it.href) ? (
             <div key={it.href} className="flex flex-[1.6] justify-center px-1">
               <Link
                 href={it.href}
@@ -125,7 +139,7 @@ function MobileNav({ active }: { active: (href: string) => boolean }) {
 }
 
 /** Menú con la sección actual resaltada. Va dentro de <Suspense fallback={<NavView />}>: la ruta solo se conoce al pedir la página. */
-export function Nav() {
+export function Nav({ focus }: { focus?: Focus }) {
   const path = usePathname();
   const query = useSearchParams().toString();
   // páginas visitadas en esta pestaña: para volver al sitio de antes tras borrar algo
@@ -136,7 +150,7 @@ export function Nav() {
       if (list.at(-1) !== url) sessionStorage.setItem(VISITED, JSON.stringify([...list, url].slice(-30)));
     } catch {}
   }, [path, query]);
-  return <NavView path={path} />;
+  return <NavView path={path} focus={focus} />;
 }
 
 const VISITED = "rio-visitadas";
@@ -152,8 +166,11 @@ export function lastVisited(skip: (url: string) => boolean, fallback: string): s
 }
 
 /** Menú sin sección resaltada (el que se prerenderiza) o con ella. */
-export function NavView({ path }: { path?: string }) {
-  const active = (href: string) => path !== undefined && (href === "/" ? path === "/" : path.startsWith(href));
+export function NavView({ path, focus }: { path?: string; focus?: Focus }) {
+  const items = itemsFor(focus);
+  // resalta la entrada más concreta: en /fuerza/entrenador, «Entrenador» y no «Fuerza»
+  const matches = (href: string) => path !== undefined && (href === "/" ? path === "/" : path === href || path.startsWith(`${href}/`) || path.startsWith(`${href}?`));
+  const active = (href: string) => matches(href) && !items.some((o) => o.href.length > href.length && o.href.startsWith(href) && matches(o.href));
   return (
     <>
       {/* Escritorio: barra lateral */}
@@ -161,7 +178,7 @@ export function NavView({ path }: { path?: string }) {
         <Link href="/" className="mb-6 flex items-center gap-2 px-2 text-lg font-bold tracking-tight">
           <Logo />
         </Link>
-        {ITEMS.map((it) => (
+        {items.map((it) => (
           <Link
             key={it.href}
             href={it.href}
@@ -177,7 +194,7 @@ export function NavView({ path }: { path?: string }) {
           <button className="w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-ink-2 hover:bg-surface-2">Cerrar sesión</button>
         </form>
       </nav>
-      <MobileNav active={active} />
+      <MobileNav active={active} focus={focus} />
     </>
   );
 }
