@@ -1,7 +1,7 @@
 // Mete las rutinas del usuario en las sesiones de fuerza del plan: las de pierna en los huecos de pierna,
 // las de tren superior en los de superior (el planificador decide qué tipo toca cada día).
 import { strengthSession, type StrengthKind } from "../engine/planner";
-import type { Db, Plan } from "../types";
+import type { Db, Phase, Plan } from "../types";
 import { findExercise } from "./catalog";
 import type { Muscle } from "./labels";
 
@@ -14,6 +14,8 @@ export interface RoutineForPlan {
   steps: string[];
   durationMin: number;
   covers: Pattern[]; // patrones de movimiento que ya trabaja
+  kind?: StrengthKind; // rutinas de la IA: hueco para el que están hechas
+  phases?: Phase[]; // y fases en que se usan
 }
 
 /** Patrón de movimiento: para completar una rutina corta con lo que le falta de la plantilla del plan. */
@@ -109,6 +111,8 @@ export function routinesForPlan(db: Pick<Db, "routines" | "customExercises">): R
       steps,
       durationMin: Math.min(120, Math.max(20, Math.round(sets * 2.5 + 5))),
       covers,
+      kind: r.kind,
+      phases: r.phases,
     };
   });
 }
@@ -125,16 +129,21 @@ const WANTS: Record<StrengthKind, RoutineZone[]> = {
  * de esa zona, su contenido (rotando entre rutinas de la misma zona). En afinamiento se queda la activación.
  */
 export function applyStrengthRoutines(plan: Plan, routines: RoutineForPlan[], today: string): void {
-  const turn: Record<RoutineZone, number> = { inferior: 0, superior: 0, completo: 0 };
+  const turn: Record<string, number> = {};
   for (const w of plan.weeks)
     w.sessions = w.sessions.map((s) => {
       if (s.type !== "strength" || !s.strengthKind || s.date < today) return s;
       const base = { ...strengthSession(s.date, w.phase, s.strengthKind), id: s.id };
       if (w.phase === "taper") return base;
-      const zone = WANTS[s.strengthKind].find((z) => routines.some((r) => r.zone === z));
-      if (!zone) return base;
-      const options = routines.filter((r) => r.zone === zone);
-      const r = options[turn[zone]++ % options.length];
+      // primero, una rutina hecha para este hueco y esta fase (las de la IA); si no, una de la misma zona
+      const fits = routines.filter((r) => !r.phases || r.phases.includes(w.phase));
+      const exact = fits.filter((r) => r.kind === s.strengthKind);
+      const zone = WANTS[s.strengthKind].find((z) => fits.some((r) => r.zone === z));
+      const key = exact.length ? `k:${s.strengthKind}` : `z:${zone}`;
+      const options = exact.length ? exact : fits.filter((r) => r.zone === zone);
+      if (!options.length) return base;
+      turn[key] ??= 0;
+      const r = options[turn[key]++ % options.length];
       const maintenance = w.phase === "especifico" || w.recovery;
       // rutina corta: se completa con lo que le falta de la plantilla de esa zona (remo, hombro, core…)
       const extra = complementSteps(base.steps, r.covers);

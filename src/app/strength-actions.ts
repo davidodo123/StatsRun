@@ -6,7 +6,8 @@ import { redirect } from "next/navigation";
 import { after } from "next/server";
 import { readDbNow, updateDb } from "@/lib/db";
 import { requireUserId } from "@/lib/session";
-import { adaptWithAI, coachConfig } from "@/lib/coach";
+import { adaptWithAI, chatJson, coachConfig, strengthModel } from "@/lib/coach";
+import { STRENGTH_SYSTEM, routinesFromAi, strengthRequest, type AiStrengthReply } from "@/lib/strength/aiRoutines";
 import { todayLocal } from "@/lib/dates";
 import { findExercise } from "@/lib/strength/catalog";
 import { cleanRoutineExercises, cleanWorkout } from "@/lib/strength/workouts";
@@ -227,5 +228,58 @@ export async function finishWorkout(input: {
     after(() => adaptWithAI(uid).then(() => undefined));
   }
   redirect(`/actividad/${id}`);
+}
+
+// ---------- Entrenador IA de fuerza ----------
+
+export interface StrengthCoachForm extends FormState {
+  routines?: { id: string; name: string }[];
+}
+
+/** El atleta cuenta su material y lo que puede hacer; la IA crea sus rutinas para la carrera y el plan las coloca. */
+export async function generateStrengthRoutines(_: StrengthCoachForm, fd: FormData): Promise<StrengthCoachForm> {
+  const material = text(fd, "material", 600);
+  const ability = text(fd, "ability", 1200);
+  if (material.length < 3) return { error: "Cuéntale qué material tienes (o «nada, solo mi cuerpo»)." };
+  if (!coachConfig().configured) return { error: "La IA no está configurada (falta OPENROUTER_API_KEY)." };
+  const now = new Date().toISOString();
+  const today = todayLocal();
+  const model = strengthModel();
+  await updateDb((d) => {
+    d.strengthCoach = { ...d.strengthCoach, material, ability, updatedAt: now, model, error: undefined };
+  });
+
+  let result: ReturnType<typeof routinesFromAi>;
+  try {
+    const db = await readDbNow();
+    const reply = await chatJson<AiStrengthReply>(STRENGTH_SYSTEM, JSON.stringify(strengthRequest(db, material, ability, today)), 0.3, model);
+    result = routinesFromAi(reply, now);
+    if (!result.routines.length) throw new Error("no propuso ninguna rutina válida con tu material");
+  } catch (e) {
+    const error = `La IA no pudo crear las rutinas: ${(e as Error).message}`.slice(0, 300);
+    await updateDb((d) => {
+      if (d.strengthCoach) d.strengthCoach.error = error;
+    });
+    return { error };
+  }
+
+  await updateDb((d) => {
+    // se sustituyen las rutinas de la IA; las del atleta no se tocan
+    d.routines = [...(d.routines ?? []).filter((r) => r.source !== "ia"), ...result.routines];
+    // su material queda como el lugar «Casa» (y pasa a ser el activo)
+    const places = (d.places ??= []);
+    const home = places.find((p) => p.name.toLowerCase() === "casa");
+    if (home) home.equipment = result.equipment;
+    else if (places.length < MAX_PLACES) places.push({ id: newId(), name: "Casa", equipment: result.equipment, notes: material.slice(0, 200) });
+    d.activePlaceId = (home ?? places.find((p) => p.name === "Casa"))?.id ?? d.activePlaceId;
+    d.strengthCoach = { material, ability, updatedAt: now, model, summary: result.summary };
+    syncPlanRoutines(d);
+  });
+  refresh();
+  return {
+    ok: true,
+    message: result.summary || `${result.routines.length} rutinas creadas.`,
+    routines: result.routines.map((r) => ({ id: r.id, name: r.name })),
+  };
 }
 

@@ -74,4 +74,19 @@ describe("fuerza en el plan", () => {
     applyStrengthRoutines(p, [], today);
     expect(p.weeks.flatMap((w) => w.sessions).some((s) => s.routineId)).toBe(false);
   });
+
+  it("usa cada rutina de la IA en su hueco y su fase", () => {
+    const mk = (id: string, kind: "pierna" | "superior", phases: ("base" | "construccion" | "especifico")[]) => ({
+      id, name: id, kind, phases, source: "ia" as const, createdAt: "", updatedAt: "",
+      exercises: [{ exerciseId: kind === "pierna" ? "Goblet_Squat" : "Pushups", sets: [{ reps: 10 }] }, { exerciseId: kind === "pierna" ? "rio_pogo_jumps" : "Pullups", sets: [{ reps: 5 }] }],
+    });
+    const db: Pick<Db, "routines"> = { routines: [mk("pb", "pierna", ["base"]), mk("pf", "pierna", ["construccion", "especifico"]), mk("sb", "superior", ["base"]), mk("sf", "superior", ["construccion", "especifico"])] };
+    const p = plan();
+    applyStrengthRoutines(p, routinesForPlan(db), today);
+    const pick = (phase: string, kind: string) => p.weeks.find((w) => w.phase === phase && !w.recovery)!.sessions.find((s) => s.strengthKind === kind)?.routineId;
+    expect(pick("base", "pierna")).toBe("pb");
+    expect(pick("construccion", "pierna")).toBe("pf");
+    expect(pick("base", "superior")).toBe("sb");
+    expect(pick("especifico", "superior")).toBe("sf");
+  });
 });

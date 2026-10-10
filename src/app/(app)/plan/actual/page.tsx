@@ -5,12 +5,13 @@ import { getAnalysis } from "@/lib/analysis";
 import { Card, Empty, Loading, Notice, PageHeader, Stat } from "@/components/ui";
 import { SessionCard } from "@/components/SessionCard";
 import { AiCoachButton } from "@/components/AiCoachButton";
+import { StrengthCoachCard } from "@/components/StrengthCoachCard";
 import { ReadinessCard } from "@/components/ReadinessCard";
 import { RaceCard } from "@/components/RaceCard";
 import { TuneUpRaces } from "@/components/TuneUpRaces";
 import { assessReadiness } from "@/lib/engine/readiness";
 import { UnavailableForm } from "@/components/UnavailableForm";
-import { adaptIfMissed, coachConfig } from "@/lib/coach";
+import { adaptIfMissed, coachConfig, strengthModel } from "@/lib/coach";
 import { availableDaysOf } from "@/lib/engine/planner";
 import { after } from "next/server";
 import { requireUserId } from "@/lib/session";
@@ -21,6 +22,8 @@ import type { Phase } from "@/lib/types";
 import { clearPlan, clearUnavailable, regeneratePlan } from "@/app/actions";
 
 export const metadata: Metadata = { title: "Plan" };
+// crear las rutinas con IA puede tardar un minuto (las acciones de la página heredan este límite)
+export const maxDuration = 180;
 
 const PHASE_LABEL: Record<Phase, string> = { base: "Base", construccion: "Construcción", especifico: "Específico", taper: "Afinado" };
 const PHASE_BG: Record<Phase, string> = { base: "bg-s3", construccion: "bg-s1", especifico: "bg-s2", taper: "bg-muted" };
@@ -220,6 +223,15 @@ async function Content({ searchParams }: { searchParams: PageProps<"/plan/actual
                 Añade <code>OPENROUTER_API_KEY</code> en <code>.env.local</code> para que la IA adapte tus entrenos.
               </p>
             )}
+          </Card>
+          <Card title="Fuerza con IA" subtitle="Cuéntale con qué entrenas y te prepara la fuerza para la carrera">
+            <StrengthCoachCard
+              material={db.strengthCoach?.material}
+              ability={db.strengthCoach?.ability}
+              summary={db.strengthCoach?.summary}
+              routines={(db.routines ?? []).filter((r) => r.source === "ia").map((r) => ({ id: r.id, name: r.name }))}
+              model={strengthModel()}
+            />
           </Card>
           <Card title="Disponibilidad" subtitle={db.profile ? `Entrenas: ${availableDaysOf(db.profile).map((d) => WEEKDAYS[d].slice(0, 3)).join(", ")}` : undefined}>
             <div className="space-y-3 text-sm">

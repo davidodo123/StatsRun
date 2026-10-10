@@ -24,9 +24,13 @@ export function coachConfig() {
   return { apiKey, model, configured: Boolean(apiKey) };
 }
 
+/** Modelo para crear rutinas de fuerza: más capaz que el de los reajustes diarios (se cambia en OPENROUTER_STRENGTH_MODEL). */
+export const strengthModel = () => process.env.OPENROUTER_STRENGTH_MODEL || "openai/gpt-4o";
+
 /** Llamada a OpenRouter que devuelve el primer objeto JSON de la respuesta. */
-async function chatJson<T>(system: string, user: string, temperature = 0.4): Promise<T> {
-  const { apiKey, model } = coachConfig();
+export async function chatJson<T>(system: string, user: string, temperature = 0.4, modelOverride?: string): Promise<T> {
+  const { apiKey, model: defaultModel } = coachConfig();
+  const model = modelOverride ?? defaultModel;
   const res = await fetch(API, {
     method: "POST",
     headers: {
@@ -44,7 +48,7 @@ async function chatJson<T>(system: string, user: string, temperature = 0.4): Pro
         { role: "user", content: user },
       ],
     }),
-    signal: AbortSignal.timeout(90_000),
+    signal: AbortSignal.timeout(150_000),
   });
   if (!res.ok) throw new Error(`OpenRouter ${res.status}: ${(await res.text()).slice(0, 300)}`);
   const json = await res.json();

@@ -197,6 +197,7 @@ export interface Db {
   activePlaceId?: string;
   customExercises?: CustomExercise[]; // ejercicios creados por el usuario (además del catálogo)
   routines?: Routine[]; // rutinas de fuerza
+  strengthCoach?: StrengthCoachState; // lo que el atleta le contó a la IA de fuerza y su última respuesta
 }
 
 export type SetType = "normal" | "calentamiento" | "descendente" | "fallo";
@@ -221,6 +222,9 @@ export interface Routine {
   name: string;
   exercises: RoutineExercise[];
   notes?: string;
+  source?: "ia"; // creada por el entrenador IA de fuerza (se sustituye al volver a pedirla)
+  kind?: "pierna" | "posterior" | "superior" | "completo"; // hueco del plan para el que está hecha
+  phases?: Phase[]; // fases del plan en que se usa (sin fases = cualquiera)
   createdAt: string;
   updatedAt: string;
 }
@@ -262,6 +266,15 @@ export interface CustomExercise {
   secondary: Muscle[];
   steps: string[];
   createdAt: string;
+}
+
+export interface StrengthCoachState {
+  material: string; // en sus palabras: «kettlebell de 16, mancuernas de 15-18 kg…»
+  ability: string; // lo que puede hacer o su rutina normal
+  updatedAt: string;
+  model?: string;
+  summary?: string;
+  error?: string;
 }
 
 /** Plan que ya no está en marcha: se guarda para consultarlo. */

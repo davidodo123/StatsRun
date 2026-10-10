@@ -375,3 +375,19 @@ Qué se decidió, por qué y cuándo. Si algo cambia, se añade una entrada nuev
   - el periodo de la gráfica de rutinas es un chip (`select-chip`);
   - los filtros de Explorar tienen textos cortos («Músculo: todos») para que quepan en el móvil.
 
+## Fuerza con IA en el plan
+*2026-10-10*
+
+- Idea de David: en el plan de running, un cuadro donde le cuenta a la IA qué tiene en casa (p. ej. kettlebell, mancuernas de 15-18 kg, cinta elástica, barra de dominadas) y qué sabe hacer o su rutina normal. A partir de eso, la IA le hace la rutina para preparar la carrera y estar fuerte.
+- **Tarjeta «Fuerza con IA»** en `/plan/actual` (`StrengthCoachCard`), con dos cuadros: material y «qué sueles o puedes hacer». Se guardan en `db.strengthCoach`.
+- **Acción `generateStrengthRoutines`**:
+  - manda a la IA su material, su capacidad, sus lesiones, la carrera, las fases que quedan, las sesiones de fuerza por semana y el catálogo compacto (`id | nombre | material | músculos`, solo fuerza y pliometría, sin nivel avanzado);
+  - pide una rutina por **tipo** (pierna, posterior, superior, completo, según sesiones por semana) y **bloque**: «base» (técnica, 8-12) para la fase base, y «fuerza» (4-6 con pliometría) para construcción y específico;
+  - **validación** (`routinesFromAi`): material con códigos conocidos; ejercicios que existen y que puede hacer con ese material; entre 1 y 6 series; el rango de repeticiones va a la nota («Rango 8-12: cuando llegues a 12…»); descansos redondeados a 15 s; peso corporal en los ejercicios sin peso externo; mínimo 2 ejercicios por rutina;
+  - las rutinas se guardan con `source: "ia"`, `kind` y `phases`. Volver a pedirla **sustituye solo las de la IA**: las del atleta no se tocan;
+  - su material queda como el lugar **«Casa»** (activo);
+  - el plan se recoloca: primero usa la rutina de la IA hecha para ese hueco y esa fase y, si no hay, una de la misma zona.
+- **Instrucciones de la IA**: estudio §6, §7 y §9.6, más la pirámide de Helms en resumen propio. RPE 7-8 (RIR 2-3) sin fallo; dosis mínima eficaz; unilaterales si hay poco peso; respetar lesiones; descansos por tipo; progresión doble; 4-7 ejercicios y 30-50 min.
+- **Modelo**: `OPENROUTER_STRENGTH_MODEL` (por defecto `openai/gpt-4o`), más capaz que el de los reajustes (`gpt-4o-mini`). Unos céntimos por petición. La página tiene `maxDuration = 180` porque puede tardar un minuto.
+- En local no hay clave de OpenRouter: la respuesta real de la IA solo se puede probar en producción. La validación está cubierta con tests.
+
