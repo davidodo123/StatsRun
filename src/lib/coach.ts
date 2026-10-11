@@ -221,7 +221,7 @@ function buildContext(db: Db, today: string) {
       .filter((r) => r.date >= today && r.date < plan.goal.date)
       .map((r) => ({
         nombre: r.name, fecha: r.date, km: r.distanceKm, prioridad: r.priority,
-        diasSuavesDespues: r.priority === "B" ? recoveryDaysAfter(r.distanceKm) : 1,
+        diasSuavesDespues: r.priority === "C" ? 1 : recoveryDaysAfter(r.distanceKm),
       })),
     diagnostico: {
       veredicto: readiness.verdict,

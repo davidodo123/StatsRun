@@ -49,7 +49,7 @@ export interface TuneUpRace {
   name: string;
   distanceKm: number;
   date: string;
-  priority: "B" | "C";
+  priority: "A" | "B" | "C"; // A = otro objetivo con su propio tramo de plan (puede ir después de la principal)
   targetTimeSec?: number;
 }
 
@@ -169,7 +169,8 @@ export interface PlanWeek {
 
 export interface Plan {
   createdAt: string;
-  goal: Goal;
+  goal: Goal; // la última carrera objetivo
+  objectives?: { name: string; date: string }[]; // temporada con varios objetivos (carreras A), en orden
   startVdot: number;
   targetVdot: number;
   realisticVdot: number;

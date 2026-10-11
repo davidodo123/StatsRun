@@ -12,7 +12,7 @@ import { TuneUpRaces } from "@/components/TuneUpRaces";
 import { assessReadiness } from "@/lib/engine/readiness";
 import { UnavailableForm } from "@/components/UnavailableForm";
 import { adaptIfMissed, coachConfig, strengthModel } from "@/lib/coach";
-import { availableDaysOf } from "@/lib/engine/planner";
+import { availableDaysOf, planTitle } from "@/lib/engine/planner";
 import { after } from "next/server";
 import { requireUserId } from "@/lib/session";
 import { trainingPaces } from "@/lib/engine/physiology";
@@ -73,7 +73,7 @@ async function Content({ searchParams }: { searchParams: PageProps<"/plan/actual
         ← Planes
       </Link>
       <PageHeader
-        title={plan.goal.name}
+        title={planTitle(plan)}
         subtitle={`${shortDate(plan.goal.date)} · ${plan.weeks.length} semanas · creado el ${shortDate(plan.createdAt)}`}
         action={
           <div className="flex gap-2">
@@ -121,7 +121,7 @@ async function Content({ searchParams }: { searchParams: PageProps<"/plan/actual
         </div>
       )}
 
-      <TuneUpRaces goal={plan.goal} races={db.races ?? []} today={today} />
+      <TuneUpRaces goal={db.goal ?? plan.goal} races={db.races ?? []} today={today} />
       {db.goal && <RaceCard goal={db.goal} />}
 
       {/* Línea temporal de fases */}

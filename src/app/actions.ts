@@ -7,7 +7,7 @@ import { updateDb, readDbNow as getDb } from "@/lib/db";
 import { requireUserId } from "@/lib/session";
 import { deauthorize, syncActivities } from "@/lib/strava";
 import { generateDemoActivities } from "@/lib/demo";
-import { applyBlockedDates, applyTuneUpRaces, availableDaysOf, generatePlan } from "@/lib/engine/planner";
+import { applyBlockedDates, applyTuneUpRaces, availableDaysOf, generateSeason } from "@/lib/engine/planner";
 import { computeStats } from "@/lib/engine/stats";
 import { profileAverages } from "@/lib/engine/profile";
 import { areFriends, getFriends } from "@/lib/auth";import { findRace } from "@/lib/races";
@@ -198,7 +198,9 @@ async function rebuildPlan(db: Db) {
     ...db.activities.filter((a) => a.sport === "run" && diffDays(today, a.date) < 30).map((a) => a.distanceM / 1000),
     0,
   );
-  const plan = generatePlan({
+  // las carreras A son objetivos con su propio tramo; las B y C se meten luego dentro del plan
+  const aGoals = (db.races ?? []).filter((r) => r.priority === "A" && r.date > today).map((r) => ({ name: r.name, distanceKm: r.distanceKm, date: r.date, targetTimeSec: r.targetTimeSec }));
+  const plan = generateSeason({
     profile: db.profile,
     goal: db.goal,
     currentVdot: stats.vdot.vdot,
@@ -206,9 +208,9 @@ async function rebuildPlan(db: Db) {
     currentWeeklyKm: hasRecentData ? stats.totals.avgWeeklyKm6 : db.profile.weeklyKm,
     longestRecentKm: longestRecent || db.profile.longestRunKm,
     today,
-  });
+  }, aGoals);
   // primero las carreras secundarias, para que lo que se mueva por días no disponibles las respete
-  applyTuneUpRaces(plan, db.races ?? [], today);
+  applyTuneUpRaces(plan, (db.races ?? []).filter((r) => r.priority !== "A"), today);
   applyBlockedDates(plan, db.unavailableDates ?? [], availableDaysOf(db.profile), today);
   // las sesiones de fuerza usan las rutinas del usuario (pierna en los huecos de pierna, superior en los de superior)
   applyStrengthRoutines(plan, routinesForPlan(db), today);
@@ -302,7 +304,7 @@ export async function addTuneUpRace(_: FormState, fd: FormData): Promise<FormSta
   const today = todayLocal();
   const date = String(fd.get("date") ?? "");
   const distanceKm = num(fd, "distanceKm");
-  const priority: TuneUpRace["priority"] = fd.get("priority") === "C" ? "C" : "B";
+  const priority: TuneUpRace["priority"] = fd.get("priority") === "C" ? "C" : fd.get("priority") === "A" ? "A" : "B";
   const target = String(fd.get("targetTime") ?? "").trim();
   const targetTimeSec = target ? parseTime(target) : undefined;
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || date <= today) return { error: "Indica una fecha a partir de mañana." };
@@ -310,7 +312,11 @@ export async function addTuneUpRace(_: FormState, fd: FormData): Promise<FormSta
   if (target && !targetTimeSec) return { error: "Tiempo objetivo con formato h:mm:ss o mm:ss." };
   const db = await getDb();
   if (!db.goal) return { error: "Primero elige la carrera principal." };
-  if (date >= db.goal.date) return { error: `Tiene que ser antes de ${db.goal.name} (${db.goal.date}).` };
+  // un objetivo A puede ir antes o después de la principal; las B y C, antes del último objetivo
+  const lastA = [db.goal.date, ...(db.races ?? []).filter((r) => r.priority === "A").map((r) => r.date)].sort().at(-1)!;
+  if (priority === "A" && date === db.goal.date) return { error: "Ese día ya es la carrera principal." };
+  if (priority === "A" && diffDays(date, today) > 730) return { error: "Como mucho dentro de dos años." };
+  if (priority !== "A" && date >= lastA) return { error: `Tiene que ser antes de tu último objetivo (${lastA}), o márcala como objetivo A.` };
   if ((db.races ?? []).some((r) => r.date === date)) return { error: "Ya hay otra carrera ese día." };
   if ((db.races ?? []).filter((r) => r.date >= today).length >= 8) return { error: "Como máximo 8 carreras secundarias." };
 

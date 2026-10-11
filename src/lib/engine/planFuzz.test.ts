@@ -1,6 +1,6 @@
 // Planificador con muchas combinaciones: en todas, el plan tiene que cumplir sus reglas básicas.
 import { describe, expect, it } from "vitest";
-import { availableDaysOf, generatePlan, isLowerKind } from "./planner";
+import { availableDaysOf, generatePlan, generateSeason, isLowerKind } from "./planner";
 import { addDays, diffDays, weekday } from "../dates";
 import type { Level, PlannedSession, Profile } from "../types";
 
@@ -100,4 +100,42 @@ describe("planificador con muchas combinaciones", () => {
       }
     });
   }
+});
+
+describe("temporada con dos objetivos", () => {
+  const profile = profileFor(1); // principiante, 3 días
+  const today = "2026-10-12";
+  const nov = { name: "Media de noviembre", distanceKm: 21.0975, date: "2026-11-22" };
+  const abr = { name: "Maratón de abril", distanceKm: 42.195, date: "2027-04-18" };
+  const plan = generateSeason({ profile: { ...profile, daysPerWeek: 5, strengthPerWeek: 2 }, goal: nov, currentVdot: 42, currentWeeklyKm: 30, longestRecentKm: 14, today }, [abr]);
+  const sessions = plan.weeks.flatMap((w) => w.sessions);
+
+  it("las dos carreras están dentro, el objetivo final es la última", () => {
+    expect(sessions.filter((s) => s.type === "race").map((s) => s.date)).toEqual([nov.date, abr.date]);
+    expect(plan.goal.name).toBe(abr.name);
+    expect(plan.notes[0]).toMatch(/2 objetivos/);
+  });
+
+  it("cada objetivo tiene su afinamiento y después de la primera hay recuperación sin plan", () => {
+    const weekOf = (d: string) => plan.weeks.find((w) => d >= w.start && d <= addDays(w.start, 6))!;
+    expect(weekOf(nov.date).phase).toBe("taper");
+    expect(weekOf(abr.date).phase).toBe("taper");
+    const after = sessions.filter((s) => s.date > nov.date && diffDays(s.date, nov.date) <= 7);
+    expect(after).toEqual([]); // 7 días de recuperación tras una media
+    expect(sessions.some((s) => s.date > addDays(nov.date, 7) && s.date < addDays(nov.date, 21))).toBe(true);
+  });
+
+  it("semanas seguidas, sin repetir ni ids duplicados", () => {
+    const starts = plan.weeks.map((w) => w.start);
+    expect(new Set(starts).size).toBe(starts.length);
+    for (let i = 1; i < starts.length; i++) expect(diffDays(starts[i], starts[i - 1])).toBe(7);
+    expect(plan.weeks.map((w) => w.index)).toEqual(plan.weeks.map((_, i) => i));
+    expect(new Set(sessions.map((s) => s.id)).size).toBe(sessions.length);
+  });
+
+  it("con un solo objetivo es el plan de siempre", () => {
+    const one = generateSeason({ profile, goal: nov, currentVdot: 42, currentWeeklyKm: 30, longestRecentKm: 14, today });
+    const base = generatePlan({ profile, goal: nov, currentVdot: 42, currentWeeklyKm: 30, longestRecentKm: 14, today });
+    expect(one.weeks).toEqual(base.weeks);
+  });
 });

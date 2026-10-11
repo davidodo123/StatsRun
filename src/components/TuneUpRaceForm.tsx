@@ -1,12 +1,14 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { addTuneUpRace, type FormState } from "@/app/actions";
 import { addDays } from "@/lib/dates";
 import { keepForm } from "./keepForm";
 
 export function TuneUpRaceForm({ today, maxDate }: { today: string; maxDate: string }) {
   const [state, action, pending] = useActionState<FormState, FormData>(addTuneUpRace, {});
+  // un objetivo A puede ir después de la carrera principal (hasta dos años); B y C, antes del último objetivo
+  const [priority, setPriority] = useState("B");
   return (
     <form onSubmit={keepForm(action)} className="space-y-3">
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
@@ -16,7 +18,7 @@ export function TuneUpRaceForm({ today, maxDate }: { today: string; maxDate: str
         </label>
         <label className="field">
           Fecha
-          <input className="input" type="date" name="date" min={addDays(today, 1)} max={addDays(maxDate, -1)} required />
+          <input className="input" type="date" name="date" min={addDays(today, 1)} max={priority === "A" ? addDays(today, 730) : addDays(maxDate, -1)} required />
         </label>
         <label className="field">
           Distancia (km)
@@ -36,14 +38,24 @@ export function TuneUpRaceForm({ today, maxDate }: { today: string; maxDate: str
       <fieldset className="space-y-2 text-sm">
         <legend className="mb-1 font-medium">¿Cómo la vas a correr?</legend>
         <label className="flex items-start gap-2 rounded-xl border border-line p-3 has-checked:border-accent">
-          <input type="radio" name="priority" value="B" defaultChecked className="mt-1" />
+          <input type="radio" name="priority" value="A" checked={priority === "A"} onChange={() => setPriority("A")} className="mt-1" />
+          <span>
+            <strong>A · Otro objetivo</strong>
+            <span className="block text-ink-2">
+              Una carrera tan importante como la principal, antes o después de ella (p. ej. una en noviembre y otra en abril). Tiene su propia preparación y
+              afinamiento, y después de correrla, unos días de recuperación antes de preparar la siguiente.
+            </span>
+          </span>
+        </label>
+        <label className="flex items-start gap-2 rounded-xl border border-line p-3 has-checked:border-accent">
+          <input type="radio" name="priority" value="B" checked={priority === "B"} onChange={() => setPriority("B")} className="mt-1" />
           <span>
             <strong>B · A tope</strong>
             <span className="block text-ink-2">Para medir tu forma o hacer marca. Llevas 2-3 días suaves antes y descansas después (un día suave por cada 3 km).</span>
           </span>
         </label>
         <label className="flex items-start gap-2 rounded-xl border border-line p-3 has-checked:border-accent">
-          <input type="radio" name="priority" value="C" className="mt-1" />
+          <input type="radio" name="priority" value="C" checked={priority === "C"} onChange={() => setPriority("C")} className="mt-1" />
           <span>
             <strong>C · Como entreno</strong>
             <span className="block text-ink-2">Por disfrutar del ambiente, a ritmo de umbral. Sustituye a la sesión de calidad y apenas cambia el plan.</span>

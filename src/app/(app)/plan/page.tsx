@@ -7,6 +7,7 @@ import { planCompliance } from "@/lib/engine/planner";
 import { diffDays, mondayOf, shortDate, todayLocal } from "@/lib/dates";
 import { fmtDuration } from "@/lib/format";
 import type { Phase, Plan } from "@/lib/types";
+import { planTitle } from "@/lib/engine/planner";
 
 export const metadata: Metadata = { title: "Planes" };
 
@@ -56,7 +57,7 @@ async function Content() {
           return (
             <Link key={p.id} href={`/plan/anterior/${p.id}`} className="flex items-center justify-between gap-3 rounded-2xl border border-line bg-surface p-4 transition hover:border-accent">
               <span className="min-w-0">
-                <strong className="block truncate">{p.plan.goal.name}</strong>
+                <strong className="block truncate">{planTitle(p.plan)}</strong>
                 <span className="text-xs text-muted">
                   {shortDate(p.plan.weeks[0]?.start ?? p.plan.createdAt.slice(0, 10))} → {shortDate(p.plan.goal.date)} · {p.plan.weeks.length} semanas
                 </span>
@@ -91,7 +92,7 @@ function ActivePlan({ plan, db, today }: { plan: Plan; db: Awaited<ReturnType<ty
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <Pill className="bg-accent text-accent-ink">En marcha</Pill>
-          <strong className="mt-2 block truncate text-xl">{plan.goal.name}</strong>
+          <strong className="mt-2 block truncate text-xl">{planTitle(plan)}</strong>
           <span className="text-sm text-ink-2">
             {shortDate(plan.goal.date)} · {days > 0 ? `faltan ${days} días` : days === 0 ? "¡es hoy!" : "carrera hecha"} · {plan.goal.distanceKm.toLocaleString("es-ES", { maximumFractionDigits: 1 })} km
             {plan.goal.targetTimeSec ? ` · objetivo ${fmtDuration(plan.goal.targetTimeSec)}` : ""}

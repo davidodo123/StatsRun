@@ -155,7 +155,8 @@ export function applyTuneUpRaces(plan: Plan, races: TuneUpRace[], today: string)
 
   for (const r of [...races].sort((a, b) => a.date.localeCompare(b.date))) {
     const wi = plan.weeks.findIndex((w) => r.date >= w.start && r.date <= addDays(w.start, 6));
-    if (r.date < today || r.date >= plan.goal.date || wi < 0) continue;
+    // las A no se tocan aquí: tienen su propio tramo (generateSeason)
+    if (r.priority === "A" || r.date < today || r.date >= plan.goal.date || wi < 0) continue;
     const vdot = plan.startVdot + (plan.targetVdot - plan.startVdot) * clamp(wi / Math.max(1, buildWeeks - 1), 0, 1);
     const p = trainingPaces(vdot);
     const isB = r.priority === "B";
@@ -445,6 +446,80 @@ export function generatePlan(input: PlanInput): Plan {
     warnings,
     notes,
     weeks,
+  };
+}
+
+/** Nombre del plan: su carrera, o todas las de la temporada («Media de noviembre + Maratón de abril»). */
+export const planTitle = (plan: Pick<Plan, "goal" | "objectives">) => (plan.objectives?.length ? plan.objectives.map((o) => o.name).join(" + ") : plan.goal.name);
+
+/**
+ * Temporada con varios objetivos (carreras A): un tramo completo por carrera (construcción y afinamiento),
+ * con la recuperación después de cada una y el siguiente tramo partiendo de la forma con que se acabó el anterior.
+ * Con un solo objetivo es generatePlan tal cual. El plan resultante tiene como objetivo la última carrera.
+ */
+export function generateSeason(input: PlanInput, extraGoals: Goal[] = []): Plan {
+  const goals = [input.goal, ...extraGoals].filter((g) => g.date > input.today).sort((a, b) => a.date.localeCompare(b.date));
+  if (goals.length <= 1) return generatePlan(goals.length ? { ...input, goal: goals[0] } : input);
+  const parts: Plan[] = [];
+  let next = input;
+  for (const goal of goals) {
+    if (goal.date <= next.today) continue;
+    const part = generatePlan({ ...next, goal });
+    parts.push(part);
+    const build = part.weeks.filter((w) => w.phase !== "taper");
+    const longs = part.weeks.flatMap((w) => w.sessions).filter((x) => x.type === "long").map((x) => x.distanceKm);
+    // tras la carrera: los días de recuperación sin plan, y se vuelve a construir desde algo menos que el pico
+    next = {
+      ...next,
+      today: addDays(goal.date, recoveryDaysAfter(goal.distanceKm) + 1),
+      currentVdot: Math.max(next.currentVdot, part.targetVdot),
+      currentWeeklyKm: Math.round(Math.max(next.currentWeeklyKm, ...build.map((w) => w.targetKm)) * 0.7),
+      longestRecentKm: Math.round(Math.max(next.longestRecentKm, ...longs) * 0.8 * 2) / 2,
+    };
+  }
+  // semanas en orden; la de una carrera y la del inicio del tramo siguiente pueden ser la misma
+  const byStart = new Map<string, PlanWeek>();
+  for (const w of parts.flatMap((x) => x.weeks)) {
+    const prev = byStart.get(w.start);
+    if (!prev) byStart.set(w.start, { ...w, sessions: [...w.sessions] });
+    else {
+      prev.sessions = [...prev.sessions, ...w.sessions.filter((x) => !prev.sessions.some((y) => y.id === x.id))].sort((a, b) => a.date.localeCompare(b.date));
+      prev.targetKm = Math.round(prev.sessions.reduce((t, x) => t + x.distanceKm, 0));
+    }
+  }
+  // las semanas de recuperación tras una carrera no tienen sesiones: se rellenan para que no haya huecos
+  const sorted = [...byStart.values()].sort((a, b) => a.start.localeCompare(b.start));
+  const filled: PlanWeek[] = [];
+  for (const w of sorted) {
+    let gap = filled.length ? addDays(filled[filled.length - 1].start, 7) : w.start;
+    while (gap < w.start) {
+      const race = goals.filter((g) => g.date < gap).at(-1);
+      filled.push({
+        index: 0,
+        start: gap,
+        phase: "base",
+        recovery: true,
+        targetKm: 0,
+        sessions: [],
+        focus: `Recuperación${race ? ` tras ${race.name}` : ""}: descanso, paseos o algo muy suave si apetece. Luego empieza la preparación de la siguiente.`,
+      });
+      gap = addDays(gap, 7);
+    }
+    filled.push(w);
+  }
+  const weeks = filled.map((w, index) => ({ ...w, index }));
+  const last = parts[parts.length - 1];
+  const fmt = (g: Goal) => `${g.name} (${g.date})`;
+  return {
+    ...last,
+    startVdot: parts[0].startVdot,
+    objectives: parts.map((x) => ({ name: x.goal.name, date: x.goal.date })),
+    weeks,
+    warnings: [...new Set(parts.flatMap((x) => x.warnings))],
+    notes: [
+      `Temporada con ${parts.length} objetivos: ${goals.map(fmt).join(" y ")}. Cada uno con su construcción y su afinamiento; tras cada carrera, unos días de recuperación sin plan (uno por cada 3 km).`,
+      ...new Set(parts.flatMap((x) => x.notes)),
+    ],
   };
 }
 

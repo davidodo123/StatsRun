@@ -570,3 +570,11 @@ David preguntó si se puede «entrenar» una IA para la app. Opciones: (1) instr
 - **Arreglo en el código** (no solo en el prompt): solo se aplica un `remove` si el diagnóstico es «descargar» o «recuperar». Con «progresar» o «mantener», la sesión se queda tal cual. En el prompt: si hay que bajar carga, que acorte o suavice la sesión, nunca la quite.
 - Para recuperar los días que ya quitó, basta con pulsar «↻ Adaptar con mis datos» en el plan: se rehace con los días de su perfil y la IA ya no puede quitarlos.
 
+## Temporada con varios objetivos
+*2026-10-11*
+
+- Además de las carreras B (a tope) y C (como entreno), ahora hay **A · Otro objetivo**: una carrera tan importante como la principal, **antes o después** de ella (antes las secundarias solo podían ir antes). Se añade en Plan → Temporada → «Añadir carrera».
+- **Plan por tramos** (`generateSeason`): un tramo completo por cada carrera A (construcción + afinamiento), luego **recuperación sin plan** (un día por cada 3 km, como las B: 7 días tras una media, 14 tras un maratón) y el siguiente tramo parte de la forma con que se acabó el anterior (VDOT final, 70 % del volumen pico, 80 % de la tirada más larga). Las semanas se juntan seguidas; la de recuperación sale como «Recuperación tras …» sin sesiones. Las B y C se colocan después dentro del plan, como antes, siempre antes del último objetivo.
+- El plan se llama con todas sus carreras («Villa Romana de Salar + Maratón de abril», `planTitle`) y la tarjeta Temporada las lista en orden con la principal y las A destacadas.
+- Probado en el navegador: con Villa Romana (25 nov) como principal y un maratón el 18 de abril como A salieron 27 semanas seguidas: afinamiento hasta el 25 de noviembre, semana suave, construcción completa con sus descargas y afinamiento hasta el 18 de abril. Tests: las dos carreras dentro, afinamiento en cada una, 7 días sin plan tras la media, semanas sin huecos ni ids repetidos, y con un solo objetivo el plan es idéntico al de siempre.
+
