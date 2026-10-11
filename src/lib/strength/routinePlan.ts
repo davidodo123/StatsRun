@@ -1,16 +1,18 @@
 // Mete las rutinas del usuario en las sesiones de fuerza del plan: las de pierna en los huecos de pierna,
 // las de tren superior en los de superior (el planificador decide qué tipo toca cada día).
-import { STRENGTH_KINDS, strengthSession, type StrengthKind } from "../engine/planner";
+import { STRENGTH_KINDS, isLowerKind, strengthSession, type StrengthKind } from "../engine/planner";
 import type { Db, Phase, Plan } from "../types";
 import { findExercise } from "./catalog";
 import type { Muscle } from "./labels";
 
 export type RoutineZone = "inferior" | "superior" | "completo";
+type UpperGroup = "pecho" | "espalda" | "hombro";
 
 export interface RoutineForPlan {
   id: string;
   name: string;
   zone: RoutineZone;
+  group?: UpperGroup; // si es de tren superior: qué parte trabaja más (para la fuerza por grupos)
   steps: string[];
   durationMin: number;
   covers: Pattern[]; // patrones de movimiento que ya trabaja
@@ -42,9 +44,9 @@ const MUSCLE_PATTERN: Partial<Record<Muscle, Pattern>> = {
 const STEP_PATTERNS: [Pattern, RegExp][] = [
   ["pliometria", /salto|pogo|comba|multisalto|pliometr/i],
   ["vertical", /dominada|jalón/i],
-  ["hombro", /press de hombro|press militar/i],
-  ["empuje", /flexion|press de banca|press con mancuernas/i],
-  ["tiron", /remo/i],
+  ["hombro", /press de hombro|press militar|elevaciones|pájaros|face pull|remo al mentón/i],
+  ["empuje", /flexion|press de banca|press con mancuernas|press inclinado|fondos|aperturas|tríceps/i],
+  ["tiron", /remo|curl de bíceps/i],
   ["core", /core|plancha|dead bug|pallof|rueda/i],
   ["sentadilla", /sentadilla|búlgara|step-up|zancada/i],
   ["bisagra", /peso muerto|hip thrust|puente|nórdico/i],
@@ -75,6 +77,19 @@ export function routineZone(muscles: Muscle[][]): RoutineZone {
   if (lower && lower >= upper * 2) return "inferior";
   if (upper && upper >= lower * 2) return "superior";
   return "completo";
+}
+
+const GROUP_OF: Partial<Record<Muscle, UpperGroup>> = { pecho: "pecho", triceps: "pecho", espalda: "espalda", dorsal: "espalda", biceps: "espalda", trapecio: "espalda", hombros: "hombro" };
+
+/** Parte del tren superior que más trabaja una rutina (por el músculo principal de cada ejercicio). */
+export function upperGroup(muscles: Muscle[][]): UpperGroup | undefined {
+  const n: Record<UpperGroup, number> = { pecho: 0, espalda: 0, hombro: 0 };
+  for (const m of muscles) {
+    const g = GROUP_OF[m[0]];
+    if (g) n[g]++;
+  }
+  const best = (Object.keys(n) as UpperGroup[]).sort((a, b) => n[b] - n[a])[0];
+  return n[best] ? best : undefined;
 }
 
 const range = (xs: number[]) => {
@@ -108,6 +123,7 @@ export function routinesForPlan(db: Pick<Db, "routines" | "customExercises">): R
       id: r.id,
       name: r.name,
       zone: routineZone(exercises.map(({ x }) => x?.muscles ?? [])),
+      group: upperGroup(exercises.map(({ x }) => x?.muscles ?? [])),
       steps,
       durationMin: Math.min(120, Math.max(20, Math.round(sets * 2.5 + 5))),
       covers,
@@ -122,6 +138,9 @@ const WANTS: Record<StrengthKind, RoutineZone[]> = {
   posterior: ["inferior", "completo"],
   superior: ["superior", "completo"],
   completo: ["completo", "inferior", "superior"],
+  pecho: ["superior", "completo"],
+  espalda: ["superior", "completo"],
+  hombro: ["superior", "completo"],
 };
 
 /**
@@ -141,14 +160,18 @@ export function applyStrengthRoutines(plan: Plan, routines: RoutineForPlan[], to
   for (const w of plan.weeks)
     w.sessions = w.sessions.map((s) => {
       if (s.type !== "strength" || !s.strengthKind || s.date < today) return s;
-      const base = { ...strengthSession(s.date, w.phase, s.strengthKind), id: s.id };
+      // día de pierna de la fuerza por grupos: ese día no hay carrera
+      const noRun = s.strengthKind === "pierna" && !w.sessions.some((x) => x.date === s.date && x.type !== "strength");
+      const base = { ...strengthSession(s.date, w.phase, s.strengthKind, noRun), id: s.id };
       if (w.phase === "taper") return base;
       // primero, una rutina hecha para este hueco y esta fase (las de la IA); si no, una de la misma zona
       const fits = routines.filter((r) => !r.phases || r.phases.includes(w.phase));
       const exact = fits.filter((r) => r.kind === s.strengthKind);
+      // por grupos: el día de espalda, una rutina de espalda (nunca la de pecho)
+      const group = s.strengthKind === "pecho" || s.strengthKind === "espalda" || s.strengthKind === "hombro" ? s.strengthKind : undefined;
       const zone = WANTS[s.strengthKind].find((z) => fits.some((r) => r.zone === z));
-      const key = exact.length ? `k:${s.strengthKind}` : `z:${zone}`;
-      const options = exact.length ? exact : fits.filter((r) => r.zone === zone);
+      const key = exact.length ? `k:${s.strengthKind}` : group ? `g:${group}` : `z:${zone}`;
+      const options = exact.length ? exact : group ? fits.filter((r) => r.zone === "superior" && r.group === group) : fits.filter((r) => r.zone === zone);
       if (!options.length) return base;
       turn[key] ??= 0;
       const r = options[turn[key]++ % options.length];
@@ -162,7 +185,7 @@ export function applyStrengthRoutines(plan: Plan, routines: RoutineForPlan[], to
         ...base,
         title: r.name,
         description: extra.length
-          ? `Tu rutina «${r.name}» y, marcado con +, lo que le falta del plan para trabajar ${s.strengthKind === "superior" ? "todo el tren superior" : "toda la pierna"}. ${base.description}`
+          ? `Tu rutina «${r.name}» y, marcado con +, lo que le falta del plan para trabajar ${isLowerKind(s.strengthKind) ? "toda la pierna" : "todo el tren superior"}. ${base.description}`
           : `Tu rutina «${r.name}». ${base.description}`,
         steps,
         durationMin: Math.min(120, maintenance ? Math.round(minutes * 0.7) : minutes),

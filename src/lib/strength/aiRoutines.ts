@@ -1,6 +1,6 @@
 // Entrenador IA de fuerza: lo que se le manda (catálogo y reglas) y la validación de las rutinas que propone.
 // La llamada en sí está en strength-actions (generateStrengthRoutines).
-import { STRENGTH_KINDS, type StrengthKind } from "../engine/planner";
+import { strengthKindsFor, type StrengthKind } from "../engine/planner";
 import type { Db, Phase, Routine, RoutineExercise, RoutineSet } from "../types";
 import { addDays } from "../dates";
 import { CATALOG } from "./catalog";
@@ -9,7 +9,7 @@ import { EXAMPLES_RULE, PREFERENCES_RULE, preferencesFor, ratedExamples } from "
 import { STUDY_RULE, studyFor } from "../knowledge";
 
 const EQ_IDS = new Set<string>(EQUIPMENT.map((e) => e.id));
-const KINDS: StrengthKind[] = ["pierna", "posterior", "superior", "completo"];
+const KINDS: StrengthKind[] = ["pierna", "posterior", "superior", "completo", "pecho", "espalda", "hombro"];
 export const BLOCK_PHASES: Record<"base" | "fuerza", Phase[]> = { base: ["base"], fuerza: ["construccion", "especifico"] };
 
 // solo fuerza y pliometría, sin halterofilia, powerlifting ni strongman: lo útil para un corredor
@@ -56,7 +56,7 @@ PRINCIPIOS (resumen propio de la evidencia: Balsalobre-Fernández 2016, Blagrove
 - Intensidad por RIR: RPE 7-8 (2-3 repeticiones en reserva). Nunca al fallo en los multiarticulares. Sin agujetas grandes.
 - Bloque "base": técnica y tolerancia. 2-3 series de 8-12 en multiarticulares, unilaterales, gemelo y sóleo con muchas repeticiones (15-25), core antirrotación, pliometría suave (comba, pogo).
 - Bloque "fuerza" (construcción y específico): multiarticular pesado 3-4 × 4-6 a RPE 7-8 y pliometría de calidad (3-5 × 3-6 saltos, al principio de la sesión y fresco). Gemelo pesado, excéntricos de isquio (nórdico), aductores (Copenhague).
-- Tipos de sesión: "pierna" (cuádriceps, glúteo, gemelo; sentadilla, búlgara, step-up, zancada); "posterior" (isquios, glúteo; bisagra de cadera, hip thrust, nórdico; con la pliometría); "superior" (empuje y tirón horizontal y vertical, hombro, core); "completo" (cuerpo entero, si solo hay 1 sesión a la semana).
+- Tipos de sesión: "pierna" (cuádriceps, glúteo, gemelo; sentadilla, búlgara, step-up, zancada); "posterior" (isquios, glúteo; bisagra de cadera, hip thrust, nórdico; con la pliometría); "superior" (empuje y tirón horizontal y vertical, hombro, core); "completo" (cuerpo entero, si solo hay 1 sesión a la semana). Si entrena por grupos: "pecho" (pecho y tríceps), "espalda" (espalda y bíceps), "hombro" (hombro y brazos) y "pierna" es la pierna entera (cuádriceps, isquios, glúteo, gemelo) en un día sin correr.
 - Con poco peso (p. ej. mancuernas de 15-18 kg o una kettlebell), para cargar la pierna usa unilaterales (búlgara, step-up, peso muerto rumano a una pierna), más series, tempo lento o pausas.
 - Usa lo que el atleta dice que puede hacer para elegir los kilos y las repeticiones iniciales. Nunca más kilos de los que tiene.
 - Si tiene lesiones o molestias, no cargues esa zona: elige variantes sin dolor y menciónalo en "notes".
@@ -91,7 +91,7 @@ Sin emojis en ningún texto. Responde SOLO con JSON:
 /** Lo que se le pide: material, capacidad, lesiones, carrera y qué rutinas hacen falta. */
 export function strengthRequest(db: Db, material: string, ability: string, today: string) {
   const per = Math.min(4, db.profile?.strengthPerWeek ?? 2) || 2;
-  const kinds = [...new Set(STRENGTH_KINDS[per] ?? STRENGTH_KINDS[2])];
+  const kinds = [...new Set(strengthKindsFor(per, db.profile?.strengthStyle))];
   const plan = db.plan;
   // fases que quedan por delante (incluida la semana en curso)
   const phases = plan ? [...new Set(plan.weeks.filter((w) => addDays(w.start, 6) >= today).map((w) => w.phase))] : [];

@@ -619,3 +619,13 @@ David preguntó si se puede «entrenar» una IA para la app. Opciones: (1) instr
 - Al marcar un día (o un rango) sin poder entrenar se guarda una copia del plan y de los días bloqueados de antes (`lastSkip`). Sale un aviso «Marcaste el … como día sin poder entrenar · Deshacer» en Inicio, Plan y Perfil hasta el día siguiente; «Deshacer» devuelve el plan y los días tal como estaban.
 - Si el plan se rehízo después (otro objetivo, «Adaptar con mis datos»), el aviso ya no sale: la copia sería de otro plan.
 - La IA que reajusta en segundo plano descarta su respuesta si mientras pensaba cambiaron los días sin entrenar, para no volver a meter el cambio deshecho.
+
+## Fuerza por grupos
+*2026-10-11*
+
+- Lo pidió David: con fuerza «por grupos» (lunes pecho, martes espalda, miércoles pierna) quiere un día sin correr entre semana; con fuerza general (cuerpo entero, poca fatiga), correr todos sus días.
+- Perfil → «Tipo de fuerza» (`strengthStyle`: general o grupos; sin indicar, general).
+- Por grupos, el **día de pierna** es el día disponible dos días antes de la tirada larga (o el más lejano a ella) y ese día **no se corre**; las de tren superior van seguidas en los días anteriores. Con 2 días: superior + pierna; con 3: pecho, espalda, pierna; con 4: + hombro. Con 3 días disponibles o menos se corre en todos.
+- En afinamiento (1 sesión, activación) y semana de carrera se vuelve a correr todos los días.
+- Plantillas nuevas: «Pecho y tríceps», «Espalda y bíceps», «Hombro y brazos», con series según la fase (3 × 8-12 en base, 4 × 6-8 en construcción, 2 × 6-8 de mantenimiento).
+- Las rutinas propias van a su día por el músculo principal (una de pecho nunca cae el día de espalda). La IA del día a día no puede mover carreras al día de pierna, y la IA de fuerza conoce los tipos nuevos.

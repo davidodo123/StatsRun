@@ -126,6 +126,8 @@ Base: [[Estudio entrenamiento#6. La Pirámide de Entrenamiento (Helms, Valdez, M
 ## 🐞 Fallos que vio David (2026-10-11)
 - [x] **«Borrar del historial» no funcionaba**: el plan sí se borraba, pero al volver a Planes se veía la lista de antes (caché del navegador). Arreglado en todas las acciones que guardan y redirigen (terminar plan, borrar rutina, ejercicio propio, guardar entreno…) — *hecho 2026-10-11, pendiente de comprobar*
 - [x] **Deshacer «No puedo ese día»** si se pulsa sin querer: aviso con botón «Deshacer» en Inicio, Plan y Perfil hasta el día siguiente — *hecho 2026-10-11, pendiente de comprobar* → [[Decisiones#Deshacer «No puedo ese día»]]
+- [x] **Fuerza por grupos**: en Perfil, «Tipo de fuerza»: general (cuerpo entero, se corre todos los días) o por grupos (pecho, espalda, pierna; el día de pierna no se corre, dos días antes de la tirada larga) — *hecho 2026-10-11, pendiente de comprobar* → [[Decisiones#Fuerza por grupos]]
+- [ ] **Semana del 12 empieza el miércoles** en el plan de David (en local sale completa): esperando capturas de la tarjeta «Entrenador IA», la semana 1 y los días del perfil
 
 ## 🧠 IA que aprende de ti (opción 2: sin entrenar el modelo) → [[Decisiones#IA que aprende de ti]]
 - [x] Bloque 1 · Valoraciones (pulgar arriba/abajo con motivo) y memoria de preferencias que leen las tres IA; el chat apunta solo lo que le cuentas — *hecho 2026-10-10, pendiente de comprobar*

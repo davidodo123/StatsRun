@@ -1,7 +1,7 @@
 // Generador de planes de entrenamiento periodizados hacia una carrera objetivo.
 // Basado en: VDOT de Daniels (ritmos), periodización Lydiard/Pfitzinger (fases),
 // regla del 10 % (progresión), semanas de descarga cada 4 y taper según distancia.
-import type { Activity, Goal, Level, PaceRange, Phase, Plan, PlannedSession, PlanWeek, Profile, SessionType, TuneUpRace } from "../types";
+import type { Activity, Goal, Level, PaceRange, Phase, Plan, PlannedSession, PlanWeek, Profile, SessionType, StrengthStyle, TuneUpRace } from "../types";
 import { addDays, diffDays, mondayOf, shortDate, weekday } from "../dates";
 import { fmtDuration, fmtPace, fmtPaceRange } from "../format";
 import { bmi, flatEquivalentKm, heatFactor, raceTimeFromVdot, trainingPaces, vdotFromRace, type TrainingPaces } from "./physiology";
@@ -336,7 +336,7 @@ export function generatePlan(input: PlanInput): Plan {
   // ---- Semanas ----
   const maxVol = Math.max(...vols);
   const avail = availableDaysOf(profile);
-  const days = avail.length;
+  const style = profile.strengthStyle ?? "general";
   const runWalkWeeks = lvl === 0 ? Math.min(6, Math.ceil(buildWeeks / 2)) : heavy && lvl === 1 ? 3 : 0;
   let longKmPrev = Math.max(input.longestRecentKm, lvl === 0 ? 3 : 5);
   let peakLong = 0; // la tirada más larga del propio plan (el afinamiento baja desde ella, no desde el historial)
@@ -354,10 +354,17 @@ export function generatePlan(input: PlanInput): Plan {
     const phaseIdx = phases.slice(0, w).filter((p) => p === phase).length; // nº de semana dentro de la fase
     const runWalk = w < runWalkWeeks;
 
+    // fuerza por grupos (pecho, espalda, pierna…): el día de pierna no se corre
+    const nStrength = isRaceWeek ? 0 : phase === "taper" ? Math.min(1, profile.strengthPerWeek) : Math.min(4, profile.strengthPerWeek);
+    const kinds = strengthKindsFor(nStrength, style);
+    const legDay = style === "grupos" && kinds.includes("pierna") ? legDayOf(avail, profile.longRunDay) : undefined;
+    const runAvail = legDay === undefined ? avail : avail.filter((d) => d !== legDay);
+    const days = runAvail.length;
+
     const q2Active =
       lvl >= 2 || (lvl === 1 && days >= 5 && (phase === "construccion" || phase === "especifico"));
 
-    const layout = weekLayout(avail, profile.longRunDay);
+    const layout = weekLayout(runAvail, profile.longRunDay);
     const slots = layout.map(([d, s]) => [d, s === "Q2" && (!q2Active || recovery || (isRaceWeek && cat !== "5k")) ? "E" : s] as [number, Slot]);
 
     // Tirada larga
@@ -412,9 +419,10 @@ export function generatePlan(input: PlanInput): Plan {
     if (isRaceWeek) sessions.push(raceSession(goal, racePaceFlat * courseFactor, predictedRace));
 
     // Fuerza: tipos según cuántas por semana y colocadas con el reparto de cargas (placeStrength)
-    const nStrength = isRaceWeek ? 0 : phase === "taper" ? Math.min(1, profile.strengthPerWeek) : Math.min(4, profile.strengthPerWeek);
     const nextKeys = layout.filter(([, sl]) => sl !== "E" && sl !== "R").map(([d]) => addDays(weekStart, 7 + d));
-    for (const [date, kind] of placeStrength(sessions, STRENGTH_KINDS[nStrength] ?? [], nextKeys)) sessions.push(strengthSession(date, phase, kind));
+    const placed =
+      legDay === undefined ? placeStrength(sessions, kinds, nextKeys) : placeGroupStrength(weekStart, kinds, legDay, avail, layout.find(([, sl]) => sl === "L")?.[0], today);
+    for (const [date, kind] of placed) sessions.push(strengthSession(date, phase, kind, legDay !== undefined && kind === "pierna"));
 
     sessions.sort((a, b) => a.date.localeCompare(b.date) || (a.type === "strength" ? 1 : -1));
     weeks.push({
@@ -817,15 +825,44 @@ function tuneUpSession(r: TuneUpRace, p: TrainingPaces, vdot: number): PlannedSe
  * Tipo de sesión de fuerza. Con 1 a la semana, cuerpo entero; con 2, pierna y tren superior; con 3, pierna pesada,
  * cadena posterior con pliometría y tren superior con core (estudio §7 y §9.6: 2-3 sesiones, cargas + pliometría).
  */
-export type StrengthKind = "pierna" | "posterior" | "superior" | "completo";
+export type StrengthKind = "pierna" | "posterior" | "superior" | "completo" | "pecho" | "espalda" | "hombro";
 // con 4, la cuarta es otra de tren superior: no carga las piernas para correr
 export const STRENGTH_KINDS: Record<number, StrengthKind[]> = { 1: ["completo"], 2: ["pierna", "superior"], 3: ["pierna", "posterior", "superior"], 4: ["pierna", "posterior", "superior", "superior"] };
+// por grupos: un día para cada parte; la pierna entera (también la posterior) va en su día
+const GROUP_KINDS: Record<number, StrengthKind[]> = { 1: ["completo"], 2: ["superior", "pierna"], 3: ["pecho", "espalda", "pierna"], 4: ["pecho", "espalda", "pierna", "hombro"] };
+export const strengthKindsFor = (n: number, style: StrengthStyle = "general"): StrengthKind[] => (style === "grupos" ? GROUP_KINDS : STRENGTH_KINDS)[n] ?? [];
 export const isLowerKind = (k?: StrengthKind) => k === "pierna" || k === "posterior" || k === "completo";
+
+/** Día de pierna de la fuerza por grupos: dos días antes de la tirada larga (o lo más lejos posible de ella). Con 3 días o menos se corre en todos. */
+export function legDayOf(avail: number[], longRunDay: number): number | undefined {
+  if (avail.length < 4) return undefined;
+  const L = avail.includes(longRunDay) ? longRunDay : (avail.find((d) => d >= 5) ?? avail.at(-1)!);
+  for (const k of [2, 3, 4, 5]) {
+    const d = (L - k + 7) % 7;
+    if (avail.includes(d)) return d;
+  }
+  return avail.find((d) => d !== L && d !== (L + 6) % 7 && d !== (L + 1) % 7);
+}
+
+/** Fuerza por grupos: la pierna en su día (sin correr) y las de tren superior en los días de antes, seguidos (lunes pecho, martes espalda…). */
+function placeGroupStrength(weekStart: string, kinds: StrengthKind[], legDay: number, avail: number[], longDay: number | undefined, today: string): [string, StrengthKind][] {
+  const out: [string, StrengthKind][] = [];
+  const legDate = addDays(weekStart, legDay);
+  if (legDate >= today) out.push([legDate, "pierna"]);
+  // de la víspera del día de pierna hacia atrás; el día de la tirada, solo si no queda otro
+  const order = [1, 2, 3, 4, 5, 6].map((k) => (legDay - k + 7) % 7).filter((d) => avail.includes(d));
+  const days = [...order.filter((d) => d !== longDay), ...order.filter((d) => d === longDay)].map((d) => addDays(weekStart, d)).filter((d) => d >= today);
+  const upper = kinds.filter((k) => k !== "pierna");
+  // en orden de la semana: pecho, espalda… seguidos hasta el día de pierna
+  const slots = days.slice(0, upper.length).sort();
+  slots.forEach((d, i) => out.push([d, upper[i]]));
+  return out;
+}
 
 type Template = { title: string; steps: string[] };
 const ACTIVATION: Template = { title: "Activación ligera", steps: ["2 rondas: puente glúteo 12, plancha 30″, monster walk con banda 10/lado", "Movilidad 10′"] };
 
-const STRENGTH: Record<Phase, Record<StrengthKind, Template>> = {
+const STRENGTH: Record<Phase, Record<"pierna" | "posterior" | "superior" | "completo", Template>> = {
   base: {
     pierna: {
       title: "Fuerza de pierna",
@@ -932,9 +969,36 @@ const STRENGTH: Record<Phase, Record<StrengthKind, Template>> = {
   taper: { pierna: ACTIVATION, posterior: ACTIVATION, superior: ACTIVATION, completo: ACTIVATION },
 };
 
-export function strengthSession(date: string, phase: Phase, kind: StrengthKind): PlannedSession {
-  const s = STRENGTH[phase][kind];
-  const when = kind === "superior" ? "Tren superior: no carga las piernas para correr." : "Después de correr o en otro momento del día.";
+// fuerza por grupos: ejercicios de cada parte; las series y repeticiones cambian con la fase
+const GROUPS: Record<"pecho" | "espalda" | "hombro", { title: string; main: string[]; rest: string[] }> = {
+  pecho: { title: "Pecho y tríceps", main: ["press de banca o con mancuernas", "press inclinado con mancuernas"], rest: ["fondos o flexiones", "aperturas con mancuernas o en polea", "extensión de tríceps"] },
+  espalda: { title: "Espalda y bíceps", main: ["dominadas (asistidas si hace falta) o jalón al pecho", "remo con barra o mancuerna"], rest: ["remo a una mano", "face pull o pájaros con banda", "curl de bíceps"] },
+  hombro: { title: "Hombro y brazos", main: ["press militar con mancuernas", "remo al mentón con banda o elevaciones frontales"], rest: ["elevaciones laterales", "pájaros o face pull", "curl de bíceps y extensión de tríceps"] },
+};
+
+function groupTemplate(phase: Phase, kind: keyof typeof GROUPS): Template {
+  if (phase === "taper") return ACTIVATION;
+  const g = GROUPS[kind];
+  const [main, rest, core, title] =
+    phase === "base"
+      ? ["3 × 8-12", "3 × 10-15", "Core: dead bug 3 × 10 + press Pallof 3 × 10/lado", g.title]
+      : phase === "construccion"
+        ? ["4 × 6-8", "3 × 10-12", "Core antirrotación: press Pallof 3 × 10/lado + rueda abdominal 3 × 8", g.title]
+        : ["2 × 6-8", "2 × 10-12", "Core: plancha 2 × 40″", `${g.title} (mantenimiento)`];
+  const rpe = phase === "construccion" ? "RPE 8" : "RPE 7";
+  return {
+    title,
+    steps: [...g.main.map((x) => `${main} ${x} a ${rpe}`), ...g.rest.map((x) => `${rest} ${x}`), core, "Progresión: cuando hagas el máximo de repeticiones en todas las series, sube el peso"],
+  };
+}
+
+export function strengthSession(date: string, phase: Phase, kind: StrengthKind, noRun = false): PlannedSession {
+  const s = kind === "pecho" || kind === "espalda" || kind === "hombro" ? groupTemplate(phase, kind) : STRENGTH[phase][kind];
+  const when = noRun
+    ? "Día de pierna: hoy no se corre, para que las piernas no carguen dos veces."
+    : isLowerKind(kind)
+      ? "Después de correr o en otro momento del día."
+      : "Tren superior: no carga las piernas para correr.";
   return { ...mk(date, "strength", s.title, when, s.steps, 0, phase === "taper" ? 20 : 40), strengthKind: kind };
 }
 
@@ -963,7 +1027,7 @@ function placeStrength(run: PlannedSession[], kinds: StrengthKind[], nextKeys: s
   const order = [...kinds].sort((a, b) => Number(b === "posterior") - Number(a === "posterior"));
   for (const kind of order) {
     const d =
-      kind === "superior"
+      !isLowerKind(kind)
         ? pick((x) => !hardOn(x), () => true)
         : kind === "posterior"
           ? pick((x) => !hardOn(x) && !beforeKey(x), (x) => !explosiveOn(x) && !beforeKey(x), (x) => !explosiveOn(x))

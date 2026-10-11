@@ -21,9 +21,13 @@ export interface Profile {
   availableDays?: number[]; // días de la semana en que puede entrenar (0 = lunes ... 6 = domingo)
   longRunDay: number; // 0 = lunes ... 6 = domingo
   strengthPerWeek: number; // 0-4 con plan de carrera; hasta 6 si solo hace fuerza
+  strengthStyle?: StrengthStyle; // cómo reparte la fuerza (sin indicar = general)
   injuries?: string;
   focus?: Focus; // qué entrena (sin indicar = los dos, como antes)
 }
+
+/** Fuerza general (cuerpo entero, poca fatiga: se corre todos los días) o por grupos (pecho, espalda, pierna…: el día de pierna no se corre). */
+export type StrengthStyle = "general" | "grupos";
 
 /** Qué entrena: solo correr, solo fuerza o los dos. Cambia el Inicio, el menú y el perfil. */
 export type Focus = "running" | "fuerza" | "ambos";
@@ -151,7 +155,7 @@ export interface PlannedSession {
   pace?: PaceRange;
   zone?: string;
   aiAdjusted?: boolean; // contenido reescrito por el entrenador IA
-  strengthKind?: "pierna" | "posterior" | "superior" | "completo"; // fuerza: qué trabaja
+  strengthKind?: "pierna" | "posterior" | "superior" | "completo" | "pecho" | "espalda" | "hombro"; // fuerza: qué trabaja
   routineId?: string; // fuerza: rutina del usuario que toca ese día
 }
 
@@ -247,7 +251,7 @@ export interface Routine {
   notes?: string;
   folder?: string; // carpeta en la que se agrupa (Gimnasio, Casa…)
   source?: "ia"; // creada por el entrenador IA de fuerza (se sustituye al volver a pedirla)
-  kind?: "pierna" | "posterior" | "superior" | "completo"; // hueco del plan para el que está hecha
+  kind?: "pierna" | "posterior" | "superior" | "completo" | "pecho" | "espalda" | "hombro"; // hueco del plan para el que está hecha
   phases?: Phase[]; // fases del plan en que se usa (sin fases = cualquiera)
   createdAt: string;
   updatedAt: string;

@@ -148,6 +148,18 @@ export function ProfileForm({ profile, initialFocus }: { profile?: Profile; init
                 : "Para ganar músculo, cada músculo 2 veces por semana: con 3-4 días va bien. Te sirve de objetivo semanal."}
             </p>
           </div>
+          {runner && (
+            <label className="field sm:col-span-2">
+              Tipo de fuerza
+              <select className="input" name="strengthStyle" defaultValue={p?.strengthStyle ?? "general"}>
+                <option value="general">General: cuerpo entero y ligera (corres todos tus días)</option>
+                <option value="grupos">Por grupos: pecho, espalda, pierna… (el día de pierna no corres)</option>
+              </select>
+              <span className="text-xs font-normal text-muted">
+                Por grupos, con 3 días: pecho y espalda los dos días antes del de pierna, y la pierna dos días antes de la tirada larga, sin correr ese día.
+              </span>
+            </label>
+          )}
           <label className="field sm:col-span-2 md:col-span-3">
             Lesiones o molestias (opcional)
             <input className="input" name="injuries" defaultValue={p?.injuries} placeholder="Ej.: fascitis plantar en 2024, rodilla derecha sensible" />

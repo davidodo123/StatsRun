@@ -25,6 +25,7 @@ function profileFor(i: number): Profile {
     ...(i % 3 === 0 ? { availableDays: [0, 2, 4, 5, 6].slice(0, Math.max(2, days % 6)) } : {}),
     longRunDay: [6, 5, 0][i % 3],
     strengthPerWeek: i % 5, // 0-4
+    ...(i % 4 === 1 ? { strengthStyle: "grupos" as const } : {}),
   };
 }
 
@@ -38,7 +39,7 @@ describe("planificador con muchas combinaciones", () => {
     const km = DISTANCES[i % DISTANCES.length];
     const weeksOut = [3, 8, 16, 24][(i >> 2) % 4];
     const goal = { name: "Carrera", distanceKm: km, date: addDays(today, weeksOut * 7 + (i % 7)), targetTimeSec: undefined };
-    it(`#${n++} ${profile.level} · ${km} km · ${weeksOut} sem · ${profile.daysPerWeek} días · fuerza ${profile.strengthPerWeek}`, () => {
+    it(`#${n++} ${profile.level} · ${km} km · ${weeksOut} sem · ${profile.daysPerWeek} días · fuerza ${profile.strengthPerWeek}${profile.strengthStyle === "grupos" ? " por grupos" : ""}`, () => {
       const plan = generatePlan({ profile, goal, currentVdot: 30 + (i % 25), currentWeeklyKm: profile.weeklyKm, longestRecentKm: profile.longestRunKm, today });
       const sessions = plan.weeks.flatMap((w) => w.sessions);
       const avail = availableDaysOf(profile);
@@ -71,6 +72,9 @@ describe("planificador con muchas combinaciones", () => {
         // si había otro día libre de esa semana
         const strength = w.sessions.filter((s) => s.type === "strength");
         expect(strength.length).toBeLessThanOrEqual(profile.strengthPerWeek);
+        // por grupos, el día de pierna no se corre
+        if (profile.strengthStyle === "grupos" && avail.length >= 4 && strength.length >= 2)
+          for (const st of strength.filter((x) => x.strengthKind === "pierna")) expect(runDays.has(st.date)).toBe(false);
         for (const st of strength) {
           const next = sessions.filter((s) => diffDays(s.date, st.date) === 1);
           expect(next.some((s) => s.type === "race")).toBe(false);

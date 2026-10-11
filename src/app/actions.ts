@@ -79,6 +79,7 @@ export async function saveProfile(_: FormState, fd: FormData): Promise<FormState
     availableDays,
     longRunDay,
     strengthPerWeek: Math.round(Math.min(runner ? 4 : 6, Math.max(0, num(fd, "strengthPerWeek") ?? 1))),
+    strengthStyle: fd.get("strengthStyle") === "grupos" ? "grupos" : runner ? "general" : prev?.strengthStyle,
     injuries: String(fd.get("injuries") ?? "").trim() || undefined,
     focus,
   };
@@ -88,7 +89,7 @@ export async function saveProfile(_: FormState, fd: FormData): Promise<FormState
   // si cambia la disponibilidad, rehacer el plan sobre los nuevos días
   const db = await getDb();
   const sameSchedule =
-    prev && availableDaysOf(prev).join() === availableDays.join() && prev.longRunDay === longRunDay && prev.strengthPerWeek === profile.strengthPerWeek;
+    prev && availableDaysOf(prev).join() === availableDays.join() && prev.longRunDay === longRunDay && prev.strengthPerWeek === profile.strengthPerWeek && (prev.strengthStyle ?? "general") === (profile.strengthStyle ?? "general");
   if (db.plan && !sameSchedule) {
     await rebuildPlan(db);
     await scheduleAiAdapt();

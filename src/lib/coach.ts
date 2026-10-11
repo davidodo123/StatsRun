@@ -116,7 +116,7 @@ PRINCIPIOS:
 - "recuperacionSalud" (si viene): sueño, pulso en reposo y VFC frente a su línea base de 30 días. Ya cuentan en el diagnóstico; menciónalos con sus números cuando expliquen el veredicto («duermes 5,8 h de media», «el pulso en reposo va 6 ppm por encima de lo normal»). Una VFC baja un solo día no significa nada: lo que cuenta es la media de 7 días.
 
 FUERZA ("strength", distanceKm 0) para corredores:
-- 1-3 sesiones/semana según "fuerzaPorSemana" (1 en afinamiento). Cada sesión trae "tipoFuerza": "pierna" (fuerza pesada de pierna), "posterior" (cadena posterior + pliometría), "superior" (tren superior y core) o "completo".
+- 1-3 sesiones/semana según "fuerzaPorSemana" (1 en afinamiento). Cada sesión trae "tipoFuerza": "pierna" (fuerza pesada de pierna), "posterior" (cadena posterior + pliometría), "superior" (tren superior y core) o "completo". Con fuerza por grupos: "pecho", "espalda", "hombro" (tren superior, no cargan las piernas) y "pierna" en un día sin correr: no pongas carrera ese día.
 - Si la sesión trae "rutina", es una rutina del propio atleta (sus ejercicios están en "rutinasDeFuerza"): respeta sus ejercicios. Puedes quitar series (descarga, fatiga) o quitar saltos (molestias), pero no la sustituyas por otra rutina ni inventes ejercicios. Nunca cambies una sesión de tren superior por una de pierna ni al revés.
 - Tren superior y core no cansan las piernas: no interfieren con la carrera y pueden ir cualquier día. La de pierna y la posterior sí: nunca el día antes de la tirada larga o de una sesión clave.
 - Mira "fuerza" en las actividades recientes (músculos, series, volumen): tras una sesión pesada de pierna (cuádriceps, isquios, glúteos), el día siguiente no pongas calidad ni tirada larga; si fue de tren superior, sigue con normalidad.
@@ -164,9 +164,13 @@ function buildContext(db: Db, today: string) {
   // carreras secundarias: ni el mismo día ni el día antes se puede mover nada
   const raceDates = plan.weeks.flatMap((w) => w.sessions).filter((s) => s.type === "race" && s.date !== plan.goal.date).map((s) => s.date);
   const nearRace = (d: string) => raceDates.some((r) => diffDays(r, d) === 0 || diffDays(r, d) === 1);
+  // el día de pierna de la fuerza por grupos se queda sin correr
+  const legDays = new Set(
+    plan.weeks.flatMap((w) => w.sessions.filter((s) => s.strengthKind === "pierna" && !w.sessions.some((x) => x.date === s.date && x.type !== "strength")).map((s) => s.date)),
+  );
   const freeDates: string[] = [];
   for (let d = today; d < end && d <= lastDay; d = addDays(d, 1))
-    if (avail.includes(weekday(d)) && !blocked.has(d) && weekOf(d) && !nearRace(d)) freeDates.push(d);
+    if (avail.includes(weekday(d)) && !blocked.has(d) && weekOf(d) && !nearRace(d) && !(profile.strengthStyle === "grupos" && legDays.has(d))) freeDates.push(d);
 
   const missed = [...matches.values()].filter((m) => m.session.date < today && diffDays(today, m.session.date) <= 7 && (m.status === "missed" || m.status === "partial"));
 
