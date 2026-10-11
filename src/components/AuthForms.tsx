@@ -5,12 +5,13 @@ import { useFormStatus } from "react-dom";
 import { createAccount, linkAccount } from "@/app/auth-actions";
 import type { FormState } from "@/app/actions";
 import { keepForm } from "./keepForm";
+import { LogoMark } from "./LogoMark";
 
 export function AuthShell({ title, subtitle, children }: { title: string; subtitle: string; children: React.ReactNode }) {
   return (
     <div className="mx-auto w-full max-w-sm py-10">
       <div className="mb-6 flex items-center gap-2 text-lg font-bold tracking-tight">
-        <span className="grid h-8 w-8 place-items-center rounded-lg bg-accent text-accent-ink">▲</span>
+        <LogoMark />
         <span>
           Run-In-<span className="text-accent">Out</span>
         </span>

@@ -5,6 +5,7 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { logout } from "@/app/auth-actions";
 import type { Focus } from "@/lib/types";
+import { LogoMark } from "./LogoMark";
 
 const ITEMS = [
   { href: "/", label: "Inicio", icon: "M3 12l9-8 9 8M5 10v10h5v-6h4v6h5V10" },
@@ -48,7 +49,7 @@ const icon = (href: string) => ITEMS.find((i) => i.href === href)!.icon;
 function Logo({ compact }: { compact?: boolean }) {
   return (
     <>
-      <span className={`grid place-items-center rounded-lg bg-accent text-accent-ink ${compact ? "h-7 w-7 text-sm" : "h-8 w-8"}`}>▲</span>
+      <LogoMark className={compact ? "h-7 w-7" : "h-8 w-8"} />
       {/* un solo bloque: el contenedor flex separaría «Run-In-» de «Out» */}
       <span>
         Run-In-<span className="text-accent">Out</span>
