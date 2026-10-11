@@ -111,7 +111,9 @@ function MobileNav({ active, focus }: { active: (href: string) => boolean; focus
         </div>
       )}
 
-      <nav className="fixed inset-x-0 bottom-0 z-40 flex items-center border-t border-line bg-surface/95 px-1 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden">
+      {/* el color de la barra sigue por debajo: en el iPhone instalado, al llegar al final de una página larga
+          o al rebotar, quedaba una franja negra bajo la barra */}
+      <nav className="fixed inset-x-0 bottom-0 z-40 flex items-center border-t border-line bg-surface/95 px-1 pb-[env(safe-area-inset-bottom)] backdrop-blur after:absolute after:inset-x-0 after:top-full after:h-40 after:bg-surface md:hidden">
         {bottom.map((it) =>
           CTA.includes(it.href) ? (
             <div key={it.href} className="flex flex-[1.6] justify-center px-1">
