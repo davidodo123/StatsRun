@@ -13,14 +13,17 @@ export const todayMadrid = (now = new Date()) => new Intl.DateTimeFormat("en-CA"
  * Número tal como lo manda Atajos: número JSON o texto en formato español ("8.234", "512,7", "8.234 pasos").
  * Devuelve undefined si no es un número válido.
  */
-export function parseHealthNumber(v: unknown): number | undefined {
+export function parseHealthNumber(v: unknown, max = Infinity): number | undefined {
   if (typeof v === "number") return Number.isFinite(v) ? v : undefined;
   if (typeof v !== "string") return undefined;
   let s = v.replace(/[^\d.,-]/g, "");
   if (!s) return undefined;
-  // "8.234" o "1.234.567" con o sin decimales tras coma: los puntos son de miles
-  if (/^\d{1,3}(\.\d{3})+(,\d+)?$/.test(s)) s = s.replace(/\./g, "").replace(",", ".");
-  else s = s.replace(",", ".");
+  // "8.234" o "1.234.567" con o sin decimales tras coma: los puntos son de miles… salvo que así salga un valor imposible
+  // para ese dato: Atajos manda las calorías con punto decimal («269.714» son 269,7 kcal, no 269.714)
+  if (/^\d{1,3}(\.\d{3})+(,\d+)?$/.test(s)) {
+    const thousands = Number(s.replace(/\./g, "").replace(",", "."));
+    s = thousands <= max || s.includes(",") || (s.match(/\./g) ?? []).length > 1 ? String(thousands) : s;
+  } else s = s.replace(",", ".");
   const n = Number(s);
   return Number.isFinite(n) ? n : undefined;
 }
@@ -33,11 +36,11 @@ function parseDay(o: Record<string, unknown>, today: string, now: string): Daily
   const date = rawDate === undefined ? today : parseHealthDate(rawDate);
   if (!date) return `Fecha no válida: ${String(rawDate)} (usa AAAA-MM-DD).`;
   if (date > addDays(today, 1) || diffDays(today, date) > HEALTH_KEEP_DAYS) return `Fecha fuera de rango: ${date}.`;
-  const steps = parseHealthNumber(pick(o, ["pasos", "steps"]));
-  const activeKcal = parseHealthNumber(pick(o, ["kcalActivas", "activeKcal", "calorias", "calories"]));
-  const restingKcal = parseHealthNumber(pick(o, ["kcalReposo", "restingKcal"]));
-  const hrvMs = parseHealthNumber(pick(o, ["vfc", "hrv", "hrvMs"]));
-  const restingHr = parseHealthNumber(pick(o, ["pulsoReposo", "fcReposo", "restingHr", "restingHeartRate"]));
+  const steps = parseHealthNumber(pick(o, ["pasos", "steps"]), 200_000);
+  const activeKcal = parseHealthNumber(pick(o, ["kcalActivas", "activeKcal", "calorias", "calories"]), 20_000);
+  const restingKcal = parseHealthNumber(pick(o, ["kcalReposo", "restingKcal"]), 20_000);
+  const hrvMs = parseHealthNumber(pick(o, ["vfc", "hrv", "hrvMs"]), 300);
+  const restingHr = parseHealthNumber(pick(o, ["pulsoReposo", "fcReposo", "restingHr", "restingHeartRate"]), 130);
   let sleepHours = parseHealthNumber(pick(o, ["sueno", "sueño", "horasSueno", "sleep", "sleepHours"]));
   // Atajos puede mandar el sueño en horas, minutos o segundos según cómo se calcule
   if (sleepHours !== undefined && sleepHours > 24 * 60) sleepHours /= 3600;

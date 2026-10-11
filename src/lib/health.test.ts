@@ -90,6 +90,14 @@ describe("salud del iPhone", () => {
     expect(recoverySignals(undefined, today)).toMatchObject({ shortSleep: false, highRestingHr: false, lowHrv: false });
   });
 
+  it("punto decimal o de miles según lo que tenga sentido para cada dato", () => {
+    expect(parseHealthNumber("269.714", 20_000)).toBe(269.714); // calorías con decimales
+    expect(parseHealthNumber("9.120", 200_000)).toBe(9120); // pasos con punto de miles
+    expect(parseHealthNumber("1.234", 20_000)).toBe(1234);
+    expect(parseHealthNumber("1.234.567", 20_000)).toBe(1234567);
+    expect(parseHealthNumber("512,7", 20_000)).toBe(512.7);
+  });
+
   it("fechas tal como las manda Atajos", () => {
     expect(parseHealthDate("2026-10-11")).toBe("2026-10-11");
     expect(parseHealthDate("2026-10-10T22:00:00Z")).toBe("2026-10-11"); // medianoche en España
