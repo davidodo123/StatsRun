@@ -21,6 +21,7 @@ function syncPlanRoutines(d: Db) {
 }
 import { CATEGORIES, EQUIPMENT, MUSCLES, PLACE_PRESETS, type Equipment, type ExerciseCategory, type Muscle } from "@/lib/strength/labels";
 import type { FormState } from "./actions";
+import { addPreferences } from "@/lib/aiMemory";
 
 const EQ_IDS = new Set<string>(EQUIPMENT.map((e) => e.id));
 const MUSCLE_IDS = new Set<string>(MUSCLES.map((m) => m.id));
@@ -386,6 +387,7 @@ export async function sendStrengthChat(_: FormState, fd: FormData): Promise<Form
       { role: "user" as const, text: message, at: now },
       { role: "assistant" as const, text: reply.text, at: new Date().toISOString(), ...(reply.routines.length ? { routines: reply.routines } : {}) },
     ].slice(-MAX_CHAT);
+    if (reply.remember.length) d.aiPreferences = addPreferences(d.aiPreferences, reply.remember.map((text) => ({ text, area: "fuerza" as const, source: "chat" as const, at: now })), () => newId());
   });
   refresh();
   return { ok: true };

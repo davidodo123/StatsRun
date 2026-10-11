@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
-import { Loading, PageHeader } from "@/components/ui";
+import { Card, Loading, PageHeader } from "@/components/ui";
 import { StrengthChat } from "@/components/StrengthChat";
 import { getDb } from "@/lib/db";
 import { findExercise } from "@/lib/strength/catalog";
+import { AiMemory } from "@/components/AiMemory";
 
 export const metadata: Metadata = { title: "Entrenador de fuerza" };
 // la respuesta con rutinas puede tardar (modelo grande): margen para la acción del chat
@@ -29,7 +30,10 @@ async function Content() {
         ← Fuerza
       </Link>
       <PageHeader title="Entrenador de fuerza" subtitle="Rutinas, dudas y progresión, con IA y base científica." />
-      <StrengthChat messages={messages} names={names} />
+      <StrengthChat messages={messages} names={names} ratings={Object.fromEntries((db.aiFeedback ?? []).filter((f) => f.area === "chat").map((f) => [f.ref, f.rating]))} />
+      <Card title="Lo que la IA sabe de ti" subtitle="Lo tiene en cuenta en el chat, en tus rutinas y al ajustar el plan" className="mt-6">
+        <AiMemory list={db.aiPreferences ?? []} />
+      </Card>
     </div>
   );
 }

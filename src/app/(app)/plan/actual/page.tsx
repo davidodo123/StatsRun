@@ -20,6 +20,8 @@ import { fmtDuration, fmtPaceRange } from "@/lib/format";
 import { WEEKDAYS, addDays, diffDays, mondayOf, shortDate, weekday } from "@/lib/dates";
 import type { Phase } from "@/lib/types";
 import { clearPlan, clearUnavailable, regeneratePlan } from "@/app/actions";
+import { AiRating } from "@/components/AiRating";
+import { feedbackFor } from "@/lib/aiMemory";
 
 export const metadata: Metadata = { title: "Plan" };
 // crear las rutinas con IA puede tardar un minuto (las acciones de la página heredan este límite)
@@ -209,6 +211,7 @@ async function Content({ searchParams }: { searchParams: PageProps<"/plan/actual
             {coachConfig().configured ? (
               <div className="space-y-3 text-sm text-ink-2">
                 {db.coach?.summary ? <p>{db.coach.summary}</p> : <p>Aún no ha revisado tu plan.</p>}
+                {db.coach?.summary && <AiRating area="plan" refId={db.coach.updatedAt} rating={feedbackFor(db, "plan", db.coach.updatedAt)?.rating} />}
                 {db.coach?.updatedAt && (
                   <p className="text-xs text-muted">
                     Última revisión: {new Date(db.coach.updatedAt).toLocaleString("es-ES")} · {db.coach.changed} sesiones ajustadas
@@ -229,6 +232,8 @@ async function Content({ searchParams }: { searchParams: PageProps<"/plan/actual
               material={db.strengthCoach?.material}
               ability={db.strengthCoach?.ability}
               summary={db.strengthCoach?.summary}
+              refId={db.strengthCoach?.summary ? db.strengthCoach.updatedAt : undefined}
+              rating={feedbackFor(db, "fuerza", db.strengthCoach?.updatedAt)?.rating}
               routines={(db.routines ?? []).filter((r) => r.source === "ia").map((r) => ({ id: r.id, name: r.name }))}
               model={strengthModel()}
             />

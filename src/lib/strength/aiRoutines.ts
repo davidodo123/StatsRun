@@ -5,6 +5,7 @@ import type { Db, Phase, Routine, RoutineExercise, RoutineSet } from "../types";
 import { addDays } from "../dates";
 import { CATALOG } from "./catalog";
 import { EQUIPMENT, canDo, type Equipment, type Exercise } from "./labels";
+import { PREFERENCES_RULE, preferencesFor } from "../aiMemory";
 
 const EQ_IDS = new Set<string>(EQUIPMENT.map((e) => e.id));
 const KINDS: StrengthKind[] = ["pierna", "posterior", "superior", "completo"];
@@ -69,6 +70,8 @@ REGLAS:
 - CADA rutina lleva entre 5 y 7 ejercicios (nunca menos de 5): el principal, unilaterales o accesorios, gemelo y sóleo (en las de pierna), core y, en el bloque de fuerza, pliometría.
 - "reps" es un rango como "8-12" o un número. "kg" solo si usa peso externo (si no, omítelo). "bw": true si es con peso corporal (los "kg" serían lastre).
 
+${PREFERENCES_RULE}
+
 Sin emojis en ningún texto. Responde SOLO con JSON:
 {"equipment": ["corporal", ...], "summary": "2-4 frases: cómo has planteado la fuerza para su carrera y con su material", "routines": [{"kind": "pierna", "block": "base", "name": "Pierna · Base", "exercises": [{"id": "...", "sets": 3, "reps": "8-12", "kg": 16, "bw": false, "restSec": 90, "notes": "..."}]}]}`;
 
@@ -84,6 +87,7 @@ export function strengthRequest(db: Db, material: string, ability: string, today
     atleta: { edad: db.profile?.age, sexo: db.profile?.sex, pesoKg: db.profile?.weightKg, nivelCorriendo: db.profile?.level, lesiones: db.profile?.injuries || "ninguna" },
     carrera: plan && { nombre: plan.goal.name, km: plan.goal.distanceKm, fecha: plan.goal.date, fasesDelPlan: phases },
     sesionesDeFuerzaPorSemana: per,
+    preferencias: preferencesFor(db, "fuerza"),
     materialQueTiene: material,
     loQuePuedeHacerOSuRutina: ability,
     rutinasAPedir: kinds.flatMap((kind) => (["base", "fuerza"] as const).map((block) => ({ kind, block }))),

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useActionState } from "react";
 import { generateStrengthRoutines, type StrengthCoachForm } from "@/app/strength-actions";
 import { keepForm } from "./keepForm";
+import { AiRating } from "./AiRating";
 
 /** Le cuentas a la IA tu material y lo que sabes hacer, y crea tus rutinas de fuerza para la carrera. */
 export function StrengthCoachCard({
@@ -12,12 +13,16 @@ export function StrengthCoachCard({
   summary,
   routines,
   model,
+  refId,
+  rating,
 }: {
   material?: string;
   ability?: string;
   summary?: string;
   routines: { id: string; name: string }[];
   model: string;
+  refId?: string;
+  rating?: 1 | -1;
 }) {
   const [state, action, pending] = useActionState<StrengthCoachForm, FormData>(generateStrengthRoutines, {});
   const list = state.routines ?? routines;
@@ -49,6 +54,7 @@ export function StrengthCoachCard({
       </button>
       {state.error && <p className="font-medium text-critical">✕ {state.error}</p>}
       {(state.message || summary) && <p className="text-ink-2">{state.message || summary}</p>}
+      {!pending && <AiRating area="fuerza" refId={refId} rating={rating} />}
       {list.length > 0 && (
         <ul className="divide-y divide-line rounded-xl border border-line">
           {list.map((r) => (

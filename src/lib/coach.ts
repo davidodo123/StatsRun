@@ -14,6 +14,7 @@ import { findExercise } from "./strength/catalog";
 import { MUSCLE_LABEL } from "./strength/labels";
 import { routinesForPlan } from "./strength/routinePlan";
 import { workoutSets, workoutVolume } from "./strength/workouts";
+import { PREFERENCES_RULE, preferencesFor } from "./aiMemory";
 
 const API = "https://openrouter.ai/api/v1/chat/completions";
 const HORIZON_DAYS = 14;
@@ -130,6 +131,7 @@ REGLAS:
 - Las SENSACIONES ("sensacion", "comoSeSintio") comparadas con "sesionPlanificada" explican el diagnóstico: cítalas en "summary" (ej.: "Como el jueves las series se te hicieron fáciles…").
 - Usa los ritmos proporcionados (min:seg /km) en los pasos de carrera.
 - Escribe en español, pasos breves y accionables.
+${PREFERENCES_RULE}
 Sin emojis en ningún texto. Responde SOLO con JSON: {"summary": "2-4 frases explicando el diagnóstico, qué has cambiado y por qué", "sessions": [{"id","date","type","title","description","steps":[...],"distanceKm","durationMin","reason"} | {"id","remove":true,"reason"}]}.
 Incluye solo las sesiones que cambies.`;
 
@@ -185,6 +187,7 @@ function buildContext(db: Db, today: string) {
       edad: profile.age, sexo: profile.sex, pesoKg: profile.weightKg, nivel: profile.level,
       fuerzaPorSemana: profile.strengthPerWeek, lesiones: profile.injuries ?? "ninguna",
     },
+    preferencias: preferencesFor(db, "plan"),
     disponibilidad: {
       diasDeLaSemana: avail.map((d) => WEEKDAYS[d]),
       diaTiradaLarga: WEEKDAYS[profile.longRunDay],

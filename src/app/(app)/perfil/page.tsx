@@ -25,6 +25,7 @@ import { tagsForDb } from "@/lib/engine/tags";
 import { getFriends } from "@/lib/auth";
 import { requireUserId } from "@/lib/session";
 import { Icon } from "@/components/icons";
+import { AiMemory } from "@/components/AiMemory";
 
 export const metadata: Metadata = { title: "Perfil" };
 
@@ -680,6 +681,9 @@ function Editar({ db, today, initialFocus }: { db: Db; today: string; initialFoc
       </div>
       {profile && (
         <div className="space-y-4">
+          <Card title="Lo que la IA sabe de ti" subtitle="Lo tienen en cuenta el chat, tus rutinas y el ajuste del plan">
+            <AiMemory list={db.aiPreferences ?? []} />
+          </Card>
           {avg && (
             <Card title="Tus promedios reales" subtitle="Últimas 6 semanas, calculados con tus entrenos">
               <ul className="divide-y divide-line text-sm">

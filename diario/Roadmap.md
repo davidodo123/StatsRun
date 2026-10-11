@@ -112,6 +112,11 @@ Base: [[Estudio entrenamiento#6. La Pirámide de Entrenamiento (Helms, Valdez, M
 - [x] Caché de navegación de 30 s y precarga de páginas en el service worker
 - [-] ~~Mover Vercel y Redis a Europa~~: descartado, la base de Upstash en Europa no tiene plan gratis en Vercel y David prefiere seguir gratis en iad1
 
+## 🧠 IA que aprende de ti (opción 2: sin entrenar el modelo) → [[Decisiones#IA que aprende de ti]]
+- [x] Bloque 1 · Valoraciones (pulgar arriba/abajo con motivo) y memoria de preferencias que leen las tres IA; el chat apunta solo lo que le cuentas — *hecho 2026-10-10, pendiente de comprobar*
+- [ ] Bloque 2 · Ejemplos buenos en las instrucciones (few-shot), sacados también de las respuestas que valores bien
+- [ ] Bloque 3 · Que consulte el Estudio de entrenamiento (solo los apartados que vengan al caso)
+
 ## 🧪 Batería de pruebas — *hecha 2026-10-10* → [[Decisiones#Batería de pruebas completa]]
 - [x] Tests de la lógica: 236 (antes 96), con 120 combinaciones del planificador
 - [x] Recorrido de todas las páginas en Chrome (móvil claro y oscuro, ordenador; usuario con datos, vacío, sin sesión y enlaces rotos)

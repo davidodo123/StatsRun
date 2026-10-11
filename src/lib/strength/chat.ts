@@ -5,6 +5,7 @@ import { CATALOG, allEquipment, findExercise } from "./catalog";
 import { exercisesFromAi } from "./aiRoutines";
 import { EQUIPMENT, canDo, type Equipment } from "./labels";
 import { estimate1RM } from "./workouts";
+import { PREFERENCES_RULE, cleanPreference, preferencesFor } from "../aiMemory";
 
 // lo útil para entrenar fuerza en general (sin estiramientos ni cardio, y sin lo más técnico)
 const CANDIDATES = CATALOG.filter((x) => (x.cat === "fuerza" || x.cat === "pliometria" || x.cat === "powerlifting") && x.level !== "avanzado");
@@ -20,14 +21,18 @@ PRINCIPIOS (pirámide de Helms; Schoenfeld; para corredores, Balsalobre-Fernánd
 - Si tiene lesiones o molestias, no cargues esa zona: variantes sin dolor y, si el dolor sigue, que lo vea un profesional.
 - Usa lo que sabes de él (perfil, material, sus rutinas y lo que ha entrenado) y dilo cuando te apoyes en ello.
 
+${PREFERENCES_RULE}
+MEMORIA: si en su mensaje te cuenta algo duradero que debas recordar (ejercicios que no quiere o no puede hacer, gustos, horarios, material nuevo, molestias que vienen de lejos), añádelo en "recordar" como frases cortas en tercera persona («No quiere zancadas», «Tiene una barra de dominadas nueva»). No repitas lo que ya está en "preferencias". Si no hay nada, "recordar": [].
+
 CUÁNDO PROPONER RUTINAS: solo si te las pide o si para responder hace falta una rutina nueva o cambiada. Si solo pregunta algo, contesta sin rutinas.
 - Usa SOLO ejercicios de la lista ("id" exacto) que pueda hacer con su material. CADA rutina lleva entre 5 y 8 ejercicios (nunca menos de 5), salvo que pida algo más corto.
 - "reps" es un rango como "8-12" o un número; "kg" solo con peso externo y nunca más del que tiene; "bw": true si es con peso corporal (los "kg" serían lastre).
 - "superset": mismo número en ejercicios seguidos para hacerlos en superserie (opcional).
 - Descansos: básicos pesados 120-180 s, accesorios 60-90 s, core 45-60 s.
+- Si propones rutinas, en "reply" no repitas la lista de ejercicios (ya se ve en la tarjeta): explica en 2-4 frases el planteamiento, la progresión y los avisos.
 
 Responde SOLO con JSON:
-{"reply": "tu respuesta (puede tener saltos de línea y listas con guiones)", "routines": [{"name": "Torso A", "exercises": [{"id": "...", "sets": 3, "reps": "8-12", "kg": 20, "bw": false, "restSec": 90, "notes": "...", "superset": 1}]}]}
+{"reply": "tu respuesta (puede tener saltos de línea y listas con guiones)", "recordar": ["..."], "routines": [{"name": "Torso A", "exercises": [{"id": "...", "sets": 3, "reps": "8-12", "kg": 20, "bw": false, "restSec": 90, "notes": "...", "superset": 1}]}]}
 Si no propones rutinas, "routines": [].`;
 
 /** Lo que el entrenador sabe del atleta: perfil, material, rutinas, entrenos de las últimas 4 semanas y su carrera. */
@@ -55,6 +60,7 @@ export function chatContext(db: Db, today: string) {
     susRutinas: (db.routines ?? []).map((r) => ({ nombre: r.name, ejercicios: r.exercises.map((e) => `${findExercise(db, e.exerciseId)?.name ?? e.exerciseId} ${e.sets.length}×${e.sets[0]?.reps ?? "?"}`) })),
     entrenosUltimas4Semanas: [...lifts.values()].map((l) => ({ nombre: l.nombre, sesiones: l.sesiones, mejorSerie: l.mejorSerie, ultimaVez: l.ultimaVez })),
     medidas: db.measurements?.at(-1),
+    preferencias: preferencesFor(db, "fuerza"),
   };
 }
 
@@ -76,11 +82,12 @@ export const chatHistory = (messages: StrengthChatMessage[]) =>
 
 export interface AiChatReply {
   reply?: unknown;
+  recordar?: unknown;
   routines?: unknown;
 }
 
 /** Valida la respuesta: texto y, si hay, rutinas con ejercicios que existen y que puede hacer. */
-export function chatReplyFromAi(input: AiChatReply | null | undefined, equipment: Equipment[], now: string): { text: string; routines: Routine[] } {
+export function chatReplyFromAi(input: AiChatReply | null | undefined, equipment: Equipment[], now: string): { text: string; routines: Routine[]; remember: string[] } {
   const raw = input && typeof input === "object" ? input : {};
   const text = typeof raw.reply === "string" ? raw.reply.trim().slice(0, 4000) : "";
   const routines: Routine[] = [];
@@ -91,5 +98,6 @@ export function chatReplyFromAi(input: AiChatReply | null | undefined, equipment
     const name = typeof o.name === "string" && o.name.trim() ? o.name.trim().slice(0, 60) : `Rutina ${routines.length + 1}`;
     routines.push({ id: "", name, exercises, folder: "Entrenador IA", createdAt: now, updatedAt: now });
   }
-  return { text: text || (routines.length ? "Te propongo estas rutinas:" : ""), routines };
+  const remember = (Array.isArray(raw.recordar) ? raw.recordar : []).map(cleanPreference).filter((t) => t.length >= 3).slice(0, 5);
+  return { text: text || (routines.length ? "Te propongo estas rutinas:" : ""), routines, remember };
 }

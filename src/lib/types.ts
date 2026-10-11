@@ -205,6 +205,8 @@ export interface Db {
   routines?: Routine[]; // rutinas de fuerza
   strengthCoach?: StrengthCoachState; // lo que el atleta le contó a la IA de fuerza y su última respuesta
   strengthChat?: StrengthChatMessage[]; // conversación con el entrenador de fuerza (sección Fuerza)
+  aiPreferences?: AiPreference[]; // lo que la IA tiene que recordar del atleta (sus gustos y correcciones)
+  aiFeedback?: AiFeedback[]; // valoraciones de las respuestas de la IA (para mejorarla con ejemplos)
 }
 
 export type SetType = "normal" | "calentamiento" | "descendente" | "fallo";
@@ -287,6 +289,28 @@ export interface CustomExercise {
   secondary: Muscle[];
   steps: string[];
   createdAt: string;
+}
+
+/** Las tres IA de la app: el ajuste del plan, la fuerza del plan y el chat de fuerza. */
+export type AiArea = "plan" | "fuerza" | "chat";
+
+/** Algo que la IA tiene que tener siempre en cuenta («No quiere zancadas», «Entrena a las 7:00»). */
+export interface AiPreference {
+  id: string;
+  text: string;
+  area: "todas" | "plan" | "fuerza"; // a qué IA se le manda (el chat usa las de fuerza)
+  source: "valoracion" | "chat" | "manual";
+  at: string;
+}
+
+/** Valoración de una respuesta de la IA. */
+export interface AiFeedback {
+  at: string;
+  area: AiArea;
+  ref: string; // qué respuesta: fecha de la revisión del plan, de las rutinas o del mensaje del chat
+  rating: 1 | -1;
+  reason?: string;
+  response?: string; // copia de la respuesta valorada (para ejemplos)
 }
 
 /** Un mensaje del chat de fuerza; los de la IA pueden traer rutinas propuestas para guardar. */

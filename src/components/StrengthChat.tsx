@@ -7,6 +7,7 @@ import type { FormState } from "@/app/actions";
 import { fmtLoad, supersetLetters } from "@/lib/strength/workouts";
 import type { Routine, StrengthChatMessage } from "@/lib/types";
 import { Icon } from "./icons";
+import { AiRating } from "./AiRating";
 
 const SUGGESTIONS = [
   "Hazme una rutina de 3 días para ganar músculo en el gimnasio",
@@ -53,7 +54,7 @@ function Proposal({ m, names }: { m: StrengthChatMessage; names: Record<string, 
 }
 
 /** Chat con el entrenador de fuerza: preguntas, consejos y rutinas que se guardan con un toque. */
-export function StrengthChat({ messages, names }: { messages: StrengthChatMessage[]; names: Record<string, string> }) {
+export function StrengthChat({ messages, names, ratings = {} }: { messages: StrengthChatMessage[]; names: Record<string, string>; ratings?: Record<string, 1 | -1> }) {
   const [state, send, pending] = useActionState<FormState, FormData>(sendStrengthChat, {});
   const [draft, setDraft] = useState("");
   const [sent, setSent] = useState("");
@@ -82,6 +83,11 @@ export function StrengthChat({ messages, names }: { messages: StrengthChatMessag
           <div className={`max-w-[92%] rounded-2xl px-4 py-3 text-sm ${m.role === "user" ? "bg-accent text-accent-ink" : "border border-line bg-surface-2"}`}>
             <p className="whitespace-pre-line">{m.text}</p>
             {m.role === "assistant" && m.routines?.length ? <Proposal m={m} names={names} /> : null}
+            {m.role === "assistant" && (
+              <div className="mt-3 border-t border-line pt-2">
+                <AiRating area="chat" refId={m.at} rating={ratings[m.at]} />
+              </div>
+            )}
           </div>
         </div>
       ))}

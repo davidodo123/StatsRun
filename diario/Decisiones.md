@@ -508,3 +508,16 @@ David pidió probar «todos los casos posibles». Tres capas:
 - **Perfil**: sin las pestañas Resumen y Running; abre en Fuerza; la cabecera muestra entrenos, toneladas movidas y horas en vez de km, carreras y VDOT.
 - Probado con un alta real en el navegador (formulario, Inicio, menú, perfil y vuelta a «Correr y fuerza») y recorriendo sus páginas en móvil y ordenador; el usuario de los dos sigue igual.
 
+## IA que aprende de ti
+*2026-10-10*
+
+David preguntó si se puede «entrenar» una IA para la app. Opciones: (1) instrucciones y contexto (lo que ya hacía), (2) **ejemplos y memoria**, (3) fine-tuning (cientos de ejemplos revisados; no compensa sin ese conjunto de datos). Eligió la 2, en bloques.
+
+**Bloque 1 · Valoraciones y memoria**
+- **Pulgar arriba / abajo** (iconos, sin emojis) en las tres IA: el ajuste del plan (tarjeta «Entrenador IA»), «Fuerza con IA» y cada respuesta del chat. Con pulgar abajo pide «¿Qué no te ha gustado?» y ese motivo pasa a ser una **preferencia**. Cada valoración se guarda con una copia de la respuesta (`aiFeedback`, últimas 200): servirán de ejemplos buenos y malos en el bloque 2 y, si algún día se hace fine-tuning, de conjunto de datos.
+- **«Lo que la IA sabe de ti»** (`aiPreferences`, máx. 40, sin repetir): en la página del entrenador y en Perfil → Editar; se pueden añadir a mano (para todas, solo plan o solo fuerza) y olvidar.
+- **El chat aprende solo**: si le cuentas algo duradero («odio las zancadas», «tengo barra de dominadas nueva»), lo devuelve en «recordar» y se guarda.
+- Las tres IA reciben sus preferencias (`preferencesFor`) con la regla de respetarlas siempre salvo por seguridad (dolor, enfermedad, fatiga).
+- Probado con la IA real: el chat apuntó «No quiere zancadas» y la rutina de pierna siguiente salió sin zancadas. Con el modelo barato respeta lo explícito («no quiero X») pero no siempre deduce («entreno en casa» → siguió usando material del gimnasio): de eso se encargan los ejemplos del bloque 2.
+- El chat ya no repite en el texto la lista de ejercicios que sale en la tarjeta de la rutina.
+
