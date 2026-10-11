@@ -521,3 +521,12 @@ David preguntó si se puede «entrenar» una IA para la app. Opciones: (1) instr
 - Probado con la IA real: el chat apuntó «No quiere zancadas» y la rutina de pierna siguiente salió sin zancadas. Con el modelo barato respeta lo explícito («no quiero X») pero no siempre deduce («entreno en casa» → siguió usando material del gimnasio): de eso se encargan los ejemplos del bloque 2.
 - El chat ya no repite en el texto la lista de ejercicios que sale en la tarjeta de la rutina.
 
+**Bloque 2 · Ejemplos** (*2026-10-11*)
+- **Ejemplos escritos a mano** en las instrucciones de cada IA (orientativos, «no los copies»):
+  - ajuste del plan: un resumen que cita lo que dijo el atleta y cambia solo lo necesario;
+  - fuerza del plan: una rutina de pierna buena (6 ejercicios: multiarticular, unilaterales, gemelo y sóleo, core; kilos que tiene y rangos);
+  - chat: «hoy en casa con mancuernas» → solo mancuernas y peso corporal y nada que recordar (es solo hoy); una pregunta suelta → breve y sin rutinas; una lesión → se recuerda.
+- **Tus valoraciones como ejemplos** (`ratedExamples`): cada IA recibe las dos últimas respuestas suyas que te gustaron («imita su tono y detalle») y las dos que no, con el motivo («no repitas ese error»).
+- **El material del mensaje manda** (`chatEquipment`): si en el chat dices «en casa» (o el nombre de uno de tus lugares), «sin material», «en el gimnasio» o nombras material («solo una kettlebell y bandas»), la lista de ejercicios que recibe la IA ya viene filtrada y se le dice por qué. No depende de que el modelo lo deduzca. «Casado» no cuenta como «casa».
+- Probado con la IA real (`gpt-4o-mini`): con gimnasio apuntado y «hoy en casa con mancuernas de 10 kg» propuso sentadilla con mancuernas, peso muerto rumano a una pierna, puente de glúteo y gemelo, y no lo guardó como preferencia; a «¿cada cuánto subo peso en press banca?» respondió breve y sin rutinas. Con el modelo barato aún repite a veces en el texto la lista de ejercicios.
+

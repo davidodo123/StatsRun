@@ -5,7 +5,7 @@ import type { Db, Phase, Routine, RoutineExercise, RoutineSet } from "../types";
 import { addDays } from "../dates";
 import { CATALOG } from "./catalog";
 import { EQUIPMENT, canDo, type Equipment, type Exercise } from "./labels";
-import { PREFERENCES_RULE, preferencesFor } from "../aiMemory";
+import { EXAMPLES_RULE, PREFERENCES_RULE, preferencesFor, ratedExamples } from "../aiMemory";
 
 const EQ_IDS = new Set<string>(EQUIPMENT.map((e) => e.id));
 const KINDS: StrengthKind[] = ["pierna", "posterior", "superior", "completo"];
@@ -71,6 +71,17 @@ REGLAS:
 - "reps" es un rango como "8-12" o un número. "kg" solo si usa peso externo (si no, omítelo). "bw": true si es con peso corporal (los "kg" serían lastre).
 
 ${PREFERENCES_RULE}
+${EXAMPLES_RULE}
+
+EJEMPLO de una rutina buena (orientativo, no la copies): pierna, bloque base, con mancuernas de 15-18 kg, banco y bandas:
+{"kind": "pierna", "block": "base", "name": "Pierna · Base", "exercises": [
+ {"id": "Dumbbell_Squat", "sets": 3, "reps": "8-12", "kg": 16, "restSec": 120, "notes": "Bajada controlada en 3 segundos."},
+ {"id": "Split_Squat_with_Dumbbells", "sets": 3, "reps": "8-10", "kg": 15, "restSec": 90},
+ {"id": "rio_single_leg_rdl_db", "sets": 3, "reps": "8-10", "kg": 15, "restSec": 90},
+ {"id": "rio_single_calf_bw", "sets": 3, "reps": "15-20", "bw": true, "restSec": 60},
+ {"id": "rio_soleus_bent_knee", "sets": 2, "reps": "15-20", "bw": true, "restSec": 60},
+ {"id": "rio_pallof_band", "sets": 3, "reps": "10", "restSec": 45}]}
+Fíjate: 6 ejercicios, primero el multiarticular, luego unilaterales, gemelo y sóleo, y core; kilos que tiene; rangos para la progresión doble.
 
 Sin emojis en ningún texto. Responde SOLO con JSON:
 {"equipment": ["corporal", ...], "summary": "2-4 frases: cómo has planteado la fuerza para su carrera y con su material", "routines": [{"kind": "pierna", "block": "base", "name": "Pierna · Base", "exercises": [{"id": "...", "sets": 3, "reps": "8-12", "kg": 16, "bw": false, "restSec": 90, "notes": "..."}]}]}`;
@@ -88,6 +99,7 @@ export function strengthRequest(db: Db, material: string, ability: string, today
     carrera: plan && { nombre: plan.goal.name, km: plan.goal.distanceKm, fecha: plan.goal.date, fasesDelPlan: phases },
     sesionesDeFuerzaPorSemana: per,
     preferencias: preferencesFor(db, "fuerza"),
+    valoraciones: ratedExamples(db, "fuerza"),
     materialQueTiene: material,
     loQuePuedeHacerOSuRutina: ability,
     rutinasAPedir: kinds.flatMap((kind) => (["base", "fuerza"] as const).map((block) => ({ kind, block }))),

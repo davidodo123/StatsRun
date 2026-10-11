@@ -2,10 +2,10 @@
 import type { Db, Routine, StrengthChatMessage } from "../types";
 import { addDays } from "../dates";
 import { CATALOG, allEquipment, findExercise } from "./catalog";
-import { exercisesFromAi } from "./aiRoutines";
+import { equipmentFromText, exercisesFromAi } from "./aiRoutines";
 import { EQUIPMENT, canDo, type Equipment } from "./labels";
 import { estimate1RM } from "./workouts";
-import { PREFERENCES_RULE, cleanPreference, preferencesFor } from "../aiMemory";
+import { EXAMPLES_RULE, PREFERENCES_RULE, cleanPreference, preferencesFor, ratedExamples } from "../aiMemory";
 
 // lo útil para entrenar fuerza en general (sin estiramientos ni cardio, y sin lo más técnico)
 const CANDIDATES = CATALOG.filter((x) => (x.cat === "fuerza" || x.cat === "pliometria" || x.cat === "powerlifting") && x.level !== "avanzado");
@@ -23,6 +23,14 @@ PRINCIPIOS (pirámide de Helms; Schoenfeld; para corredores, Balsalobre-Fernánd
 
 ${PREFERENCES_RULE}
 MEMORIA: si en su mensaje te cuenta algo duradero que debas recordar (ejercicios que no quiere o no puede hacer, gustos, horarios, material nuevo, molestias que vienen de lejos), añádelo en "recordar" como frases cortas en tercera persona («No quiere zancadas», «Tiene una barra de dominadas nueva»). No repitas lo que ya está en "preferencias". Si no hay nada, "recordar": [].
+
+${EXAMPLES_RULE}
+MATERIAL: si viene "materialParaEsteMensaje", entrena hoy con eso (la lista de ejercicios ya viene filtrada): no propongas nada que pida otro material aunque lo tenga en otro lugar.
+
+EJEMPLOS (orientativos, no los copies tal cual):
+1) «Hoy estoy en casa con dos mancuernas de 10 kg, ¿qué hago de pierna?» (tiene un gimnasio apuntado, pero "materialParaEsteMensaje" dice mancuernas). Bien: rutina solo con mancuernas y peso corporal (sentadilla con mancuernas, peso muerto rumano a una pierna, puente de glúteo, gemelo a una pierna), con más repeticiones o bajada lenta porque el peso es poco; "recordar": [] porque es solo hoy. Mal: sentadilla con barra o prensa.
+2) «¿Cada cuánto subo peso en press banca?» Bien: 2-4 frases sobre la progresión doble (cuando llegues al tope del rango en todas las series, sube 2,5 kg) y "routines": [], "recordar": [].
+3) «Me operé el hombro, nada de press por encima de la cabeza.» Bien: "recordar": ["Operado del hombro: sin press por encima de la cabeza"] y, si pide rutina, sin ese movimiento.
 
 CUÁNDO PROPONER RUTINAS: solo si te las pide o si para responder hace falta una rutina nueva o cambiada. Si solo pregunta algo, contesta sin rutinas.
 - Usa SOLO ejercicios de la lista ("id" exacto) que pueda hacer con su material. CADA rutina lleva entre 5 y 8 ejercicios (nunca menos de 5), salvo que pida algo más corto.
@@ -61,11 +69,33 @@ export function chatContext(db: Db, today: string) {
     entrenosUltimas4Semanas: [...lifts.values()].map((l) => ({ nombre: l.nombre, sesiones: l.sesiones, mejorSerie: l.mejorSerie, ultimaVez: l.ultimaVez })),
     medidas: db.measurements?.at(-1),
     preferencias: preferencesFor(db, "fuerza"),
+    valoraciones: ratedExamples(db, "chat"),
   };
 }
 
-/** Material con el que puede entrenar (sin lugares apuntados, todo). */
-export const chatEquipment = (db: Pick<Db, "places">): Equipment[] => (db.places?.length ? allEquipment(db) : EQUIPMENT.map((e) => e.id));
+const ALL = EQUIPMENT.map((e) => e.id);
+const plain = (t: string) => t.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
+
+/**
+ * Material con el que va a entrenar. Si el mensaje dice dónde o con qué («en casa», «solo mancuernas», «sin material»,
+ * el nombre de uno de sus lugares), manda eso; si no, todo lo de sus lugares (sin lugares apuntados, todo).
+ * `from` explica a la IA de dónde sale.
+ */
+export function chatEquipment(db: Pick<Db, "places">, message = ""): { equipment: Equipment[]; from?: string } {
+  const t = plain(message);
+  // palabras sueltas, para que «casa» no coincida con «casada»
+  const words = ` ${t.replace(/[^a-z0-9ñ]+/g, " ")} `;
+  const place = db.places?.find((p) => {
+    const name = plain(p.name).replace(/[^a-z0-9ñ]+/g, " ").trim();
+    return name.length >= 3 && words.includes(` ${name} `);
+  });
+  if (place) return { equipment: place.equipment, from: `lo que tiene en «${place.name}», que nombra en su mensaje` };
+  if (/sin material|solo (con )?mi (propio )?cuerpo|peso corporal|nada de material/.test(t)) return { equipment: ["corporal"], from: "su mensaje: sin material" };
+  if (/gimnasio|gym/.test(t)) return { equipment: ALL, from: "su mensaje: en el gimnasio" };
+  const said = equipmentFromText(message);
+  if (said.length > 1) return { equipment: said, from: "el material que nombra en su mensaje" };
+  return { equipment: db.places?.length ? allEquipment(db) : ALL };
+}
 
 /** Lista de ejercicios para el prompt, solo los que puede hacer: «id | nombre». */
 export const chatExerciseList = (equipment: Equipment[]) =>

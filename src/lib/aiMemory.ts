@@ -34,3 +34,18 @@ export function addPreferences(list: AiPreference[] = [], items: Omit<AiPreferen
 /** La valoración que tiene una respuesta (la última). */
 export const feedbackFor = (db: Pick<Db, "aiFeedback">, area: AiArea, ref: string | undefined): AiFeedback | undefined =>
   ref ? [...(db.aiFeedback ?? [])].reverse().find((f) => f.area === area && f.ref === ref) : undefined;
+
+/** Regla común: cómo usar las respuestas que valoró. */
+export const EXAMPLES_RULE = `VALORACIONES ("valoraciones", si vienen): respuestas tuyas anteriores que le gustaron ("gustaron": imita su tono, su longitud y su nivel de detalle) y que no ("noGustaron", con el motivo: no repitas ese error).`;
+
+/** Las dos últimas respuestas de esa IA que le gustaron y las dos que no (con el motivo), para usarlas de ejemplo. */
+export function ratedExamples(db: Pick<Db, "aiFeedback">, area: AiArea) {
+  const list = (db.aiFeedback ?? []).filter((f) => f.area === area && f.response).reverse();
+  const gustaron = list.filter((f) => f.rating === 1).slice(0, 2).map((f) => f.response!.slice(0, 600));
+  const noGustaron = list
+    .filter((f) => f.rating === -1)
+    .slice(0, 2)
+    .map((f) => ({ respuesta: f.response!.slice(0, 300), ...(f.reason ? { motivo: f.reason } : {}) }));
+  return gustaron.length || noGustaron.length ? { gustaron, noGustaron } : undefined;
+}
+

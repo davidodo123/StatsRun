@@ -14,7 +14,7 @@ import { findExercise } from "./strength/catalog";
 import { MUSCLE_LABEL } from "./strength/labels";
 import { routinesForPlan } from "./strength/routinePlan";
 import { workoutSets, workoutVolume } from "./strength/workouts";
-import { PREFERENCES_RULE, preferencesFor } from "./aiMemory";
+import { EXAMPLES_RULE, PREFERENCES_RULE, preferencesFor, ratedExamples } from "./aiMemory";
 
 const API = "https://openrouter.ai/api/v1/chat/completions";
 const HORIZON_DAYS = 14;
@@ -132,6 +132,11 @@ REGLAS:
 - Usa los ritmos proporcionados (min:seg /km) en los pasos de carrera.
 - Escribe en español, pasos breves y accionables.
 ${PREFERENCES_RULE}
+${EXAMPLES_RULE}
+
+EJEMPLO (orientativo, no lo copies): diagnóstico "mantener"; el jueves hizo series y escribió «muy duras, piernas cargadas»; el martes tenía series otra vez.
+{"summary": "Mantienes la carga: el jueves las series se te hicieron muy duras y llegas con las piernas cargadas. Cambio las series del martes por un tempo corto para no encadenar dos sesiones al límite; la tirada del domingo se queda igual.", "sessions": [{"id": "<id de la sesión del martes>", "type": "tempo", "title": "Tempo 15′", "description": "Tempo corto en lugar de series: estímulo de calidad sin llegar al límite.", "steps": ["15′ suave", "15′ a ritmo T", "10′ suave"], "distanceKm": 8, "durationMin": 45, "reason": "Piernas cargadas tras las series del jueves"}]}
+Fíjate: cita lo que dijo, explica el porqué en una frase y cambia solo lo necesario.
 Sin emojis en ningún texto. Responde SOLO con JSON: {"summary": "2-4 frases explicando el diagnóstico, qué has cambiado y por qué", "sessions": [{"id","date","type","title","description","steps":[...],"distanceKm","durationMin","reason"} | {"id","remove":true,"reason"}]}.
 Incluye solo las sesiones que cambies.`;
 
@@ -188,6 +193,7 @@ function buildContext(db: Db, today: string) {
       fuerzaPorSemana: profile.strengthPerWeek, lesiones: profile.injuries ?? "ninguna",
     },
     preferencias: preferencesFor(db, "plan"),
+    valoraciones: ratedExamples(db, "plan"),
     disponibilidad: {
       diasDeLaSemana: avail.map((d) => WEEKDAYS[d]),
       diaTiradaLarga: WEEKDAYS[profile.longRunDay],

@@ -358,9 +358,11 @@ export async function sendStrengthChat(_: FormState, fd: FormData): Promise<Form
   const now = new Date().toISOString();
   const db = await readDbNow();
   const history = db.strengthChat ?? [];
-  const equipment = chatEquipment(db);
+  const { equipment, from } = chatEquipment(db, message);
   const request = JSON.stringify({
     contexto: chatContext(db, todayLocal()),
+    // si el mensaje dice con qué entrena hoy, la lista ya viene filtrada y la IA lo sabe
+    ...(from ? { materialParaEsteMensaje: { codigos: equipment, segun: from } } : {}),
     conversacion: chatHistory(history),
     ejerciciosDisponibles: "id | nombre\n" + chatExerciseList(equipment),
     mensaje: message,

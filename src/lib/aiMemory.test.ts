@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { MAX_PREFERENCES, addPreferences, feedbackFor, preferencesFor } from "./aiMemory";
+import { MAX_PREFERENCES, addPreferences, feedbackFor, preferencesFor, ratedExamples } from "./aiMemory";
 import { chatReplyFromAi } from "./strength/chat";
 import type { AiPreference } from "./types";
 
@@ -39,4 +39,12 @@ describe("memoria de la IA", () => {
     expect(r.remember).toEqual(["No quiere zancadas", "Tiene barra de dominadas"]); // fuera vacíos, números y frases de menos de 3 letras
     expect(chatReplyFromAi({ reply: "Hola" }, ["corporal"], "t").remember).toEqual([]);
   });
+
+  it("ejemplos valorados: las dos últimas que gustaron y las dos que no, con el motivo, solo de esa IA", () => {
+    const f = (ref: string, rating: 1 | -1, area: "chat" | "plan" = "chat", reason?: string) => ({ at: ref, area, ref, rating, response: `respuesta ${ref}`, ...(reason ? { reason } : {}) });
+    const db = { aiFeedback: [f("1", 1), f("2", 1), f("3", 1), f("4", -1, "chat", "muy larga"), f("5", -1, "plan", "otra IA"), { at: "6", area: "chat" as const, ref: "6", rating: 1 as const }] };
+    expect(ratedExamples(db, "chat")).toEqual({ gustaron: ["respuesta 3", "respuesta 2"], noGustaron: [{ respuesta: "respuesta 4", motivo: "muy larga" }] });
+    expect(ratedExamples({}, "chat")).toBeUndefined();
+  });
 });
+

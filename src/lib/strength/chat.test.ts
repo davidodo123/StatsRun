@@ -25,10 +25,20 @@ describe("chat de fuerza", () => {
   });
 
   it("sin lugares apuntados se le ofrece todo el catálogo; con lugares, solo lo que puede hacer", () => {
-    expect(chatEquipment({})).toContain("maquinas");
-    const home = chatExerciseList(chatEquipment({ places: [{ id: "c", name: "Casa", equipment: ["corporal", "mancuernas"] }] }));
+    expect(chatEquipment({}).equipment).toContain("maquinas");
+    const home = chatExerciseList(chatEquipment({ places: [{ id: "c", name: "Casa", equipment: ["corporal", "mancuernas"] }] }).equipment);
     expect(home).toContain("Dumbbell_Bicep_Curl |");
     expect(home).not.toContain("Barbell_Squat |");
+  });
+
+  it("el material de este mensaje manda sobre sus lugares", () => {
+    const db = { places: [{ id: "c", name: "Casa", equipment: ["corporal" as const, "mancuernas" as const] }, { id: "g", name: "Gimnasio", equipment: ["corporal" as const, "barra" as const, "maquinas" as const] }] };
+    expect(chatEquipment(db, "Hoy entreno en casa").equipment).toEqual(["corporal", "mancuernas"]);
+    expect(chatEquipment(db, "Estoy en mi casa, ¿qué hago?").from).toContain("Casa");
+    expect(chatEquipment(db, "Me he casado y...").from).toBeUndefined(); // «casado» no es «casa»
+    expect(chatEquipment(db, "Hoy sin material, solo mi cuerpo").equipment).toEqual(["corporal"]);
+    expect(chatEquipment(db, "Solo tengo una kettlebell y bandas").equipment.sort()).toEqual(["bandas", "corporal", "kettlebell"]);
+    expect(chatEquipment(db, "¿Cómo progreso en sentadilla?")).toEqual({ equipment: ["corporal", "mancuernas", "barra", "maquinas"] });
   });
 
   it("el contexto resume lo entrenado las últimas 4 semanas con la mejor serie", () => {
