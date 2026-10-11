@@ -282,3 +282,42 @@ export function recoverySignals(list: DailyHealth[] | undefined, today: string):
   };
 }
 
+// ---------- Por meses ----------
+
+export interface MonthHealth {
+  month: string; // AAAA-MM
+  days: number; // días con pasos registrados
+  steps: number; // total del mes
+  avgSteps?: number; // media por día con datos
+  days10k: number; // días de 10.000 pasos o más
+  bestDay?: { date: string; steps: number };
+  kcal: number;
+  avgKcal?: number;
+}
+
+/** Totales y medias por mes (de más antiguo a más reciente), hasta `months` meses con datos. Los días a 0 (sin registro) no cuentan. */
+export function monthlyHealth(list: DailyHealth[] | undefined, months = 12): MonthHealth[] {
+  const byMonth = new Map<string, DailyHealth[]>();
+  for (const d of list ?? []) if (d.steps || d.activeKcal) byMonth.set(d.date.slice(0, 7), [...(byMonth.get(d.date.slice(0, 7)) ?? []), d]);
+  return [...byMonth.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .slice(-months)
+    .map(([month, days]) => {
+      const withSteps = days.filter((d) => d.steps);
+      const withKcal = days.filter((d) => d.activeKcal);
+      const steps = withSteps.reduce((t, d) => t + d.steps!, 0);
+      const kcal = withKcal.reduce((t, d) => t + d.activeKcal!, 0);
+      const best = withSteps.reduce<DailyHealth | undefined>((b, d) => (!b || d.steps! > b.steps! ? d : b), undefined);
+      return {
+        month,
+        days: withSteps.length,
+        steps,
+        avgSteps: withSteps.length ? Math.round(steps / withSteps.length) : undefined,
+        days10k: withSteps.filter((d) => d.steps! >= 10_000).length,
+        ...(best ? { bestDay: { date: best.date, steps: best.steps! } } : {}),
+        kcal: Math.round(kcal),
+        avgKcal: withKcal.length ? Math.round(kcal / withKcal.length) : undefined,
+      };
+    });
+}
+

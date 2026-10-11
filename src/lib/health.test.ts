@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { healthSummary, mergeHealth, parseHealthDate, parseHealthNumber, parseHealthPayload, recoverySignals, todayMadrid } from "./health";
+import { healthSummary, mergeHealth, monthlyHealth, parseHealthDate, parseHealthNumber, parseHealthPayload, recoverySignals, todayMadrid } from "./health";
 import { addDays } from "./dates";
 import type { DailyHealth } from "./types";
 
@@ -143,6 +143,20 @@ describe("salud del iPhone", () => {
       ["2026-10-08", 10000],
       ["2026-10-09", 2000],
     ]);
+  });
+
+  it("por meses: total, media por día con datos, días de 10.000 y mejor día (los días a 0 no cuentan)", () => {
+    const m = monthlyHealth([
+      { date: "2026-09-29", steps: 12000, activeKcal: 500, updatedAt: "" },
+      { date: "2026-09-30", steps: 8000, activeKcal: 300, updatedAt: "" },
+      { date: "2026-10-01", steps: 0, activeKcal: 0, updatedAt: "" },
+      { date: "2026-10-02", steps: 15000, activeKcal: 700, updatedAt: "" },
+    ]);
+    expect(m).toEqual([
+      { month: "2026-09", days: 2, steps: 20000, avgSteps: 10000, days10k: 1, bestDay: { date: "2026-09-29", steps: 12000 }, kcal: 800, avgKcal: 400 },
+      { month: "2026-10", days: 1, steps: 15000, avgSteps: 15000, days10k: 1, bestDay: { date: "2026-10-02", steps: 15000 }, kcal: 700, avgKcal: 700 },
+    ]);
+    expect(monthlyHealth(undefined)).toEqual([]);
   });
 });
 

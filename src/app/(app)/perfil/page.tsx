@@ -6,7 +6,7 @@ import { getAnalysis } from "@/lib/analysis";
 import { logout } from "@/app/auth-actions";
 import { revokeHealthKey, syncProfileAverages } from "@/app/actions";
 import { HealthKey } from "@/components/HealthKey";
-import { healthSummary, recoverySignals, todayMadrid } from "@/lib/health";
+import { healthSummary, monthlyHealth, recoverySignals, todayMadrid } from "@/lib/health";
 import { ProfileForm } from "@/components/ProfileForm";
 import { DeleteAccountForm } from "@/components/DeleteAccountForm";
 import { SessionCard } from "@/components/SessionCard";
@@ -584,6 +584,7 @@ function Salud({ db }: { db: Db }) {
               <SimpleBars data={h.last30} xKey="date" yKey="kcal" name="Calorías activas" unit="kcal" xFormat="day" />
             </Card>
           </div>
+          <HealthMonths db={db} today={today} />
           {h.hasRecovery && (
             <>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
@@ -732,6 +733,67 @@ function Salud({ db }: { db: Db }) {
         </div>
       </Card>
     </div>
+  );
+}
+
+const MONTH_NAMES = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
+const monthName = (ym: string) => MONTH_NAMES[Number(ym.slice(5, 7)) - 1];
+
+/** Pasos y calorías por meses: el mes en curso frente al anterior, la evolución y la tabla. */
+function HealthMonths({ db, today }: { db: Db; today: string }) {
+  const months = monthlyHealth(db.health);
+  if (!months.length) return null;
+  const cur = months.find((m) => m.month === today.slice(0, 7)) ?? months[months.length - 1];
+  const prev = months[months.indexOf(cur) - 1];
+  const pct = (a?: number, b?: number) => (a !== undefined && b ? Math.round(((a - b) / b) * 100) : undefined);
+  const delta = pct(cur.avgSteps, prev?.avgSteps);
+  return (
+    <Card title={`Este mes: ${monthName(cur.month)}`} subtitle={prev ? `Comparado con ${monthName(prev.month)}` : "Tu primer mes con datos"}>
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <Stat
+          label="Media diaria"
+          value={cur.avgSteps !== undefined ? fmtNum(cur.avgSteps) : "–"}
+          unit="pasos"
+          sub={delta !== undefined ? `${delta > 0 ? "+" : ""}${delta} % que en ${monthName(prev!.month)}` : `${cur.days} días con datos`}
+        />
+        <Stat label="Pasos del mes" value={fmtNum(cur.steps)} sub={`${cur.days} días con datos`} />
+        <Stat label="Días de 10.000+" value={cur.days10k} sub={prev ? `${prev.days10k} en ${monthName(prev.month)}` : undefined} />
+        <Stat label="Mejor día" value={cur.bestDay ? fmtNum(cur.bestDay.steps) : "–"} unit={cur.bestDay ? "pasos" : undefined} sub={cur.bestDay ? shortDate(cur.bestDay.date) : undefined} />
+      </div>
+      {months.length > 1 && (
+        <div className="mt-4">
+          <p className="mb-1 text-xs font-medium text-muted">Media de pasos por día, mes a mes</p>
+          <SimpleBars data={months.map((m) => ({ month: `${m.month}-01`, steps: m.avgSteps ?? 0 }))} xKey="month" yKey="steps" name="Media de pasos" unit="" xFormat="month" height={180} />
+        </div>
+      )}
+      <table className="mt-4 w-full text-sm tabular">
+        <thead className="text-left text-xs text-muted">
+          <tr>
+            <th className="pb-2 font-medium">Mes</th>
+            <th className="pb-2 text-right font-medium">Media/día</th>
+            <th className="pb-2 text-right font-medium">10.000+</th>
+            <th className="hidden pb-2 text-right font-medium sm:table-cell">Total</th>
+            <th className="pb-2 text-right font-medium">kcal/día</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-line">
+          {[...months].reverse().map((m) => (
+            <tr key={m.month}>
+              <td className="py-1.5 capitalize">{monthName(m.month)} {m.month.slice(2, 4)}</td>
+              <td className="py-1.5 text-right font-semibold">{m.avgSteps !== undefined ? fmtNum(m.avgSteps) : "–"}</td>
+              <td className="py-1.5 text-right">{m.days10k}</td>
+              <td className="hidden py-1.5 text-right sm:table-cell">{fmtNum(m.steps)}</td>
+              <td className="py-1.5 text-right">{m.avgKcal !== undefined ? fmtNum(m.avgKcal) : "–"}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      {months.length < 3 && (
+        <p className="mt-3 text-xs text-muted">
+          Para ver los meses anteriores, cambia una vez en el atajo los dos «últimos 7 días» por <strong>365</strong>, ejecútalo y vuelve a dejarlo en 7.
+        </p>
+      )}
+    </Card>
   );
 }
 

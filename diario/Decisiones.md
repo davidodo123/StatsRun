@@ -599,4 +599,12 @@ David preguntó si se puede «entrenar» una IA para la app. Opciones: (1) instr
 - Probado en Chrome simulando el dedo: el gesto recarga; y con el servidor respondiendo otra versión, al volver a la app sale el botón.
 - **Ajuste al montarlo con David** (*2026-10-11*): en Atajos es más fácil poner las listas en campos de tipo **Texto** que de tipo Matriz. Con una variable de lista en un campo de texto, Atajos manda los elementos **uno por línea**; la app ahora los separa (antes juntaba los números de toda la semana en uno gigante y daba «Pasos fuera de rango: 2,07e+35»). Un número suelto junto a las listas sigue contando como el valor de hoy. La guía de Perfil → Salud dice ahora «Texto».
 - Al probarlo: Atajos manda las calorías con **punto decimal** («269.714» = 269,7 kcal) y la app lo leía como miles (269.714 kcal → «fuera de rango»). Ahora, si leer el punto como de miles da un valor imposible para ese dato (más de 20.000 kcal, 300 ms de VFC…), se lee como decimal. Los pasos con punto de miles («9.120») siguen igual.
+- **Funcionando** (2026-10-11): «8 días guardados (del 2026-10-04 al 2026-10-11)». Hay que borrar la acción final «Mostrar contenido» del atajo para que las automatizaciones no saquen una ventana.
+
+## Pasos y calorías por meses
+*2026-10-11*
+
+- Perfil → Salud → tarjeta **«Este mes»** (`monthlyHealth`): media diaria de pasos (y cuánto sube o baja frente al mes anterior), total del mes, días de 10.000 pasos o más, mejor día; gráfica de la media de pasos mes a mes y tabla de los últimos 12 meses (media/día, días de 10.000+, total y kcal activas por día).
+- Los días a 0 (sin registro, por «Completar las que faltan» del atajo) no cuentan para las medias.
+- Para rellenar los meses anteriores: cambiar una vez en el atajo «últimos 7 días» por 365, ejecutarlo y volver a 7 (la app guarda 400 días).
 
