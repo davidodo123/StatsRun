@@ -4,7 +4,7 @@ import type { SessionMatch } from "@/lib/engine/planner";
 import { fmtPaceRange } from "@/lib/format";
 import { WEEKDAYS, shortDate, weekday } from "@/lib/dates";
 import { Status } from "./ui";
-import { skipSession } from "@/app/actions";
+import { SkipDayButton } from "./SkipDayButton";
 import { Icon } from "./icons";
 
 type Kind = "suave" | "calidad" | "larga" | "fuerza" | "carrera";
@@ -59,6 +59,7 @@ export function SessionCard({
   const canLog = !readOnly && match !== undefined && match.status !== "upcoming";
   const kind = KIND_STYLE[SESSION_KIND[s.type]];
   const st = match ? STATUS[match.status] : undefined;
+  const dayLabel = `${WEEKDAYS[weekday(s.date)].toLowerCase()} ${shortDate(s.date)}`;
   return (
     <article className="relative flex gap-3 overflow-hidden rounded-xl border border-line bg-surface p-3 pl-4">
       <span className={`absolute inset-y-0 left-0 w-1 ${kind.bar}`} aria-hidden />
@@ -92,10 +93,7 @@ export function SessionCard({
           </>
         )}
         {!readOnly && match?.status === "upcoming" && s.type !== "race" && !compact && (
-          <form action={skipSession} className="mt-2">
-            <input type="hidden" name="date" value={s.date} />
-            <button className="text-xs text-ink-2 underline hover:text-critical">No puedo ese día</button>
-          </form>
+          <SkipDayButton date={s.date} dayLabel={dayLabel} label="No puedo ese día" className="mt-2" />
         )}
         {(st || canLog || (match && match.activities.length > 0)) && (
           <div className="mt-2 flex flex-wrap items-center gap-3">
@@ -119,12 +117,7 @@ export function SessionCard({
               ))}
             {st && <Status tone={st.tone}>{st.label}</Status>}
             {!readOnly && s.type !== "race" && match && (match.status === "missed" || match.status === "today") && (
-              <form action={skipSession}>
-                <input type="hidden" name="date" value={s.date} />
-                <button className="text-xs text-ink-2 underline hover:text-critical" title="La IA reorganiza los próximos días">
-                  {match.status === "missed" ? "No pude → reajustar" : "Hoy no puedo"}
-                </button>
-              </form>
+              <SkipDayButton date={s.date} dayLabel={dayLabel} label={match.status === "missed" ? "No pude → reajustar" : "Hoy no puedo"} title="La IA reorganiza los próximos días" />
             )}
             {match && match.activities.length > 0 && s.type !== "strength" && (
               <span className="text-xs text-ink-2 tabular">

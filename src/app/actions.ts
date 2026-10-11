@@ -430,11 +430,18 @@ export async function undoSkip(): Promise<void> {
   refresh();
 }
 
+/** «Vuelvo a estar disponible»: quita el día y rehace el plan para que vuelvan las sesiones que se movieron o quitaron. */
 export async function clearUnavailable(fd: FormData): Promise<void> {
   const date = String(fd.get("date") ?? "");
   await updateDb((db) => {
     db.unavailableDates = (db.unavailableDates ?? []).filter((d) => d !== date);
+    db.lastSkip = undefined;
   });
+  const db = await getDb();
+  if (db.plan) {
+    await rebuildPlan(db);
+    await scheduleAiAdapt();
+  }
   refresh();
 }
 

@@ -188,6 +188,21 @@ async function Content({ searchParams }: { searchParams: PageProps<"/plan/actual
                 </summary>
                 <div className="space-y-2 border-t border-line p-4">
                   <p className="text-sm text-ink-2">{w.focus}</p>
+                  {/* los días marcados como «no puedo» de esta semana: así se ve por qué falta una sesión */}
+                  {(db.unavailableDates ?? [])
+                    .filter((d) => d >= w.start && d <= addDays(w.start, 6))
+                    .map((d) => (
+                      <form key={d} action={clearUnavailable} className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-xl border border-dashed border-line px-3 py-2 text-sm">
+                        <input type="hidden" name="date" value={d} />
+                        <span className="text-ink-2">
+                          <strong className="text-ink">
+                            {WEEKDAYS[weekday(d)]} {shortDate(d)}
+                          </strong>{" "}
+                          · marcado como «no puedo»
+                        </span>
+                        {d >= today && <button className="text-xs font-semibold text-accent">Vuelvo a estar disponible</button>}
+                      </form>
+                    ))}
                   {w.sessions.map((s) => (
                     <SessionCard key={s.id} s={s} match={matches?.get(s.id)} />
                   ))}

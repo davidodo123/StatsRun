@@ -130,7 +130,7 @@ Base: [[Estudio entrenamiento#6. La Pirámide de Entrenamiento (Helms, Valdez, M
 - [x] **Perfil más recogido en el móvil**: fuera el título «Tu perfil» y «Cerrar sesión» (está en Más); Logros es un trofeo en la barra de arriba, junto a Amigos; Editar, un lápiz en la tarjeta del nombre; y las pestañas (Resumen, Running, Fuerza, Entrenos, Salud) dentro de esa misma tarjeta. Arreglado el desborde lateral de Editar (el desplegable de tipo de fuerza era muy ancho) — *hecho 2026-10-11, pendiente de comprobar*
 - [x] **Foto de perfil** (subir, cambiar o quitar; sale en Amigos) — *hecho 2026-10-11, pendiente de comprobar*
 - [x] **Foto en los entrenos** (al registrar o desde la ficha; en Amigos sale como publicación con la foto grande) — *hecho 2026-10-11, pendiente de comprobar*
-- [ ] **Semana del 12 empieza el miércoles** en el plan de David (en local sale completa): esperando capturas de la tarjeta «Entrenador IA», la semana 1 y los días del perfil
+- [x] **Semana del 12 sin lunes a jueves**: eran días marcados como «no puedo»; quitar el día ahora devuelve las sesiones, se ven en su semana y «No puedo ese día» pide confirmación — *hecho 2026-10-11*
 
 ## 🧠 IA que aprende de ti (opción 2: sin entrenar el modelo) → [[Decisiones#IA que aprende de ti]]
 - [x] Bloque 1 · Valoraciones (pulgar arriba/abajo con motivo) y memoria de preferencias que leen las tres IA; el chat apunta solo lo que le cuentas — *hecho 2026-10-10, pendiente de comprobar*
