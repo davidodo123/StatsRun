@@ -108,6 +108,9 @@
    de html: el mismo que las barras, no el negro del fondo */
 html {
   background: var(--surface);
+  /* con la barra de estado translúcida, el 100 % del iPhone instalado no cuenta su altura: en las páginas cortas
+     la página se quedaba corta y la barra de abajo flotaba sobre una franja negra */
+  min-height: calc(100% + env(safe-area-inset-top));
 }
 
 body {
