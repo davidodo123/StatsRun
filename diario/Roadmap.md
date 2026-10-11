@@ -123,6 +123,10 @@ Base: [[Estudio entrenamiento#6. La Pirámide de Entrenamiento (Helms, Valdez, M
 8. [x] **Carreras de «Cruzando la meta»**: traer las carreras que van saliendo, con los detalles y el archivo del recorrido que publican — *hecho 2026-10-11* → [[Decisiones#Carreras de Cruzando la Meta]]
 9. [x] **Tirar para actualizar**: al bajar la pantalla, botón de actualizar para coger los cambios de la web sin cerrar y abrir la app — *hecho 2026-10-11* → [[Decisiones#Tirar para actualizar y aviso de versión nueva]]
 
+## 🐞 Fallos que vio David (2026-10-11)
+- [x] **«Borrar del historial» no funcionaba**: el plan sí se borraba, pero al volver a Planes se veía la lista de antes (caché del navegador). Arreglado en todas las acciones que guardan y redirigen (terminar plan, borrar rutina, ejercicio propio, guardar entreno…) — *hecho 2026-10-11, pendiente de comprobar*
+- [x] **Deshacer «No puedo ese día»** si se pulsa sin querer: aviso con botón «Deshacer» en Inicio, Plan y Perfil hasta el día siguiente — *hecho 2026-10-11, pendiente de comprobar* → [[Decisiones#Deshacer «No puedo ese día»]]
+
 ## 🧠 IA que aprende de ti (opción 2: sin entrenar el modelo) → [[Decisiones#IA que aprende de ti]]
 - [x] Bloque 1 · Valoraciones (pulgar arriba/abajo con motivo) y memoria de preferencias que leen las tres IA; el chat apunta solo lo que le cuentas — *hecho 2026-10-10, pendiente de comprobar*
 - [x] Bloque 2 · Ejemplos buenos en las instrucciones (few-shot), y las respuestas que valoras como ejemplos de lo que gusta y lo que no; el chat entrena con el material que nombras — *hecho 2026-10-11, pendiente de comprobar*

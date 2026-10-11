@@ -188,6 +188,14 @@ export interface StravaAuth {
   scope: string;
 }
 
+/** Cómo estaba todo antes del último «no puedo ese día». */
+export interface LastSkip {
+  at: string;
+  dates: string[];
+  plan?: Plan;
+  unavailableDates?: string[];
+}
+
 export interface Db {
   profile?: Profile;
   goal?: Goal;
@@ -203,6 +211,7 @@ export interface Db {
   routesSynced?: boolean; // ya se trajeron de Strava los recorridos de lo sincronizado antes de guardar mapas
   coach?: CoachState;
   unavailableDates?: string[]; // fechas concretas sin poder entrenar (futuras: no planificar; pasadas: "no pude")
+  lastSkip?: LastSkip; // el último «no puedo ese día», para poder deshacerlo
   places?: GymPlace[]; // dónde entrena fuerza y con qué material
   activePlaceId?: string;
   customExercises?: CustomExercise[]; // ejercicios creados por el usuario (además del catálogo)

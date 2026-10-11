@@ -76,6 +76,7 @@ export async function cancelRequest(fd: FormData): Promise<void> {
 
 export async function unfriend(fd: FormData): Promise<void> {
   await removeFriend(await requireUserId(), str(fd, "id"));
+  refresh();
   redirect("/amigos");
 }
 

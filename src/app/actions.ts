@@ -161,6 +161,7 @@ export async function saveGoal(_: FormState, fd: FormData): Promise<FormState> {
   if (db.profile) {
     await rebuildPlan(db);
     await scheduleAiAdapt();
+    refresh();
     redirect("/plan/actual");
   }
   refresh();
@@ -206,6 +207,7 @@ export async function deletePastPlan(fd: FormData): Promise<void> {
   await updateDb((db) => {
     db.pastPlans = (db.pastPlans ?? []).filter((p) => p.id !== id);
   });
+  refresh();
   redirect("/plan");
 }
 
@@ -316,6 +318,7 @@ export async function clearPlan(): Promise<void> {
     archivePlan(db);
     db.goal = undefined;
   });
+  refresh();
   redirect("/plan");
 }
 
@@ -395,6 +398,7 @@ export async function markUnavailable(_: FormState, fd: FormData): Promise<FormS
   let moved = 0;
   let dropped = 0;
   await updateDb((db) => {
+    db.lastSkip = { at: new Date().toISOString(), dates, plan: db.plan && structuredClone(db.plan), unavailableDates: db.unavailableDates };
     db.unavailableDates = [...new Set([...(db.unavailableDates ?? []), ...dates])].filter((d) => diffDays(today, d) <= 30).sort();
     if (db.plan && db.profile) ({ moved, dropped } = applyBlockedDates(db.plan, db.unavailableDates, availableDaysOf(db.profile), today));
   });
@@ -410,6 +414,18 @@ export async function skipSession(fd: FormData): Promise<void> {
   const f = new FormData();
   f.set("from", date);
   await markUnavailable({}, f);
+}
+
+/** Deshace el último «no puedo ese día»: vuelven el plan y los días tal como estaban. */
+export async function undoSkip(): Promise<void> {
+  await updateDb((db) => {
+    const last = db.lastSkip;
+    if (!last) return;
+    if (last.plan && db.plan?.createdAt === last.plan.createdAt) db.plan = last.plan;
+    db.unavailableDates = last.unavailableDates;
+    db.lastSkip = undefined;
+  });
+  refresh();
 }
 
 export async function clearUnavailable(fd: FormData): Promise<void> {
@@ -492,8 +508,8 @@ export async function saveActivity(_: FormState, fd: FormData): Promise<FormStat
   });
   await scheduleAiAdapt();
   // nuevo: volver con el formulario limpio para no registrarlo dos veces
-  if (!existingId) redirect(sessionId ? "/plan/actual?registrado=1" : `/registrar?guardado=${encodeURIComponent(id)}`);
   refresh();
+  if (!existingId) redirect(sessionId ? "/plan/actual?registrado=1" : `/registrar?guardado=${encodeURIComponent(id)}`);
   return { ok: true, message: "Entreno actualizado." };
 }
 

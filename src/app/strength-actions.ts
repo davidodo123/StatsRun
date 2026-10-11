@@ -169,6 +169,7 @@ export async function saveCustomExercise(_: FormState, fd: FormData): Promise<Fo
     }
   });
   if (error) return { error };
+  refresh();
   redirect(`/fuerza/ejercicios/${savedId}`);
 }
 
@@ -177,6 +178,7 @@ export async function deleteCustomExercise(fd: FormData): Promise<void> {
   await updateDb((db) => {
     db.customExercises = (db.customExercises ?? []).filter((x) => x.id !== id);
   });
+  refresh();
   redirect("/fuerza/ejercicios");
 }
 
@@ -209,6 +211,7 @@ export async function saveRoutine(input: { id?: string; name?: string; notes?: s
     syncPlanRoutines(d);
   });
   if (error) return { error };
+  refresh();
   redirect(`/fuerza/rutinas/${id}`);
 }
 
@@ -229,6 +232,7 @@ export async function deleteRoutine(fd: FormData): Promise<void> {
     db.routines = (db.routines ?? []).filter((r) => r.id !== id);
     syncPlanRoutines(db);
   });
+  refresh();
   redirect("/fuerza");
 }
 
@@ -278,6 +282,7 @@ export async function finishWorkout(input: {
     const uid = await requireUserId();
     after(() => adaptWithAI(uid).then(() => undefined));
   }
+  refresh();
   redirect(`/actividad/${id}`);
 }
 

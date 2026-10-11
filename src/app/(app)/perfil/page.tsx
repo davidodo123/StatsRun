@@ -10,6 +10,7 @@ import { healthSummary, monthlyHealth, recoverySignals, todayMadrid } from "@/li
 import { ProfileForm } from "@/components/ProfileForm";
 import { DeleteAccountForm } from "@/components/DeleteAccountForm";
 import { SessionCard } from "@/components/SessionCard";
+import { UndoSkip } from "@/components/UndoSkip";
 import { SimpleBars, TrendLine } from "@/components/charts";
 import { Card, Empty, Loading, PageHeader, Pill, Stat } from "@/components/ui";
 import { bmi, bmiLabel, hrMaxOf, hrRestOf, hrZones } from "@/lib/engine/physiology";
@@ -271,6 +272,7 @@ function Preparacion({ db, matches, today }: { db: Db; matches?: Map<string, Ses
       {week && <p className="mt-2 text-xs text-ink-2">{week.focus}</p>}
       {next.length > 0 && (
         <div className="mt-3 space-y-2">
+          <UndoSkip db={db} today={today} className="" />
           {next.map((s) => (
             <SessionCard key={s.id} s={s} match={matches?.get(s.id)} compact />
           ))}

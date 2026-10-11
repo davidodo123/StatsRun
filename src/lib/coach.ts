@@ -361,6 +361,7 @@ async function run(uid: string): Promise<CoachResult> {
   const built = buildContext(db, today);
   if (!built) return { ok: false, changed: 0, message: "No hay plan o sesiones próximas que ajustar." };
   const createdAt = db.plan!.createdAt;
+  const blocked = (db.unavailableDates ?? []).join();
 
   try {
     const ai = await chatJson<AiResponse>(SYSTEM, JSON.stringify(built.context));
@@ -368,8 +369,9 @@ async function run(uid: string): Promise<CoachResult> {
     let changed = 0;
     await updateDb((d) => {
       changed = 0; // la escritura puede reintentarse
-      // si el plan se regeneró mientras la IA pensaba, descartar
-      if (!d.plan || d.plan.createdAt !== createdAt) return;
+      // si el plan se regeneró mientras la IA pensaba, descartar;
+      // o si cambiaron los días sin entrenar (p. ej. se deshizo un «no puedo ese día»), también
+      if (!d.plan || d.plan.createdAt !== createdAt || (d.unavailableDates ?? []).join() !== blocked) return;
       const allowed = new Set(built.upcoming.map((s) => s.id));
       const free = new Set(built.freeDates);
       const all = d.plan.weeks.flatMap((w) => w.sessions);

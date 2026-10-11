@@ -20,6 +20,7 @@ import { fmtDuration, fmtPaceRange } from "@/lib/format";
 import { WEEKDAYS, addDays, diffDays, mondayOf, shortDate, weekday } from "@/lib/dates";
 import type { Phase } from "@/lib/types";
 import { clearPlan, clearUnavailable, regeneratePlan } from "@/app/actions";
+import { UndoSkip } from "@/components/UndoSkip";
 import { AiRating } from "@/components/AiRating";
 import { feedbackFor } from "@/lib/aiMemory";
 
@@ -91,6 +92,7 @@ async function Content({ searchParams }: { searchParams: PageProps<"/plan/actual
         }
       />
 
+      <UndoSkip db={db} today={today} />
       {sp.registrado && (
         <div className="mb-4">
           <Notice tone="good">Sesión registrada. El cumplimiento y tu forma ya están actualizados.</Notice>

@@ -608,3 +608,14 @@ David preguntó si se puede «entrenar» una IA para la app. Opciones: (1) instr
 - Los días a 0 (sin registro, por «Completar las que faltan» del atajo) no cuentan para las medias.
 - Para rellenar los meses anteriores: cambiar una vez en el atajo «últimos 7 días» por 365, ejecutarlo y volver a 7 (la app guarda 400 días).
 
+## Refrescar antes de redirigir
+*2026-10-11*
+
+- Las acciones que guardan y luego llevan a otra página (`redirect`) no refrescaban la caché del navegador: con `staleTimes.dynamic: 30`, la página de destino salía con lo de antes durante 30 s (por eso «Borrar del historial» parecía no hacer nada). Ahora todas llaman a `refresh()` justo antes del `redirect`.
+
+## Deshacer «No puedo ese día»
+*2026-10-11*
+
+- Al marcar un día (o un rango) sin poder entrenar se guarda una copia del plan y de los días bloqueados de antes (`lastSkip`). Sale un aviso «Marcaste el … como día sin poder entrenar · Deshacer» en Inicio, Plan y Perfil hasta el día siguiente; «Deshacer» devuelve el plan y los días tal como estaban.
+- Si el plan se rehízo después (otro objetivo, «Adaptar con mis datos»), el aviso ya no sale: la copia sería de otro plan.
+- La IA que reajusta en segundo plano descarta su respuesta si mientras pensaba cambiaron los días sin entrenar, para no volver a meter el cambio deshecho.
