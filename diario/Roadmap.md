@@ -112,6 +112,17 @@ Base: [[Estudio entrenamiento#6. La Pirámide de Entrenamiento (Helms, Valdez, M
 - [x] Caché de navegación de 30 s y precarga de páginas en el service worker
 - [-] ~~Mover Vercel y Redis a Europa~~: descartado, la base de Upstash en Europa no tiene plan gratis en Vercel y David prefiere seguir gratis en iad1
 
+## 🛠️ Fase 5 · Arreglos que pidió David (2026-10-11) — *de uno en uno, comprobando cada uno*
+1. [x] **Atajo de pasos automático**: que se actualice solo y que, si un día no se ejecuta, ese día no se pierda (cada envío manda los últimos 7 días) — *hecho, falta que David cambie el atajo* → [[Decisiones#Atajo de pasos con 7 días]]
+2. [ ] **Arreglar el logo**
+3. [ ] **Perfil en el móvil**: quitar la barra de desplazamiento de las pestañas (Resumen, Running, Fuerza, Actividades…)
+4. [ ] **Plan con fuerza**: que ponga todos los días de carrera que necesite (p. ej. 5) más los días de fuerza elegidos (p. ej. 3); ahora solo pone 3 de fuerza y 3 de correr
+5. [ ] **Un plan con dos carreras** (p. ej. 25 de noviembre y abril): que se ajuste a las dos
+6. [ ] **Plan en el móvil**: hay un espacio negro abajo
+7. [ ] **Quitar las barras de desplazamiento en todo el móvil**
+8. [ ] **Carreras de «Cruzando la meta»**: traer las carreras que van saliendo, con los detalles y el archivo del recorrido que publican
+9. [ ] **Tirar para actualizar**: al bajar la pantalla, botón de actualizar para coger los cambios de la web sin cerrar y abrir la app
+
 ## 🧠 IA que aprende de ti (opción 2: sin entrenar el modelo) → [[Decisiones#IA que aprende de ti]]
 - [x] Bloque 1 · Valoraciones (pulgar arriba/abajo con motivo) y memoria de preferencias que leen las tres IA; el chat apunta solo lo que le cuentas — *hecho 2026-10-10, pendiente de comprobar*
 - [x] Bloque 2 · Ejemplos buenos en las instrucciones (few-shot), y las respuestas que valoras como ejemplos de lo que gusta y lo que no; el chat entrena con el material que nombras — *hecho 2026-10-11, pendiente de comprobar*

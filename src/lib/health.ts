@@ -30,8 +30,8 @@ const pick = (o: Record<string, unknown>, keys: string[]) => keys.map((k) => o[k
 /** Convierte un día del cuerpo de la petición; acepta claves en español o en inglés. */
 function parseDay(o: Record<string, unknown>, today: string, now: string): DailyHealth | string {
   const rawDate = pick(o, ["fecha", "date"]);
-  const date = typeof rawDate === "string" ? rawDate.slice(0, 10) : today;
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return `Fecha no válida: ${String(rawDate)} (usa AAAA-MM-DD).`;
+  const date = rawDate === undefined ? today : parseHealthDate(rawDate);
+  if (!date) return `Fecha no válida: ${String(rawDate)} (usa AAAA-MM-DD).`;
   if (date > addDays(today, 1) || diffDays(today, date) > HEALTH_KEEP_DAYS) return `Fecha fuera de rango: ${date}.`;
   const steps = parseHealthNumber(pick(o, ["pasos", "steps"]));
   const activeKcal = parseHealthNumber(pick(o, ["kcalActivas", "activeKcal", "calorias", "calories"]));
@@ -63,11 +63,86 @@ function parseDay(o: Record<string, unknown>, today: string, now: string): Daily
   };
 }
 
-/** Cuerpo de la petición → días válidos. Un día suelto ({pasos, kcalActivas…}) o varios ({dias: [...]}). */
+const MONTHS: Record<string, number> = { ene: 1, jan: 1, feb: 2, mar: 3, abr: 4, apr: 4, may: 5, jun: 6, jul: 7, ago: 8, aug: 8, sep: 9, set: 9, oct: 10, nov: 11, dic: 12, dec: 12 };
+const pad = (n: number) => String(n).padStart(2, "0");
+
+/**
+ * Fecha tal como la manda Atajos → AAAA-MM-DD (día en España). Acepta «2026-10-11», ISO con hora y zona
+ * («2026-10-10T22:00:00Z» es ya el día 11 en España), «11/10/2026», «11 oct 2026», «11 de octubre de 2026» y «Oct 11, 2026».
+ */
+export function parseHealthDate(v: unknown): string | undefined {
+  if (v instanceof Date) return Number.isNaN(v.getTime()) ? undefined : todayMadrid(v);
+  if (typeof v !== "string") return undefined;
+  const s = v.trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+  if (/^\d{4}-\d{2}-\d{2}T/.test(s)) {
+    // con zona horaria se pasa al día de España; sin ella, la fecha tal cual
+    if (/(Z|[+-]\d{2}:?\d{2})$/.test(s)) {
+      const d = new Date(s);
+      return Number.isNaN(d.getTime()) ? undefined : todayMadrid(d);
+    }
+    return s.slice(0, 10);
+  }
+  let m = s.match(/^(\d{1,2})[/.-](\d{1,2})[/.-](\d{2,4})/);
+  if (m) return `${m[3].length === 2 ? `20${m[3]}` : m[3]}-${pad(+m[2])}-${pad(+m[1])}`;
+  const t = s.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "");
+  m = t.match(/(\d{1,2})\s+(?:de\s+)?([a-z]{3})[a-z]*\.?\s+(?:de\s+)?(\d{4})/);
+  if (m && MONTHS[m[2]]) return `${m[3]}-${pad(MONTHS[m[2]])}-${pad(+m[1])}`;
+  m = t.match(/([a-z]{3})[a-z]*\.?\s+(\d{1,2}),?\s+(\d{4})/);
+  if (m && MONTHS[m[1]]) return `${m[3]}-${pad(MONTHS[m[1]])}-${pad(+m[2])}`;
+  return undefined;
+}
+
+const SERIES: [string, string[], string[]][] = [
+  // [clave del día, listas de valores aceptadas, listas de fechas propias]
+  ["pasos", ["pasos", "steps"], ["fechasPasos"]],
+  ["kcalActivas", ["kcalActivas", "activeKcal"], ["fechasKcal", "fechasActivas"]],
+  ["kcalReposo", ["kcalReposo", "restingKcal"], ["fechasReposo"]],
+  ["vfc", ["vfc", "hrv"], ["fechasVfc"]],
+  ["pulsoReposo", ["pulsoReposo", "restingHr"], ["fechasPulso"]],
+  ["sueno", ["sueno", "sueño", "sleep"], ["fechasSueno"]],
+];
+
+/**
+ * Formato de listas, el que sale de Atajos al buscar muestras «de los últimos 7 días» agrupadas por día:
+ * {"fechas": [...], "pasos": [...], "kcalActivas": [...]} (o una lista de fechas propia por dato: fechasPasos, fechasKcal…).
+ * Se juntan por fecha en un día por elemento. Devuelve undefined si el cuerpo no trae listas.
+ */
+function daysFromLists(o: Record<string, unknown>, today: string): Record<string, unknown>[] | string | undefined {
+  const shared = pick(o, ["fechas", "dates"]);
+  const series = SERIES.map(([key, valueKeys, dateKeys]) => ({ key, values: pick(o, valueKeys), dates: pick(o, dateKeys) ?? shared })).filter((x) => Array.isArray(x.values));
+  if (!series.length) return undefined;
+  const byDate = new Map<string, Record<string, unknown>>();
+  for (const { key, values, dates } of series) {
+    if (!Array.isArray(dates)) return `Para la lista «${key}» falta la lista de fechas («fechas»).`;
+    const vals = values as unknown[];
+    if (dates.length !== vals.length) return `La lista «${key}» tiene ${vals.length} valores y ${dates.length} fechas.`;
+    for (let i = 0; i < dates.length; i++) {
+      const date = parseHealthDate(dates[i]);
+      if (!date) return `No entiendo la fecha «${String(dates[i])}».`;
+      const day = byDate.get(date) ?? { fecha: date };
+      day[key] = vals[i];
+      byDate.set(date, day);
+    }
+  }
+  // los valores sueltos que vengan junto a las listas (p. ej. la VFC o el sueño de hoy) van al día de hoy
+  for (const [key, valueKeys] of SERIES) {
+    const v = pick(o, valueKeys);
+    if (v === undefined || Array.isArray(v)) continue;
+    const day = byDate.get(today) ?? { fecha: today };
+    day[key] = v;
+    byDate.set(today, day);
+  }
+  return [...byDate.values()];
+}
+
+/** Cuerpo de la petición → días válidos. Un día suelto ({pasos, kcalActivas…}), varios ({dias: [...]}) o listas paralelas ({fechas, pasos…}). */
 export function parseHealthPayload(body: unknown, today: string, now = new Date().toISOString()): { days: DailyHealth[] } | { error: string } {
   if (!body || typeof body !== "object") return { error: "El cuerpo tiene que ser JSON." };
   const o = body as Record<string, unknown>;
-  const list = Array.isArray(o.dias) ? o.dias : Array.isArray(o.days) ? o.days : [o];
+  const fromLists = daysFromLists(o, today);
+  if (typeof fromLists === "string") return { error: fromLists };
+  const list = fromLists ?? (Array.isArray(o.dias) ? o.dias : Array.isArray(o.days) ? o.days : [o]);
   if (list.length > HEALTH_KEEP_DAYS) return { error: `Como mucho ${HEALTH_KEEP_DAYS} días por envío.` };
   const days: DailyHealth[] = [];
   for (const d of list) {

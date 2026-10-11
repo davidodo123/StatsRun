@@ -28,7 +28,9 @@ export async function POST(req: Request) {
   await updateDb((db) => {
     db.health = mergeHealth(db.health ?? [], parsed.days, today);
   }, uid);
-  const d = parsed.days.at(-1)!;
+  const days = [...parsed.days].sort((x, y) => x.date.localeCompare(y.date));
+  const d = days.at(-1)!;
   const what = [d.steps !== undefined && `${d.steps.toLocaleString("es-ES")} pasos`, d.activeKcal !== undefined && `${d.activeKcal} kcal activas`].filter(Boolean).join(" y ");
-  return reply({ ok: true, message: parsed.days.length > 1 ? `${parsed.days.length} días guardados.` : `Guardado: ${what || "datos del día"}.` });
+  const range = days.length > 1 ? `${days.length} días guardados (del ${days[0].date} al ${d.date}). ` : "";
+  return reply({ ok: true, message: `${range}${d.date}: ${what || "datos del día"}.` });
 }

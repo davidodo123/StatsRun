@@ -639,22 +639,23 @@ function Salud({ db }: { db: Db }) {
               acción se añade desde la barra <em>Buscar acciones</em> de abajo y se coloca al final: el orden importa.
             </p>
             <ol className="space-y-5">
-              <ShortcutStep n={1} img="1-pasos" w={600} h={882} title="Pasos de hoy">
+              <ShortcutStep n={1} title="Pasos de los últimos 7 días">
                 Busca <em>muestras</em> y añade <strong className="text-ink">Buscar muestras de salud</strong> (puede llamarse «Buscar muestras médicas»). Tipo{" "}
-                <em>Pasos</em> (<em>Steps</em>), filtro <em>Fecha de inicio · es hoy</em>, unidad <em>contar</em>. Debajo, añade{" "}
-                <strong className="text-ink">Calcular estadísticas</strong> con <em>Suma</em>: tiene que poner «Calcular Suma de Muestras médicas».
+                <em>Pasos</em>, filtro <em>Fecha de inicio · está en los últimos 7 días</em>, <strong className="text-ink">Agrupar por: Día</strong> y unidad <em>contar</em>.
+                Así cada envío lleva la semana entera: si un día el atajo no se ejecuta, el siguiente lo recupera.
               </ShortcutStep>
-              <ShortcutStep n={2} img="2-variable-pasos" w={600} h={304} title="Guárdalo como «Pasos»">
-                Añade <strong className="text-ink">Definir variable</strong>, escribe <code>Pasos</code> como nombre y deja <em>Suma</em> como valor.
+              <ShortcutStep n={2} title="Sus fechas y sus valores">
+                Añade <strong className="text-ink">Obtener detalles de muestras de salud</strong> → <em>Fecha de inicio</em> y luego <strong className="text-ink">Definir variable</strong>{" "}
+                <code>FechasPasos</code>. Otra vez <strong className="text-ink">Obtener detalles de muestras de salud</strong> (de las mismas muestras: toca el valor y elige el
+                resultado del paso 1) → <em>Valor</em> y <strong className="text-ink">Definir variable</strong> <code>Pasos</code>.
               </ShortcutStep>
-              <ShortcutStep n={3} img="3-calorias" w={600} h={584} title="Calorías de hoy → «Activas»">
-                Repite los pasos 1 y 2 con el tipo <em>Energía en actividad</em> (en la lista va por la E; arriba del menú hay un buscador), unidad{" "}
-                <em>kcal</em> y la variable <code>Activas</code>. Revisa que el cálculo sea <em>Suma</em> y no <em>Media</em>, y el filtro <em>es hoy</em>.
+              <ShortcutStep n={3} title="Lo mismo con las calorías">
+                Repite los pasos 1 y 2 con el tipo <em>Energía en actividad</em> (unidad <em>kcal</em>) y las variables <code>FechasKcal</code> y <code>Activas</code>.
               </ShortcutStep>
               <ShortcutStep n={4} img="4-buscar-url" w={600} h={831} title="La acción que envía">
                 Busca <em>contenido</em> y elige <strong className="text-ink">Obtener contenido de URL</strong> (icono verde con flecha). No sirven «URL» ni «Abrir URL».
               </ShortcutStep>
-              <ShortcutStep n={5} img="5-enviar" w={600} h={885} title="Configura el envío">
+              <ShortcutStep n={5} title="Configura el envío">
                 <ul className="list-disc space-y-1 pl-5">
                   <li>
                     URL: <code className="break-all">{endpoint}</code>
@@ -666,15 +667,16 @@ function Salud({ db }: { db: Db }) {
                     Cabeceras → Añadir nueva cabecera: <code>Authorization</code> y como valor lo copiado en el paso 1 (<code>Bearer rio_…</code>, con un espacio).
                   </li>
                   <li>
-                    Cuerpo de la solicitud: <em>JSON</em>, dos campos de tipo <em>Número</em> en minúscula: <code>pasos</code> y <code>kcalActivas</code>. En cada valor,
-                    borra el 0, pulsa <em>Seleccionar variable</em> y elige <em>Pasos</em> o <em>Activas</em>.
+                    Cuerpo de la solicitud: <em>JSON</em>, cuatro campos de tipo <strong className="text-ink">Matriz</strong> (lista), en minúscula como aquí:{" "}
+                    <code>fechasPasos</code>, <code>pasos</code>, <code>fechasKcal</code> y <code>kcalActivas</code>. En cada uno, <em>Seleccionar variable</em> y elige la suya
+                    (FechasPasos, Pasos, FechasKcal, Activas).
                   </li>
                 </ul>
               </ShortcutStep>
               <ShortcutStep n={6} img="6-resultado" w={600} h={393} title="Pruébalo">
                 Añade <strong className="text-ink">Mostrar resultado</strong> y pulsa <Icon name="play" className="h-3 w-3 align-[-1px]" />. La primera vez pide permiso para leer Salud: <em>Permitir</em>. Tiene que salir{" "}
-                <code>&quot;ok&quot; : true</code> con tus pasos (justo después de medianoche saldrá 0). Si sale 0 de día, revisa Ajustes → Salud → Acceso a datos →
-                Atajos.
+                <code>&quot;ok&quot; : true</code> y «7 días guardados (del … al …)». Si da un error con una fecha o con las listas, mándame la captura. Si salen 0 pasos de
+                día, revisa Ajustes → Salud → Acceso a datos → Atajos.
               </ShortcutStep>
             </ol>
           </div>
@@ -683,8 +685,12 @@ function Salud({ db }: { db: Db }) {
             <ol className="space-y-5">
               <ShortcutStep n={7} img="7-automatizacion" w={600} h={362} title="Cada noche a las 23:50">
                 En Atajos → <em>Automatización</em> → <em>+</em> → <em>Hora del día</em>: 23:50, todos los días → <em>Ejecutar inmediatamente</em> (sin «Notificar al
-                ejecutar») → elige tu atajo. Puede ejecutarse más veces al día: cada envío actualiza el total. Salud solo se lee con el iPhone desbloqueado; si un día no
-                llega, pulsa el atajo a mano.
+                ejecutar») → elige tu atajo.
+              </ShortcutStep>
+              <ShortcutStep n={8} title="Y por la mañana, al quitar el cargador">
+                Otra automatización: <em>Cargador</em> → <em>Se desconecta</em> → <em>Ejecutar inmediatamente</em> → el mismo atajo. iOS no deja leer Salud con el iPhone
+                bloqueado, así que la de la noche a veces falla; la de la mañana (cuando lo coges) lo recupera. Como cada envío lleva 7 días, no se pierde ninguno aunque
+                fallen varias seguidas. No hace falta pulsarlo nunca a mano.
               </ShortcutStep>
             </ol>
           </div>
@@ -695,20 +701,20 @@ function Salud({ db }: { db: Db }) {
               «Obtener contenido de URL», igual que las de pasos.
             </p>
             <ol className="space-y-4">
-              <ShortcutStep n={8} title="VFC → «VFC»">
+              <ShortcutStep n={9} title="VFC → «VFC»">
                 <strong className="text-ink">Buscar muestras de salud</strong>, tipo <em>Variabilidad de la frecuencia cardiaca</em>, filtro <em>Fecha de inicio · es hoy</em>.
                 Luego <strong className="text-ink">Calcular estadísticas</strong> con <em>Media</em> y <strong className="text-ink">Definir variable</strong> <code>VFC</code>.
               </ShortcutStep>
-              <ShortcutStep n={9} title="Pulso en reposo → «PulsoReposo»">
+              <ShortcutStep n={10} title="Pulso en reposo → «PulsoReposo»">
                 Igual, con el tipo <em>Frecuencia cardiaca en reposo</em>, <em>Media</em> y la variable <code>PulsoReposo</code>.
               </ShortcutStep>
-              <ShortcutStep n={10} title="Sueño → «Sueno»">
+              <ShortcutStep n={11} title="Sueño → «Sueno»">
                 <strong className="text-ink">Buscar muestras de salud</strong>, tipo <em>Análisis del sueño</em>, filtro <em>Fecha de inicio · está en los últimos 1 días</em> y{" "}
                 <em>Valor · no es · En la cama</em> (si no aparece ese filtro, déjalo sin él). Luego <strong className="text-ink">Obtener detalles de muestras de salud</strong> →{" "}
                 <em>Duración</em>, <strong className="text-ink">Calcular estadísticas</strong> con <em>Suma</em> y la variable <code>Sueno</code>. Vale en horas, minutos o
                 segundos: la app lo entiende.
               </ShortcutStep>
-              <ShortcutStep n={11} title="Añádelos al envío">
+              <ShortcutStep n={12} title="Añádelos al envío">
                 En el cuerpo JSON de «Obtener contenido de URL», tres campos más de tipo <em>Número</em>: <code>vfc</code>, <code>pulsoReposo</code> y <code>sueno</code>, con sus
                 variables. Al ejecutarlo, la respuesta debe seguir diciendo <code>&quot;ok&quot; : true</code>. Si un día no hay dato (sin reloj puesto), no pasa nada.
               </ShortcutStep>

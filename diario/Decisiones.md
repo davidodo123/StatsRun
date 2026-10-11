@@ -552,3 +552,14 @@ David preguntó si se puede «entrenar» una IA para la app. Opciones: (1) instr
 - **Perfil → Salud** (antes «Pasos y calorías»): tres cajas con su estado y gráficas de 30 días de sueño, pulso en reposo y VFC. La guía del atajo tiene un apartado opcional «Recuperación (con Apple Watch)», sin capturas porque no se pueden hacer desde aquí.
 - **Pendiente de David**: añadir esas acciones al atajo. Si algún paso no aparece igual en su iPhone (sobre todo el del sueño), ajustar la guía con capturas.
 
+## Atajo de pasos con 7 días
+*2026-10-11*
+
+- **Problema**: el atajo mandaba solo el día de hoy. iOS no deja leer Salud con el iPhone bloqueado, así que la automatización de las 23:50 a veces falla, y ese día se perdía salvo que David lo pulsara a mano.
+- **Solución**: cada envío lleva **los últimos 7 días**. En Atajos, «Buscar muestras de salud» con *está en los últimos 7 días* y **Agrupar por: Día**; luego «Obtener detalles» → *Fecha de inicio* y *Valor*, sin bucles. El cuerpo JSON lleva listas: `fechasPasos`, `pasos`, `fechasKcal`, `kcalActivas` (también vale una sola lista `fechas`). Un día que llega otra vez se actualiza; los que no llegan se conservan.
+- **Fechas**: la app entiende las de Atajos en cualquier formato (`parseHealthDate`): «2026-10-11», ISO con zona (pasada al día de España: «2026-10-10T22:00:00Z» es el 11), «11/10/2026», «11 oct 2026, 0:00», «11 de octubre de 2026», «Oct 11, 2026». Si no entiende una, el atajo responde cuál.
+- **Dos automatizaciones**: a las 23:50 y al **desconectar el cargador** por la mañana (cuando se coge el iPhone desbloqueado). Con 7 días por envío no se pierde ninguno aunque fallen varias seguidas.
+- Los valores sueltos (VFC, pulso, sueño de hoy) pueden ir junto a las listas. La respuesta del atajo dice qué días ha guardado.
+- Probado contra la API local con un cuerpo como el de Atajos: 6 días guardados, el que no venía se conserva.
+- Guía de Perfil → Salud reescrita. Se quitaron las 4 capturas que ya no correspondían (pasos, variable, calorías y envío); quedan las de «Obtener contenido de URL», el resultado y la automatización.
+

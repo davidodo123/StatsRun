@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { healthSummary, mergeHealth, parseHealthNumber, parseHealthPayload, recoverySignals, todayMadrid } from "./health";
+import { healthSummary, mergeHealth, parseHealthDate, parseHealthNumber, parseHealthPayload, recoverySignals, todayMadrid } from "./health";
 import { addDays } from "./dates";
 import type { DailyHealth } from "./types";
 
@@ -88,6 +88,47 @@ describe("salud del iPhone", () => {
     // con solo una semana de datos no hay línea base: no salta el pulso ni la VFC
     expect(recoverySignals(tired.slice(0, 7), today)).toMatchObject({ highRestingHr: false, lowHrv: false, shortSleep: true });
     expect(recoverySignals(undefined, today)).toMatchObject({ shortSleep: false, highRestingHr: false, lowHrv: false });
+  });
+
+  it("fechas tal como las manda Atajos", () => {
+    expect(parseHealthDate("2026-10-11")).toBe("2026-10-11");
+    expect(parseHealthDate("2026-10-10T22:00:00Z")).toBe("2026-10-11"); // medianoche en España
+    expect(parseHealthDate("2026-10-11T00:00:00+02:00")).toBe("2026-10-11");
+    expect(parseHealthDate("2026-10-11T08:15:00")).toBe("2026-10-11");
+    expect(parseHealthDate("11/10/2026")).toBe("2026-10-11");
+    expect(parseHealthDate("11 oct 2026, 0:00")).toBe("2026-10-11");
+    expect(parseHealthDate("11 de octubre de 2026")).toBe("2026-10-11");
+    expect(parseHealthDate("Oct 11, 2026 at 12:00 AM")).toBe("2026-10-11");
+    expect(parseHealthDate("ayer")).toBeUndefined();
+    expect(parseHealthDate(42)).toBeUndefined();
+  });
+
+  it("listas de los últimos días (sin bucles en el atajo): se juntan por fecha y no se pierde ningún día", () => {
+    const r = parseHealthPayload({ fechas: ["2026-10-07", "2026-10-08", "2026-10-09"], pasos: ["8.234", 10000, 2000], kcalActivas: [300, 500, 120] }, today, now);
+    expect("days" in r && r.days.map((d) => [d.date, d.steps, d.activeKcal])).toEqual([
+      ["2026-10-07", 8234, 300],
+      ["2026-10-08", 10000, 500],
+      ["2026-10-09", 2000, 120],
+    ]);
+    // con fechas propias por dato (un día sin calorías no descuadra)
+    const r2 = parseHealthPayload({ fechasPasos: ["8/10/2026", "9/10/2026"], pasos: [9000, 3000], fechasKcal: ["9/10/2026"], kcalActivas: [200] }, today, now);
+    expect("days" in r2 && r2.days.map((d) => [d.date, d.steps, d.activeKcal])).toEqual([
+      ["2026-10-08", 9000, undefined],
+      ["2026-10-09", 3000, 200],
+    ]);
+    // listas de pasos + VFC y sueño sueltos de hoy
+    const r3 = parseHealthPayload({ fechas: ["2026-10-08", today], pasos: [9000, 3000], vfc: 55, sueno: "7,2" }, today, now);
+    expect("days" in r3 && r3.days.find((d) => d.date === today)).toMatchObject({ steps: 3000, hrvMs: 55, sleepHours: 7.2 });
+    expect(parseHealthPayload({ fechas: ["2026-10-08"], pasos: [1, 2] }, today, now)).toEqual({ error: "La lista «pasos» tiene 2 valores y 1 fechas." });
+    expect(parseHealthPayload({ fechas: ["mañana"], pasos: [1] }, today, now)).toEqual({ error: "No entiendo la fecha «mañana»." });
+    // un día que llega otra vez con más pasos se actualiza; los que no llegan se conservan
+    const merged = mergeHealth([{ date: "2026-10-06", steps: 7000, updatedAt: "a" }, { date: "2026-10-09", steps: 1500, updatedAt: "a" }], "days" in r ? r.days : [], today);
+    expect(merged.map((d) => [d.date, d.steps])).toEqual([
+      ["2026-10-06", 7000],
+      ["2026-10-07", 8234],
+      ["2026-10-08", 10000],
+      ["2026-10-09", 2000],
+    ]);
   });
 });
 
