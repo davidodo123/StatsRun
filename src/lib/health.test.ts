@@ -116,6 +116,12 @@ describe("salud del iPhone", () => {
       ["2026-10-08", 9000, undefined],
       ["2026-10-09", 3000, 200],
     ]);
+    // como lo manda Atajos con variables de lista en campos de texto: un elemento por línea
+    const r4 = parseHealthPayload({ fechasPasos: "8 oct 2026, 0:00\n9 oct 2026, 0:00", pasos: "9.120\n3.400", fechasKcal: "9 oct 2026, 0:00", kcalActivas: "210" }, today, now);
+    expect("days" in r4 && r4.days.map((d) => [d.date, d.steps, d.activeKcal])).toEqual([
+      ["2026-10-08", 9120, undefined],
+      ["2026-10-09", 3400, 210],
+    ]);
     // listas de pasos + VFC y sueño sueltos de hoy
     const r3 = parseHealthPayload({ fechas: ["2026-10-08", today], pasos: [9000, 3000], vfc: 55, sueno: "7,2" }, today, now);
     expect("days" in r3 && r3.days.find((d) => d.date === today)).toMatchObject({ steps: 3000, hrvMs: 55, sleepHours: 7.2 });

@@ -109,8 +109,18 @@ const SERIES: [string, string[], string[]][] = [
  * Se juntan por fecha en un día por elemento. Devuelve undefined si el cuerpo no trae listas.
  */
 function daysFromLists(o: Record<string, unknown>, today: string): Record<string, unknown>[] | string | undefined {
-  const shared = pick(o, ["fechas", "dates"]);
-  const series = SERIES.map(([key, valueKeys, dateKeys]) => ({ key, values: pick(o, valueKeys), dates: pick(o, dateKeys) ?? shared })).filter((x) => Array.isArray(x.values));
+  // Atajos, con una variable de lista en un campo de texto, manda los elementos separados por saltos de línea
+  const asList = (v: unknown) => (Array.isArray(v) ? v : typeof v === "string" ? v.split(/\r?\n/).map((x) => x.trim()).filter(Boolean) : undefined);
+  const shared = asList(pick(o, ["fechas", "dates"]));
+  const series = SERIES.map(([key, valueKeys, dateKeys]) => {
+    const ownDates = asList(pick(o, dateKeys));
+    const dates = ownDates ?? shared;
+    const raw = pick(o, valueKeys);
+    // con sus propias fechas, los valores son una lista (aunque sea de un día); con las comunes, solo si vienen como
+    // lista o en varias líneas (un número suelto junto a las listas es el valor de hoy)
+    const isList = Array.isArray(raw) || (typeof raw === "string" && (ownDates !== undefined || /\n/.test(raw)));
+    return { key, values: dates && isList ? asList(raw) : undefined, dates };
+  }).filter((x) => Array.isArray(x.values) && x.values.length);
   if (!series.length) return undefined;
   const byDate = new Map<string, Record<string, unknown>>();
   for (const { key, values, dates } of series) {
@@ -128,7 +138,7 @@ function daysFromLists(o: Record<string, unknown>, today: string): Record<string
   // los valores sueltos que vengan junto a las listas (p. ej. la VFC o el sueño de hoy) van al día de hoy
   for (const [key, valueKeys] of SERIES) {
     const v = pick(o, valueKeys);
-    if (v === undefined || Array.isArray(v)) continue;
+    if (v === undefined || Array.isArray(v) || series.some((x) => x.key === key)) continue;
     const day = byDate.get(today) ?? { fecha: today };
     day[key] = v;
     byDate.set(today, day);

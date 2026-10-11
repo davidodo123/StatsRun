@@ -675,9 +675,10 @@ function Salud({ db }: { db: Db }) {
                     Cabeceras → Añadir nueva cabecera: <code>Authorization</code> y como valor lo copiado en el paso 1 (<code>Bearer rio_…</code>, con un espacio).
                   </li>
                   <li>
-                    Cuerpo de la solicitud: <em>JSON</em>, cuatro campos de tipo <strong className="text-ink">Matriz</strong> (lista), en minúscula como aquí:{" "}
+                    Cuerpo de la solicitud: <em>JSON</em>, cuatro campos de tipo <strong className="text-ink">Texto</strong>, con la clave escrita exactamente así:{" "}
                     <code>fechasPasos</code>, <code>pasos</code>, <code>fechasKcal</code> y <code>kcalActivas</code>. En cada uno, <em>Seleccionar variable</em> y elige la suya
-                    (FechasPasos, Pasos, FechasKcal, Activas).
+                    (FechasPasos, Pasos y FechasKcal salen encima del teclado; en <code>kcalActivas</code>, «Seleccionar variable» y toca la acción «Obtener Valor» de las
+                    calorías).
                   </li>
                 </ul>
               </ShortcutStep>
