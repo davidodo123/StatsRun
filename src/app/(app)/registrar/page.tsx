@@ -17,6 +17,7 @@ import { TagChips } from "@/components/ActivityItem";
 import { tagsForDb } from "@/lib/engine/tags";
 import { estimateVdot } from "@/lib/engine/stats";
 import { requireUserId } from "@/lib/session";
+import { activityPhotoUrl } from "@/lib/photos";
 
 export const metadata: Metadata = { title: "Registrar entreno" };
 
@@ -49,7 +50,8 @@ function fromSession(s: PlannedSession, today: string): ActivityFormInitial {
 
 async function Content({ searchParams }: { searchParams: PageProps<"/registrar">["searchParams"] }) {
   const sp = await searchParams;
-  const [{ db, today, matches }, friends] = await Promise.all([getAnalysis(), requireUserId().then(getFriends)]);
+  const uid = await requireUserId();
+  const [{ db, today, matches }, friends] = await Promise.all([getAnalysis(), getFriends(uid)]);
   const sessions = db.plan?.weeks.flatMap((w) => w.sessions) ?? [];
 
   const editId = typeof sp.editar === "string" ? sp.editar : undefined;
@@ -79,6 +81,7 @@ async function Content({ searchParams }: { searchParams: PageProps<"/registrar">
       feelings: editing.feelings,
       notes: editing.notes,
       with: editing.with,
+      photo: activityPhotoUrl(uid, editing),
     };
   else if (session) initial = fromSession(session, today);
   else initial = { sport: "run", name: "", date: today, time: "07:00", rpe: 4 };

@@ -129,6 +129,7 @@ Base: [[Estudio entrenamiento#6. La Pirámide de Entrenamiento (Helms, Valdez, M
 - [x] **Fuerza por grupos**: en Perfil, «Tipo de fuerza»: general (cuerpo entero, se corre todos los días) o por grupos (pecho, espalda, pierna; el día de pierna no se corre, dos días antes de la tirada larga) — *hecho 2026-10-11, pendiente de comprobar* → [[Decisiones#Fuerza por grupos]]
 - [x] **Perfil más recogido en el móvil**: fuera el título «Tu perfil» y «Cerrar sesión» (está en Más); Logros es un trofeo en la barra de arriba, junto a Amigos; Editar, un lápiz en la tarjeta del nombre; y las pestañas (Resumen, Running, Fuerza, Entrenos, Salud) dentro de esa misma tarjeta. Arreglado el desborde lateral de Editar (el desplegable de tipo de fuerza era muy ancho) — *hecho 2026-10-11, pendiente de comprobar*
 - [x] **Foto de perfil** (subir, cambiar o quitar; sale en Amigos) — *hecho 2026-10-11, pendiente de comprobar*
+- [x] **Foto en los entrenos** (al registrar o desde la ficha; en Amigos sale como publicación con la foto grande) — *hecho 2026-10-11, pendiente de comprobar*
 - [ ] **Semana del 12 empieza el miércoles** en el plan de David (en local sale completa): esperando capturas de la tarjeta «Entrenador IA», la semana 1 y los días del perfil
 
 ## 🧠 IA que aprende de ti (opción 2: sin entrenar el modelo) → [[Decisiones#IA que aprende de ti]]

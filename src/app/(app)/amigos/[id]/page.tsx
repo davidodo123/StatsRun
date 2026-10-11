@@ -111,7 +111,7 @@ async function Content({ params }: { params: PageProps<"/amigos/[id]">["params"]
                 {f.recent.length ? (
                   <ul className="divide-y divide-line">
                     {f.recent.map((a) => (
-                      <ActivityItem key={a.id} a={publicActivity(a)} href={`/actividad/${encodeURIComponent(a.id)}?de=${friend.id}`} names={names} tags={tags.get(a.id)} />
+                      <ActivityItem key={a.id} a={publicActivity(a)} href={`/actividad/${encodeURIComponent(a.id)}?de=${friend.id}`} names={names} ownerId={friend.id} tags={tags.get(a.id)} />
                     ))}
                   </ul>
                 ) : (

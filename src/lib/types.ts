@@ -119,6 +119,7 @@ export interface Activity {
   route?: string; // recorrido GPS como encoded polyline (lib/route.ts)
   with?: string[]; // ids de los amigos con los que se hizo la sesión
   sharedFrom?: string; // "<idUsuario>:<idActividad>" si se copió de la sesión de un amigo
+  photoAt?: string; // cuándo se subió su foto (va aparte, en photoKey)
   workout?: Workout; // entreno de fuerza registrado en vivo: ejercicios y series
 }
 

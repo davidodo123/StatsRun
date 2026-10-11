@@ -20,6 +20,7 @@ import { GOOGLE_PENDING_COOKIE, endSession, requireUserId, startSession, unsealV
 import type { FormState } from "./actions";
 import { healthTokenKey, kvDel, readDbNow } from "@/lib/db";
 import { deauthorize } from "@/lib/strava";
+import { jpegFromDataUrl, photoKey } from "@/lib/photoStore";
 const str = (fd: FormData, k: string) => String(fd.get(k) ?? "");
 
 /** Identidad de Google que acaba de volver del inicio de sesión y aún no tiene cuenta. */
@@ -90,6 +91,8 @@ export async function deleteAccount(_: FormState, fd: FormData): Promise<FormSta
   if (db.strava) await deauthorize(db.strava).catch(() => undefined);
   // y que la clave del atajo de Salud deje de apuntar a la cuenta
   if (db.healthTokenHash) await kvDel(healthTokenKey(db.healthTokenHash));
+  // y las fotos de sus entrenos
+  await Promise.all(db.activities.filter((a) => a.photoAt).map((a) => kvDel(photoKey(uid, a.id))));
   await deleteUser(uid);
   await endSession();
   redirect("/login?borrada=1");
@@ -102,12 +105,10 @@ export async function newFriendCode(): Promise<void> {
 
 /** Guarda la foto de perfil (llega ya recortada y reducida a JPEG desde el navegador). */
 export async function saveAvatar(dataUrl: string): Promise<FormState> {
-  const m = /^data:image\/jpeg;base64,([A-Za-z0-9+/]+={0,2})$/.exec(String(dataUrl));
-  if (!m) return { error: "La foto no es válida." };
-  const bytes = Buffer.from(m[1], "base64");
   // JPEG de verdad y pequeño (el navegador la deja en ~20-40 KB)
-  if (bytes.length > 200_000 || bytes[0] !== 0xff || bytes[1] !== 0xd8) return { error: "La foto no es válida." };
-  await setAvatar(await requireUserId(), m[1]);
+  const jpeg = jpegFromDataUrl(dataUrl, 200_000);
+  if (!jpeg) return { error: "La foto no es válida." };
+  await setAvatar(await requireUserId(), jpeg);
   refresh();
   return { ok: true };
 }

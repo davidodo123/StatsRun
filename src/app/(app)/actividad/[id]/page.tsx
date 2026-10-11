@@ -4,6 +4,8 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { Card, Loading, PageHeader, Stat } from "@/components/ui";
 import { RouteMap } from "@/components/RouteMap";
+import { ActivityPhotoButtons } from "@/components/ActivityPhoto";
+import { activityPhotoUrl } from "@/lib/photos";
 import { SPORT_LABEL, TagChips, withText } from "@/components/ActivityItem";
 import { RouteReplay } from "@/components/RouteReplay";
 import { tagsForDb } from "@/lib/engine/tags";
@@ -46,6 +48,7 @@ async function Content({ params, searchParams }: { params: PageProps<"/actividad
   const tags = tagsForDb(db, estimateVdot(db.activities, db.profile, todayLocal()).vdot).get(a.id) ?? [];
   const pace = a.sport === "run" && a.distanceM > 0 ? a.movingSec / (a.distanceM / 1000) : undefined;
   const speed = a.distanceM > 0 && a.movingSec > 0 ? a.distanceM / 1000 / (a.movingSec / 3600) : undefined;
+  const photo = activityPhotoUrl(ownerId, a);
 
   return (
     <>
@@ -75,6 +78,12 @@ async function Content({ params, searchParams }: { params: PageProps<"/actividad
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <div className="space-y-4 lg:col-span-2">
           {tags.length > 0 && <TagChips tags={tags} />}
+          {photo && (
+            // foto del entreno (servida por /api/foto): sin optimizar
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={photo} alt={`Foto de ${a.name}`} className="max-h-[70vh] w-full rounded-2xl border border-line object-cover" />
+          )}
+          {mine && <ActivityPhotoButtons id={a.id} hasPhoto={Boolean(photo)} />}
           {a.workout ? (
             <WorkoutCard workout={a.workout} records={strengthRecords(db.activities).get(a.id) ?? []} />
           ) : a.route ? (

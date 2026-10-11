@@ -80,6 +80,7 @@ async function Content({ searchParams }: { searchParams: PageProps<"/amigos">["s
                   href={`/actividad/${encodeURIComponent(a.id)}?de=${owner.id}`}
                   names={names}
                   owner={owner.name}
+                  ownerId={owner.id}
                   tags={tagsByOwner.get(owner.id)?.get(a.id)}
                   action={
                     <span className="flex shrink-0 flex-col gap-1">
@@ -105,7 +106,8 @@ async function Content({ searchParams }: { searchParams: PageProps<"/amigos">["s
           {feed.items.length ? (
             <ul className="divide-y divide-line">
               {feed.items.map(({ owner, activity: a }) => (
-                <ActivityItem key={`${owner.id}:${a.id}`} a={a} href={`/actividad/${encodeURIComponent(a.id)}?de=${owner.id}`} names={names} owner={owner.name} tags={tagsByOwner.get(owner.id)?.get(a.id)} />
+                <ActivityItem key={`${owner.id}:${a.id}`} a={a} href={`/actividad/${encodeURIComponent(a.id)}?de=${owner.id}`} names={names} owner={owner.name}
+                  ownerId={owner.id} tags={tagsByOwner.get(owner.id)?.get(a.id)} />
               ))}
             </ul>
           ) : (

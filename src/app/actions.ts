@@ -19,6 +19,7 @@ import { addDays, diffDays, todayLocal } from "@/lib/dates";
 import type { Db, Feel, Focus, Goal, Level, Profile, Sex, TuneUpRace } from "@/lib/types";
 import { downloadCmCourse, findCmRace } from "@/lib/cruzandolametaStore";
 import { parseCourseFile } from "@/lib/importers/course";
+import { deleteImage, jpegFromDataUrl, photoKey, putImage } from "@/lib/photoStore";
 
 export interface FormState {
   ok?: boolean;
@@ -478,6 +479,13 @@ export async function saveActivity(_: FormState, fd: FormData): Promise<FormStat
   const withIds = [...new Set(fd.getAll("with").map(String))].filter((x) => friendIds.has(x));
 
   const id = existingId ?? `manual-${Date.now().toString(36)}`;
+  // foto del entreno: llega ya reducida desde el navegador
+  const photoRaw = String(fd.get("photo") ?? "");
+  const photo = photoRaw ? jpegFromDataUrl(photoRaw, MAX_PHOTO) : undefined;
+  if (photoRaw && !photo) return { error: "La foto no es válida o es demasiado grande." };
+  const uid = await requireUserId();
+  if (photo) await putImage(photoKey(uid, id), photo);
+  else if (fd.get("removePhoto")) await deleteImage(photoKey(uid, id));
   await updateDb((db) => {
     const prev = db.activities.find((a) => a.id === id);
     const act = {
@@ -504,6 +512,7 @@ export async function saveActivity(_: FormState, fd: FormData): Promise<FormStat
       notes: String(fd.get("notes") ?? "").trim() || undefined,
       sessionId,
       with: withIds.length ? withIds : undefined,
+      photoAt: photo ? new Date().toISOString() : fd.get("removePhoto") ? undefined : prev?.photoAt,
     };
     db.activities = [...db.activities.filter((a) => a.id !== id), act].sort((a, b) => a.startLocal.localeCompare(b.startLocal));
   });
@@ -512,6 +521,24 @@ export async function saveActivity(_: FormState, fd: FormData): Promise<FormStat
   refresh();
   if (!existingId) redirect(sessionId ? "/plan/actual?registrado=1" : `/registrar?guardado=${encodeURIComponent(id)}`);
   return { ok: true, message: "Entreno actualizado." };
+}
+
+const MAX_PHOTO = 900_000;
+
+/** Pone, cambia (`dataUrl`) o quita (null) la foto de un entreno propio. */
+export async function setActivityPhoto(id: string, dataUrl: string | null): Promise<FormState> {
+  const uid = await requireUserId();
+  const photo = dataUrl === null ? undefined : jpegFromDataUrl(dataUrl, MAX_PHOTO);
+  if (dataUrl !== null && !photo) return { error: "La foto no es válida o es demasiado grande." };
+  if (!(await getDb()).activities.some((a) => a.id === id)) return { error: "No existe ese entreno." };
+  if (photo) await putImage(photoKey(uid, id), photo);
+  else await deleteImage(photoKey(uid, id));
+  await updateDb((db) => {
+    const a = db.activities.find((x) => x.id === id);
+    if (a) a.photoAt = photo ? new Date().toISOString() : undefined;
+  });
+  refresh();
+  return { ok: true };
 }
 
 /** Añade a mis entrenos la sesión en la que me ha incluido un amigo (copia distancia, tiempo, desnivel y recorrido). */
@@ -565,6 +592,7 @@ export async function deleteActivity(fd: FormData): Promise<void> {
   await updateDb((db) => {
     db.activities = db.activities.filter((a) => a.id !== id);
   });
+  await deleteImage(photoKey(await requireUserId(), id));
   // la vuelta a la página de antes la hace el botón (DeleteActivityButton), que sabe de dónde se venía
   refresh();
 }

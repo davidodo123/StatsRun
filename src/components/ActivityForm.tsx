@@ -6,6 +6,7 @@ import { saveActivity, type FormState } from "@/app/actions";
 import type { Activity, Feel, PlannedSession } from "@/lib/types";
 import { fmtDuration, fmtPace, parseTime } from "@/lib/format";
 import { keepForm } from "./keepForm";
+import { PhotoField } from "./ActivityPhoto";
 
 const RPE: Record<number, string> = {
   1: "Muy muy suave",
@@ -40,6 +41,7 @@ export interface ActivityFormInitial {
   feelings?: string;
   notes?: string;
   with?: string[];
+  photo?: string; // dirección de la foto que ya tiene
 }
 
 const FEELS: { value: Feel; label: string }[] = [
@@ -249,6 +251,8 @@ export function ActivityForm({
         Otras notas
         <textarea className="input min-h-16" name="notes" defaultValue={initial.notes} placeholder="Clima, zapatillas, recorrido…" />
       </label>
+
+      <PhotoField initial={initial.photo} />
 
       {friends.length > 0 && <WithFriends friends={friends} initial={initial.with ?? []} />}
 

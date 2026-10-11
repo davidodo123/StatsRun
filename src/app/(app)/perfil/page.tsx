@@ -904,7 +904,8 @@ function Row({ label, value, note }: { label: string; value: string; note?: stri
 
 async function ActivityList({ acts }: { acts: Activity[] }) {
   // nombres para «con quién»; la lectura de usuarios se memoriza por petición
-  const names = new Map((await getFriends(await requireUserId())).map((f) => [f.id, f.name]));
+  const uid = await requireUserId();
+  const names = new Map((await getFriends(uid)).map((f) => [f.id, f.name]));
   const { db, stats } = await getAnalysis();
   const tags = tagsForDb(db, stats?.vdot.vdot);
   return (
@@ -915,6 +916,7 @@ async function ActivityList({ acts }: { acts: Activity[] }) {
           a={a}
           href={`/actividad/${encodeURIComponent(a.id)}`}
           names={names}
+          ownerId={uid}
           tags={tags.get(a.id)}
           action={
             <Link href={`/registrar?editar=${encodeURIComponent(a.id)}`} className="shrink-0 text-xs font-semibold text-accent">

@@ -3,25 +3,7 @@
 import { useRef, useState, useTransition } from "react";
 import { removeAvatar, saveAvatar } from "@/app/auth-actions";
 import { Icon } from "./icons";
-
-const SIZE = 320; // px del lado: nítida en pantallas retina y ~20-40 KB
-
-/** Recorta la foto al cuadrado del centro y la reduce a JPEG (en el navegador, antes de subirla). */
-async function toSquareJpeg(file: File): Promise<string> {
-  const url = URL.createObjectURL(file);
-  try {
-    const img = new Image();
-    img.src = url;
-    await img.decode();
-    const side = Math.min(img.naturalWidth, img.naturalHeight);
-    const canvas = document.createElement("canvas");
-    canvas.width = canvas.height = SIZE;
-    canvas.getContext("2d")!.drawImage(img, (img.naturalWidth - side) / 2, (img.naturalHeight - side) / 2, side, side, 0, 0, SIZE, SIZE);
-    return canvas.toDataURL("image/jpeg", 0.85);
-  } finally {
-    URL.revokeObjectURL(url);
-  }
-}
+import { toJpeg } from "./imageFile";
 
 /** Foto de perfil: al tocarla se elige otra (de la galería o la cámara); si es subida, se puede quitar. */
 export function AvatarPicker({ picture, initials, custom }: { picture?: string; initials: string; custom: boolean }) {
@@ -36,7 +18,8 @@ export function AvatarPicker({ picture, initials, custom }: { picture?: string; 
     setError(undefined);
     start(async () => {
       try {
-        const jpeg = await toSquareJpeg(file);
+        // 320 px: nítida en pantallas retina y ~20-40 KB
+        const jpeg = await toJpeg(file, { max: 320, square: true, quality: 0.85 });
         setPreview(jpeg);
         const r = await saveAvatar(jpeg);
         if (r.error) {
