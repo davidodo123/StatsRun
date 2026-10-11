@@ -43,6 +43,7 @@ const MOBILE_BOTTOM = ["/plan", "/fuerza", "/registrar", "/perfil"];
 const STRENGTH_BOTTOM = ["/fuerza", "/fuerza/entrenador", "/fuerza/entreno", "/perfil"];
 const CTA = ["/registrar", "/fuerza/entreno"]; // el botón naranja de la barra de abajo
 const MORE_ICON = "M5 12h.01M12 12h.01M19 12h.01";
+const TROPHY = "M8 4h8v5a4 4 0 01-8 0V4zM8 6H5a3 3 0 003 4M16 6h3a3 3 0 01-3 4M12 13v4M8 21h8M10 17h4v4";
 const LONG_LABEL: Record<string, string> = { "/estadisticas": "Estadísticas", "/herramientas": "Calculadoras", "/ajustes": "Importar / demo", "/registrar": "Registrar actividad" };
 const icon = (href: string) => ITEMS.find((i) => i.href === href)!.icon;
 
@@ -59,7 +60,7 @@ function Logo({ compact }: { compact?: boolean }) {
 }
 
 /** Móvil: barra superior (logo = Inicio, Amigos) e inferior (Plan, Fuerza, Registrar, Perfil, Más; o la de fuerza). */
-function MobileNav({ active, focus }: { active: (href: string) => boolean; focus?: Focus }) {
+function MobileNav({ active, focus, logros }: { active: (href: string) => boolean; focus?: Focus; logros: boolean }) {
   const [more, setMore] = useState(false);
   const items = itemsFor(focus);
   const bottomHrefs = focus === "fuerza" ? STRENGTH_BOTTOM : MOBILE_BOTTOM;
@@ -74,13 +75,22 @@ function MobileNav({ active, focus }: { active: (href: string) => boolean; focus
           <Link href="/" className="flex items-center gap-2 text-lg font-bold tracking-tight" aria-label="Inicio">
             <Logo compact />
           </Link>
-          <Link
-            href="/amigos"
-            aria-label="Amigos"
-            className={`grid h-10 w-10 place-items-center rounded-full ${active("/amigos") ? "bg-surface-2 text-accent" : "text-ink-2 hover:bg-surface-2"}`}
-          >
-            <Icon d={icon("/amigos")} className="h-6 w-6" />
-          </Link>
+          <div className="flex items-center gap-1">
+            <Link
+              href="/perfil?tab=logros"
+              aria-label="Logros"
+              className={`grid h-10 w-10 place-items-center rounded-full ${logros ? "bg-surface-2 text-accent" : "text-ink-2 hover:bg-surface-2"}`}
+            >
+              <Icon d={TROPHY} className="h-6 w-6" />
+            </Link>
+            <Link
+              href="/amigos"
+              aria-label="Amigos"
+              className={`grid h-10 w-10 place-items-center rounded-full ${active("/amigos") ? "bg-surface-2 text-accent" : "text-ink-2 hover:bg-surface-2"}`}
+            >
+              <Icon d={icon("/amigos")} className="h-6 w-6" />
+            </Link>
+          </div>
         </div>
       </header>
 
@@ -153,7 +163,7 @@ export function Nav({ focus }: { focus?: Focus }) {
       if (list.at(-1) !== url) sessionStorage.setItem(VISITED, JSON.stringify([...list, url].slice(-30)));
     } catch {}
   }, [path, query]);
-  return <NavView path={path} focus={focus} />;
+  return <NavView path={path} query={query} focus={focus} />;
 }
 
 const VISITED = "rio-visitadas";
@@ -169,7 +179,7 @@ export function lastVisited(skip: (url: string) => boolean, fallback: string): s
 }
 
 /** Menú sin sección resaltada (el que se prerenderiza) o con ella. */
-export function NavView({ path, focus }: { path?: string; focus?: Focus }) {
+export function NavView({ path, query, focus }: { path?: string; query?: string; focus?: Focus }) {
   const items = itemsFor(focus);
   // resalta la entrada más concreta: en /fuerza/entrenador, «Entrenador» y no «Fuerza»
   const matches = (href: string) => path !== undefined && (href === "/" ? path === "/" : path === href || path.startsWith(`${href}/`) || path.startsWith(`${href}?`));
@@ -197,7 +207,7 @@ export function NavView({ path, focus }: { path?: string; focus?: Focus }) {
           <button className="w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-ink-2 hover:bg-surface-2">Cerrar sesión</button>
         </form>
       </nav>
-      <MobileNav active={active} focus={focus} />
+      <MobileNav active={active} focus={focus} logros={path === "/perfil" && new URLSearchParams(query).get("tab") === "logros"} />
     </>
   );
 }

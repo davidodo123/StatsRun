@@ -39,6 +39,7 @@ export const ICON_PATHS = {
   thumbUp: "M7 10v11M15 5.9L14 10h5.8a2 2 0 011.9 2.6l-2.3 8a2 2 0 01-1.9 1.4H4a2 2 0 01-2-2v-8a2 2 0 012-2h2.8a2 2 0 001.8-1.1L12 2a3.1 3.1 0 013 3.9z",
   thumbDown: "M17 14V3M9 18.1l1-4.1H4.2a2 2 0 01-1.9-2.6l2.3-8A2 2 0 016.5 2H20a2 2 0 012 2v8a2 2 0 01-2 2h-2.8a2 2 0 00-1.8 1.1L12 22a3.1 3.1 0 01-3-3.9z",
   folder: "M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z",
+  edit: "M4 20h4L19 9a2.8 2.8 0 00-4-4L4 16v4zM13.5 6.5l4 4",
 } as const;
 
 export type IconName = keyof typeof ICON_PATHS;

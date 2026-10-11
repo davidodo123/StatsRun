@@ -104,6 +104,12 @@
   --font-sans: system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 
+/* lo que queda fuera de la página (bajo la barra de abajo en el iPhone instalado, o al rebotar) toma el color
+   de html: el mismo que las barras, no el negro del fondo */
+html {
+  background: var(--surface);
+}
+
 body {
   background: var(--bg);
   color: var(--text);

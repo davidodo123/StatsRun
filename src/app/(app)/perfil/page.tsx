@@ -3,7 +3,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { Suspense, type ReactNode } from "react";
 import { getAnalysis } from "@/lib/analysis";
-import { logout } from "@/app/auth-actions";
 import { revokeHealthKey, syncProfileAverages } from "@/app/actions";
 import { HealthKey } from "@/components/HealthKey";
 import { healthSummary, monthlyHealth, recoverySignals, todayMadrid } from "@/lib/health";
@@ -12,7 +11,7 @@ import { DeleteAccountForm } from "@/components/DeleteAccountForm";
 import { SessionCard } from "@/components/SessionCard";
 import { UndoSkip } from "@/components/UndoSkip";
 import { SimpleBars, TrendLine } from "@/components/charts";
-import { Card, Empty, Loading, PageHeader, Pill, Stat } from "@/components/ui";
+import { Card, Empty, Loading, Pill, Stat } from "@/components/ui";
 import { bmi, bmiLabel, hrMaxOf, hrRestOf, hrZones } from "@/lib/engine/physiology";
 import { achievements, bestTimes, periodAverages, profileAverages, strengthSummary, type Achievement, type PeriodAvg } from "@/lib/engine/profile";
 import type { SessionMatch } from "@/lib/engine/planner";
@@ -30,14 +29,15 @@ import { AiMemory } from "@/components/AiMemory";
 
 export const metadata: Metadata = { title: "Perfil" };
 
+// Logros (icono en la barra de arriba) y Editar (botón de la cabecera) no van en la fila de pestañas
 const TABS = [
   { id: "resumen", label: "Resumen" },
   { id: "running", label: "Running" },
   { id: "fuerza", label: "Fuerza" },
-  { id: "actividades", label: "Actividades" },
-  { id: "logros", label: "Logros" },
+  { id: "actividades", label: "Actividades", short: "Entrenos" },
   { id: "salud", label: "Salud" },
-  { id: "editar", label: "Editar perfil" },
+  { id: "logros", label: "Logros", hidden: true },
+  { id: "editar", label: "Editar perfil", hidden: true },
 ] as const;
 type Tab = (typeof TABS)[number]["id"];
 
@@ -48,15 +48,7 @@ const PAGE_SIZE = 25;
 export default function PerfilPage({ searchParams }: PageProps<"/perfil">) {
   return (
     <>
-      <PageHeader
-        title="Tu perfil"
-        subtitle="Tus marcas, tu progreso y tu preparación en un solo sitio."
-        action={
-          <form action={logout}>
-            <button className="btn btn-ghost">Cerrar sesión</button>
-          </form>
-        }
-      />
+      <h1 className="sr-only">Perfil</h1>
       <Suspense fallback={<Loading />}>
         <Content searchParams={searchParams} />
       </Suspense>
@@ -78,29 +70,34 @@ async function Content({ searchParams }: { searchParams: PageProps<"/perfil">["s
 
   return (
     <div className="space-y-4">
-      {db.profile && stats && <ProfileHeader db={db} stats={stats} />}
-      {/* en el móvil, todas a la vista en una rejilla (sin barra que se desliza); en el ordenador, en una fila */}
-      <nav aria-label="Secciones del perfil">
-        <div className="grid grid-cols-4 gap-1 rounded-xl border border-line bg-surface p-1 md:flex md:w-max">
-          {tabs.map((t) => (
-            <Link
-              key={t.id}
-              href={t.id === first ? "/perfil" : `/perfil?tab=${t.id}`}
-              aria-current={t.id === tab ? "page" : undefined}
-              className={`truncate rounded-lg px-1 py-1.5 text-center text-[13px] font-medium md:px-3 md:text-sm ${t.id === tab ? "bg-accent text-accent-ink" : "text-ink-2 hover:bg-surface-2"}`}
-            >
-              {t.id === "editar" ? (
-                <>
-                  <span className="md:hidden">Editar</span>
-                  <span className="hidden md:inline">{t.label}</span>
-                </>
-              ) : (
-                t.label
-              )}
-            </Link>
-          ))}
-        </div>
-      </nav>
+      {db.profile && stats && (
+        <ProfileHeader db={db} stats={stats} tab={tab}>
+          {/* las pestañas, dentro de la misma tarjeta: todas a la vista también en el móvil */}
+          <nav aria-label="Secciones del perfil" className="mt-4 border-t border-line pt-3">
+            <div className="flex gap-1">
+              {tabs
+                .filter((t) => !("hidden" in t))
+                .map((t) => (
+                  <Link
+                    key={t.id}
+                    href={t.id === first ? "/perfil" : `/perfil?tab=${t.id}`}
+                    aria-current={t.id === tab ? "page" : undefined}
+                    className={`min-w-0 flex-auto truncate rounded-lg px-1.5 py-1.5 text-center text-[13px] font-medium md:flex-none md:px-3 md:text-sm ${t.id === tab ? "bg-accent text-accent-ink" : "text-ink-2 hover:bg-surface-2"}`}
+                  >
+                    {"short" in t ? (
+                      <>
+                        <span className="sm:hidden">{t.short}</span>
+                        <span className="hidden sm:inline">{t.label}</span>
+                      </>
+                    ) : (
+                      t.label
+                    )}
+                  </Link>
+                ))}
+            </div>
+          </nav>
+        </ProfileHeader>
+      )}
 
       {tab === "resumen" && <Resumen db={db} stats={stats!} matches={matches} today={today} />}
       {tab === "running" && <Running db={db} stats={stats!} today={today} />}
@@ -115,7 +112,7 @@ async function Content({ searchParams }: { searchParams: PageProps<"/perfil">["s
 
 // ---------------- Cabecera ----------------
 
-function ProfileHeader({ db, stats }: { db: Db; stats: Stats }) {
+function ProfileHeader({ db, stats, tab, children }: { db: Db; stats: Stats; tab: Tab; children: ReactNode }) {
   const p = db.profile!;
   const T = stats.totals;
   const strengthOnly = focusOf(p) === "fuerza";
@@ -137,27 +134,40 @@ function ProfileHeader({ db, stats }: { db: Db; stats: Stats }) {
     .join("")
     .slice(0, 2)
     .toUpperCase();
+  const btn = (on: boolean) => `grid h-9 w-9 shrink-0 place-items-center rounded-full border ${on ? "border-accent bg-accent text-accent-ink" : "border-line text-ink-2 hover:bg-surface-2"}`;
   return (
-    <section className="flex flex-wrap items-center gap-4 rounded-2xl border border-line bg-surface p-4 md:p-5">
-      <span className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-accent text-lg font-bold text-accent-ink" aria-hidden>
-        {initials}
-      </span>
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-lg font-bold">{p.name}</p>
-        <p className="text-xs text-ink-2">
-          {strengthOnly ? "Fuerza" : `${LEVEL[p.level]} · `}
-          {strengthOnly ? ` · ${p.age} años` : `${p.age} años · VDOT ${stats.vdot.vdot.toFixed(1)}`}
-          {db.goal && ` · Objetivo: ${db.goal.name}`}
-        </p>
+    <section className="rounded-2xl border border-line bg-surface p-4 md:p-5">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
+        <span className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-accent text-lg font-bold text-accent-ink" aria-hidden>
+          {initials}
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-lg font-bold">{p.name}</p>
+          <p className="text-xs text-ink-2">
+            {strengthOnly ? "Fuerza" : `${LEVEL[p.level]} · `}
+            {strengthOnly ? ` · ${p.age} años` : `${p.age} años · VDOT ${stats.vdot.vdot.toFixed(1)}`}
+            {db.goal && ` · Objetivo: ${db.goal.name}`}
+          </p>
+        </div>
+        <div className="flex gap-2 self-start sm:order-last sm:self-center">
+          {/* en el móvil, Logros está en la barra de arriba */}
+          <Link href="/perfil?tab=logros" aria-label="Logros" aria-current={tab === "logros" ? "page" : undefined} className={`hidden md:grid ${btn(tab === "logros")}`}>
+            <Icon name="trophy" className="h-[18px] w-[18px]" />
+          </Link>
+          <Link href="/perfil?tab=editar" aria-label="Editar perfil" aria-current={tab === "editar" ? "page" : undefined} className={btn(tab === "editar")}>
+            <Icon name="edit" className="h-[18px] w-[18px]" />
+          </Link>
+        </div>
+        <dl className="grid w-full grid-cols-3 gap-2 text-center sm:w-auto sm:gap-6">
+          {cells.map(([label, value]) => (
+            <div key={label}>
+              <dt className="text-[11px] text-muted">{label}</dt>
+              <dd className="font-bold tabular">{value}</dd>
+            </div>
+          ))}
+        </dl>
       </div>
-      <dl className="grid w-full grid-cols-3 gap-2 text-center sm:w-auto sm:gap-6">
-        {cells.map(([label, value]) => (
-          <div key={label}>
-            <dt className="text-[11px] text-muted">{label}</dt>
-            <dd className="font-bold tabular">{value}</dd>
-          </div>
-        ))}
-      </dl>
+      {children}
     </section>
   );
 }

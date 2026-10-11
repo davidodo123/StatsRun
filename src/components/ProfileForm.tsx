@@ -149,14 +149,14 @@ export function ProfileForm({ profile, initialFocus }: { profile?: Profile; init
             </p>
           </div>
           {runner && (
-            <label className="field sm:col-span-2">
+            <label className="field min-w-0 sm:col-span-2">
               Tipo de fuerza
-              <select className="input" name="strengthStyle" defaultValue={p?.strengthStyle ?? "general"}>
-                <option value="general">General: cuerpo entero y ligera (corres todos tus días)</option>
-                <option value="grupos">Por grupos: pecho, espalda, pierna… (el día de pierna no corres)</option>
+              <select className="input min-w-0" name="strengthStyle" defaultValue={p?.strengthStyle ?? "general"}>
+                <option value="general">General (cuerpo entero)</option>
+                <option value="grupos">Por grupos (pecho, espalda, pierna)</option>
               </select>
               <span className="text-xs font-normal text-muted">
-                Por grupos, con 3 días: pecho y espalda los dos días antes del de pierna, y la pierna dos días antes de la tirada larga, sin correr ese día.
+                General: fuerza ligera y corres todos tus días. Por grupos: pecho y espalda los dos días antes del de pierna, y la pierna dos días antes de la tirada larga, sin correr ese día.
               </span>
             </label>
           )}
