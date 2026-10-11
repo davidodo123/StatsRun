@@ -13,6 +13,7 @@ import {
   regenerateFriendCode,
   removeFriend,
   sendFriendRequest,
+  setAvatar,
   type GoogleIdentity,
 } from "@/lib/auth";
 import { GOOGLE_PENDING_COOKIE, endSession, requireUserId, startSession, unsealValue } from "@/lib/session";
@@ -96,5 +97,22 @@ export async function deleteAccount(_: FormState, fd: FormData): Promise<FormSta
 
 export async function newFriendCode(): Promise<void> {
   await regenerateFriendCode(await requireUserId());
+  refresh();
+}
+
+/** Guarda la foto de perfil (llega ya recortada y reducida a JPEG desde el navegador). */
+export async function saveAvatar(dataUrl: string): Promise<FormState> {
+  const m = /^data:image\/jpeg;base64,([A-Za-z0-9+/]+={0,2})$/.exec(String(dataUrl));
+  if (!m) return { error: "La foto no es válida." };
+  const bytes = Buffer.from(m[1], "base64");
+  // JPEG de verdad y pequeño (el navegador la deja en ~20-40 KB)
+  if (bytes.length > 200_000 || bytes[0] !== 0xff || bytes[1] !== 0xd8) return { error: "La foto no es válida." };
+  await setAvatar(await requireUserId(), m[1]);
+  refresh();
+  return { ok: true };
+}
+
+export async function removeAvatar(): Promise<void> {
+  await setAvatar(await requireUserId());
   refresh();
 }

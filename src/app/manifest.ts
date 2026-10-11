@@ -10,7 +10,7 @@ export default function manifest(): MetadataRoute.Manifest {
     start_url: "/",
     scope: "/",
     display: "standalone",
-    background_color: "#0d0d0d",
+    background_color: "#1a1a19", // el de las barras: lo que el iPhone pinta fuera de la página (bajo la barra de abajo)
     theme_color: "#eb6834",
     lang: "es",
     categories: ["sports", "health", "fitness"],

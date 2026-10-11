@@ -17,7 +17,8 @@ export interface User {
   salt?: string;
   googleSub?: string; // id estable de la cuenta de Google
   email?: string;
-  picture?: string;
+  picture?: string; // foto de Google
+  photoAt?: string; // cuándo subió su propia foto (va aparte, en avatarKey); manda sobre la de Google
   createdAt: string;
   friendCode: string;
   friends: string[]; // ids
@@ -29,7 +30,22 @@ interface UsersDoc {
 }
 
 export type PublicUser = Pick<User, "id" | "username" | "name" | "friendCode" | "picture">;
-const toPublic = ({ id, username, name, friendCode, picture }: User): PublicUser => ({ id, username, name, friendCode, picture });
+// la foto subida se sirve desde /api/avatar; la versión en la dirección hace que el navegador coja la nueva al cambiarla
+const pictureOf = (u: User) => (u.photoAt ? `/api/avatar/${u.id}?v=${Date.parse(u.photoAt)}` : u.picture);
+const toPublic = (u: User): PublicUser => ({ id: u.id, username: u.username, name: u.name, friendCode: u.friendCode, picture: pictureOf(u) });
+
+/** Clave de la foto de perfil subida (aparte del documento de usuarios, que lo lee todo el mundo). */
+export const avatarKey = (uid: string) => `statsrun:avatar:${uid}`;
+
+/** Guarda (o quita, sin `jpegBase64`) la foto de perfil subida. */
+export async function setAvatar(uid: string, jpegBase64?: string): Promise<void> {
+  if (jpegBase64) await kvSet(avatarKey(uid), JSON.stringify({ type: "image/jpeg", data: jpegBase64 }));
+  else await kvDel(avatarKey(uid));
+  await updateUsers((doc) => {
+    const u = doc.users.find((x) => x.id === uid);
+    if (u) u.photoAt = jpegBase64 ? new Date().toISOString() : undefined;
+  });
+}
 
 // al renderizar, una sola lectura por petición; fuera del renderizado (acciones, rutas) React.cache no memoriza
 const readUsers = cache(async (): Promise<UsersDoc> => {
@@ -213,7 +229,7 @@ export async function searchUsers(uid: string, query: string, limit = 10): Promi
     .map((u) => ({ u, starts: normalize(u.name).startsWith(q) || u.username.startsWith(q) }))
     .sort((a, b) => Number(b.starts) - Number(a.starts) || a.u.name.localeCompare(b.u.name))
     .slice(0, limit)
-    .map(({ u }) => ({ id: u.id, username: u.username, name: u.name, picture: u.picture, relation: relation(u) }));
+    .map(({ u }) => ({ id: u.id, username: u.username, name: u.name, picture: pictureOf(u), relation: relation(u) }));
 }
 
 /** Solicitudes recibidas y enviadas pendientes. */
@@ -282,6 +298,7 @@ export async function removeFriend(uid: string, friendId: string): Promise<void>
 /** Borra la cuenta: sus datos de entrenamiento, su usuario y su rastro en amigos y solicitudes de los demás. */
 export async function deleteUser(uid: string): Promise<void> {
   await kvDel(userDbKey(uid));
+  await kvDel(avatarKey(uid));
   await updateUsers((doc) => {
     doc.users = doc.users.filter((u) => u.id !== uid);
     for (const u of doc.users) {

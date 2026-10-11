@@ -22,7 +22,8 @@ import { workoutVolume } from "@/lib/strength/workouts";
 import type { Stats } from "@/lib/engine/stats";
 import { ActivityItem } from "@/components/ActivityItem";
 import { tagsForDb } from "@/lib/engine/tags";
-import { getFriends } from "@/lib/auth";
+import { getFriends, getUser } from "@/lib/auth";
+import { AvatarPicker } from "@/components/AvatarPicker";
 import { requireUserId } from "@/lib/session";
 import { Icon } from "@/components/icons";
 import { AiMemory } from "@/components/AiMemory";
@@ -58,7 +59,7 @@ export default function PerfilPage({ searchParams }: PageProps<"/perfil">) {
 
 async function Content({ searchParams }: { searchParams: PageProps<"/perfil">["searchParams"] }) {
   const sp = await searchParams;
-  const { db, stats, matches, today } = await getAnalysis();
+  const [{ db, stats, matches, today }, me] = await Promise.all([getAnalysis(), requireUserId().then(getUser)]);
   // solo fuerza: sin Resumen ni Running (son de correr) y se abre en Fuerza
   const focus = focusOf(db.profile);
   const tabs = TABS.filter((t) => focus !== "fuerza" || (t.id !== "resumen" && t.id !== "running"));
@@ -71,7 +72,7 @@ async function Content({ searchParams }: { searchParams: PageProps<"/perfil">["s
   return (
     <div className="space-y-4">
       {db.profile && stats && (
-        <ProfileHeader db={db} stats={stats} tab={tab}>
+        <ProfileHeader db={db} stats={stats} tab={tab} picture={me?.picture}>
           {/* las pestañas, dentro de la misma tarjeta: todas a la vista también en el móvil */}
           <nav aria-label="Secciones del perfil" className="mt-4 border-t border-line pt-3">
             <div className="flex gap-1">
@@ -112,7 +113,7 @@ async function Content({ searchParams }: { searchParams: PageProps<"/perfil">["s
 
 // ---------------- Cabecera ----------------
 
-function ProfileHeader({ db, stats, tab, children }: { db: Db; stats: Stats; tab: Tab; children: ReactNode }) {
+function ProfileHeader({ db, stats, tab, picture, children }: { db: Db; stats: Stats; tab: Tab; picture?: string; children: ReactNode }) {
   const p = db.profile!;
   const T = stats.totals;
   const strengthOnly = focusOf(p) === "fuerza";
@@ -138,9 +139,7 @@ function ProfileHeader({ db, stats, tab, children }: { db: Db; stats: Stats; tab
   return (
     <section className="rounded-2xl border border-line bg-surface p-4 md:p-5">
       <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
-        <span className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-accent text-lg font-bold text-accent-ink" aria-hidden>
-          {initials}
-        </span>
+        <AvatarPicker picture={picture} initials={initials} custom={Boolean(picture?.startsWith("/api/avatar/"))} />
         <div className="min-w-0 flex-1">
           <p className="truncate text-lg font-bold">{p.name}</p>
           <p className="text-xs text-ink-2">

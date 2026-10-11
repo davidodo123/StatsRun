@@ -11,9 +11,10 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
+  // el color de las barras (no el del fondo): el iPhone lo usa para lo que queda fuera de la página
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f9f9f7" },
-    { media: "(prefers-color-scheme: dark)", color: "#0d0d0d" },
+    { media: "(prefers-color-scheme: light)", color: "#fcfcfb" },
+    { media: "(prefers-color-scheme: dark)", color: "#1a1a19" },
   ],
   width: "device-width",
   initialScale: 1,

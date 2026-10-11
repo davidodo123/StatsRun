@@ -114,6 +114,8 @@ html {
 }
 
 body {
+  /* lo mismo para el cuerpo: en el iPhone instalado, toda la pantalla aunque la página tenga poco */
+  min-height: calc(100dvh + env(safe-area-inset-top));
   background: var(--bg);
   color: var(--text);
   font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
