@@ -1,0 +1,97 @@
+[
+ {
+  "id": "1-sindrome-general-de-adaptacion-hans-selye",
+  "title": "1. Síndrome general de adaptación (Hans Selye)",
+  "text": "Selye (1936) describió la respuesta de cualquier organismo a un estrés en tres fases. En entrenamiento, el estrés es la sesión.\n\n| Fase | Qué pasa | Qué hace la app |\n|---|---|---|\n| Alarma | Tras un estímulo nuevo o una subida de carga, el rendimiento baja: fatiga, agujetas, daño muscular. | ACWR > 1,3 o TSB < −20 → mantener: no subir más hasta que se asimile. |\n| Resistencia (adaptación) | Con descanso, el cuerpo se repara y se adapta a ese estrés. | ACWR 0,8–1,3 y sensaciones normales → progresar poco a poco. |\n| Supercompensación | Al disipar la fatiga, el rendimiento queda *por encima* del inicial. | TSB > +5 (afinamiento, tras descarga) → listo para competir o subir. |\n| Agotamiento | Si se encadena carga sin recuperar, el rendimiento cae y llega el sobreentrenamiento. | 2+ señales de mala recuperación → descarga. |\n\nAdemás, si no hay estímulo, se pierde lo ganado (desentrenamiento): ACWR < 0,8 lejos de la carrera → reconstruir carga gradualmente.\n\nLa idea clave es que la mejora no ocurre durante el entrenamiento sino en la recuperación. Por eso la siguiente sesión dura debería llegar cerca del pico de supercompensación: ni antes (con fatiga), ni mucho después (cuando ya se ha perdido)."
+ },
+ {
+  "id": "2-modelo-forma-fatiga-banister",
+  "title": "2. Modelo forma–fatiga (Banister)",
+  "text": "Cada sesión genera a la vez forma (lenta de ganar y de perder) y fatiga (rápida de ganar y de perder).\n\n- Rendimiento ≈ forma − fatiga.\n- En la app: CTL = forma (media 42 días), ATL = fatiga (7 días), TSB = CTL − ATL (frescura).\n- Como la fatiga se va antes que la forma, una descarga o un afinamiento (taper) revela la forma ganada.\n\nTipos de *overreaching* (sobrecarga):\n\n| Tipo | Qué es | Bueno o malo |\n|---|---|---|\n| Funcional | Sobrecarga corta y buscada. Tras la descarga, el rendimiento sube más que antes. |  Planificado |\n| No funcional | Se fuerza de más; tras descansar solo se vuelve al punto de partida. |  Tiempo perdido |\n| Sobreentrenamiento | Fatiga que dura semanas o meses; la forma empeora. |  Evitar |"
+ },
+ {
+  "id": "3-ratio-carga-aguda-cronica-acwr-gabbett",
+  "title": "3. Ratio carga aguda/crónica — ACWR (Gabbett)",
+  "text": "ACWR = carga de los últimos 7 días ÷ media semanal de los últimos 28.\n\n| ACWR | Lectura |\n|---|---|\n| < 0,8 | Desentrenando |\n| 0,8–1,3 | Zona óptima |\n| 1,3–1,5 | Precaución (alarma) |\n| > 1,5 | Riesgo alto de lesión |\n\n> [!warning] El ACWR está muy discutido como predictor de lesiones (ver 9.3). En la app es una señal más, no la única."
+ },
+ {
+  "id": "4-monotonia-y-strain-foster",
+  "title": "4. Monotonía y strain (Foster)",
+  "text": "- Monotonía = carga media diaria ÷ desviación típica de la semana. Si es > 2, todos los días son parecidos y aumenta el riesgo de enfermedad y sobrecarga.\n- Strain = carga semanal × monotonía.\n- Remedio: alternar días duros y días suaves de verdad."
+ },
+ {
+  "id": "5-distribucion-de-la-intensidad",
+  "title": "5. Distribución de la intensidad",
+  "text": "- 80/20 polarizado (Seiler): ~80 % del tiempo suave, conversacional, por debajo del primer umbral, y ~20 % de calidad (umbral, VO₂máx, ritmo carrera).\n- El error más común es la «zona gris»: rodajes suaves demasiado rápidos, que cansan sin dar el estímulo de la calidad.\n- Los ritmos de la app salen del VDOT de Daniels: suave, maratón, umbral, intervalos, repeticiones.\n- Nunca dos sesiones duras seguidas: hacen falta 48 h entre estímulos intensos."
+ },
+ {
+  "id": "6-la-piramide-de-entrenamiento-helms-valdez-morgan",
+  "title": "6. La Pirámide de Entrenamiento (Helms, Valdez, Morgan)",
+  "text": "Orden de prioridades, de más a menos importante:\n\n1. Adherencia: realista, agradable y flexible. Lo óptimo sobre el papel no sirve si no se puede seguir.\n   - Si se pierde una sesión, se sigue por donde se iba; no se intenta recuperar todo.\n   - El estrés de fuera (trabajo, sueño, problemas) reduce la adaptación.\n   - Elegir la sesión según la energía del día mejora los resultados.\n2. Volumen, intensidad y frecuencia: relación dosis–respuesta en forma de «U» invertida.\n   - Haz lo suficiente para progresar, no lo máximo posible.\n   - Sube el volumen solo si te has estancado y te recuperas bien.\n3. Progresión:\n   - Principiante: subir de sesión en sesión. Intermedio: de semana en semana. Avanzado: por bloques.\n   - Descargas: semana con ~la mitad de volumen y la misma intensidad.\n   - Ciclo de introducción antes de un bloque de más volumen.\n4. Selección de ejercicios: específicos al objetivo, con algo de variedad para evitar eslabones débiles.\n5. Descansos y 6. tempo: detalles menores.\n\nEvaluación de final de bloque (adaptada para la app). Preguntas al acabar cada bloque:\n- ¿Ha bajado la motivación?\n- ¿Duermes peor?\n- ¿Bajan las cargas o las repeticiones (en carrera: ritmo, FC o sensaciones)?\n- ¿Tienes más estrés?\n- ¿Tienes más molestias de lo normal?\n\nCon 2 o más «sí» → descarga. Si solo hay molestias → semana ligera.\n\nRPE por repeticiones en reserva (RIR): RPE 10 = fallo; 9 = te queda 1 repetición; 8 = te quedan 2; 7 = te quedan 3.\n- Hay que evitar el fallo en los ejercicios multiarticulares: no da más fuerza y pide 24–48 h más de recuperación.\n\nEfecto interferencia (cardio y fuerza):\n- El cardio intenso justo antes de la fuerza la empeora.\n- Mejor fuerza → cardio, separarlos 6 h o hacerlos en días distintos.\n- Para un corredor, la fuerza va al servicio de la carrera: dosis mínima eficaz, lejos del fallo, sin agujetas."
+ },
+ {
+  "id": "7-fuerza-para-corredores",
+  "title": "7. Fuerza para corredores",
+  "text": "- La fuerza pesada (3–5 repeticiones) y la pliometría mejoran la economía de carrera (Rønnestad, Støren) sin ganar peso significativo.\n- 2 sesiones/semana en base y construcción; mantenimiento (1–2 cortas) en específico; activación en el afinamiento.\n- Progresión doble: primero repeticiones dentro del rango, luego más peso."
+ },
+ {
+  "id": "8-senales-de-alarma-que-usa-la-app",
+  "title": "8. Señales de alarma que usa la app",
+  "text": "| Señal | De dónde sale |\n|---|---|\n| Sensación «duro/muy duro» repetida | Botones al registrar |\n| Rodajes suaves a RPE ≥ 6 | RPE del registro |\n| Eficiencia (velocidad/FC) cae > 5 % | FC media de las carreras |\n| Palabras: dolor, molestia, gemelo, rodilla… | Texto «¿Cómo te has sentido?» |\n| Palabras: dormir mal, estrés, sin ganas | Texto libre |\n| 3+ sesiones sin hacer en 14 días | Cumplimiento del plan |\n| Palabras: fiebre, gripe, catarro… | Texto libre (últimos 7 días) |\n| Sesión > tirada más larga de 30 días + 10 % | Distancias registradas |"
+ },
+ {
+  "id": "9-1-picos-de-una-sola-sesion-frandsen-et-al-2025-bjsm",
+  "title": "9.1 Picos de una sola sesión — Frandsen et al. 2025 (BJSM)",
+  "text": "- 5.205 corredores de 87 países, 18 meses con GPS, ~588.000 sesiones.\n- La medida es la distancia de la sesión ÷ la tirada más larga de los 30 días previos.\n- El riesgo de lesión por sobrecarga sube un 64 % con un pico del 10–30 %, un 52 % con uno del 30–100 % y un 128 % si la distancia se dobla o más.\n- Cambio de enfoque: importa tanto la sesión puntual como la semana.\n- En la app: limits.maxSessionKm es la tirada más larga de 30 días × 1,1. El código impide que la IA alargue por encima, y el prompt le pide acortar las sesiones que lo superen."
+ },
+ {
+  "id": "9-2-progresion-semanal-nielsen-et-al-2014-jospt",
+  "title": "9.2 Progresión semanal — Nielsen et al. 2014 (JOSPT)",
+  "text": "- 873 corredores novatos durante un año.\n- Subir más de un 30 % semanal se asocia a más lesiones de distancia que subir menos de un 10 % (HR 1,59; resultado al límite de la significación).\n- Afecta sobre todo a la rodilla (dolor femoropatelar), la cintilla iliotibial y la periostitis.\n- Lectura: la «regla del 10 %» no es mágica, pero los saltos grandes son malos. En la app, el cambio semanal máximo al progresar es del +10 %."
+ },
+ {
+  "id": "9-3-criticas-al-acwr-impellizzeri-et-al-2020-2021",
+  "title": "9.3 Críticas al ACWR — Impellizzeri et al. 2020–2021",
+  "text": "- El ACWR reescala la carga aguda: no predice lesiones mejor que la propia carga aguda y tiene artefactos estadísticos.\n- Las lesiones son multifactoriales.\n- Lectura: en la app el ACWR es una señal más (fase de alarma), nunca la única. Se combina con sensaciones, dolor, sueño, eficiencia y el tope por sesión."
+ },
+ {
+  "id": "9-4-distribucion-de-intensidad-oliveira-et-al-2024-meta-analisis-17-estudios",
+  "title": "9.4 Distribución de intensidad — Oliveira et al. 2024 (meta-análisis, 17 estudios)",
+  "text": "- La polarizada mejora algo más el VO₂pico (efecto pequeño), sobre todo en atletas muy entrenados y en intervenciones cortas.\n- En contrarreloj y tiempo hasta el agotamiento es equivalente a las demás.\n- Otros trabajos sugieren que los populares responden igual o mejor con la piramidal (mucho suave, algo de umbral, poco VO₂máx).\n- Lectura: lo esencial es que el 80 % sea suave de verdad; el reparto exacto del 20 % importa menos."
+ },
+ {
+  "id": "9-5-afinamiento-taper-bosquet-2007-wang-et-al-2023",
+  "title": "9.5 Afinamiento (taper) — Bosquet 2007; Wang et al. 2023",
+  "text": "- Bajar el volumen un 41–60 %, mantener la intensidad y la frecuencia, de forma progresiva, durante 8–14 días (hasta 21) → ~2–3 % de mejora en contrarreloj.\n- Funciona mejor si antes hubo un bloque de sobrecarga.\n- El VO₂máx no cambia: se gana frescura, no forma.\n- En la app: regla en el prompt. No hay que quitar todas las series en el afinamiento; se acortan."
+ },
+ {
+  "id": "9-6-fuerza-para-corredores",
+  "title": "9.6 Fuerza para corredores",
+  "text": "- Balsalobre-Fernández et al. 2016 (meta-análisis): efecto grande sobre la economía de carrera en corredores entrenados, con 2–3 sesiones/semana durante 8–12 semanas combinando cargas y pliometría.\n- Blagrove et al. 2018 (revisión de 24 estudios): la economía mejora un 2–8 %, y también la contrarreloj de 1,5–10 km.\n- Lauersen et al. 2014 (BJSM; 25 ensayos, 26.610 personas): la fuerza reduce las lesiones deportivas a menos de 1/3 y casi a la mitad las de sobrecarga. El estiramiento, en cambio, no las reduce.\n- Interferencia (Schumann et al. 2022), en 43 ensayos: el cardio no frena la fuerza máxima ni la hipertrofia. Solo frena algo la potencia explosiva cuando se hace en la misma sesión.\n- Lectura: la interferencia es menor de lo que se creía. Basta con separar la pliometría del cardio intenso."
+ },
+ {
+  "id": "9-7-sobreentrenamiento-consenso-ecss-acsm-meeusen-et-al-2013",
+  "title": "9.7 Sobreentrenamiento — consenso ECSS/ACSM (Meeusen et al. 2013)",
+  "text": "- Sigue la secuencia de la sección 2: sobrecarga funcional, no funcional y síndrome de sobreentrenamiento.\n- Ningún marcador (hormonas, analíticas, tests) es fiable por sí solo. El diagnóstico se hace por exclusión, con la caída de rendimiento y los síntomas como base.\n- Lectura: respalda usar la evaluación de recuperación (sensaciones, sueño, motivación, rendimiento) por encima de un único número."
+ },
+ {
+  "id": "9-8-sueno-milewski-et-al-2014",
+  "title": "9.8 Sueño — Milewski et al. 2014",
+  "text": "- Deportistas adolescentes que dormían menos de 8 h tenían 1,7 veces más lesiones.\n- Es un estudio pequeño y retrospectivo, pero coherente con el resto de la evidencia.\n- En la app: mencionar dormir mal cuenta en la evaluación y lleva a mantener."
+ },
+ {
+  "id": "9-9-enfermedad",
+  "title": "9.9 Enfermedad",
+  "text": "- Regla clásica del «cuello»: con síntomas solo por encima del cuello (mocos, garganta) se puede hacer algo suave; con fiebre, malestar general o síntomas en el pecho, descanso hasta 24 h sin fiebre.\n- Ojo: esta regla es práctica clínica, no evidencia sólida.\n- En la app: si mencionas fiebre, gripe, catarro… en los últimos 7 días → recuperar (sin calidad)."
+ },
+ {
+  "id": "9-10-vuelta-tras-molestia-semaforo-de-dolor-0-10",
+  "title": "9.10 Vuelta tras molestia: semáforo de dolor (0–10)",
+  "text": "| Dolor | Qué hacer |\n|---|---|\n| 0–2 | Seguir el plan. |\n| 3–4, sin empeorar | Hacer la sesión, pero no subir la siguiente. |\n| ≥ 5, empeora corriendo, cambia la zancada o dura más de 24 h | Parar y retroceder. |\n\nVuelta progresiva con correr/caminar (p. ej. 1′ corriendo y 4′ caminando → 5′/1′ en 2–3 semanas). En la app: regla en el prompt de «recuperar»."
+ },
+ {
+  "id": "9-11-otras-herramientas-evaluadas",
+  "title": "9.11 Otras herramientas evaluadas",
+  "text": "- Entrenar guiado por VFC (HRV): frente a un plan fijo, la mejora es pequeña y no significativa. Hay algo menos de «no respondedores». No compensa sin un sensor diario → FUTURO.\n- Desacople aeróbico (Pa:FC): compara ritmo/FC en la 1.ª y la 2.ª mitad de un rodaje largo estable. < 5 % indica buena base aeróbica. Necesita datos por segundo (streams de Strava) → FUTURO.\n- Carga por sRPE (Foster): RPE × minutos, validado en 36 estudios. La app ya guarda el RPE; se podría usar como carga cuando no hay FC → IMPORTANTE.\n- RED-S (consenso del COI, 2023): es la falta crónica de energía (comer poco para lo que se entrena). Da fatiga, lesiones óseas, problemas hormonales y bajada de rendimiento. Se queda fuera del alcance de la app; si hay fracturas por estrés repetidas o la sensación de vacío es constante, hay que consultar con un médico o un nutricionista."
+ }
+]

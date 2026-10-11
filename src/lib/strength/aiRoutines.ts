@@ -6,6 +6,7 @@ import { addDays } from "../dates";
 import { CATALOG } from "./catalog";
 import { EQUIPMENT, canDo, type Equipment, type Exercise } from "./labels";
 import { EXAMPLES_RULE, PREFERENCES_RULE, preferencesFor, ratedExamples } from "../aiMemory";
+import { STUDY_RULE, studyFor } from "../knowledge";
 
 const EQ_IDS = new Set<string>(EQUIPMENT.map((e) => e.id));
 const KINDS: StrengthKind[] = ["pierna", "posterior", "superior", "completo"];
@@ -72,6 +73,7 @@ REGLAS:
 
 ${PREFERENCES_RULE}
 ${EXAMPLES_RULE}
+${STUDY_RULE}
 
 EJEMPLO de una rutina buena (orientativo, no la copies): pierna, bloque base, con mancuernas de 15-18 kg, banco y bandas:
 {"kind": "pierna", "block": "base", "name": "Pierna · Base", "exercises": [
@@ -100,6 +102,7 @@ export function strengthRequest(db: Db, material: string, ability: string, today
     sesionesDeFuerzaPorSemana: per,
     preferencias: preferencesFor(db, "fuerza"),
     valoraciones: ratedExamples(db, "fuerza"),
+    estudio: studyFor(`fuerza para corredores ${ability} ${db.profile?.injuries ?? ""}`, 2),
     materialQueTiene: material,
     loQuePuedeHacerOSuRutina: ability,
     rutinasAPedir: kinds.flatMap((kind) => (["base", "fuerza"] as const).map((block) => ({ kind, block }))),

@@ -530,3 +530,13 @@ David preguntó si se puede «entrenar» una IA para la app. Opciones: (1) instr
 - **El material del mensaje manda** (`chatEquipment`): si en el chat dices «en casa» (o el nombre de uno de tus lugares), «sin material», «en el gimnasio» o nombras material («solo una kettlebell y bandas»), la lista de ejercicios que recibe la IA ya viene filtrada y se le dice por qué. No depende de que el modelo lo deduzca. «Casado» no cuenta como «casa».
 - Probado con la IA real (`gpt-4o-mini`): con gimnasio apuntado y «hoy en casa con mancuernas de 10 kg» propuso sentadilla con mancuernas, peso muerto rumano a una pierna, puente de glúteo y gemelo, y no lo guardó como preferencia; a «¿cada cuánto subo peso en press banca?» respondió breve y sin rutinas. Con el modelo barato aún repite a veces en el texto la lista de ejercicios.
 
+**Bloque 3 · Consulta del Estudio** (*2026-10-11*)
+- [[Estudio entrenamiento]] se trocea en apartados (`scripts/build-knowledge.mjs` → `src/lib/knowledge/estudio.json`, 19 apartados). Se ejecuta solo antes de cada build (`prebuild`, también en Vercel) y al arrancar en local (`predev`): **basta con editar el estudio en Obsidian y subirlo**. Si el archivo no está, se mantiene el último troceado. Se quitan las gráficas, los emojis y los enlaces de Obsidian; la sección «Fuentes» no se manda.
+- **Buscador** (`searchStudy`): por palabras con raíces cortas («doler»/«dolor»), sinónimos de cómo habla el atleta («me duele la rodilla» → semáforo de dolor; «reventado» → fatiga y sobreentrenamiento; «la carrera» → afinamiento; «series», «sentadilla» → Helms) y ajuste por longitud como BM25 (si no, el apartado de Helms, el más largo, salía en todo). Como mucho 2-3 apartados y ~3.500 caracteres; lo que puntúa por debajo del 45 % del mejor no se manda.
+- **Qué consulta cada IA**:
+  - chat: tu mensaje y el anterior;
+  - fuerza del plan: «fuerza para corredores» + lo que sabes hacer + tus lesiones;
+  - ajuste del plan: el diagnóstico (veredicto y motivos), enfermedad, si la carrera está a menos de 3 semanas y lo que escribiste en tus sensaciones de los últimos 7 días.
+- Regla común: si un apartado trae una regla concreta para el caso (semáforo de dolor, tope de la tirada, regla del cuello…), la IA la aplica tal cual y la nombra. La regla de molestias del chat se alineó con el semáforo (antes decía «no cargues la zona»).
+- Probado con la IA real: «me duele la rodilla un 4 sobre 10…» → «Según el semáforo de dolor, con un 4, puedes entrenar pero sin subir la carga y con variantes que no duelan…». Antes de ajustar la regla no lo citaba.
+

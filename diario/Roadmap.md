@@ -115,7 +115,7 @@ Base: [[Estudio entrenamiento#6. La Pirámide de Entrenamiento (Helms, Valdez, M
 ## 🧠 IA que aprende de ti (opción 2: sin entrenar el modelo) → [[Decisiones#IA que aprende de ti]]
 - [x] Bloque 1 · Valoraciones (pulgar arriba/abajo con motivo) y memoria de preferencias que leen las tres IA; el chat apunta solo lo que le cuentas — *hecho 2026-10-10, pendiente de comprobar*
 - [x] Bloque 2 · Ejemplos buenos en las instrucciones (few-shot), y las respuestas que valoras como ejemplos de lo que gusta y lo que no; el chat entrena con el material que nombras — *hecho 2026-10-11, pendiente de comprobar*
-- [ ] Bloque 3 · Que consulte el Estudio de entrenamiento (solo los apartados que vengan al caso)
+- [x] Bloque 3 · Que consulte el Estudio de entrenamiento (solo los apartados que vengan al caso) — *hecho 2026-10-11, pendiente de comprobar*
 
 ## 🧪 Batería de pruebas — *hecha 2026-10-10* → [[Decisiones#Batería de pruebas completa]]
 - [x] Tests de la lógica: 236 (antes 96), con 120 combinaciones del planificador

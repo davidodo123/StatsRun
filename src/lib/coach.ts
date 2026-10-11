@@ -15,6 +15,7 @@ import { MUSCLE_LABEL } from "./strength/labels";
 import { routinesForPlan } from "./strength/routinePlan";
 import { workoutSets, workoutVolume } from "./strength/workouts";
 import { EXAMPLES_RULE, PREFERENCES_RULE, preferencesFor, ratedExamples } from "./aiMemory";
+import { STUDY_RULE, studyFor } from "./knowledge";
 
 const API = "https://openrouter.ai/api/v1/chat/completions";
 const HORIZON_DAYS = 14;
@@ -133,6 +134,7 @@ REGLAS:
 - Escribe en español, pasos breves y accionables.
 ${PREFERENCES_RULE}
 ${EXAMPLES_RULE}
+${STUDY_RULE}
 
 EJEMPLO (orientativo, no lo copies): diagnóstico "mantener"; el jueves hizo series y escribió «muy duras, piernas cargadas»; el martes tenía series otra vez.
 {"summary": "Mantienes la carga: el jueves las series se te hicieron muy duras y llegas con las piernas cargadas. Cambio las series del martes por un tempo corto para no encadenar dos sesiones al límite; la tirada del domingo se queda igual.", "sessions": [{"id": "<id de la sesión del martes>", "type": "tempo", "title": "Tempo 15′", "description": "Tempo corto en lugar de series: estímulo de calidad sin llegar al límite.", "steps": ["15′ suave", "15′ a ritmo T", "10′ suave"], "distanceKm": 8, "durationMin": 45, "reason": "Piernas cargadas tras las series del jueves"}]}
@@ -194,6 +196,17 @@ function buildContext(db: Db, today: string) {
     },
     preferencias: preferencesFor(db, "plan"),
     valoraciones: ratedExamples(db, "plan"),
+    // apartados del estudio según el diagnóstico, lo que ha contado y lo cerca que está la carrera
+    estudio: studyFor(
+      [
+        readiness.verdict,
+        ...readiness.reasons,
+        readiness.signals.illness ? "enfermedad fiebre" : "",
+        diffDays(plan.goal.date, today) <= 21 ? "afinamiento carrera" : "",
+        ...db.activities.filter((a) => a.date <= today && diffDays(today, a.date) <= 7).map((a) => a.feelings ?? ""),
+      ].join(" "),
+      2,
+    ),
     disponibilidad: {
       diasDeLaSemana: avail.map((d) => WEEKDAYS[d]),
       diaTiradaLarga: WEEKDAYS[profile.longRunDay],

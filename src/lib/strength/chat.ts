@@ -6,6 +6,7 @@ import { equipmentFromText, exercisesFromAi } from "./aiRoutines";
 import { EQUIPMENT, canDo, type Equipment } from "./labels";
 import { estimate1RM } from "./workouts";
 import { EXAMPLES_RULE, PREFERENCES_RULE, cleanPreference, preferencesFor, ratedExamples } from "../aiMemory";
+import { STUDY_RULE } from "../knowledge";
 
 // lo útil para entrenar fuerza en general (sin estiramientos ni cardio, y sin lo más técnico)
 const CANDIDATES = CATALOG.filter((x) => (x.cat === "fuerza" || x.cat === "pliometria" || x.cat === "powerlifting") && x.level !== "avanzado");
@@ -18,13 +19,14 @@ PRINCIPIOS (pirámide de Helms; Schoenfeld; para corredores, Balsalobre-Fernánd
 - Para ganar músculo: 10-20 series efectivas por músculo y semana, cada músculo 2 veces por semana, 6-15 repeticiones a 1-3 RIR. Para fuerza: 3-6 repeticiones en los básicos, descansos largos. Para mantener: en torno a un tercio de ese volumen.
 - Si corre: 2-3 sesiones, RPE 7-8, nunca al fallo en multiarticulares, nada pesado de pierna el día antes de la tirada larga o de series; unilaterales, gemelo y sóleo, isquios excéntricos y pliometría.
 - Progresión doble: cuando llega al máximo del rango en todas las series, sube el peso. Principiantes: técnica y rangos medios.
-- Si tiene lesiones o molestias, no cargues esa zona: variantes sin dolor y, si el dolor sigue, que lo vea un profesional.
+- Molestias: semáforo de dolor (0-10). 0-2 sigue igual; 3-4 que no empeora, puede entrenar pero sin subir la carga y con variantes que no duelan; 5 o más, o si empeora o dura más de un día, para esa zona y que lo vea un profesional.
 - Usa lo que sabes de él (perfil, material, sus rutinas y lo que ha entrenado) y dilo cuando te apoyes en ello.
 
 ${PREFERENCES_RULE}
 MEMORIA: si en su mensaje te cuenta algo duradero que debas recordar (ejercicios que no quiere o no puede hacer, gustos, horarios, material nuevo, molestias que vienen de lejos), añádelo en "recordar" como frases cortas en tercera persona («No quiere zancadas», «Tiene una barra de dominadas nueva»). No repitas lo que ya está en "preferencias". Si no hay nada, "recordar": [].
 
 ${EXAMPLES_RULE}
+${STUDY_RULE}
 MATERIAL: si viene "materialParaEsteMensaje", entrena hoy con eso (la lista de ejercicios ya viene filtrada): no propongas nada que pida otro material aunque lo tenga en otro lugar.
 
 EJEMPLOS (orientativos, no los copies tal cual):

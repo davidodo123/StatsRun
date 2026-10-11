@@ -22,6 +22,7 @@ function syncPlanRoutines(d: Db) {
 import { CATEGORIES, EQUIPMENT, MUSCLES, PLACE_PRESETS, type Equipment, type ExerciseCategory, type Muscle } from "@/lib/strength/labels";
 import type { FormState } from "./actions";
 import { addPreferences } from "@/lib/aiMemory";
+import { studyFor } from "@/lib/knowledge";
 
 const EQ_IDS = new Set<string>(EQUIPMENT.map((e) => e.id));
 const MUSCLE_IDS = new Set<string>(MUSCLES.map((m) => m.id));
@@ -364,6 +365,8 @@ export async function sendStrengthChat(_: FormState, fd: FormData): Promise<Form
     // si el mensaje dice con qué entrena hoy, la lista ya viene filtrada y la IA lo sabe
     ...(from ? { materialParaEsteMensaje: { codigos: equipment, segun: from } } : {}),
     conversacion: chatHistory(history),
+    // lo del estudio que tiene que ver con su pregunta (y con la anterior, por si sigue el mismo tema)
+    estudio: studyFor(`${message} ${history.filter((m) => m.role === "user").at(-1)?.text ?? ""}`),
     ejerciciosDisponibles: "id | nombre\n" + chatExerciseList(equipment),
     mensaje: message,
   });
