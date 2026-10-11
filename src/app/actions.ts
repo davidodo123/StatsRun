@@ -17,6 +17,8 @@ import { createHealthToken, revokeHealthToken } from "@/lib/healthToken";
 import { applyStrengthRoutines, routinesForPlan } from "@/lib/strength/routinePlan";
 import { addDays, diffDays, todayLocal } from "@/lib/dates";
 import type { Db, Feel, Focus, Goal, Level, Profile, Sex, TuneUpRace } from "@/lib/types";
+import { downloadCmCourse, findCmRace } from "@/lib/cruzandolametaStore";
+import { parseCourseFile } from "@/lib/importers/course";
 
 export interface FormState {
   ok?: boolean;
@@ -109,7 +111,10 @@ export async function syncProfileAverages(): Promise<void> {
 }
 
 export async function saveGoal(_: FormState, fd: FormData): Promise<FormState> {
-  const race = findRace(String(fd.get("raceId") ?? "") || undefined);
+  const raceId = String(fd.get("raceId") ?? "");
+  const race = findRace(raceId || undefined);
+  // carrera de Cruzando la Meta: se identifica para conservar su recorrido y cargarlo de su web
+  const cmId = /^cm-\d+$/.test(raceId) ? raceId.slice(3) : undefined;
   const date = String(fd.get("date") ?? "");
   const distanceKm = num(fd, "distanceKm") ?? race?.distanceKm;
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return { error: "Indica la fecha de la carrera." };
@@ -120,7 +125,7 @@ export async function saveGoal(_: FormState, fd: FormData): Promise<FormState> {
   if (target && !targetTimeSec) return { error: "Tiempo objetivo con formato h:mm:ss o mm:ss." };
 
   const goal: Goal = {
-    raceId: race?.id,
+    raceId: race?.id ?? (cmId ? raceId : undefined),
     name: String(fd.get("name") ?? "").trim() || race?.name || `Carrera ${distanceKm} km`,
     distanceKm,
     date,
@@ -136,6 +141,22 @@ export async function saveGoal(_: FormState, fd: FormData): Promise<FormState> {
     if (!same) archivePlan(db);
     db.goal = same && prev.course ? { ...goal, course: prev.course } : goal;
   });
+  // su recorrido (GPX, KMZ o KML), si lo publican: mapa, distancia y desnivel sin tener que subirlo
+  if (cmId && !(await getDb()).goal?.course) {
+    const cm = await findCmRace(cmId);
+    const file = cm?.courseUrl ? await downloadCmCourse(cm.courseUrl).catch(() => undefined) : undefined;
+    if (file) {
+      try {
+        const course = parseCourseFile(file.name, file.bytes);
+        await updateDb((db) => {
+          const g = db.goal;
+          if (g && g.raceId === goal.raceId) db.goal = { ...g, course, elevationGainM: g.elevationGainM || course.elevationGainM };
+        });
+      } catch {
+        // si no se entiende el archivo, se sigue sin recorrido (se puede subir a mano)
+      }
+    }
+  }
   const db = await getDb();
   if (db.profile) {
     await rebuildPlan(db);

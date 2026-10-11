@@ -5,26 +5,53 @@ import { saveGoal, type FormState } from "@/app/actions";
 import type { Race } from "@/lib/races";
 import { keepForm } from "./keepForm";
 
-export function GoalForm({ race, defaultDate, hasProfile }: { race?: Race; defaultDate: string; hasProfile: boolean }) {
+/** Datos ya conocidos de una carrera de fuera del catálogo (p. ej. de Cruzando la Meta). */
+export interface GoalPreset {
+  raceId: string;
+  name: string;
+  distances: number[];
+  date: string;
+}
+
+const DISTANCES = [
+  { km: 5, label: "5K" },
+  { km: 10, label: "10K" },
+  { km: 15, label: "15K" },
+  { km: 21.0975, label: "Media maratón" },
+  { km: 42.195, label: "Maratón" },
+];
+const kmLabel = (km: number) => DISTANCES.find((d) => Math.abs(d.km - km) < 0.05)?.label ?? `${km.toLocaleString("es-ES", { maximumFractionDigits: 2 })} km`;
+
+export function GoalForm({ race, preset, defaultDate, hasProfile }: { race?: Race; preset?: GoalPreset; defaultDate: string; hasProfile: boolean }) {
   const [state, action, pending] = useActionState<FormState, FormData>(saveGoal, {});
+  // con una carrera conocida, sus distancias (la más larga primero); si no, las habituales
+  const options = preset?.distances.length ? [...preset.distances].sort((a, b) => b - a) : DISTANCES.map((d) => d.km);
   return (
     <form onSubmit={keepForm(action)} className="space-y-4">
       {race && <input type="hidden" name="raceId" value={race.id} />}
+      {preset && (
+        <>
+          <input type="hidden" name="raceId" value={preset.raceId} />
+          <input type="hidden" name="name" value={preset.name} />
+        </>
+      )}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {!race && (
           <>
-            <label className="field sm:col-span-2">
-              Nombre de la carrera
-              <input className="input" name="name" placeholder="Ej.: Media Maratón de mi ciudad" required />
-            </label>
+            {!preset && (
+              <label className="field sm:col-span-2">
+                Nombre de la carrera
+                <input className="input" name="name" placeholder="Ej.: Media Maratón de mi ciudad" required />
+              </label>
+            )}
             <label className="field">
-              Distancia (km)
-              <select className="input" name="distanceKm" defaultValue="21.0975">
-                <option value="5">5K</option>
-                <option value="10">10K</option>
-                <option value="15">15K</option>
-                <option value="21.0975">Media maratón</option>
-                <option value="42.195">Maratón</option>
+              Distancia
+              <select className="input" name="distanceKm" defaultValue={String(preset ? options[0] : 21.0975)}>
+                {options.map((km) => (
+                  <option key={km} value={km}>
+                    {kmLabel(km)}
+                  </option>
+                ))}
               </select>
             </label>
           </>

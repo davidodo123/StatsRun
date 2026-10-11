@@ -120,7 +120,7 @@ Base: [[Estudio entrenamiento#6. La Pirámide de Entrenamiento (Helms, Valdez, M
 5. [x] **Un plan con dos carreras** (p. ej. 25 de noviembre y abril): que se ajuste a las dos — *hecho 2026-10-11: carreras «A · Otro objetivo» en la Temporada, con su propio tramo* → [[Decisiones#Temporada con varios objetivos]]
 6. [x] **Plan en el móvil**: hay un espacio negro abajo — *hecho 2026-10-11: franja negra bajo la barra de abajo al llegar al final (o al rebotar) en el iPhone instalado; el color de la barra sigue por debajo. Pendiente de comprobar en el iPhone*
 7. [x] **Quitar las barras de desplazamiento en todo el móvil** — *hecho 2026-10-11: barras ocultas en el móvil (se sigue deslizando) y las 4 tablas que se desplazaban de lado (Estadísticas ×2, tabla de mejora del perfil, comparación con un amigo) caben en la pantalla, con las columnas secundarias desde tableta. Todas las páginas sin desborde a 360 px*
-8. [ ] **Carreras de «Cruzando la meta»**: traer las carreras que van saliendo, con los detalles y el archivo del recorrido que publican
+8. [x] **Carreras de «Cruzando la meta»**: traer las carreras que van saliendo, con los detalles y el archivo del recorrido que publican — *hecho 2026-10-11* → [[Decisiones#Carreras de Cruzando la Meta]]
 9. [ ] **Tirar para actualizar**: al bajar la pantalla, botón de actualizar para coger los cambios de la web sin cerrar y abrir la app
 
 ## 🧠 IA que aprende de ti (opción 2: sin entrenar el modelo) → [[Decisiones#IA que aprende de ti]]

@@ -71,6 +71,8 @@ export const userDbKey = (uid: string) => `${PREFIX}:${uid}`;
 export const LEGACY_DB_KEY = PREFIX;
 /** Clave que apunta del hash de la clave de Salud (atajo del iPhone) al usuario. */
 export const healthTokenKey = (hash: string) => `${PREFIX}:salud:${hash}`;
+/** Carreras de Cruzando la Meta leídas de su web (compartidas por todos los usuarios). */
+export const CM_RACES_KEY = `${PREFIX}:carreras-cm`;
 
 // colas de escritura por clave: serializan las modificaciones dentro de una misma instancia
 const queues = new Map<string, Promise<unknown>>();

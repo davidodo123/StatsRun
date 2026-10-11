@@ -578,3 +578,15 @@ David preguntó si se puede «entrenar» una IA para la app. Opciones: (1) instr
 - El plan se llama con todas sus carreras («Villa Romana de Salar + Maratón de abril», `planTitle`) y la tarjeta Temporada las lista en orden con la principal y las A destacadas.
 - Probado en el navegador: con Villa Romana (25 nov) como principal y un maratón el 18 de abril como A salieron 27 semanas seguidas: afinamiento hasta el 25 de noviembre, semana suave, construcción completa con sus descargas y afinamiento hasta el 18 de abril. Tests: las dos carreras dentro, afinamiento en cada una, 7 días sin plan tras la media, semanas sin huecos ni ids repetidos, y con un solo objetivo el plan es idéntico al de siempre.
 
+## Carreras de Cruzando la Meta
+*2026-10-11*
+
+- **La web**: cruzandolameta.es (cronometraje, sobre todo Andalucía). Lista de próximas en `/carreras/proximas/` (por páginas; pasada la última responde 404) y ficha por carrera en `/ver/<nombre>---<número>/` con distancias, hora, tipo, localidad, lugar de salida, coordenadas (Google Maps), plazo de inscripción, web oficial y **Descargas** (normativa en PDF y, en algunas, el recorrido en GPX/KMZ). Las ya celebradas redirigen a sus clasificaciones. No tiene `robots.txt` que lo prohíba.
+- **Cómo se lee** (`cruzandolameta.ts` interpreta el HTML, `cruzandolametaStore.ts` descarga y guarda): como mucho **cada 12 horas**, en segundo plano al entrar en Carreras (`after`), de dos en dos con pausas y con un User-Agent que dice quién es. Se guarda para todos los usuarios (`statsrun:db:carreras-cm`), hasta 9 meses vista. Si su web falla se mantiene lo anterior. Los recorridos solo se descargan de su propio dominio y con tope de 4 MB.
+- **En la app**:
+  - Carreras → «Próximas carreras · Cruzando la Meta»: tarjetas con cartel, fecha, lugar, distancias y tipo; filtro por provincia; por defecto solo carreras a pie (se pueden ver también bici, natación, triatlón e infantiles).
+  - `/carreras/cm/<número>`: datos, cartel, enlaces (ficha e inscripción, web oficial, descargas, salida en el mapa) y **Preparar esta carrera** con el formulario ya rellenado (nombre, fecha y sus distancias).
+  - Al generar el plan, si publican el recorrido se descarga y se carga solo en el objetivo (mapa, distancia y desnivel si el archivo lo trae).
+- Probado con su web real: 18 próximas carreras, todas con coordenadas, 7 con descargas y 3 con recorrido. Con la XV Prueba de Fondo «Villa Romana de Salar» (10K, 15 de noviembre) se creó el objetivo, el plan y el recorrido (9,9 km; ese GPX no trae alturas).
+- **Ojo**: el plan de David tiene «Villa Romana de Salar» como media maratón el 25 de noviembre; según Cruzando la Meta es un 10K el 15 de noviembre. Se le avisa.
+
