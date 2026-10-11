@@ -563,3 +563,10 @@ David preguntó si se puede «entrenar» una IA para la app. Opciones: (1) instr
 - Probado contra la API local con un cuerpo como el de Atajos: 6 días guardados, el que no venía se conserva.
 - Guía de Perfil → Salud reescrita. Se quitaron las 4 capturas que ya no correspondían (pasos, variable, calorías y envío); quedan las de «Obtener contenido de URL», el resultado y la automatización.
 
+## La IA no quita días de entreno
+*2026-10-11*
+
+- **Problema** (captura de David): la semana del 12 al 18 de octubre empezaba el miércoles; faltaban el lunes y el martes, y las sesiones ponían «Ajustada por IA: mantener la carga suave para evitar sobrecarga». El planificador sí ponía los 5 días; era el ajuste diario de la IA el que quitaba sesiones (`remove`) aunque el diagnóstico era «mantener». Antes se le permitía «si la semana queda sobrecargada».
+- **Arreglo en el código** (no solo en el prompt): solo se aplica un `remove` si el diagnóstico es «descargar» o «recuperar». Con «progresar» o «mantener», la sesión se queda tal cual. En el prompt: si hay que bajar carga, que acorte o suavice la sesión, nunca la quite.
+- Para recuperar los días que ya quitó, basta con pulsar «↻ Adaptar con mis datos» en el plan: se rehace con los días de su perfil y la IA ya no puede quitarlos.
+

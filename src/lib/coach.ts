@@ -129,7 +129,7 @@ FUERZA ("strength", distanceKm 0) para corredores:
 REGLAS:
 - Solo puedes tocar las sesiones de "sesionesAAjustar" (mismo "id"). No inventes ids.
 - Puedes cambiar la fecha de una sesión ("date"), pero SOLO a una de "fechasLibres". Nunca dos sesiones de carrera el mismo día ni dos de fuerza el mismo día (fuerza + carrera el mismo día sí).
-- Puedes quitar una sesión con {"id","remove":true} si la semana queda sobrecargada.
+- Solo puedes quitar una sesión ({"id","remove":true}) si el diagnóstico es "descargar" o "recuperar". Con "progresar" o "mantener" NO quites ninguna: el atleta quiere entrenar todos sus días; si hay que bajar carga, acorta la sesión (menos km o minutos) o hazla más suave.
 - Las SENSACIONES ("sensacion", "comoSeSintio") comparadas con "sesionPlanificada" explican el diagnóstico: cítalas en "summary" (ej.: "Como el jueves las series se te hicieron fáciles…").
 - Usa los ritmos proporcionados (min:seg /km) en los pasos de carrera.
 - Escribe en español, pasos breves y accionables.
@@ -399,9 +399,12 @@ async function run(uid: string): Promise<CoachResult> {
           changed++;
         }
       }
+      // quitar sesiones solo con descarga o recuperación: si no, se queda (el atleta entrena todos sus días)
+      const canRemove = built.readiness.verdict === "descargar" || built.readiness.verdict === "recuperar";
       for (const [s, prop] of proposals) {
         if (prop.remove) {
-          changed++;
+          if (canRemove) changed++;
+          else result.push(s);
           continue;
         }
         const strength = s.type === "strength";

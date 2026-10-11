@@ -116,7 +116,7 @@ Base: [[Estudio entrenamiento#6. La Pirámide de Entrenamiento (Helms, Valdez, M
 1. [x] **Atajo de pasos automático**: que se actualice solo y que, si un día no se ejecuta, ese día no se pierda (cada envío manda los últimos 7 días) — *hecho, falta que David cambie el atajo* → [[Decisiones#Atajo de pasos con 7 días]]
 2. [x] **Arreglar el logo**: dentro de la app salía un triángulo de un pico (texto «▲»); ahora las montañas de dos picos del icono en la barra y en «Entrar» (`LogoMark`) — *hecho 2026-10-11*
 3. [x] **Perfil en el móvil**: quitar la barra de desplazamiento de las pestañas (Resumen, Running, Fuerza, Actividades…) — *hecho 2026-10-11: rejilla de 4 columnas en el móvil (todas a la vista), fila en el ordenador; «Editar perfil» se acorta a «Editar»*
-4. [ ] **Plan con fuerza**: que ponga todos los días de carrera que necesite (p. ej. 5) más los días de fuerza elegidos (p. ej. 3); ahora solo pone 3 de fuerza y 3 de correr
+4. [x] **Plan con fuerza**: que ponga todos los días de carrera que necesite (p. ej. 5) más los días de fuerza elegidos (p. ej. 3); ahora solo pone 3 de fuerza y 3 de correr — *hecho 2026-10-11: la IA del ajuste diario quitaba días de correr («evitar sobrecarga»); ahora solo puede quitar sesiones con diagnóstico descargar o recuperar. David pulsa «↻ Adaptar con mis datos» para recuperar los días quitados* → [[Decisiones#La IA no quita días de entreno]]
 5. [ ] **Un plan con dos carreras** (p. ej. 25 de noviembre y abril): que se ajuste a las dos
 6. [ ] **Plan en el móvil**: hay un espacio negro abajo
 7. [ ] **Quitar las barras de desplazamiento en todo el móvil**
