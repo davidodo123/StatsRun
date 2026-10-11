@@ -159,8 +159,8 @@ function Comparison({ me, friend, friendName }: { me: AthleteSummary; friend: At
     ],
   ];
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full min-w-[420px] text-sm tabular">
+    <div>
+      <table className="w-full text-sm tabular">
         <thead className="text-left text-xs text-muted">
           <tr>
             <th className="pb-2 font-medium" />

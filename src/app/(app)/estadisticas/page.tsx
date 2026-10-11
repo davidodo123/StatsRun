@@ -110,17 +110,18 @@ async function Content() {
           </ul>
         </Card>
         <Card title="Resumen mensual" className="lg:col-span-2">
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[480px] text-sm tabular">
+          {/* en el móvil caben mes, km, carreras y ritmo; el resto, desde tableta */}
+          <div>
+            <table className="w-full text-sm tabular">
               <thead className="text-left text-xs text-muted">
                 <tr>
                   <th className="pb-2 font-medium">Mes</th>
                   <th className="pb-2 text-right font-medium">Km</th>
                   <th className="pb-2 text-right font-medium">Carreras</th>
                   <th className="pb-2 text-right font-medium">Ritmo</th>
-                  <th className="pb-2 text-right font-medium">Horas</th>
-                  <th className="pb-2 text-right font-medium">Desnivel</th>
-                  <th className="pb-2 text-right font-medium">kcal</th>
+                  <th className="hidden pb-2 text-right font-medium sm:table-cell">Horas</th>
+                  <th className="hidden pb-2 text-right font-medium sm:table-cell">Desnivel</th>
+                  <th className="hidden pb-2 text-right font-medium sm:table-cell">kcal</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-line">
@@ -130,9 +131,9 @@ async function Content() {
                     <td className="py-1.5 text-right font-semibold">{fmtKm(m.runKm)}</td>
                     <td className="py-1.5 text-right">{m.runs}</td>
                     <td className="py-1.5 text-right">{m.avgPace ? fmtPace(m.avgPace) : "–"}</td>
-                    <td className="py-1.5 text-right">{fmtKm(m.hours)}</td>
-                    <td className="py-1.5 text-right">{fmtNum(m.elevation)} m</td>
-                    <td className="py-1.5 text-right">{fmtNum(m.kcal)}</td>
+                    <td className="hidden py-1.5 text-right sm:table-cell">{fmtKm(m.hours)}</td>
+                    <td className="hidden py-1.5 text-right sm:table-cell">{fmtNum(m.elevation)} m</td>
+                    <td className="hidden py-1.5 text-right sm:table-cell">{fmtNum(m.kcal)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -142,19 +143,20 @@ async function Content() {
       </div>
 
       <Card title="Últimas actividades" subtitle="Carga = puntos de estrés (100 ≈ 1 h a umbral)">
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[720px] text-sm tabular">
+        {/* en el móvil: fecha, actividad, distancia y ritmo; tiempo y FC desde tableta; lo demás en el ordenador */}
+        <div>
+          <table className="w-full text-sm tabular">
             <thead className="text-left text-xs text-muted">
               <tr>
                 <th className="pb-2 font-medium">Fecha</th>
                 <th className="pb-2 font-medium">Actividad</th>
                 <th className="pb-2 text-right font-medium">Distancia</th>
-                <th className="pb-2 text-right font-medium">Tiempo</th>
+                <th className="hidden pb-2 text-right font-medium sm:table-cell">Tiempo</th>
                 <th className="pb-2 text-right font-medium">Ritmo</th>
-                <th className="pb-2 text-right font-medium">FC</th>
-                <th className="pb-2 text-right font-medium">Desnivel</th>
-                <th className="pb-2 text-right font-medium">Carga</th>
-                <th className="pb-2 text-right font-medium">kcal</th>
+                <th className="hidden pb-2 text-right font-medium sm:table-cell">FC</th>
+                <th className="hidden pb-2 text-right font-medium lg:table-cell">Desnivel</th>
+                <th className="hidden pb-2 text-right font-medium lg:table-cell">Carga</th>
+                <th className="hidden pb-2 text-right font-medium lg:table-cell">kcal</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-line">
@@ -172,12 +174,12 @@ async function Content() {
                     <span className="ml-2 text-xs text-muted">{SPORT[a.sport]}</span>
                   </td>
                   <td className="py-1.5 text-right">{a.distanceM ? `${fmtKm(a.distanceM / 1000, 2)} km` : "–"}</td>
-                  <td className="py-1.5 text-right">{fmtDuration(a.movingSec)}</td>
+                  <td className="hidden py-1.5 text-right sm:table-cell">{fmtDuration(a.movingSec)}</td>
                   <td className="py-1.5 text-right">{a.sport === "run" && a.distanceM ? fmtPace(a.movingSec / (a.distanceM / 1000)) : "–"}</td>
-                  <td className="py-1.5 text-right">{a.avgHr ? Math.round(a.avgHr) : "–"}</td>
-                  <td className="py-1.5 text-right">{Math.round(a.elevationGainM)} m</td>
-                  <td className="py-1.5 text-right">{Math.round(activityLoad(a, db.profile!, stats.vdot.vdot))}</td>
-                  <td className="py-1.5 text-right">{Math.round(activityKcal(a, db.profile!.weightKg))}</td>
+                  <td className="hidden py-1.5 text-right sm:table-cell">{a.avgHr ? Math.round(a.avgHr) : "–"}</td>
+                  <td className="hidden py-1.5 text-right lg:table-cell">{Math.round(a.elevationGainM)} m</td>
+                  <td className="hidden py-1.5 text-right lg:table-cell">{Math.round(activityLoad(a, db.profile!, stats.vdot.vdot))}</td>
+                  <td className="hidden py-1.5 text-right lg:table-cell">{Math.round(activityKcal(a, db.profile!.weightKg))}</td>
                 </tr>
               ))}
             </tbody>

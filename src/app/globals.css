@@ -281,3 +281,14 @@ select option {
     display: none;
   }
 }
+
+/* En el móvil no se ven las barras de desplazamiento (la página y las listas se siguen deslizando igual) */
+@media (max-width: 767px) {
+  * {
+    scrollbar-width: none;
+  }
+  *::-webkit-scrollbar {
+    display: none;
+  }
+}
+

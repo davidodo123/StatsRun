@@ -325,8 +325,8 @@ function ImprovementTable({ rows }: { rows: PeriodAvg[] }) {
   ];
   return (
     <Card title="Tabla de mejora" subtitle="Medias por bloques de 4 semanas. La flecha compara el último bloque con el anterior.">
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm tabular sm:min-w-[520px]">
+      <div>
+        <table className="w-full text-sm tabular">
           <thead className="text-left text-xs text-muted">
             <tr>
               <th className="pb-2 font-medium">Métrica</th>
