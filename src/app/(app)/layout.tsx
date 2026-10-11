@@ -2,11 +2,14 @@ import { Suspense } from "react";
 import { NavView } from "@/components/Nav";
 import { AppNav } from "@/components/AppNav";
 import { InstallBanner } from "@/components/Pwa";
+import { AppUpdates } from "@/components/AppUpdates";
 
 // Páginas de la app (con sesión): menú lateral en escritorio y barra inferior en móvil.
 export default function AppLayout({ children }: LayoutProps<"/">) {
   return (
     <>
+      {/* versión con la que se ha abierto la app (el commit de Vercel; en local, «dev») */}
+      <AppUpdates version={process.env.VERCEL_GIT_COMMIT_SHA ?? "dev"} />
       <Suspense fallback={<NavView />}>
         <AppNav />
       </Suspense>

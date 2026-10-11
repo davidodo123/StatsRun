@@ -590,3 +590,11 @@ David preguntó si se puede «entrenar» una IA para la app. Opciones: (1) instr
 - Probado con su web real: 18 próximas carreras, todas con coordenadas, 7 con descargas y 3 con recorrido. Con la XV Prueba de Fondo «Villa Romana de Salar» (10K, 15 de noviembre) se creó el objetivo, el plan y el recorrido (9,9 km; ese GPX no trae alturas).
 - **Ojo**: el plan de David tiene «Villa Romana de Salar» como media maratón el 25 de noviembre; según Cruzando la Meta es un 10K el 15 de noviembre. Se le avisa.
 
+## Tirar para actualizar y aviso de versión nueva
+*2026-10-11*
+
+- En el iPhone instalado (pantalla completa) no existe «tirar para actualizar» y, para coger una versión nueva, había que cerrar la app y volver a abrirla.
+- **Tirar hacia abajo** (`AppUpdates`): estando arriba del todo, al arrastrar hacia abajo sale «Tira para actualizar» y, pasados 80 px, «Suelta para actualizar»; al soltar se recarga la página (el service worker pide siempre la página a la red, así que llega lo último). No se activa dentro de ventanas, campos de texto ni listas que se deslizan, ni si el gesto es más de lado que hacia abajo.
+- **Aviso de versión nueva**: la app sabe con qué versión se abrió (`VERCEL_GIT_COMMIT_SHA` de su despliegue) y pregunta a `/api/version` (pública, sin caché) cuál está publicada: al abrir, al volver a la app y cada 10 minutos. Si es otra, sale arriba el botón «Hay una versión nueva · Actualizar». En local la versión es «dev» y no avisa.
+- Probado en Chrome simulando el dedo: el gesto recarga; y con el servidor respondiendo otra versión, al volver a la app sale el botón.
+

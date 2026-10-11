@@ -112,7 +112,7 @@ Base: [[Estudio entrenamiento#6. La Pirámide de Entrenamiento (Helms, Valdez, M
 - [x] Caché de navegación de 30 s y precarga de páginas en el service worker
 - [-] ~~Mover Vercel y Redis a Europa~~: descartado, la base de Upstash en Europa no tiene plan gratis en Vercel y David prefiere seguir gratis en iad1
 
-## 🛠️ Fase 5 · Arreglos que pidió David (2026-10-11) — *de uno en uno, comprobando cada uno*
+## 🛠️ Fase 5 · Arreglos que pidió David (2026-10-11) — *hechos los 9, pendientes de comprobar en el iPhone*
 1. [x] **Atajo de pasos automático**: que se actualice solo y que, si un día no se ejecuta, ese día no se pierda (cada envío manda los últimos 7 días) — *hecho, falta que David cambie el atajo* → [[Decisiones#Atajo de pasos con 7 días]]
 2. [x] **Arreglar el logo**: dentro de la app salía un triángulo de un pico (texto «▲»); ahora las montañas de dos picos del icono en la barra y en «Entrar» (`LogoMark`) — *hecho 2026-10-11*
 3. [x] **Perfil en el móvil**: quitar la barra de desplazamiento de las pestañas (Resumen, Running, Fuerza, Actividades…) — *hecho 2026-10-11: rejilla de 4 columnas en el móvil (todas a la vista), fila en el ordenador; «Editar perfil» se acorta a «Editar»*
@@ -121,7 +121,7 @@ Base: [[Estudio entrenamiento#6. La Pirámide de Entrenamiento (Helms, Valdez, M
 6. [x] **Plan en el móvil**: hay un espacio negro abajo — *hecho 2026-10-11: franja negra bajo la barra de abajo al llegar al final (o al rebotar) en el iPhone instalado; el color de la barra sigue por debajo. Pendiente de comprobar en el iPhone*
 7. [x] **Quitar las barras de desplazamiento en todo el móvil** — *hecho 2026-10-11: barras ocultas en el móvil (se sigue deslizando) y las 4 tablas que se desplazaban de lado (Estadísticas ×2, tabla de mejora del perfil, comparación con un amigo) caben en la pantalla, con las columnas secundarias desde tableta. Todas las páginas sin desborde a 360 px*
 8. [x] **Carreras de «Cruzando la meta»**: traer las carreras que van saliendo, con los detalles y el archivo del recorrido que publican — *hecho 2026-10-11* → [[Decisiones#Carreras de Cruzando la Meta]]
-9. [ ] **Tirar para actualizar**: al bajar la pantalla, botón de actualizar para coger los cambios de la web sin cerrar y abrir la app
+9. [x] **Tirar para actualizar**: al bajar la pantalla, botón de actualizar para coger los cambios de la web sin cerrar y abrir la app — *hecho 2026-10-11* → [[Decisiones#Tirar para actualizar y aviso de versión nueva]]
 
 ## 🧠 IA que aprende de ti (opción 2: sin entrenar el modelo) → [[Decisiones#IA que aprende de ti]]
 - [x] Bloque 1 · Valoraciones (pulgar arriba/abajo con motivo) y memoria de preferencias que leen las tres IA; el chat apunta solo lo que le cuentas — *hecho 2026-10-10, pendiente de comprobar*
