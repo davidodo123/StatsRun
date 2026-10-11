@@ -102,4 +102,13 @@ describe("Diagnóstico de estado de forma", () => {
     expect(r.verdict).toBe("recuperar");
     expect(r.limits.qualityAllowed).toBe(false);
   });
+
+  it("los datos de Salud cuentan: poco sueño lleva a mantener y lo explica con números", () => {
+    const health = Array.from({ length: 3 }, (_, i) => ({ date: `2026-10-${String(10 - i).padStart(2, "0")}`, sleepHours: 5.4, updatedAt: "" }));
+    const r = assessReadiness({ ...input(), health });
+    expect(r.check.malDescanso).toBe(true);
+    expect(r.verdict).not.toBe("progresar");
+    expect(r.reasons.join(" ")).toMatch(/Duermes poco: 5,4 h/);
+  });
 });
+

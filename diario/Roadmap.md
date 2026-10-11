@@ -51,7 +51,7 @@ Detalle en [[2026-10-09]].
 - [x] Instalada en el iPhone de David desde Safari (2026-10-09)
 - [-] ~~App nativa~~: descartada, David tiene iPhone y no tiene Mac (compilar en la nube exigiría Apple Developer, 99 $/año)
 - [x] **Pasos y calorías** de Salud del iPhone con un atajo de Atajos → [[Decisiones#Pasos y calorías del iPhone (atajo)]]
-- [ ] Ampliar el atajo con VFC, pulso en reposo y sueño (para el diagnóstico de la IA)
+- [x] Ampliar el atajo con VFC, pulso en reposo y sueño (para el diagnóstico de la IA) — *hecho 2026-10-11; falta que David añada los pasos al atajo* → [[Decisiones#VFC, pulso en reposo y sueño]]
 
 ### Carrera objetivo — *hecho 2026-10-09* → [[Decisiones#Recorrido de la carrera]]
 - [x] Subir el recorrido de la carrera (.kmz, .kml, .gpx) → mapa con salida, meta y avituallamientos, distancia y desnivel
@@ -62,7 +62,7 @@ Detalle en [[2026-10-09]].
 - [x] Carga por sRPE (RPE × minutos) cuando no hay FC — *ya existía en `load.ts`*
 - [x] El planificador aplica también el tope por sesión de Frandsen: la tirada larga sube como mucho un 10 % (mín. 0,5 km)
 - [ ] Desacople aeróbico (Pa:FC) en tiradas largas — necesita los streams de Strava
-- [ ] VFC (HRV) diaria si se conecta con la app de Salud
+- [x] VFC (HRV) diaria si se conecta con la app de Salud (con el atajo, 2026-10-11)
 
 ### Experiencias de la app — *hecho 2026-10-09, comprobado 2026-10-10* → [[Decisiones#Etiquetas y repetición del recorrido]]
 - [x] Flyover estilo Strava con la ruta seguida (repetición animada en 2D, cámara que sigue al corredor)

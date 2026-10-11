@@ -540,3 +540,15 @@ David preguntó si se puede «entrenar» una IA para la app. Opciones: (1) instr
 - Regla común: si un apartado trae una regla concreta para el caso (semáforo de dolor, tope de la tirada, regla del cuello…), la IA la aplica tal cual y la nombra. La regla de molestias del chat se alineó con el semáforo (antes decía «no cargues la zona»).
 - Probado con la IA real: «me duele la rodilla un 4 sobre 10…» → «Según el semáforo de dolor, con un 4, puedes entrenar pero sin subir la carga y con variantes que no duelan…». Antes de ajustar la regla no lo citaba.
 
+## VFC, pulso en reposo y sueño
+*2026-10-11*
+
+- El atajo de Salud puede mandar tres datos más: **`vfc`** (ms), **`pulsoReposo`** (ppm) y **`sueno`**. También valen en inglés (`hrv`, `restingHr`, `sleep`). El sueño vale en horas, minutos o segundos (la app lo detecta por el tamaño) y 0 h cuenta como «sin registro». Rangos: VFC 5-300 ms, pulso 25-130 ppm, sueño 0-16 h. Un envío solo con estos datos, sin pasos, también sirve.
+- **Alertas frente a tu propia línea base** (`recoverySignals`, 30 días; necesitan al menos 14 días de datos para no saltar en falso):
+  - **sueño corto**: menos de 6,5 h de media las 3 últimas noches (Milewski 2014 asocia < 8 h con más lesiones; 6,5 h como umbral práctico);
+  - **pulso en reposo alto**: 5 ppm o más sobre lo normal, de media en 3 días;
+  - **VFC baja**: la media de 7 días por debajo de tu rango normal (media − 1 desviación típica, como Plews 2013). Un día bajo no cuenta.
+- **En el diagnóstico**: sueño corto = mal descanso; pulso alto o VFC baja = rendimiento a la baja (fatiga). Llevan a mantener o descargar como si lo hubieras escrito, con los números en los motivos («Duermes poco: 5,6 h de media…»). La IA diaria los recibe por día y con la línea base (`recuperacionSalud`), con la regla de citarlos.
+- **Perfil → Salud** (antes «Pasos y calorías»): tres cajas con su estado y gráficas de 30 días de sueño, pulso en reposo y VFC. La guía del atajo tiene un apartado opcional «Recuperación (con Apple Watch)», sin capturas porque no se pueden hacer desde aquí.
+- **Pendiente de David**: añadir esas acciones al atajo. Si algún paso no aparece igual en su iPhone (sobre todo el del sueño), ajustar la guía con capturas.
+

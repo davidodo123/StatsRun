@@ -204,6 +204,7 @@ async function Content({ searchParams }: { searchParams: PageProps<"/plan/actual
                 today,
                 missed14d: [...(matches?.values() ?? [])].filter((m) => m.status === "missed" && m.session.date < today && diffDays(today, m.session.date) <= 14).length,
                 raceDate: plan.goal.date,
+                health: db.health,
               })}
             />
           )}

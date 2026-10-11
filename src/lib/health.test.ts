@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { healthSummary, mergeHealth, parseHealthNumber, parseHealthPayload, todayMadrid } from "./health";
+import { healthSummary, mergeHealth, parseHealthNumber, parseHealthPayload, recoverySignals, todayMadrid } from "./health";
+import { addDays } from "./dates";
+import type { DailyHealth } from "./types";
 
 const today = "2026-10-09";
 const now = "2026-10-09T20:00:00.000Z";
@@ -48,11 +50,44 @@ describe("salud del iPhone", () => {
     expect(s.avgSteps7).toBe(8000);
     expect(s.avgActiveKcal7).toBe(400);
     expect(s.last30).toHaveLength(30);
-    expect(s.last30.at(-1)).toEqual({ date: today, steps: 2000, kcal: 0 });
+    expect(s.last30.at(-1)).toEqual({ date: today, steps: 2000, kcal: 0, sleep: null, hrv: null, rhr: null });
+    expect(s.hasRecovery).toBe(false);
     expect(healthSummary([], today)).toBeUndefined();
   });
 
   it("hoy en España aunque el servidor vaya en UTC", () => {
     expect(todayMadrid(new Date("2026-10-08T22:30:00Z"))).toBe("2026-10-09");
   });
+
+  it("VFC, pulso en reposo y sueño: claves en español o inglés, sueño en horas, minutos o segundos", () => {
+    const one = (o: object) => {
+      const r = parseHealthPayload(o, today);
+      return "days" in r ? r.days[0] : r.error;
+    };
+    expect(one({ vfc: "52,4", pulsoReposo: 51, sueno: "7,5" })).toMatchObject({ hrvMs: 52, restingHr: 51, sleepHours: 7.5 });
+    expect(one({ hrv: 60, restingHr: "48 ppm", sleep: 450 })).toMatchObject({ hrvMs: 60, restingHr: 48, sleepHours: 7.5 }); // minutos
+    expect(one({ sueño: 27000 })).toMatchObject({ sleepHours: 7.5 }); // segundos
+    expect((one({ sueno: 0, pasos: 100 }) as DailyHealth).sleepHours).toBeUndefined(); // 0 h = sin registro
+    expect(one({ vfc: 900 })).toMatch(/VFC fuera de rango/);
+    expect(one({ pulsoReposo: 10 })).toMatch(/Pulso en reposo fuera de rango/);
+    expect(one({})).toMatch(/No llega ningún dato/);
+    const merged = mergeHealth([{ date: today, steps: 5000, hrvMs: 50, updatedAt: "a" }], [{ date: today, steps: 6000, updatedAt: "b" }], today);
+    expect(merged[0]).toMatchObject({ steps: 6000, hrvMs: 50 });
+  });
+
+  it("alertas de recuperación frente a la línea base de 30 días (y sin línea base, ninguna)", () => {
+    const days = (n: number, f: (i: number) => Partial<DailyHealth>) => Array.from({ length: n }, (_, i) => ({ date: addDays(today, -i), updatedAt: "", ...f(i) }));
+    // 30 días normales: VFC 60 ± 4, pulso 50, sueño 7,5
+    const normal = days(30, (i) => ({ hrvMs: 60 + (i % 3) * 4 - 4, restingHr: 50, sleepHours: 7.5 }));
+    const ok = recoverySignals(normal, today);
+    expect(ok).toMatchObject({ shortSleep: false, highRestingHr: false, lowHrv: false });
+    // los últimos días: duerme 5,5 h, pulso 57 y VFC 45
+    const tired = normal.map((d, i) => (i < 7 ? { ...d, hrvMs: 45, sleepHours: i < 3 ? 5.5 : 7.5, restingHr: i < 3 ? 57 : 50 } : d));
+    const r = recoverySignals(tired, today);
+    expect(r).toMatchObject({ shortSleep: true, highRestingHr: true, lowHrv: true, sleepAvg3: 5.5, restingHrAvg3: 57, restingHrBase: 50 });
+    // con solo una semana de datos no hay línea base: no salta el pulso ni la VFC
+    expect(recoverySignals(tired.slice(0, 7), today)).toMatchObject({ highRestingHr: false, lowHrv: false, shortSleep: true });
+    expect(recoverySignals(undefined, today)).toMatchObject({ shortSleep: false, highRestingHr: false, lowHrv: false });
+  });
 });
+

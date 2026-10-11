@@ -10,9 +10,10 @@
 //   (motivación, sueño, rendimiento, estrés, molestias) toca descarga; si solo hay molestias, semana ligera.
 // - Picos de una sola sesión (Frandsen et al. 2025, BJSM, 5.205 corredores): correr más de un 10 % por encima
 //   de la tirada más larga de los últimos 30 días se asocia a más lesiones por sobrecarga.
-import type { Activity, Feel } from "../types";
+import type { Activity, Feel, DailyHealth } from "../types";
 import { diffDays } from "../dates";
 import type { Stats } from "./stats";
+import { recoverySignals, type RecoverySignals } from "../health";
 
 export type SelyePhase = "desentrenamiento" | "alarma" | "adaptacion" | "agotamiento" | "supercompensacion";
 export type Verdict = "progresar" | "mantener" | "descargar" | "recuperar";
@@ -45,6 +46,8 @@ export interface Readiness {
     longestRun30dKm?: number;
     /** Síntomas de enfermedad (fiebre, gripe, resfriado…) en los últimos 7 días. */
     illness: boolean;
+    /** VFC, pulso en reposo y sueño de Salud del iPhone frente a su línea base. */
+    recovery: RecoverySignals;
   };
   /** Límites que el código aplica a los cambios de la IA. */
   limits: {
@@ -55,6 +58,8 @@ export interface Readiness {
     maxSessionKm?: number;
   };
 }
+
+const fmt1 = (n: number) => n.toLocaleString("es-ES", { maximumFractionDigits: 1 });
 
 const PAIN = /(dolor|duele|molest|lesi[oó]n|tendin|fascitis|periostitis|pinchazo|rodilla|gemelo|aquiles|tobillo|cadera|isquio|femoral|espalda|lumbar|pie |planta|cojea|inflama)/i;
 const SLEEP = /(dorm[ií]|sue[ñn]o|insomnio|desvel|descans[eéo] mal|mal descanso|noche mala)/i;
@@ -79,9 +84,12 @@ export interface ReadinessInput {
   missed14d: number;
   /** Fecha de la carrera objetivo (para no confundir el afinamiento previo con desentrenamiento). */
   raceDate?: string;
+  /** Datos diarios de Salud (VFC, pulso en reposo, sueño). */
+  health?: DailyHealth[];
 }
 
-export function assessReadiness({ stats, activities, today, missed14d, raceDate }: ReadinessInput): Readiness {
+export function assessReadiness({ stats, activities, today, missed14d, raceDate, health }: ReadinessInput): Readiness {
+  const recovery = recoverySignals(health, today);
   const last7 = activities.filter((a) => a.date <= today && diffDays(today, a.date) < 7);
   const last14 = activities.filter((a) => a.date <= today && diffDays(today, a.date) < 14);
 
@@ -110,12 +118,14 @@ export function assessReadiness({ stats, activities, today, missed14d, raceDate 
 
   const check: RecoveryCheck = {
     motivacionBaja: last14.some((a) => LOW_MOTIVATION.test(textOf(a))) || missed14d >= 3,
-    malDescanso: last14.some((a) => SLEEP.test(textOf(a))),
+    malDescanso: last14.some((a) => SLEEP.test(textOf(a))) || recovery.shortSleep,
     rendimientoBaja:
       hardFeels7d >= 2 ||
       last7.some((a) => HEAVY.test(textOf(a))) ||
       (efChangePct !== undefined && efChangePct <= -5) ||
-      (easyRunRpe7d !== undefined && easyRunRpe7d >= 6),
+      (easyRunRpe7d !== undefined && easyRunRpe7d >= 6) ||
+      recovery.highRestingHr ||
+      recovery.lowHrv,
     estresAlto: last14.some((a) => STRESS.test(textOf(a))),
     molestias: painMentions.length > 0,
   };
@@ -140,7 +150,10 @@ export function assessReadiness({ stats, activities, today, missed14d, raceDate 
   if (tsb < -30) reasons.push(`Frescura muy negativa (TSB ${tsb.toFixed(0)}): fatiga acumulada alta.`);
   if (stats.monotony > 2) reasons.push(`Semana muy monótona (monotonía ${stats.monotony.toFixed(1)} > 2): alterna días duros y suaves.`);
   if (check.rendimientoBaja) reasons.push("Rendimiento a la baja: entrenos que se hacen duros, piernas cargadas o más pulsaciones al mismo ritmo.");
-  if (check.malDescanso) reasons.push("Mencionas mal descanso.");
+  if (recovery.shortSleep) reasons.push(`Duermes poco: ${fmt1(recovery.sleepAvg3!)} h de media las últimas noches (menos de 6,5 h).`);
+  else if (check.malDescanso) reasons.push("Mencionas mal descanso.");
+  if (recovery.highRestingHr) reasons.push(`Pulso en reposo alto: ${fmt1(recovery.restingHrAvg3!)} ppm frente a tus ${fmt1(recovery.restingHrBase!)} habituales.`);
+  if (recovery.lowHrv) reasons.push(`VFC por debajo de tu rango normal: ${fmt1(recovery.hrvAvg7!)} ms de media en 7 días (lo normal para ti, más de ${fmt1(recovery.hrvLow!)}).`);
   if (check.estresAlto) reasons.push("Mencionas estrés fuera del entrenamiento: también cuenta como carga.");
   if (check.motivacionBaja) reasons.push(missed14d >= 3 ? `Varias sesiones sin hacer (${missed14d} en 14 días).` : "Mencionas falta de ganas.");
   if (check.molestias) reasons.push("Hay molestias o dolor anotados.");
@@ -193,6 +206,7 @@ export function assessReadiness({ stats, activities, today, missed14d, raceDate 
       painMentions,
       longestRun30dKm,
       illness,
+      recovery,
     },
     limits: { ...LIMITS[verdict], maxSessionKm },
   };

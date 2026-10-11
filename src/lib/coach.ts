@@ -113,6 +113,7 @@ PRINCIPIOS:
 - Flexibilidad: si se pierde una sesión, se sigue por donde iba; no se recupera todo ni se acumula. Si una sesión era clave, recolócala o sustituye un rodaje cercano por una versión reducida.
 - El estrés de fuera (sueño, trabajo, exámenes) también es carga: con mal descanso, prioriza lo suave.
 - "pasosYCaloriasUltimos7Dias" (Salud del iPhone) es la actividad fuera de los entrenos: días de muchos pasos (más de ~15.000, p. ej. de pie en el trabajo o de viaje) también cansan las piernas; si coinciden antes de una sesión dura o de la tirada larga, menciónalo y no subas la carga.
+- "recuperacionSalud" (si viene): sueño, pulso en reposo y VFC frente a su línea base de 30 días. Ya cuentan en el diagnóstico; menciónalos con sus números cuando expliquen el veredicto («duermes 5,8 h de media», «el pulso en reposo va 6 ppm por encima de lo normal»). Una VFC baja un solo día no significa nada: lo que cuenta es la media de 7 días.
 
 FUERZA ("strength", distanceKm 0) para corredores:
 - 1-3 sesiones/semana según "fuerzaPorSemana" (1 en afinamiento). Cada sesión trae "tipoFuerza": "pierna" (fuerza pesada de pierna), "posterior" (cadena posterior + pliometría), "superior" (tren superior y core) o "completo".
@@ -183,6 +184,7 @@ function buildContext(db: Db, today: string) {
     today,
     missed14d: [...matches.values()].filter((m) => m.status === "missed" && m.session.date < today && diffDays(today, m.session.date) <= 14).length,
     raceDate: plan.goal.date,
+    health: db.health,
   });
 
   const p = trainingPaces(stats.vdot.vdot);
@@ -252,7 +254,9 @@ function buildContext(db: Db, today: string) {
       })),
     pasosYCaloriasUltimos7Dias: (db.health ?? [])
       .filter((d) => d.date <= today && diffDays(today, d.date) < 7)
-      .map((d) => ({ fecha: d.date, pasos: d.steps, kcalActivas: d.activeKcal })),
+      .map((d) => ({ fecha: d.date, pasos: d.steps, kcalActivas: d.activeKcal, vfcMs: d.hrvMs, pulsoReposo: d.restingHr, horasSueno: d.sleepHours })),
+    // VFC, pulso en reposo y sueño frente a su propia línea base (solo si los manda el atajo)
+    recuperacionSalud: readiness.signals.recovery.sleepAvg3 || readiness.signals.recovery.restingHrAvg3 || readiness.signals.recovery.hrvAvg7 ? readiness.signals.recovery : undefined,
     rutinasDeFuerza: routinesForPlan(db).map((r) => ({ nombre: r.name, zona: r.zone, ejercicios: r.steps })),
     sesionesNoRealizadas: missed.map((m) => ({ fecha: m.session.date, tipo: m.session.type, titulo: m.session.title, planKm: m.session.distanceKm, hechoKm: +m.doneKm.toFixed(1), estado: m.status })),
     sesionesAAjustar: upcoming.map((s) => {

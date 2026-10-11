@@ -6,11 +6,11 @@ import { getAnalysis } from "@/lib/analysis";
 import { logout } from "@/app/auth-actions";
 import { revokeHealthKey, syncProfileAverages } from "@/app/actions";
 import { HealthKey } from "@/components/HealthKey";
-import { healthSummary, todayMadrid } from "@/lib/health";
+import { healthSummary, recoverySignals, todayMadrid } from "@/lib/health";
 import { ProfileForm } from "@/components/ProfileForm";
 import { DeleteAccountForm } from "@/components/DeleteAccountForm";
 import { SessionCard } from "@/components/SessionCard";
-import { SimpleBars } from "@/components/charts";
+import { SimpleBars, TrendLine } from "@/components/charts";
 import { Card, Empty, Loading, PageHeader, Pill, Stat } from "@/components/ui";
 import { bmi, bmiLabel, hrMaxOf, hrRestOf, hrZones } from "@/lib/engine/physiology";
 import { achievements, bestTimes, periodAverages, profileAverages, strengthSummary, type Achievement, type PeriodAvg } from "@/lib/engine/profile";
@@ -35,7 +35,7 @@ const TABS = [
   { id: "fuerza", label: "Fuerza" },
   { id: "actividades", label: "Actividades" },
   { id: "logros", label: "Logros" },
-  { id: "salud", label: "Pasos y calorías" },
+  { id: "salud", label: "Salud" },
   { id: "editar", label: "Editar perfil" },
 ] as const;
 type Tab = (typeof TABS)[number]["id"];
@@ -546,6 +546,8 @@ function Salud({ db }: { db: Db }) {
   const h = healthSummary(db.health, today);
   const endpoint = `${(process.env.APP_URL ?? "https://run-in-out.vercel.app").replace(/\/$/, "")}/api/salud`;
   const last = db.health?.at(-1);
+  const rec = recoverySignals(db.health, today);
+  const n1 = (v?: number) => (v === undefined ? "–" : v.toLocaleString("es-ES", { maximumFractionDigits: 1 }));
   return (
     <div className="space-y-4">
       {h ? (
@@ -574,6 +576,46 @@ function Salud({ db }: { db: Db }) {
               <SimpleBars data={h.last30} xKey="date" yKey="kcal" name="Calorías activas" unit="kcal" xFormat="day" />
             </Card>
           </div>
+          {h.hasRecovery && (
+            <>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                <Stat
+                  label="Sueño (3 noches)"
+                  value={n1(rec.sleepAvg3)}
+                  unit="h"
+                  status={rec.sleepAvg3 === undefined ? undefined : rec.shortSleep ? { tone: "warn", label: "Poco: menos de 6,5 h" } : { tone: "good", label: "Bien" }}
+                />
+                <Stat
+                  label="Pulso en reposo (3 días)"
+                  value={n1(rec.restingHrAvg3)}
+                  unit="ppm"
+                  sub={rec.restingHrBase !== undefined ? `Lo normal para ti: ${n1(rec.restingHrBase)}` : "Hacen falta 2 semanas de datos para tu línea base"}
+                  status={rec.restingHrBase === undefined ? undefined : rec.highRestingHr ? { tone: "warn", label: "Alto: posible fatiga" } : { tone: "good", label: "Normal" }}
+                />
+                <Stat
+                  label="VFC (7 días)"
+                  value={n1(rec.hrvAvg7)}
+                  unit="ms"
+                  sub={rec.hrvLow !== undefined ? `Tu rango normal: más de ${n1(rec.hrvLow)}` : "Hacen falta 2 semanas de datos para tu línea base"}
+                  status={rec.hrvLow === undefined ? undefined : rec.lowHrv ? { tone: "warn", label: "Baja: posible fatiga" } : { tone: "good", label: "Normal" }}
+                />
+              </div>
+              <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+                <Card title="Sueño" subtitle="Horas por noche, 30 días">
+                  <TrendLine data={h.last30} dataKey="sleep" name="Sueño (h)" xKey="date" format="dec1" height={160} />
+                </Card>
+                <Card title="Pulso en reposo" subtitle="ppm, 30 días">
+                  <TrendLine data={h.last30} dataKey="rhr" name="Pulso en reposo" xKey="date" color="s2" format="int" height={160} />
+                </Card>
+                <Card title="VFC" subtitle="ms, 30 días (más alta = más recuperado)">
+                  <TrendLine data={h.last30} dataKey="hrv" name="VFC" xKey="date" color="s3" format="int" height={160} />
+                </Card>
+              </div>
+              <p className="text-xs text-muted">
+                El entrenador IA los tiene en cuenta: con poco sueño, el pulso en reposo alto o la VFC baja frente a tu línea base de 30 días, no sube la carga.
+              </p>
+            </>
+          )}
         </>
       ) : (
         <Empty title="Aún no hay datos de Salud">Crea tu clave y el atajo de abajo: cada día llegarán tus pasos y tus calorías del iPhone (o del Apple Watch).</Empty>
@@ -646,6 +688,32 @@ function Salud({ db }: { db: Db }) {
               </ShortcutStep>
             </ol>
           </div>
+          <div>
+            <p className="mb-1 font-semibold">4. Opcional: recuperación (con Apple Watch)</p>
+            <p className="mb-3 text-ink-2">
+              Con VFC, pulso en reposo y sueño la IA sabe si estás recuperado sin que se lo digas. Añade estas acciones <strong className="text-ink">antes</strong> de
+              «Obtener contenido de URL», igual que las de pasos.
+            </p>
+            <ol className="space-y-4">
+              <ShortcutStep n={8} title="VFC → «VFC»">
+                <strong className="text-ink">Buscar muestras de salud</strong>, tipo <em>Variabilidad de la frecuencia cardiaca</em>, filtro <em>Fecha de inicio · es hoy</em>.
+                Luego <strong className="text-ink">Calcular estadísticas</strong> con <em>Media</em> y <strong className="text-ink">Definir variable</strong> <code>VFC</code>.
+              </ShortcutStep>
+              <ShortcutStep n={9} title="Pulso en reposo → «PulsoReposo»">
+                Igual, con el tipo <em>Frecuencia cardiaca en reposo</em>, <em>Media</em> y la variable <code>PulsoReposo</code>.
+              </ShortcutStep>
+              <ShortcutStep n={10} title="Sueño → «Sueno»">
+                <strong className="text-ink">Buscar muestras de salud</strong>, tipo <em>Análisis del sueño</em>, filtro <em>Fecha de inicio · está en los últimos 1 días</em> y{" "}
+                <em>Valor · no es · En la cama</em> (si no aparece ese filtro, déjalo sin él). Luego <strong className="text-ink">Obtener detalles de muestras de salud</strong> →{" "}
+                <em>Duración</em>, <strong className="text-ink">Calcular estadísticas</strong> con <em>Suma</em> y la variable <code>Sueno</code>. Vale en horas, minutos o
+                segundos: la app lo entiende.
+              </ShortcutStep>
+              <ShortcutStep n={11} title="Añádelos al envío">
+                En el cuerpo JSON de «Obtener contenido de URL», tres campos más de tipo <em>Número</em>: <code>vfc</code>, <code>pulsoReposo</code> y <code>sueno</code>, con sus
+                variables. Al ejecutarlo, la respuesta debe seguir diciendo <code>&quot;ok&quot; : true</code>. Si un día no hay dato (sin reloj puesto), no pasa nada.
+              </ShortcutStep>
+            </ol>
+          </div>
         </div>
       </Card>
     </div>
@@ -653,9 +721,9 @@ function Salud({ db }: { db: Db }) {
 }
 
 /** Paso de la guía del atajo con su captura del iPhone (public/atajo, la clave personal va tapada). */
-function ShortcutStep({ n, title, img, w, h, children }: { n: number; title: string; img: string; w: number; h: number; children: ReactNode }) {
+function ShortcutStep({ n, title, img, w = 600, h = 600, children }: { n: number; title: string; img?: string; w?: number; h?: number; children: ReactNode }) {
   return (
-    <li className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_220px]">
+    <li className={`grid grid-cols-1 gap-3 ${img ? "sm:grid-cols-[1fr_220px]" : ""}`}>
       <div className="text-ink-2">
         <p className="mb-1 font-semibold text-ink">
           <span className="mr-2 inline-grid h-6 w-6 place-items-center rounded-full bg-accent text-xs text-accent-ink">{n}</span>
@@ -663,7 +731,7 @@ function ShortcutStep({ n, title, img, w, h, children }: { n: number; title: str
         </p>
         {children}
       </div>
-      <Image src={`/atajo/${img}.webp`} width={w} height={h} alt={`Captura del paso ${n}: ${title}`} unoptimized className="h-auto w-full max-w-[260px] rounded-xl border border-line sm:max-w-none" />
+      {img && <Image src={`/atajo/${img}.webp`} width={w} height={h} alt={`Captura del paso ${n}: ${title}`} unoptimized className="h-auto w-full max-w-[260px] rounded-xl border border-line sm:max-w-none" />}
     </li>
   );
 }

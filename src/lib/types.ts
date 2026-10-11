@@ -59,6 +59,9 @@ export interface DailyHealth {
   steps?: number;
   activeKcal?: number; // energía activa
   restingKcal?: number; // energía en reposo (metabolismo basal)
+  hrvMs?: number; // variabilidad de la frecuencia cardiaca (SDNN del Apple Watch, ms)
+  restingHr?: number; // pulso en reposo (ppm)
+  sleepHours?: number; // horas dormidas la noche anterior
   updatedAt: string;
 }
 
