@@ -78,16 +78,24 @@ async function Content({ searchParams }: { searchParams: PageProps<"/perfil">["s
   return (
     <div className="space-y-4">
       {db.profile && stats && <ProfileHeader db={db} stats={stats} />}
-      <nav className="-mx-4 overflow-x-auto px-4 md:mx-0 md:px-0" aria-label="Secciones del perfil">
-        <div className="flex w-max gap-1 rounded-xl border border-line bg-surface p-1">
+      {/* en el móvil, todas a la vista en una rejilla (sin barra que se desliza); en el ordenador, en una fila */}
+      <nav aria-label="Secciones del perfil">
+        <div className="grid grid-cols-4 gap-1 rounded-xl border border-line bg-surface p-1 md:flex md:w-max">
           {tabs.map((t) => (
             <Link
               key={t.id}
               href={t.id === first ? "/perfil" : `/perfil?tab=${t.id}`}
               aria-current={t.id === tab ? "page" : undefined}
-              className={`whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium ${t.id === tab ? "bg-accent text-accent-ink" : "text-ink-2 hover:bg-surface-2"}`}
+              className={`truncate rounded-lg px-1 py-1.5 text-center text-[13px] font-medium md:px-3 md:text-sm ${t.id === tab ? "bg-accent text-accent-ink" : "text-ink-2 hover:bg-surface-2"}`}
             >
-              {t.label}
+              {t.id === "editar" ? (
+                <>
+                  <span className="md:hidden">Editar</span>
+                  <span className="hidden md:inline">{t.label}</span>
+                </>
+              ) : (
+                t.label
+              )}
             </Link>
           ))}
         </div>
