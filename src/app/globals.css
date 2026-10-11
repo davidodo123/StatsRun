@@ -131,6 +131,11 @@ body {
   textarea {
     font-size: 16px !important;
   }
+
+  /* con el teclado abierto, la barra de abajo subía y quedaba flotando en medio, tapando el formulario */
+  body:has(:is(input:not([type="checkbox"], [type="radio"], [type="range"], [type="file"], [type="button"], [type="submit"]), textarea, select):focus) .mobile-tabbar {
+    display: none;
+  }
 }
 
 .tabular {
@@ -143,6 +148,7 @@ body {
 .field {
   display: flex;
   flex-direction: column;
+  min-width: 0; /* en una rejilla, que un campo ancho no ensanche la columna */
   gap: 0.35rem;
   font-size: 0.875rem;
   color: var(--text-2);
@@ -155,6 +161,22 @@ body {
   color: var(--text);
   padding: 0.55rem 0.75rem;
   font-size: 0.95rem;
+}
+/* fecha y hora: en el iPhone tienen un ancho mínimo propio y se salían de la tarjeta */
+input.input[type="date"],
+input.input[type="time"],
+input.input[type="datetime-local"],
+input.input[type="month"] {
+  -webkit-appearance: none;
+  appearance: none;
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 2.6rem;
+  text-align: left;
+}
+input.input::-webkit-date-and-time-value {
+  text-align: left;
 }
 .input:focus {
   outline: 2px solid var(--accent);

@@ -109,7 +109,7 @@ export function ActivityForm({
         </label>
         <label className="field">
           Nombre de la sesión
-          <input className="input" name="name" defaultValue={initial.name} placeholder="Ej.: Carrera de mañana" />
+          <input className="input" name="name" autoComplete="off" defaultValue={initial.name} placeholder="Ej.: Carrera de mañana" />
         </label>
         <label className="field">
           Fecha
