@@ -132,6 +132,20 @@ Base: [[Estudio entrenamiento#6. La Pirámide de Entrenamiento (Helms, Valdez, M
 - [x] **Foto en los entrenos** (al registrar o desde la ficha; en Amigos sale como publicación con la foto grande) — *hecho 2026-10-11, pendiente de comprobar*
 - [x] **Semana del 12 sin lunes a jueves**: eran días marcados como «no puedo»; quitar el día ahora devuelve las sesiones, se ven en su semana y «No puedo ese día» pide confirmación — *hecho 2026-10-11*
 
+- [x] **Sección Sueño** en «Más»: a qué hora despertarse por ciclos de 90 min, o a qué hora acostarse — *hecho 2026-10-12, pendiente de comprobar*
+
+## 📲 Fase 6 · Compartir la app (2026-10-12) → [[Decisiones#iPhone por enlace, Android por Play Store]]
+**iPhone (David y sus amigos): enlace web + atajo, sin App Store (99 €/año)**
+- [ ] 6.1 Atajo compartido por enlace de iCloud: David prepara una copia sin su clave y la comparte
+- [ ] 6.2 En Perfil → Salud: «Copiar mi clave» + «Instalar el atajo» (enlace de iCloud) + guía corta de las dos automatizaciones
+- [ ] 6.3 Bienvenida en Safari: cómo añadir la app a la pantalla de inicio en dos pasos
+
+**Android: Google Play (25 $ una vez)**
+- [ ] 6.4 Android Studio en el PC de David; Capacitor con la app actual dentro
+- [ ] 6.5 Entrar con Google desde la app (pestaña del sistema y vuelta a la app; Google bloquea el inicio de sesión en vistas web)
+- [ ] 6.6 Health Connect: pasos, calorías, sueño y pulso al abrir la app (sin atajos)
+- [ ] 6.7 Prueba cerrada en Play (12 personas, 14 días, obligatorio en cuentas nuevas) y publicación
+
 ## 🧠 IA que aprende de ti (opción 2: sin entrenar el modelo) → [[Decisiones#IA que aprende de ti]]
 - [x] Bloque 1 · Valoraciones (pulgar arriba/abajo con motivo) y memoria de preferencias que leen las tres IA; el chat apunta solo lo que le cuentas — *hecho 2026-10-10, pendiente de comprobar*
 - [x] Bloque 2 · Ejemplos buenos en las instrucciones (few-shot), y las respuestas que valoras como ejemplos de lo que gusta y lo que no; el chat entrena con el material que nombras — *hecho 2026-10-11, pendiente de comprobar*

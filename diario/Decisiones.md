@@ -629,3 +629,10 @@ David preguntó si se puede «entrenar» una IA para la app. Opciones: (1) instr
 - En afinamiento (1 sesión, activación) y semana de carrera se vuelve a correr todos los días.
 - Plantillas nuevas: «Pecho y tríceps», «Espalda y bíceps», «Hombro y brazos», con series según la fase (3 × 8-12 en base, 4 × 6-8 en construcción, 2 × 6-8 de mantenimiento).
 - Las rutinas propias van a su día por el músculo principal (una de pecho nunca cae el día de espalda). La IA del día a día no puede mover carreras al día de pierna, y la IA de fuerza conoce los tipos nuevos.
+
+## iPhone por enlace, Android por Play Store
+*2026-10-12*
+
+- El App Store cuesta 99 €/año: David no lo quiere. Para él y sus amigos (todos con iPhone), la app sigue siendo la web instalada desde Safari, con el atajo para la salud.
+- Para que sus amigos no tengan que montar el atajo a mano: atajo compartido por enlace de iCloud y, en la app, botones para copiar la clave e instalarlo.
+- Android: app en Google Play (25 $ una vez) con Capacitor (la misma app dentro) y Health Connect, que lee la salud sin atajos.
