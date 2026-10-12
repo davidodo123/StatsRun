@@ -1,6 +1,6 @@
 // Abre una copia de seguridad (archivo .rio del repo de copias) y, si se pide, la restaura.
 //
-//   BACKUP_SECRET=… node scripts/backup-restore.mjs copia.rio                 → resumen (claves y tamaños)
+//   node scripts/backup-restore.mjs copia.rio                 → pide la clave y enseña el resumen (claves y tamaños)
 //   BACKUP_SECRET=… node scripts/backup-restore.mjs copia.rio --json out.json → todo descifrado a un JSON
 //   BACKUP_SECRET=… KV_REST_API_URL=… KV_REST_API_TOKEN=… \
 //     node scripts/backup-restore.mjs copia.rio --restaurar [--solo statsrun:db:<id>]  → lo escribe en Redis
@@ -9,12 +9,20 @@
 import { createDecipheriv, createHash } from "node:crypto";
 import { readFileSync, writeFileSync } from "node:fs";
 import { gunzipSync } from "node:zlib";
+import { createInterface } from "node:readline/promises";
 
 const [file, ...args] = process.argv.slice(2);
-const secret = process.env.BACKUP_SECRET;
-if (!file || !secret) {
-  console.error("Uso: BACKUP_SECRET=… node scripts/backup-restore.mjs copia.rio [--json salida.json | --restaurar [--solo clave]]");
+if (!file) {
+  console.error("Uso: node scripts/backup-restore.mjs copia.rio [--json salida.json | --restaurar [--solo clave]]");
   process.exit(1);
+}
+// la clave se pide aquí (o llega en BACKUP_SECRET): así no queda escrita en el comando ni en el historial
+let secret = process.env.BACKUP_SECRET;
+if (!secret) {
+  const rl = createInterface({ input: process.stdin, output: process.stdout });
+  secret = (await rl.question("Pega la clave de las copias (BACKUP_SECRET) y pulsa Enter: ")).trim().replace(/^BACKUP_SECRETS?=/, "").replace(/^"|"$/g, "");
+  rl.close();
+  console.log("\x1b[1A\x1b[2K"); // borra la línea con la clave de la pantalla
 }
 
 // mismo formato que src/lib/backupCrypto.ts: "RIOB1" + iv (12) + etiqueta (16) + datos (AES-256-GCM)
@@ -22,7 +30,14 @@ const raw = readFileSync(file);
 if (raw.subarray(0, 5).toString() !== "RIOB1") throw new Error("No es una copia de Run-In-Out.");
 const d = createDecipheriv("aes-256-gcm", createHash("sha256").update(secret).digest(), raw.subarray(5, 17));
 d.setAuthTag(raw.subarray(17, 33));
-const backup = JSON.parse(gunzipSync(Buffer.concat([d.update(raw.subarray(33)), d.final()])).toString());
+let plain;
+try {
+  plain = Buffer.concat([d.update(raw.subarray(33)), d.final()]);
+} catch {
+  console.error("Clave incorrecta: BACKUP_SECRET no es la misma con la que se hizo la copia (o el archivo está dañado).");
+  process.exit(1);
+}
+const backup = JSON.parse(gunzipSync(plain).toString());
 
 const only = args.includes("--solo") ? args[args.indexOf("--solo") + 1] : undefined;
 const entries = Object.entries(backup.keys).filter(([k]) => !only || k === only);

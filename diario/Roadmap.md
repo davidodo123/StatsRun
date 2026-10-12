@@ -136,8 +136,9 @@ Base: [[Estudio entrenamiento#6. La Pirámide de Entrenamiento (Helms, Valdez, M
 
 ## 💾 Copias de seguridad (2026-10-12) → [[Decisiones#Copias de seguridad]]
 - [x] Copia diaria cifrada a un repo privado de GitHub (cron de Vercel a las 3:00 UTC), 30 días de diarias + una mensual; script para abrirla y restaurarla — *código hecho 2026-10-12*
-- [ ] David crea el repo privado, el token y las 4 variables en Vercel (sin pegarlas en el chat ni aquí) y guarda BACKUP_SECRET en su gestor de contraseñas
-- [ ] Probar la primera copia desde Vercel → Cron Jobs → Run
+- [x] David crea el repo privado, el token y las 4 variables en Vercel y guarda BACKUP_SECRET aparte — *hecho 2026-10-12*
+- [x] Primera copia desde Vercel → Settings → Cron Jobs → Run: `diarias/2026-10-12.rio` (7 claves) — *hecho 2026-10-12*
+- [x] David abre la copia en su PC con el script y su BACKUP_SECRET guardada: funciona — *hecho 2026-10-12*
 
 ## 📲 Fase 6 · Compartir la app (2026-10-12) → [[Decisiones#iPhone por enlace, Android por Play Store]]
 **iPhone (David y sus amigos): enlace web + atajo, sin App Store (99 €/año)**
