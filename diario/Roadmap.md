@@ -136,9 +136,9 @@ Base: [[Estudio entrenamiento#6. La Pirámide de Entrenamiento (Helms, Valdez, M
 
 ## 📲 Fase 6 · Compartir la app (2026-10-12) → [[Decisiones#iPhone por enlace, Android por Play Store]]
 **iPhone (David y sus amigos): enlace web + atajo, sin App Store (99 €/año)**
-- [ ] 6.1 Atajo compartido por enlace de iCloud: David prepara una copia sin su clave y la comparte
-- [ ] 6.2 En Perfil → Salud: «Copiar mi clave» + «Instalar el atajo» (enlace de iCloud) + guía corta de las dos automatizaciones
-- [ ] 6.3 Bienvenida en Safari: cómo añadir la app a la pantalla de inicio en dos pasos
+- [x] 6.1 Atajo compartido por enlace de iCloud (copia sin clave, comprobada descargándola) — *hecho 2026-10-12*
+- [x] 6.2 En Perfil → Salud: «Copiar mi clave» + «Instalar el atajo» + pegar la clave + las dos automatizaciones; la guía para crearlo a mano queda en un desplegable — *hecho 2026-10-12, pendiente de comprobar*
+- [x] 6.3 Bienvenida en Safari: ya la hace el aviso «Instala Run-In-Out» (en iPhone, Compartir → Añadir a pantalla de inicio). Al pasar el enlace: abrirlo en Safari, no dentro de WhatsApp/Instagram
 
 **Android: Google Play (25 $ una vez)**
 - [ ] 6.4 Android Studio en el PC de David; Capacitor con la app actual dentro

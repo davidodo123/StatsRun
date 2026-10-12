@@ -19,8 +19,8 @@ export function HealthKey({ hasKey, endpoint }: { hasKey: boolean; endpoint: str
           <p className="font-semibold">Tu clave (cópiala ahora: no se volverá a ver)</p>
           <code className="block break-all rounded-lg bg-surface-2 p-2 text-xs">{state.token}</code>
           <div className="flex flex-wrap gap-2">
-            <button type="button" className="btn text-sm" onClick={() => copy("cabecera", `Bearer ${state.token}`)}>
-              {copied === "cabecera" ? "✓ Copiado" : "Copiar «Bearer clave»"}
+            <button type="button" className="btn text-sm" onClick={() => copy("clave", state.token!)}>
+              {copied === "clave" ? "✓ Copiada" : "Copiar mi clave"}
             </button>
             <button type="button" className="btn btn-ghost text-sm" onClick={() => copy("url", endpoint)}>
               {copied === "url" ? "✓ Copiada" : "Copiar la URL"}

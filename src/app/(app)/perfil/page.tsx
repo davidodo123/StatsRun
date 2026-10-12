@@ -641,7 +641,7 @@ function Salud({ db }: { db: Db }) {
         <Empty title="Aún no hay datos de Salud">Crea tu clave y el atajo de abajo: cada día llegarán tus pasos y tus calorías del iPhone (o del Apple Watch).</Empty>
       )}
 
-      <Card title="Conectar con Salud del iPhone" subtitle="Con un atajo de la app Atajos: sin instalar nada más.">
+      <Card title="Conectar con Salud del iPhone" subtitle="Con un atajo de la app Atajos: lo instalas con un toque y pegas tu clave.">
         <div className="space-y-4 text-sm">
           <div>
             <p className="mb-2 font-semibold">1. Tu clave personal</p>
@@ -653,10 +653,45 @@ function Salud({ db }: { db: Db }) {
             )}
           </div>
           <div>
-            <p className="mb-1 font-semibold">2. Crea el atajo en el iPhone</p>
-            <p className="mb-3 text-ink-2">
-              Abre la <strong className="text-ink">app Atajos</strong> (icono de dos cuadrados rosa y azul; no es Ajustes → Atajos) → pestaña Atajos → <em>+</em>. Cada
-              acción se añade desde la barra <em>Buscar acciones</em> de abajo y se coloca al final: el orden importa.
+            <p className="mb-2 font-semibold">2. Instala el atajo</p>
+            <ol className="space-y-5">
+              <ShortcutStep n={1} title="Añádelo a tu iPhone">
+                <a href={SHORTCUT_URL} target="_blank" rel="noreferrer" className="btn my-1 inline-flex">
+                  Instalar el atajo
+                </a>
+                <br />
+                Se abre la app Atajos: pulsa <strong className="text-ink">Añadir atajo</strong>. Se llama «Salud Run-In-Out».
+              </ShortcutStep>
+              <ShortcutStep n={2} title="Pega tu clave">
+                En Atajos, toca los <strong className="text-ink">tres puntos</strong> del atajo. En <em>Obtener contenido de URL</em> toca la{" "}
+                <strong className="text-ink">flecha ›</strong> → <em>Cabeceras</em> → <em>Authorization</em>: borra el texto de ejemplo («PEGA… TU CLAVE») y pega la clave que copiaste en el
+                paso 1. Pulsa <em>OK</em>.
+              </ShortcutStep>
+              <ShortcutStep n={3} title="Pruébalo">
+                Pulsa <Icon name="play" className="h-3 w-3 align-[-1px]" />. La primera vez pide permiso para leer Salud: <em>Permitir todo</em>. Luego vuelve aquí: arriba
+                tienen que salir tus pasos de la última semana.
+              </ShortcutStep>
+            </ol>
+          </div>
+          <div>
+            <p className="mb-1 font-semibold">3. Que se ejecute solo</p>
+            <ol className="space-y-5">
+              <ShortcutStep n={4} img="7-automatizacion" w={600} h={362} title="Cada noche a las 23:50">
+                En Atajos → <em>Automatización</em> → <em>+</em> → <em>Hora del día</em>: 23:50, todos los días → <em>Ejecutar inmediatamente</em> (sin «Notificar al
+                ejecutar») → elige tu atajo.
+              </ShortcutStep>
+              <ShortcutStep n={5} title="Y por la mañana, al quitar el cargador">
+                Otra automatización: <em>Cargador</em> → <em>Se desconecta</em> → <em>Ejecutar inmediatamente</em> → el mismo atajo. iOS no deja leer Salud con el iPhone
+                bloqueado, así que la de la noche a veces falla; la de la mañana (cuando lo coges) lo recupera. Como cada envío lleva 7 días, no se pierde ninguno aunque
+                fallen varias seguidas. No hace falta pulsarlo nunca a mano.
+              </ShortcutStep>
+            </ol>
+          </div>
+          <details className="rounded-xl border border-line p-3">
+            <summary className="cursor-pointer font-semibold">¿Prefieres crearlo a mano?</summary>
+            <p className="my-3 text-ink-2">
+              Abre la <strong className="text-ink">app Atajos</strong> → pestaña Atajos → <em>+</em>. Cada acción se añade desde la barra <em>Buscar acciones</em> de abajo y
+              se coloca al final: el orden importa.
             </p>
             <ol className="space-y-5">
               <ShortcutStep n={1} title="Pasos de los últimos 7 días">
@@ -684,7 +719,7 @@ function Salud({ db }: { db: Db }) {
                     Método: <em>POST</em>.
                   </li>
                   <li>
-                    Cabeceras → Añadir nueva cabecera: <code>Authorization</code> y como valor lo copiado en el paso 1 (<code>Bearer rio_…</code>, con un espacio).
+                    Cabeceras → Añadir nueva cabecera: <code>Authorization</code> y como valor tu clave (<code>rio_…</code>).
                   </li>
                   <li>
                     Cuerpo de la solicitud: <em>JSON</em>, cuatro campos de tipo <strong className="text-ink">Texto</strong>, con la clave escrita exactamente así:{" "}
@@ -700,21 +735,7 @@ function Salud({ db }: { db: Db }) {
                 día, revisa Ajustes → Salud → Acceso a datos → Atajos.
               </ShortcutStep>
             </ol>
-          </div>
-          <div>
-            <p className="mb-1 font-semibold">3. Que se ejecute solo</p>
-            <ol className="space-y-5">
-              <ShortcutStep n={7} img="7-automatizacion" w={600} h={362} title="Cada noche a las 23:50">
-                En Atajos → <em>Automatización</em> → <em>+</em> → <em>Hora del día</em>: 23:50, todos los días → <em>Ejecutar inmediatamente</em> (sin «Notificar al
-                ejecutar») → elige tu atajo.
-              </ShortcutStep>
-              <ShortcutStep n={8} title="Y por la mañana, al quitar el cargador">
-                Otra automatización: <em>Cargador</em> → <em>Se desconecta</em> → <em>Ejecutar inmediatamente</em> → el mismo atajo. iOS no deja leer Salud con el iPhone
-                bloqueado, así que la de la noche a veces falla; la de la mañana (cuando lo coges) lo recupera. Como cada envío lleva 7 días, no se pierde ninguno aunque
-                fallen varias seguidas. No hace falta pulsarlo nunca a mano.
-              </ShortcutStep>
-            </ol>
-          </div>
+          </details>
           <div>
             <p className="mb-1 font-semibold">4. Opcional: recuperación (con Apple Watch)</p>
             <p className="mb-3 text-ink-2">
@@ -722,20 +743,20 @@ function Salud({ db }: { db: Db }) {
               «Obtener contenido de URL», igual que las de pasos.
             </p>
             <ol className="space-y-4">
-              <ShortcutStep n={9} title="VFC → «VFC»">
+              <ShortcutStep n={6} title="VFC → «VFC»">
                 <strong className="text-ink">Buscar muestras de salud</strong>, tipo <em>Variabilidad de la frecuencia cardiaca</em>, filtro <em>Fecha de inicio · es hoy</em>.
                 Luego <strong className="text-ink">Calcular estadísticas</strong> con <em>Media</em> y <strong className="text-ink">Definir variable</strong> <code>VFC</code>.
               </ShortcutStep>
-              <ShortcutStep n={10} title="Pulso en reposo → «PulsoReposo»">
+              <ShortcutStep n={7} title="Pulso en reposo → «PulsoReposo»">
                 Igual, con el tipo <em>Frecuencia cardiaca en reposo</em>, <em>Media</em> y la variable <code>PulsoReposo</code>.
               </ShortcutStep>
-              <ShortcutStep n={11} title="Sueño → «Sueno»">
+              <ShortcutStep n={8} title="Sueño → «Sueno»">
                 <strong className="text-ink">Buscar muestras de salud</strong>, tipo <em>Análisis del sueño</em>, filtro <em>Fecha de inicio · está en los últimos 1 días</em> y{" "}
                 <em>Valor · no es · En la cama</em> (si no aparece ese filtro, déjalo sin él). Luego <strong className="text-ink">Obtener detalles de muestras de salud</strong> →{" "}
                 <em>Duración</em>, <strong className="text-ink">Calcular estadísticas</strong> con <em>Suma</em> y la variable <code>Sueno</code>. Vale en horas, minutos o
                 segundos: la app lo entiende.
               </ShortcutStep>
-              <ShortcutStep n={12} title="Añádelos al envío">
+              <ShortcutStep n={9} title="Añádelos al envío">
                 En el cuerpo JSON de «Obtener contenido de URL», tres campos más de tipo <em>Número</em>: <code>vfc</code>, <code>pulsoReposo</code> y <code>sueno</code>, con sus
                 variables. Al ejecutarlo, la respuesta debe seguir diciendo <code>&quot;ok&quot; : true</code>. Si un día no hay dato (sin reloj puesto), no pasa nada.
               </ShortcutStep>
@@ -746,6 +767,9 @@ function Salud({ db }: { db: Db }) {
     </div>
   );
 }
+
+// atajo compartido por David (sin clave): cada uno pega la suya al instalarlo
+const SHORTCUT_URL = "https://www.icloud.com/shortcuts/2e5697f64f774ff8b679520f08cc319c";
 
 const MONTH_NAMES = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
 const monthName = (ym: string) => MONTH_NAMES[Number(ym.slice(5, 7)) - 1];
