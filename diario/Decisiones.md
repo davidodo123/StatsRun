@@ -646,3 +646,11 @@ David preguntó si se puede «entrenar» una IA para la app. Opciones: (1) instr
 - Variables en Vercel: `BACKUP_SECRET`, `CRON_SECRET`, `GITHUB_BACKUP_TOKEN` (token de grano fino, solo «Contents: lectura y escritura» en ese repo), `GITHUB_BACKUP_REPO` (`usuario/repo`). Nunca en el diario.
 - **Sin `BACKUP_SECRET` las copias no se pueden abrir**: guardarla también fuera de Vercel (gestor de contraseñas).
 - Restaurar: `scripts/backup-restore.mjs` (resumen, `--json` para verla descifrada, `--restaurar [--solo clave]` para escribirla en Redis).
+
+## App de Android con Capacitor
+*2026-10-12*
+
+- Capacitor 8 (`capacitor.config.ts`): id `app.runinout`, carga la web de Vercel (`server.url`), así cada despliegue llega también a la app sin publicar otra versión. `capacitor-web/index.html` es solo la pantalla «Sin conexión».
+- La carpeta `android/` es el proyecto nativo (se sube a git; lo compilado no).
+- Compilar: Android Studio trae Java 25 y el Gradle de Capacitor solo llega a Java 24, así que se usa un **JDK 21** aparte (`%LOCALAPPDATA%\jdk21`, puesto en `~/.gradle/gradle.properties` → `org.gradle.java.home`). `cd android && gradlew assembleDebug`.
+- Probado en el emulador «Medium Phone» (Android 17): abre la pantalla de Entrar.

@@ -106,6 +106,28 @@
 
 /* lo que queda fuera de la página (bajo la barra de abajo en el iPhone instalado, o al rebotar) toma el color
    de html: el mismo que las barras, no el negro del fondo */
+/* Aviso «Gira el móvil»: solo en un móvil puesto en horizontal (poco alto y bastante ancho; en vertical con el
+   teclado abierto puede quedar más ancho que alto, pero nunca tan ancho) */
+.rotate-hint {
+  display: none;
+}
+@media (orientation: landscape) and (max-height: 500px) and (min-width: 560px) and (pointer: coarse) {
+  .rotate-hint {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    gap: 0.75rem;
+    padding: 1.5rem;
+    background: var(--bg);
+    color: var(--text);
+    text-align: center;
+    font-weight: 600;
+  }
+}
+
 html {
   background: var(--surface);
   /* con la barra de estado translúcida, el 100 % del iPhone instalado no cuenta su altura: en las páginas cortas

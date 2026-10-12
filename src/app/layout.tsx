@@ -28,6 +28,14 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="flex min-h-full">
         {children}
         <ServiceWorkerRegister />
+        {/* el iPhone no deja bloquear el giro en la app instalada: en horizontal se pide volver a vertical */}
+        <div className="rotate-hint" role="alert">
+          <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <rect x="7" y="2" width="10" height="20" rx="2" />
+            <path d="M11 18h2" />
+          </svg>
+          <p>Gira el móvil: Run-In-Out se usa en vertical.</p>
+        </div>
       </body>
     </html>
   );
