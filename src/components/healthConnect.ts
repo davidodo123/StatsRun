@@ -12,27 +12,29 @@ export const isAndroidApp = () => {
   return Boolean(cap?.isNativePlatform?.() && cap.getPlatform?.() === "android");
 };
 
-const health = async () => (await import("@capgo/capacitor-health")).Health;
+// el complemento de Capacitor no se puede devolver tal cual desde una función async: JavaScript lo trataría como una
+// promesa (le pide .then() y falla con «"Health.then()" is not implemented»), así que va dentro de un objeto
+const plugin = async () => ({ H: (await import("@capgo/capacitor-health")).Health });
 const dayOf = (iso: string) => new Date(iso).toLocaleDateString("sv-SE"); // fecha local del móvil
 
 export async function hcAvailable(): Promise<boolean> {
-  return (await (await health()).isAvailable()).available;
+  return (await (await plugin()).H.isAvailable()).available;
 }
 
 /** Abre la pantalla de permisos de Health Connect. Devuelve qué datos se pueden leer. */
 export async function hcConnect(): Promise<HealthDataType[]> {
-  return (await (await health()).requestAuthorization({ read: HC_READ })).readAuthorized;
+  return (await (await plugin()).H.requestAuthorization({ read: HC_READ })).readAuthorized;
 }
 
 export async function hcOpenSettings() {
-  await (await health()).openHealthConnectSettings();
+  await (await plugin()).H.openHealthConnectSettings();
 }
 
 type Day = { fecha: string; pasos?: number; kcalActivas?: number; pulsoReposo?: number; vfc?: number; sueno?: number };
 
 /** Los últimos `days` días, día a día (solo los datos con permiso). */
 export async function hcRead(days = 7): Promise<{ dias: Day[] }> {
-  const H = await health();
+  const { H } = await plugin();
   const end = new Date();
   const start = new Date(end);
   start.setHours(0, 0, 0, 0);

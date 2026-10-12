@@ -96,6 +96,12 @@ describe("salud del iPhone", () => {
     expect(parseHealthNumber("1.234", 20_000)).toBe(1234);
     expect(parseHealthNumber("1.234.567", 20_000)).toBe(1234567);
     expect(parseHealthNumber("512,7", 20_000)).toBe(512.7);
+    // calorías, VFC y sueño: Atajos manda punto decimal («2.288» por la mañana son 2,3 kcal, no 2.288)
+    expect(parseHealthNumber("2.288", 20_000, true)).toBe(2.288);
+    expect(parseHealthNumber("1.234,5", 20_000, true)).toBe(1234.5);
+    expect(parseHealthNumber("1.234.567", Infinity, true)).toBe(1234567);
+    const r = parseHealthPayload({ pasos: "68", kcalActivas: "2.288" }, today, now);
+    expect("days" in r && r.days[0]).toMatchObject({ steps: 68, activeKcal: 2 });
   });
 
   it("fechas tal como las manda Atajos", () => {
