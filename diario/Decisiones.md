@@ -636,3 +636,13 @@ David preguntó si se puede «entrenar» una IA para la app. Opciones: (1) instr
 - El App Store cuesta 99 €/año: David no lo quiere. Para él y sus amigos (todos con iPhone), la app sigue siendo la web instalada desde Safari, con el atajo para la salud.
 - Para que sus amigos no tengan que montar el atajo a mano: atajo compartido por enlace de iCloud y, en la app, botones para copiar la clave e instalarlo.
 - Android: app en Google Play (25 $ una vez) con Capacitor (la misma app dentro) y Health Connect, que lee la salud sin atajos.
+
+## Copias de seguridad
+*2026-10-12*
+
+- Cada noche (cron de Vercel, `0 3 * * *` UTC) `/api/cron/backup` copia todas las claves `statsrun:*` de Redis (usuarios, datos de cada uno, fotos, claves del atajo…; sin los contadores `:v`), las comprime (gzip) y las cifra con AES-256-GCM (`BACKUP_SECRET`).
+- Se suben a un repo **privado** de GitHub: `diarias/AAAA-MM-DD.rio` (se borran a los 30 días) y `mensuales/AAAA-MM.rio` (la del día 1, se quedan). El historial de git conserva también las borradas.
+- La ruta solo responde con `Authorization: Bearer CRON_SECRET` (Vercel la manda sola si existe la variable).
+- Variables en Vercel: `BACKUP_SECRET`, `CRON_SECRET`, `GITHUB_BACKUP_TOKEN` (token de grano fino, solo «Contents: lectura y escritura» en ese repo), `GITHUB_BACKUP_REPO` (`usuario/repo`). Nunca en el diario.
+- **Sin `BACKUP_SECRET` las copias no se pueden abrir**: guardarla también fuera de Vercel (gestor de contraseñas).
+- Restaurar: `scripts/backup-restore.mjs` (resumen, `--json` para verla descifrada, `--restaurar [--solo clave]` para escribirla en Redis).

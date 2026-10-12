@@ -134,6 +134,11 @@ Base: [[Estudio entrenamiento#6. La Pirámide de Entrenamiento (Helms, Valdez, M
 
 - [x] **Sección Sueño** en «Más»: a qué hora despertarse por ciclos de 90 min, o a qué hora acostarse — *hecho 2026-10-12, pendiente de comprobar*
 
+## 💾 Copias de seguridad (2026-10-12) → [[Decisiones#Copias de seguridad]]
+- [x] Copia diaria cifrada a un repo privado de GitHub (cron de Vercel a las 3:00 UTC), 30 días de diarias + una mensual; script para abrirla y restaurarla — *código hecho 2026-10-12*
+- [ ] David crea el repo privado, el token y las 4 variables en Vercel (sin pegarlas en el chat ni aquí) y guarda BACKUP_SECRET en su gestor de contraseñas
+- [ ] Probar la primera copia desde Vercel → Cron Jobs → Run
+
 ## 📲 Fase 6 · Compartir la app (2026-10-12) → [[Decisiones#iPhone por enlace, Android por Play Store]]
 **iPhone (David y sus amigos): enlace web + atajo, sin App Store (99 €/año)**
 - [x] 6.1 Atajo compartido por enlace de iCloud (copia sin clave, comprobada descargándola) — *hecho 2026-10-12*
