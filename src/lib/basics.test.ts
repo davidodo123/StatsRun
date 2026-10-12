@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { addDays, diffDays, mondayOf, monthLabel, shortDate, weekday } from "./dates";
-import { fmtDuration, fmtKm, fmtNum, fmtPace, fmtPaceRange, parsePace, parseTime } from "./format";
+import { fmtDuration, fmtKm, fmtNum, fmtPace, fmtPaceRange, maskTime, parsePace, parseTime } from "./format";
 import { bmi, bmiLabel, flatEquivalentKm, heatFactor, hrMaxOf, hrZones, raceTimeFromVdot, riegel, vdotFromRace, vo2maxLabel, zoneOfHr } from "./engine/physiology";
 import { acwrStatus, tsbStatus } from "./engine/load";
 import { isSameActivity, mergeActivities, shortHash, sportFromName } from "./importers/common";
@@ -70,6 +70,10 @@ describe("formatos", () => {
     expect(parsePace("6")).toBe(360);
     expect(parsePace("5,75")).toBeUndefined(); // 75 segundos no
     expect(parsePace("abc")).toBeUndefined();
+    // los «:» se ponen solos al escribir con el teclado numérico
+    expect(["5", "53", "530", "1005", "4530", "13000", "5:3", "5,30"].map(maskTime)).toEqual(["5", "53", "5:30", "10:05", "45:30", "1:30:00", "5:3", "5,30"]);
+    expect(parsePace(maskTime("530"))).toBe(330);
+    expect(parseTime(maskTime("13000"))).toBe(5400);
     expect(parseTime("1:23:45")).toBe(5025);
     expect(parseTime(" 3:30:00 ")).toBe(12600);
     expect(parseTime("")).toBeUndefined();

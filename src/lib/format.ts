@@ -41,6 +41,18 @@ export function parseTime(input: string): number | undefined {
 }
 
 /**
+ * Pone los «:» mientras se escribe con el teclado numérico (el del iPhone no los tiene):
+ * «530» → «5:30», «4530» → «45:30», «13000» → «1:30:00». Si ya trae «:», se deja como está.
+ */
+export function maskTime(input: string): string {
+  if (/[:'.,]/.test(input)) return input;
+  const d = input.replace(/\D/g, "").slice(0, 6);
+  if (d.length <= 2) return d;
+  if (d.length <= 4) return `${d.slice(0, -2)}:${d.slice(-2)}`;
+  return `${d.slice(0, -4)}:${d.slice(-4, -2)}:${d.slice(-2)}`;
+}
+
+/**
  * Ritmo por km escrito como sale en el móvil: «5:30», «5,30», «5.30» o «5'30» son 5:30 /km
  * (en el teclado numérico del iPhone no hay «:»). Con una sola cifra tras la coma son minutos con decimales: «5,5» = 5:30.
  */

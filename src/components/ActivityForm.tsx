@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useActionState, useState } from "react";
 import { saveActivity, type FormState } from "@/app/actions";
 import type { Activity, Feel, PlannedSession } from "@/lib/types";
-import { fmtDuration, fmtPace, parsePace, parseTime } from "@/lib/format";
+import { fmtDuration, fmtPace, maskTime, parsePace, parseTime } from "@/lib/format";
 import { keepForm } from "./keepForm";
 import { PhotoField } from "./ActivityPhoto";
 
@@ -133,8 +133,10 @@ export function ActivityForm({
           <input
             className="input"
             name="duration"
+            // teclado numérico: los «:» se ponen solos (4530 → 45:30)
+            inputMode="numeric"
             value={dur}
-            onChange={(e) => setDur(e.target.value)}
+            onChange={(e) => setDur(maskTime(e.target.value))}
             placeholder={derivedSec ? fmtDuration(derivedSec) : "h:mm:ss o mm:ss"}
             required={!hasDistance || !derivedSec}
           />
@@ -145,10 +147,10 @@ export function ActivityForm({
             <input
               className="input"
               name="pace"
-              // con coma en el teclado del iPhone: «5,30» vale como 5:30
-              inputMode="decimal"
+              // teclado numérico: los «:» se ponen solos (530 → 5:30)
+              inputMode="numeric"
               value={paceIn}
-              onChange={(e) => setPaceIn(e.target.value)}
+              onChange={(e) => setPaceIn(maskTime(e.target.value))}
               placeholder={km > 0 && sec ? fmtPace(sec / km) : "m:ss"}
             />
           </label>
