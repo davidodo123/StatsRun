@@ -654,3 +654,11 @@ David preguntó si se puede «entrenar» una IA para la app. Opciones: (1) instr
 - La carpeta `android/` es el proyecto nativo (se sube a git; lo compilado no).
 - Compilar: Android Studio trae Java 25 y el Gradle de Capacitor solo llega a Java 24, así que se usa un **JDK 21** aparte (`%LOCALAPPDATA%\jdk21`, puesto en `~/.gradle/gradle.properties` → `org.gradle.java.home`). `cd android && gradlew assembleDebug`.
 - Probado en el emulador «Medium Phone» (Android 17): abre la pantalla de Entrar.
+
+## Entrar con Google desde la app de Android
+*2026-10-12*
+
+- Google no deja iniciar sesión dentro de la vista web de una app. En la app (`NativeBridge`), «Continuar con Google» se abre en el navegador del sistema (`@capacitor/browser`) con `/api/auth/google?app=<reto>`.
+- Al volver de Google, el callback no abre la sesión en el navegador: devuelve una página que abre `app.runinout://auth?code=…` (código firmado, 2 min). La app lo recibe (`@capacitor/app`, `appUrlOpen`) y va a `/api/auth/app?code=…&v=<verificador>`, que abre la sesión dentro de la app.
+- Como PKCE: el reto es el sha256 de un verificador que nunca sale de la app; si otra app del móvil captara la vuelta, el código no le serviría.
+- En la web no cambia nada.

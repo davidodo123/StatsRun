@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { ServiceWorkerRegister } from "@/components/Pwa";
+import { NativeBridge } from "@/components/NativeBridge";
 
 export const metadata: Metadata = {
   title: { default: "Run-In-Out", template: "%s · Run-In-Out" },
@@ -28,6 +29,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="flex min-h-full">
         {children}
         <ServiceWorkerRegister />
+        <NativeBridge />
         {/* el iPhone no deja bloquear el giro en la app instalada: en horizontal se pide volver a vertical */}
         <div className="rotate-hint" role="alert">
           <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
