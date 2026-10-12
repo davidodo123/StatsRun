@@ -69,7 +69,7 @@ async function putFile(file: string, content: Buffer, message: string) {
   if (!res.ok) throw new Error(`GitHub ${res.status}: ${(await res.text()).slice(0, 200)}`);
 }
 
-/** Copia del día en diarias/ (y la del día 1 también en mensuales/); borra las diarias de más de 30 días. */
+/** Copia del día en diarias/ (y la del día 1 también en mensuales/); borra las diarias de más de 30 días y las mensuales de más de un año. */
 export async function runBackup(now = new Date()): Promise<BackupResult> {
   const secret = process.env.BACKUP_SECRET;
   if (!secret || !process.env.GITHUB_BACKUP_TOKEN || !process.env.GITHUB_BACKUP_REPO) throw new Error("Faltan BACKUP_SECRET, GITHUB_BACKUP_TOKEN o GITHUB_BACKUP_REPO.");
@@ -81,13 +81,18 @@ export async function runBackup(now = new Date()): Promise<BackupResult> {
   await putFile(`diarias/${day}.rio`, enc, `Copia ${day} (${n} claves)`);
   if (day.endsWith("-01")) await putFile(`mensuales/${day.slice(0, 7)}.rio`, enc, `Copia mensual ${day.slice(0, 7)}`);
 
-  // las diarias de hace más de 30 días se borran (las mensuales se quedan)
+  // las diarias de hace más de 30 días y las mensuales de hace más de 12 meses se borran
+  // (así lo que alguien borra de su cuenta desaparece también de las copias)
   let deleted = 0;
-  const list = await gh("contents/diarias");
-  if (list.ok) {
-    const limit = new Date(now.getTime() - KEEP_DAYS * 864e5).toISOString().slice(0, 10);
+  const limits: [string, string][] = [
+    ["diarias", new Date(now.getTime() - KEEP_DAYS * 864e5).toISOString().slice(0, 10)],
+    ["mensuales", new Date(Date.UTC(now.getUTCFullYear() - 1, now.getUTCMonth(), 1)).toISOString().slice(0, 7)],
+  ];
+  for (const [dir, limit] of limits) {
+    const list = await gh(`contents/${dir}`);
+    if (!list.ok) continue;
     for (const f of (await list.json()) as { name: string; path: string; sha: string }[]) {
-      if (f.name.slice(0, 10) >= limit) continue;
+      if (f.name.slice(0, limit.length) >= limit) continue;
       const res = await gh(`contents/${f.path}`, { method: "DELETE", body: JSON.stringify({ message: `Borrar copia antigua ${f.name}`, sha: f.sha }) });
       if (res.ok) deleted++;
     }

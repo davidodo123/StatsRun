@@ -148,7 +148,7 @@ Base: [[Estudio entrenamiento#6. La Pirámide de Entrenamiento (Helms, Valdez, M
 
 **Android: Google Play (25 $ una vez)**
 - [x] 6.4 Android Studio en el PC de David; Capacitor 8 con la app actual dentro (`app.runinout`, carga run-in-out.vercel.app); APK de prueba funcionando en el emulador — *hecho 2026-10-12*
-- [ ] 6.5 Entrar con Google desde la app (pestaña del sistema y vuelta a la app; Google bloquea el inicio de sesión en vistas web)
+- [x] 6.5 Entrar con Google desde la app (pestaña del sistema y vuelta a la app con código de un solo uso) — *hecho y probado en el emulador 2026-10-12*
 - [ ] 6.6 Health Connect: pasos, calorías, sueño y pulso al abrir la app (sin atajos)
 - [ ] 6.7 Prueba cerrada en Play (12 personas, 14 días, obligatorio en cuentas nuevas) y publicación
 

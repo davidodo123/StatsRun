@@ -5,6 +5,7 @@ import { Suspense, type ReactNode } from "react";
 import { getAnalysis } from "@/lib/analysis";
 import { revokeHealthKey, syncProfileAverages } from "@/app/actions";
 import { HealthKey } from "@/components/HealthKey";
+import { HealthConnectCard } from "@/components/HealthConnectCard";
 import { healthSummary, monthlyHealth, recoverySignals, todayMadrid } from "@/lib/health";
 import { ProfileForm } from "@/components/ProfileForm";
 import { DeleteAccountForm } from "@/components/DeleteAccountForm";
@@ -638,9 +639,14 @@ function Salud({ db }: { db: Db }) {
           )}
         </>
       ) : (
-        <Empty title="Aún no hay datos de Salud">Crea tu clave y el atajo de abajo: cada día llegarán tus pasos y tus calorías del iPhone (o del Apple Watch).</Empty>
+        <Empty title="Aún no hay datos de Salud">
+          <span className="not-android">Crea tu clave y el atajo de abajo: cada día llegarán tus pasos y tus calorías del iPhone (o del Apple Watch).</span>
+          <span className="only-android">Conecta Health Connect aquí debajo: llegarán solos tus pasos, calorías, sueño y pulso.</span>
+        </Empty>
       )}
 
+      <HealthConnectCard lastSync={db.healthConnectAt} />
+      <div className="not-android">
       <Card title="Conectar con Salud del iPhone" subtitle="Con un atajo de la app Atajos: lo instalas con un toque y pegas tu clave.">
         <div className="space-y-4 text-sm">
           <div>
@@ -764,6 +770,7 @@ function Salud({ db }: { db: Db }) {
           </div>
         </div>
       </Card>
+      </div>
     </div>
   );
 }

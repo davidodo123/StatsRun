@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect } from "react";
+import { saveHealthFromApp } from "@/app/actions";
+import { hcAutoSync, isAndroidApp } from "./healthConnect";
 
 const VERIFIER = "rio-login-verifier";
 
@@ -16,6 +18,11 @@ export function NativeBridge() {
     const cap = (window as { Capacitor?: { isNativePlatform?: () => boolean } }).Capacitor;
     if (!cap?.isNativePlatform?.()) return;
     let off: (() => void) | undefined;
+    // en Android se enseña Health Connect en vez del atajo del iPhone (ver .not-android / .only-android)
+    if (isAndroidApp()) document.documentElement.dataset.native = "android";
+    // los datos de salud llegan solos al abrir la app y al volver a ella
+    const sync = () => hcAutoSync(saveHealthFromApp);
+    if (isAndroidApp()) sync();
 
     const onClick = async (e: MouseEvent) => {
       const a = (e.target as Element | null)?.closest?.('a[href="/api/auth/google"]');
@@ -42,7 +49,11 @@ export function NativeBridge() {
         // eslint-disable-next-line @next/next/no-location-assign-relative-destination
         window.location.assign(`${location.origin}/api/auth/app?code=${encodeURIComponent(code)}&v=${encodeURIComponent(v)}`);
       });
-      off = () => h.remove();
+      const resume = await App.addListener("resume", () => isAndroidApp() && sync());
+      off = () => {
+        h.remove();
+        resume.remove();
+      };
     })();
 
     return () => {

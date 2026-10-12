@@ -70,8 +70,17 @@ export default function PrivacyPage() {
               <strong className="text-ink">Strava</strong> (solo si lo conectas): las actividades y el recorrido resumido, más los permisos de acceso que da Strava.
             </li>
             <li>
-              <strong className="text-ink">Salud del iPhone</strong> (solo si creas el atajo): los pasos y las calorías activas y en reposo de cada día que tu atajo
-              envía. No leemos nada más de Salud. Puedes desactivar la clave cuando quieras en Perfil → Pasos y calorías.
+              <strong className="text-ink">Salud del iPhone</strong> (solo si creas el atajo): lo que tu atajo envía de cada día: pasos, calorías activas y, si lo
+              añades, variabilidad de la frecuencia cardiaca (VFC), pulso en reposo y horas de sueño. No leemos nada más de Salud. Puedes desactivar la clave cuando
+              quieras en Perfil → Salud.
+            </li>
+            <li>
+              <strong className="text-ink">Health Connect</strong> (solo en la app de Android y si le das permiso): los pasos, las calorías activas, el pulso en reposo,
+              la VFC y el sueño de los últimos 7 días, que la app lee al abrirla. Solo lectura: no escribimos nada en Health Connect ni leemos otros datos. Puedes quitar
+              el permiso cuando quieras en Perfil → Salud → Permisos o en los ajustes de Health Connect.
+            </li>
+            <li>
+              <strong className="text-ink">Fotos</strong> (solo si las subes): tu foto de perfil y las fotos de tus entrenos, reducidas en tu móvil antes de enviarlas.
             </li>
             <li>
               <strong className="text-ink">Amigos</strong>: a quién has añadido, solicitudes pendientes y con quién has entrenado.
@@ -84,6 +93,10 @@ export default function PrivacyPage() {
           <ul className="list-disc space-y-1 pl-5">
             <li>Calcular tus estadísticas, tu forma y tus ritmos, y generar y ajustar tu plan de entrenamiento.</li>
             <li>Mostrar tus entrenos y estadísticas a los amigos que tú aceptes.</li>
+            <li>
+              Con los datos de salud (Salud del iPhone o Health Connect): enseñarte tus pasos, calorías y recuperación, y adaptar el plan si duermes poco o tu
+              cuerpo no está recuperado. Solo para eso: nunca para publicidad, ni se venden ni se ceden a nadie más.
+            </li>
           </ul>
           <p>No vendemos tus datos ni los usamos para publicidad.</p>
         </Section>
@@ -96,11 +109,13 @@ export default function PrivacyPage() {
             </li>
             <li>
               <strong className="text-ink">Entrenador con IA</strong>: para ajustar tu plan se envían a OpenRouter (y al modelo de IA que use) tu edad, sexo, peso, nivel,
-              lesiones, plan y entrenos recientes con tus sensaciones. No se envían tu nombre ni tu email.
+              lesiones, plan y entrenos recientes con tus sensaciones y, si tienes datos de salud, un resumen de tu recuperación (sueño, pulso en reposo y VFC). No se
+              envían tu nombre ni tu email.
             </li>
             <li>
               <strong className="text-ink">Proveedores técnicos</strong>: Vercel (alojamiento de la web), Upstash (base de datos), Google (inicio de sesión), Strava (si lo
-              conectas) y OpenStreetMap (fondos de mapa: tu navegador le pide las imágenes de la zona del recorrido).
+              conectas), OpenStreetMap (fondos de mapa: tu navegador le pide las imágenes de la zona del recorrido) y GitHub (guarda cada noche una copia de
+              seguridad cifrada, que solo puede abrir el administrador de la app, para no perder datos si algo falla).
             </li>
           </ul>
         </Section>
@@ -109,7 +124,7 @@ export default function PrivacyPage() {
           <p>
             Guardamos tus datos mientras tengas cuenta. Puedes borrarla tú mismo en <strong className="text-ink">Perfil → Editar perfil → Borrar mi cuenta</strong>: se
             eliminan tu perfil, tu plan, tus entrenos y tus amistades, y se desconecta Strava. También puedes borrar entrenos sueltos y desconectar Strava cuando
-            quieras.
+            quieras. Lo borrado desaparece también de las copias de seguridad en un máximo de 30 días (las copias mensuales, en un máximo de 12 meses).
           </p>
         </Section>
 

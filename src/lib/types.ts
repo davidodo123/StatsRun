@@ -207,6 +207,7 @@ export interface Db {
   races?: TuneUpRace[]; // carreras secundarias de la temporada (la principal es goal)
   health?: DailyHealth[]; // pasos y calorías de cada día (Salud del iPhone, por Atajos)
   healthTokenHash?: string; // sha256 de la clave personal con la que el atajo envía los datos
+  healthConnectAt?: string; // última vez que la app de Android mandó datos de Health Connect
   plan?: Plan;
   pastPlans?: ArchivedPlan[]; // planes terminados o sustituidos, del más reciente al más antiguo
   measurements?: BodyMeasurement[]; // medidas corporales, por fecha (una por día)

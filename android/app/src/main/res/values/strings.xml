@@ -4,4 +4,5 @@
     <string name="title_activity_main">Run-In-Out</string>
     <string name="package_name">app.runinout</string>
     <string name="custom_url_scheme">app.runinout</string>
+    <string name="health_connect_privacy_policy_url">https://run-in-out.vercel.app/privacidad</string>
 </resources>

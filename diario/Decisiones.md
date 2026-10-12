@@ -641,7 +641,7 @@ David preguntó si se puede «entrenar» una IA para la app. Opciones: (1) instr
 *2026-10-12*
 
 - Cada noche (cron de Vercel, `0 3 * * *` UTC) `/api/cron/backup` copia todas las claves `statsrun:*` de Redis (usuarios, datos de cada uno, fotos, claves del atajo…; sin los contadores `:v`), las comprime (gzip) y las cifra con AES-256-GCM (`BACKUP_SECRET`).
-- Se suben a un repo **privado** de GitHub: `diarias/AAAA-MM-DD.rio` (se borran a los 30 días) y `mensuales/AAAA-MM.rio` (la del día 1, se quedan). El historial de git conserva también las borradas.
+- Se suben a un repo **privado** de GitHub: `diarias/AAAA-MM-DD.rio` (se borran a los 30 días) y `mensuales/AAAA-MM.rio` (la del día 1, se borran a los 12 meses, para que lo que alguien borra no se quede para siempre; así lo dice la política de privacidad). Ojo: el historial de git conserva también las borradas; si algún día hace falta borrarlas de verdad, hay que reescribir el historial del repo de copias.
 - La ruta solo responde con `Authorization: Bearer CRON_SECRET` (Vercel la manda sola si existe la variable).
 - Variables en Vercel: `BACKUP_SECRET`, `CRON_SECRET`, `GITHUB_BACKUP_TOKEN` (token de grano fino, solo «Contents: lectura y escritura» en ese repo), `GITHUB_BACKUP_REPO` (`usuario/repo`). Nunca en el diario.
 - **Sin `BACKUP_SECRET` las copias no se pueden abrir**: guardarla también fuera de Vercel (gestor de contraseñas).
@@ -662,3 +662,12 @@ David preguntó si se puede «entrenar» una IA para la app. Opciones: (1) instr
 - Al volver de Google, el callback no abre la sesión en el navegador: devuelve una página que abre `app.runinout://auth?code=…` (código firmado, 2 min). La app lo recibe (`@capacitor/app`, `appUrlOpen`) y va a `/api/auth/app?code=…&v=<verificador>`, que abre la sesión dentro de la app.
 - Como PKCE: el reto es el sha256 de un verificador que nunca sale de la app; si otra app del móvil captara la vuelta, el código no le serviría.
 - En la web no cambia nada.
+
+## Health Connect en la app de Android
+*2026-10-12*
+
+- Complemento `@capgo/capacitor-health` 8.11.4. Solo **lectura** de 5 datos: pasos, calorías activas, pulso en reposo, VFC y sueño. El complemento declara ~50 permisos (leer y escribir de todo): se quitan en `AndroidManifest.xml` con `tools:node="remove"`, porque Google Play revisa y hay que justificar cada permiso de salud. `minSdk` 26 (Android 8), el mínimo de Health Connect.
+- Al abrir la app y al volver a ella (como mucho cada 30 min) lee los últimos 7 días, día a día, y los manda con la sesión (acción `saveHealthFromApp`, mismo formato `{dias: […]}` que el atajo). El sueño cuenta para el día en que te despiertas y, si hay fases, sin «despierto» ni «en la cama».
+- Perfil → Salud en Android: tarjeta «Health Connect» (conectar, sincronizar ahora, permisos) y se oculta la guía del atajo del iPhone (`html[data-native=android]`).
+- Política de privacidad: Health Connect, fotos, la IA recibe un resumen de recuperación, copias en GitHub. La pantalla de permisos enlaza a `/privacidad`.
+- Copias mensuales: ahora se borran a los 12 meses (antes, nunca).

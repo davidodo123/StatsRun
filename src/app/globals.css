@@ -106,6 +106,15 @@
 
 /* lo que queda fuera de la página (bajo la barra de abajo en el iPhone instalado, o al rebotar) toma el color
    de html: el mismo que las barras, no el negro del fondo */
+/* App de Android (NativeBridge pone data-native): Health Connect en vez de la guía del atajo del iPhone */
+.only-android,
+html[data-native="android"] .not-android {
+  display: none;
+}
+html[data-native="android"] .only-android {
+  display: block;
+}
+
 /* Aviso «Gira el móvil»: solo en un móvil puesto en horizontal (poco alto y bastante ancho; en vertical con el
    teclado abierto puede quedar más ancho que alto, pero nunca tan ancho) */
 .rotate-hint {

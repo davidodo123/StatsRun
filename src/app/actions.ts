@@ -14,6 +14,7 @@ import { areFriends, getFriends } from "@/lib/auth";import { findRace } from "@/
 import { adaptWithAI, coachConfig } from "@/lib/coach";
 import { parseTime } from "@/lib/format";
 import { createHealthToken, revokeHealthToken } from "@/lib/healthToken";
+import { mergeHealth, parseHealthPayload, todayMadrid } from "@/lib/health";
 import { applyStrengthRoutines, routinesForPlan } from "@/lib/strength/routinePlan";
 import { addDays, diffDays, todayLocal } from "@/lib/dates";
 import type { Db, Feel, Focus, Goal, Level, Profile, Sex, TuneUpRace } from "@/lib/types";
@@ -379,6 +380,20 @@ export async function newHealthKey(): Promise<HealthKeyState> {
   const token = await createHealthToken(await requireUserId());
   refresh();
   return { ok: true, token };
+}
+
+/** Datos de Health Connect que manda la app de Android (con la sesión: no hace falta la clave del atajo). */
+export async function saveHealthFromApp(body: unknown): Promise<FormState> {
+  if (JSON.stringify(body ?? null).length > 200_000) return { error: "Demasiados datos." };
+  const today = todayMadrid();
+  const parsed = parseHealthPayload(body, today);
+  if ("error" in parsed) return { error: parsed.error };
+  await updateDb((db) => {
+    db.health = mergeHealth(db.health ?? [], parsed.days, today);
+    db.healthConnectAt = new Date().toISOString();
+  });
+  refresh();
+  return { ok: true, message: `${parsed.days.length} días guardados.` };
 }
 
 export async function revokeHealthKey(): Promise<void> {
