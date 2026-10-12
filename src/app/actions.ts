@@ -12,7 +12,7 @@ import { computeStats } from "@/lib/engine/stats";
 import { profileAverages } from "@/lib/engine/profile";
 import { areFriends, getFriends } from "@/lib/auth";import { findRace } from "@/lib/races";
 import { adaptWithAI, coachConfig } from "@/lib/coach";
-import { parseTime } from "@/lib/format";
+import { parsePace, parseTime } from "@/lib/format";
 import { createHealthToken, revokeHealthToken } from "@/lib/healthToken";
 import { mergeHealth, parseHealthPayload, todayMadrid } from "@/lib/health";
 import { applyStrengthRoutines, routinesForPlan } from "@/lib/strength/routinePlan";
@@ -474,7 +474,7 @@ export async function saveActivity(_: FormState, fd: FormData): Promise<FormStat
   const distanceKm = num(fd, "distanceKm") ?? 0;
   if (distanceKm < 0 || distanceKm > 400) return { error: "Distancia no válida." };
   // tiempo en movimiento; si no se indica, a partir del ritmo medio y la distancia
-  const paceSec = parseTime(String(fd.get("pace") ?? ""));
+  const paceSec = parsePace(String(fd.get("pace") ?? ""));
   const typedSec = parseTime(String(fd.get("duration") ?? ""));
   const durationSec = typedSec ?? (paceSec && distanceKm > 0 ? Math.round(paceSec * distanceKm) : undefined);
   if (!durationSec || durationSec < 60 || durationSec > 24 * 3600)

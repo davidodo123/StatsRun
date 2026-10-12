@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useActionState, useState } from "react";
 import { saveActivity, type FormState } from "@/app/actions";
 import type { Activity, Feel, PlannedSession } from "@/lib/types";
-import { fmtDuration, fmtPace, parseTime } from "@/lib/format";
+import { fmtDuration, fmtPace, parsePace, parseTime } from "@/lib/format";
 import { keepForm } from "./keepForm";
 import { PhotoField } from "./ActivityPhoto";
 
@@ -73,7 +73,7 @@ export function ActivityForm({
 
   const km = Number(dist.replace(",", "."));
   const sec = parseTime(dur);
-  const typedPace = parseTime(paceIn);
+  const typedPace = parsePace(paceIn);
   const hasDistance = sport !== "strength";
   const hasSteps = sport === "run" || sport === "walk";
   // con dos de los tres datos (distancia, tiempo, ritmo) se calcula el tercero; el tiempo manda si están los tres
@@ -145,7 +145,8 @@ export function ActivityForm({
             <input
               className="input"
               name="pace"
-              inputMode="numeric"
+              // con coma en el teclado del iPhone: «5,30» vale como 5:30
+              inputMode="decimal"
               value={paceIn}
               onChange={(e) => setPaceIn(e.target.value)}
               placeholder={km > 0 && sec ? fmtPace(sec / km) : "m:ss"}
@@ -158,7 +159,7 @@ export function ActivityForm({
         <p className="text-sm text-ink-2 tabular">
           {pace && (km > 0 || typedPace) ? (
             <>
-              Ritmo medio: <strong className="text-ink">{fmtPace(pace)} /km</strong> · {(3600 / pace).toFixed(1)} km/h
+              Ritmo medio: <strong className="text-ink">{fmtPace(pace)} /km</strong> · {(3600 / pace).toLocaleString("es-ES", { maximumFractionDigits: 1 })} km/h
               {derivedSec && <> · Tiempo: <strong className="text-ink">{fmtDuration(derivedSec)}</strong></>}
             </>
           ) : (

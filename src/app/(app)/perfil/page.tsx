@@ -126,7 +126,7 @@ function ProfileHeader({ db, stats, tab, picture, children }: { db: Db; stats: S
         ["Horas", fmtNum(lifts.reduce((t, a) => t + a.movingSec, 0) / 3600)],
       ]
     : [
-        ["Km totales", fmtNum(T.allKm)],
+        ["Km totales", fmtKm(T.allKm, 2)],
         ["Carreras", fmtNum(T.allRuns)],
         ["Horas", fmtNum(T.allHours)],
       ];

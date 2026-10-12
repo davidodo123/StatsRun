@@ -39,3 +39,14 @@ export function parseTime(input: string): number | undefined {
   if (nums.length === 3) return nums[0] * 3600 + nums[1] * 60 + nums[2];
   return undefined;
 }
+
+/**
+ * Ritmo por km escrito como sale en el móvil: «5:30», «5,30», «5.30» o «5'30» son 5:30 /km
+ * (en el teclado numérico del iPhone no hay «:»). Con una sola cifra tras la coma son minutos con decimales: «5,5» = 5:30.
+ */
+export function parsePace(input: string): number | undefined {
+  const s = input.trim().replace(/[´’′"″]+$/, "").replace(/[´’′]/g, "'");
+  const dec = /^(\d+)[.,](\d)$/.exec(s);
+  if (dec) return Number(dec[1]) * 60 + Number(dec[2]) * 6;
+  return parseTime(s.replace(/[.,']/g, ":"));
+}

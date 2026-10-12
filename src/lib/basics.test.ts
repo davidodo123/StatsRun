@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { addDays, diffDays, mondayOf, monthLabel, shortDate, weekday } from "./dates";
-import { fmtDuration, fmtKm, fmtNum, fmtPace, fmtPaceRange, parseTime } from "./format";
+import { fmtDuration, fmtKm, fmtNum, fmtPace, fmtPaceRange, parsePace, parseTime } from "./format";
 import { bmi, bmiLabel, flatEquivalentKm, heatFactor, hrMaxOf, hrZones, raceTimeFromVdot, riegel, vdotFromRace, vo2maxLabel, zoneOfHr } from "./engine/physiology";
 import { acwrStatus, tsbStatus } from "./engine/load";
 import { isSameActivity, mergeActivities, shortHash, sportFromName } from "./importers/common";
@@ -64,6 +64,12 @@ describe("formatos", () => {
   it("lee tiempos escritos a mano y rechaza lo que no lo es", () => {
     expect(parseTime("45")).toBe(2700);
     expect(parseTime("45:30")).toBe(2730);
+    // ritmo escrito con el teclado del iPhone (sin «:»)
+    expect([parsePace("5:30"), parsePace("5,30"), parsePace("5.30"), parsePace("5'30"), parsePace("5'30\"")]).toEqual([330, 330, 330, 330, 330]);
+    expect(parsePace("5,5")).toBe(330); // minutos con decimales
+    expect(parsePace("6")).toBe(360);
+    expect(parsePace("5,75")).toBeUndefined(); // 75 segundos no
+    expect(parsePace("abc")).toBeUndefined();
     expect(parseTime("1:23:45")).toBe(5025);
     expect(parseTime(" 3:30:00 ")).toBe(12600);
     expect(parseTime("")).toBeUndefined();
