@@ -671,3 +671,11 @@ David preguntó si se puede «entrenar» una IA para la app. Opciones: (1) instr
 - Perfil → Salud en Android: tarjeta «Health Connect» (conectar, sincronizar ahora, permisos) y se oculta la guía del atajo del iPhone (`html[data-native=android]`).
 - Política de privacidad: Health Connect, fotos, la IA recibe un resumen de recuperación, copias en GitHub. La pantalla de permisos enlaza a `/privacidad`.
 - Copias mensuales: ahora se borran a los 12 meses (antes, nunca).
+
+## Icono y versión para Google Play
+*2026-10-12*
+
+- Iconos de Android desde el mismo logo que la web (`scripts/generate-icons.mjs`): icono adaptable (logo blanco en la zona segura sobre naranja #EB6834), icono redondo y cuadrado para Android antiguo, y pantalla de carga con el logo sobre el fondo oscuro #1a1a19.
+- Versión para la tienda: `cd android && gradlew bundleRelease` → `app/build/outputs/bundle/release/app-release.aab`, firmado con la **clave de subida** (`~/.android-keys/runinout-upload.jks`, alias `upload`). Contraseña al azar en `~/.android-keys/keystore.properties`, copiada a `android/keystore.properties` (en `.gitignore`, nunca en git).
+- **Hay que guardar la carpeta `~/.android-keys` en un sitio seguro** (gestor de contraseñas o copia cifrada). Con «Firma de apps de Google Play», si se pierde la clave de subida se puede pedir a Google que la cambie, pero tarda días.
+- Cada versión nueva que se suba a Play tiene que subir `versionCode` en `android/app/build.gradle` (1, 2, 3…).

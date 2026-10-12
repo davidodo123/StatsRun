@@ -149,8 +149,8 @@ Base: [[Estudio entrenamiento#6. La Pirámide de Entrenamiento (Helms, Valdez, M
 **Android: Google Play (25 $ una vez)**
 - [x] 6.4 Android Studio en el PC de David; Capacitor 8 con la app actual dentro (`app.runinout`, carga run-in-out.vercel.app); APK de prueba funcionando en el emulador — *hecho 2026-10-12*
 - [x] 6.5 Entrar con Google desde la app (pestaña del sistema y vuelta a la app con código de un solo uso) — *hecho y probado en el emulador 2026-10-12*
-- [ ] 6.6 Health Connect: pasos, calorías, sueño y pulso al abrir la app (sin atajos)
-- [ ] 6.7 Prueba cerrada en Play (12 personas, 14 días, obligatorio en cuentas nuevas) y publicación
+- [x] 6.6 Health Connect: pasos, calorías, pulso en reposo, VFC y sueño al abrir la app (sin atajos) — *hecho 2026-10-12: permisos y lectura probados en el emulador (sin datos); falta probarlo con datos reales en un Android*
+- [ ] 6.7 Prueba cerrada en Play (12 personas, 14 días, obligatorio en cuentas nuevas) y publicación — *en pausa: David prueba la app unos días antes (cuenta personal de Play Console, con DNI)*
 
 ## 🧠 IA que aprende de ti (opción 2: sin entrenar el modelo) → [[Decisiones#IA que aprende de ti]]
 - [x] Bloque 1 · Valoraciones (pulgar arriba/abajo con motivo) y memoria de preferencias que leen las tres IA; el chat apunta solo lo que le cuentas — *hecho 2026-10-10, pendiente de comprobar*
