@@ -71,7 +71,16 @@ describe("formatos", () => {
     expect(parsePace("5,75")).toBeUndefined(); // 75 segundos no
     expect(parsePace("abc")).toBeUndefined();
     // los «:» se ponen solos al escribir con el teclado numérico
-    expect(["5", "53", "530", "1005", "4530", "13000", "5:3", "5,30"].map(maskTime)).toEqual(["5", "53", "5:30", "10:05", "45:30", "1:30:00", "5:3", "5,30"]);
+    expect(["5", "53", "530", "1005", "4530", "13000", "5,30"].map(maskTime)).toEqual(["5", "53", "5:30", "10:05", "45:30", "1:30:00", "5,30"]);
+    // tecleando cifra a cifra: lo ya formateado se rehace (2 → 23 → 2:31 → 23:16), y al borrar también
+    let typed = "";
+    for (const c of "2316") typed = maskTime(typed + c);
+    expect(typed).toBe("23:16");
+    typed = "";
+    for (const c of "13000") typed = maskTime(typed + c);
+    expect(typed).toBe("1:30:00");
+    expect(maskTime("23:1")).toBe("2:31"); // borrando
+    expect(maskTime("1:05:00")).toBe("1:05:00");
     expect(parsePace(maskTime("530"))).toBe(330);
     expect(parseTime(maskTime("13000"))).toBe(5400);
     expect(parseTime("1:23:45")).toBe(5025);
