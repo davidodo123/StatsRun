@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { raceTimeFromVdot, trainingPaces, vdotFromRace, riegel, hrZones } from "./physiology";
 import { fitnessSeries, acwr } from "./load";
-import { applyBlockedDates, applyTuneUpRaces, availableDaysOf, generatePlan, isHardSession, matchPlan, recoveryDaysAfter } from "./planner";
+import { applyBlockedDates, applyTuneUpRaces, availableDaysOf, generatePlan, isHardSession, matchPlan, planChanges, recoveryDaysAfter } from "./planner";
 import { computeStats } from "./stats";
 import { generateDemoActivities } from "../demo";
 import type { Profile } from "../types";
@@ -71,6 +71,20 @@ describe("planificador", () => {
       const runDays = new Set(w.sessions.filter((s) => s.type !== "strength").map((s) => s.date));
       expect(runDays.size).toBeLessThanOrEqual(profile.daysPerWeek);
     }
+  });
+
+  it("planChanges cuenta los días cambiados desde hoy", () => {
+    const plan = generatePlan({ profile, goal, currentVdot: 45, currentWeeklyKm: 35, longestRecentKm: 16, today });
+    expect(planChanges(plan, structuredClone(plan), today).changedDays).toBe(0);
+    const edited = structuredClone(plan);
+    const future = edited.weeks.flatMap((w) => w.sessions).filter((s) => s.date > today && s.type !== "strength");
+    future[0].distanceKm += 2;
+    future[1].title = "Otra cosa";
+    const r = planChanges(plan, edited, today);
+    expect(r.changedDays).toBe(new Set([future[0].date, future[1].date]).size);
+    expect(r.kmAfter - r.kmBefore).toBeCloseTo(2);
+    // sin plan previo, cuentan todos los días que quedan
+    expect(planChanges(undefined, plan, today).changedDays).toBeGreaterThan(0);
   });
 
   it("respeta la regla del 10 % y el taper reduce volumen", () => {

@@ -19,7 +19,8 @@ import { trainingPaces } from "@/lib/engine/physiology";
 import { fmtDuration, fmtPaceRange } from "@/lib/format";
 import { WEEKDAYS, addDays, diffDays, mondayOf, shortDate, weekday } from "@/lib/dates";
 import type { Phase } from "@/lib/types";
-import { clearPlan, clearUnavailable, regeneratePlan } from "@/app/actions";
+import { clearPlan, clearUnavailable } from "@/app/actions";
+import { AdaptPlanButton } from "@/components/AdaptPlanButton";
 import { UndoSkip } from "@/components/UndoSkip";
 import { AiRating } from "@/components/AiRating";
 import { feedbackFor } from "@/lib/aiMemory";
@@ -77,12 +78,8 @@ async function Content({ searchParams }: { searchParams: PageProps<"/plan/actual
         title={planTitle(plan)}
         subtitle={`${shortDate(plan.goal.date)} · ${plan.weeks.length} semanas · creado el ${shortDate(plan.createdAt)}`}
         action={
-          <div className="flex gap-2">
-            <form action={regeneratePlan}>
-              <button className="btn" title="Recalcula con tus últimos datos de Strava y tu perfil">
-                ↻ Adaptar con mis datos
-              </button>
-            </form>
+          <div className="flex max-w-md flex-wrap gap-2">
+            <AdaptPlanButton />
             <form action={clearPlan}>
               <button className="btn btn-ghost" title="Pasa a «Planes anteriores»">
                 Terminar plan

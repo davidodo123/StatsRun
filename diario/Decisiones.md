@@ -679,3 +679,11 @@ David preguntó si se puede «entrenar» una IA para la app. Opciones: (1) instr
 - Versión para la tienda: `cd android && gradlew bundleRelease` → `app/build/outputs/bundle/release/app-release.aab`, firmado con la **clave de subida** (`~/.android-keys/runinout-upload.jks`, alias `upload`). Contraseña al azar en `~/.android-keys/keystore.properties`, copiada a `android/keystore.properties` (en `.gitignore`, nunca en git).
 - **Hay que guardar la carpeta `~/.android-keys` en un sitio seguro** (gestor de contraseñas o copia cifrada). Con «Firma de apps de Google Play», si se pierde la clave de subida se puede pedir a Google que la cambie, pero tarda días.
 - Cada versión nueva que se suba a Play tiene que subir `versionCode` en `android/app/build.gradle` (1, 2, 3…).
+
+## Respuesta de «Adaptar con mis datos»
+*2026-10-18*
+
+- El botón sí funcionaba: rehace el plan entero con el VDOT y los km de media de ahora, y la IA lo reajusta después en segundo plano. Pero no daba ninguna señal y, si los datos no habían cambiado, el plan salía igual (o perdía un momento los ajustes de la IA hasta que esta volvía a ponerlos).
+- Ahora el botón (`AdaptPlanButton`) pone «Adaptando…» y debajo un mensaje: «Plan recalculado: VDOT objetivo 30,4 → 30,0 · 119 → 123 km hasta la carrera · 19 días cambiados» o «Tus datos no han cambiado: el plan sale igual», más «La IA lo está ajustando: en un minuto verás sus cambios» si está activada.
+- Los cambios se cuentan desde hoy (`planChanges`), por días con sesiones distintas.
+- Sin perfil o sin carrera objetivo, avisa en vez de no hacer nada.

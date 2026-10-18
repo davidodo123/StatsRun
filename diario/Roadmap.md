@@ -131,6 +131,7 @@ Base: [[Estudio entrenamiento#6. La Pirámide de Entrenamiento (Helms, Valdez, M
 - [x] **Foto de perfil** (subir, cambiar o quitar; sale en Amigos) — *hecho 2026-10-11, pendiente de comprobar*
 - [x] **Foto en los entrenos** (al registrar o desde la ficha; en Amigos sale como publicación con la foto grande) — *hecho 2026-10-11, pendiente de comprobar*
 - [x] **Semana del 12 sin lunes a jueves**: eran días marcados como «no puedo»; quitar el día ahora devuelve las sesiones, se ven en su semana y «No puedo ese día» pide confirmación — *hecho 2026-10-11*
+- [x] **«↻ Adaptar con mis datos» no parecía hacer nada**: sí recalculaba, pero sin aviso. Ahora pone «Adaptando…» y dice qué ha cambiado (VDOT, km, días) o que sale igual, y que la IA lo está ajustando — *hecho 2026-10-18, pendiente de comprobar* → [[Decisiones#Respuesta de «Adaptar con mis datos»]]
 
 - [x] **Sección Sueño** en «Más»: a qué hora despertarse por ciclos de 90 min, o a qué hora acostarse — *hecho 2026-10-12, pendiente de comprobar*
 

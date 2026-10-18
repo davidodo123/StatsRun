@@ -1039,6 +1039,22 @@ function placeStrength(run: PlannedSession[], kinds: StrengthKind[], nextKeys: s
   return out;
 }
 
+/** Qué cambia de un plan a otro desde hoy: días con sesiones distintas y km que quedan. */
+export function planChanges(before: Plan | undefined, after: Plan, today: string): { changedDays: number; kmBefore: number; kmAfter: number } {
+  const byDay = (plan: Plan | undefined) => {
+    const days = new Map<string, string[]>();
+    for (const s of plan?.weeks.flatMap((w) => w.sessions) ?? [])
+      if (s.date >= today) days.set(s.date, [...(days.get(s.date) ?? []), `${s.type}|${s.title}|${s.distanceKm}|${s.durationMin}`]);
+    return days;
+  };
+  const a = byDay(before);
+  const b = byDay(after);
+  const sig = (d: Map<string, string[]>, day: string) => (d.get(day) ?? []).sort().join(";");
+  const changedDays = [...new Set([...a.keys(), ...b.keys()])].filter((d) => sig(a, d) !== sig(b, d)).length;
+  const km = (d: Map<string, string[]>) => [...d.values()].flat().reduce((s, k) => s + Number(k.split("|")[2]), 0);
+  return { changedDays, kmBefore: km(a), kmAfter: km(b) };
+}
+
 // ---------------- Cumplimiento ----------------
 
 export interface SessionMatch {

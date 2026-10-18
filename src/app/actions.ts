@@ -7,17 +7,17 @@ import { updateDb, readDbNow as getDb } from "@/lib/db";
 import { requireUserId } from "@/lib/session";
 import { deauthorize, syncActivities } from "@/lib/strava";
 import { generateDemoActivities } from "@/lib/demo";
-import { applyBlockedDates, applyTuneUpRaces, availableDaysOf, generateSeason } from "@/lib/engine/planner";
+import { applyBlockedDates, applyTuneUpRaces, availableDaysOf, generateSeason, planChanges } from "@/lib/engine/planner";
 import { computeStats } from "@/lib/engine/stats";
 import { profileAverages } from "@/lib/engine/profile";
 import { areFriends, getFriends } from "@/lib/auth";import { findRace } from "@/lib/races";
 import { adaptWithAI, coachConfig } from "@/lib/coach";
-import { parsePace, parseTime } from "@/lib/format";
+import { fmtNum, parsePace, parseTime } from "@/lib/format";
 import { createHealthToken, revokeHealthToken } from "@/lib/healthToken";
 import { mergeHealth, parseHealthPayload, todayMadrid } from "@/lib/health";
 import { applyStrengthRoutines, routinesForPlan } from "@/lib/strength/routinePlan";
 import { addDays, diffDays, todayLocal } from "@/lib/dates";
-import type { Db, Feel, Focus, Goal, Level, Profile, Sex, TuneUpRace } from "@/lib/types";
+import type { Db, Feel, Focus, Goal, Level, Plan, Profile, Sex, TuneUpRace } from "@/lib/types";
 import { downloadCmCourse, findCmRace } from "@/lib/cruzandolametaStore";
 import { parseCourseFile } from "@/lib/importers/course";
 import { deleteImage, jpegFromDataUrl, photoKey, putImage } from "@/lib/photoStore";
@@ -214,7 +214,7 @@ export async function deletePastPlan(fd: FormData): Promise<void> {
   redirect("/plan");
 }
 
-async function rebuildPlan(db: Db) {
+async function rebuildPlan(db: Db): Promise<Plan | undefined> {
   if (!db.profile || !db.goal) return;
   const today = todayLocal();
   const stats = computeStats(db.activities, db.profile, today);
@@ -245,13 +245,29 @@ async function rebuildPlan(db: Db) {
   await updateDb((d) => {
     d.plan = plan;
   });
+  return plan;
 }
 
-export async function regeneratePlan(): Promise<void> {
+export async function regeneratePlan(): Promise<FormState> {
   const db = await getDb();
-  await rebuildPlan(db);
+  if (!db.profile) return { error: "Completa tu perfil para poder adaptar el plan." };
+  if (!db.goal) return { error: "Elige tu carrera objetivo para poder adaptar el plan." };
+  const before = db.plan;
+  const plan = await rebuildPlan(db);
+  if (!plan) return { error: "No se ha podido recalcular el plan." };
   await scheduleAiAdapt();
   refresh();
+  const { changedDays, kmBefore, kmAfter } = planChanges(before, plan, todayLocal());
+  const parts: string[] = [];
+  const vdotBefore = before && fmtNum(before.targetVdot, 1);
+  if (vdotBefore && vdotBefore !== fmtNum(plan.targetVdot, 1)) parts.push(`VDOT objetivo ${vdotBefore} → ${fmtNum(plan.targetVdot, 1)}`);
+  if (Math.round(kmBefore) !== Math.round(kmAfter)) parts.push(`${Math.round(kmBefore)} → ${Math.round(kmAfter)} km hasta la carrera`);
+  if (changedDays) parts.push(`${changedDays} ${changedDays === 1 ? "día cambiado" : "días cambiados"}`);
+  const ai = coachConfig().configured ? " La IA lo está ajustando: en un minuto verás sus cambios." : "";
+  return {
+    ok: true,
+    message: parts.length ? `Plan recalculado: ${parts.join(" · ")}.${ai}` : `Tus datos no han cambiado: el plan sale igual.${ai}`,
+  };
 }
 
 export async function adaptPlanWithAI(): Promise<FormState> {
