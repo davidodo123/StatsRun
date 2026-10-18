@@ -131,6 +131,7 @@ REGLAS:
 - Puedes cambiar la fecha de una sesión ("date"), pero SOLO a una de "fechasLibres". Nunca dos sesiones de carrera el mismo día ni dos de fuerza el mismo día (fuerza + carrera el mismo día sí).
 - Solo puedes quitar una sesión ({"id","remove":true}) si el diagnóstico es "descargar" o "recuperar". Con "progresar" o "mantener" NO quites ninguna: el atleta quiere entrenar todos sus días; si hay que bajar carga, acorta la sesión (menos km o minutos) o hazla más suave.
 - Las SENSACIONES ("sensacion", "comoSeSintio") comparadas con "sesionPlanificada" explican el diagnóstico: cítalas en "summary" (ej.: "Como el jueves las series se te hicieron fáciles…").
+- "desacoplePct" (desacople aeróbico de las tiradas largas): < 5 % buena base aeróbica; 5-10 % mejorable; > 10 % la base aún no aguanta esa duración, así que no alargues la tirada larga y mete más rodaje suave. Con desnivel o calor sube solo, sin ser falta de base.
 - Usa los ritmos proporcionados (min:seg /km) en los pasos de carrera.
 - Escribe en español, pasos breves y accionables.
 ${PREFERENCES_RULE}
@@ -252,7 +253,7 @@ function buildContext(db: Db, today: string) {
       .map((a) => ({
         fecha: a.date, deporte: a.sport, nombre: a.name, km: +(a.distanceM / 1000).toFixed(2), min: Math.round(a.movingSec / 60),
         ritmo: a.sport === "run" && a.distanceM > 0 ? pace(a.movingSec / (a.distanceM / 1000)) : undefined,
-        fcMedia: a.avgHr, rpe: a.rpe, sensacion: a.feel, comoSeSintio: a.feelings, notas: a.notes,
+        fcMedia: a.avgHr, desacoplePct: a.decoupling ?? undefined, rpe: a.rpe, sensacion: a.feel, comoSeSintio: a.feelings, notas: a.notes,
         sesionPlanificada: planned(a),
         fuerza: a.workout && strengthSummary(db, a.workout),
       })),

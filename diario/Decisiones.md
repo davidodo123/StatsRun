@@ -687,3 +687,12 @@ David preguntó si se puede «entrenar» una IA para la app. Opciones: (1) instr
 - Ahora el botón (`AdaptPlanButton`) pone «Adaptando…» y debajo un mensaje: «Plan recalculado: VDOT objetivo 30,4 → 30,0 · 119 → 123 km hasta la carrera · 19 días cambiados» o «Tus datos no han cambiado: el plan sale igual», más «La IA lo está ajustando: en un minuto verás sus cambios» si está activada.
 - Los cambios se cuentan desde hoy (`planChanges`), por días con sesiones distintas.
 - Sin perfil o sin carrera objetivo, avisa en vez de no hacer nada.
+
+## Desacople aeróbico
+*2026-10-18*
+
+- Pa:FC (Friel / TrainingPeaks): eficiencia (velocidad ÷ pulso) de la 1.ª mitad frente a la 2.ª de un rodaje largo. Menos de un 5 % = buena base aeróbica; 5-10 % mejorable; más de un 10 %, la base aún no aguanta esa duración → [[Estudio entrenamiento#9.11 Otras herramientas evaluadas]]
+- Solo en carreras de Strava con pulso y **1 h o más** en movimiento. Se quitan los 10 primeros minutos (calentamiento), las paradas y los tramos andando (menos de 1,5 m/s).
+- Al sincronizar Strava se piden los datos por segundo (streams) de **5 tiradas como mucho** cada vez, las más recientes primero, porque Strava deja unas 100 lecturas cada 15 min. Las antiguas se van rellenando en las siguientes sincronizaciones. Si una no tiene pulso por segundo, se apunta para no volver a pedirla.
+- Se ve en la ficha de la sesión («Desacople aeróbico 6,3 % · Base aeróbica mejorable»). La IA lo recibe en cada actividad y, si es alto, no alarga la tirada larga y mete más rodaje suave. Con desnivel o calor sube solo, sin ser falta de base.
+- Las carreras registradas a mano o desde archivo no lo tienen (no traen el pulso por segundo).

@@ -117,6 +117,7 @@ export interface Activity {
   notes?: string;
   sessionId?: string; // sesión del plan a la que corresponde
   route?: string; // recorrido GPS como encoded polyline (lib/route.ts)
+  decoupling?: number | null; // desacople aeróbico en % (tiradas de 1 h o más con pulso, de Strava); null = mirado, sin datos
   with?: string[]; // ids de los amigos con los que se hizo la sesión
   sharedFrom?: string; // "<idUsuario>:<idActividad>" si se copió de la sesión de un amigo
   photoAt?: string; // cuándo se subió su foto (va aparte, en photoKey)

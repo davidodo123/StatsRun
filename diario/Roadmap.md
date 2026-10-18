@@ -61,7 +61,7 @@ Detalle en [[2026-10-09]].
 ### IA / ciencia (salido del estudio)
 - [x] Carga por sRPE (RPE × minutos) cuando no hay FC — *ya existía en `load.ts`*
 - [x] El planificador aplica también el tope por sesión de Frandsen: la tirada larga sube como mucho un 10 % (mín. 0,5 km)
-- [ ] Desacople aeróbico (Pa:FC) en tiradas largas — necesita los streams de Strava
+- [x] Desacople aeróbico (Pa:FC) en tiradas largas, con los streams de Strava — *hecho 2026-10-18, pendiente de comprobar con una tirada real* → [[Decisiones#Desacople aeróbico]]
 - [x] VFC (HRV) diaria si se conecta con la app de Salud (con el atajo, 2026-10-11)
 
 ### Experiencias de la app — *hecho 2026-10-09, comprobado 2026-10-10* → [[Decisiones#Etiquetas y repetición del recorrido]]

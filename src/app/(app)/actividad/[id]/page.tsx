@@ -10,6 +10,7 @@ import { SPORT_LABEL, TagChips, withText } from "@/components/ActivityItem";
 import { RouteReplay } from "@/components/RouteReplay";
 import { tagsForDb } from "@/lib/engine/tags";
 import { estimateVdot } from "@/lib/engine/stats";
+import { decouplingLabel } from "@/lib/engine/decoupling";
 import { areFriends, getFriends, getUser } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { publicActivity } from "@/lib/feed";
@@ -103,6 +104,15 @@ async function Content({ params, searchParams }: { params: PageProps<"/actividad
             {pace ? <Stat label="Ritmo medio" value={fmtPace(pace)} unit="/km" /> : speed ? <Stat label="Velocidad media" value={fmtKm(speed)} unit="km/h" /> : null}
             {a.elevationGainM > 0 && <Stat label="Desnivel +" value={fmtNum(a.elevationGainM)} unit="m" sub={a.maxAltitudeM ? `Altitud máx. ${fmtNum(a.maxAltitudeM)} m` : undefined} />}
             {a.avgHr && <Stat label="FC media" value={Math.round(a.avgHr)} unit="ppm" sub={a.maxHr ? `Máx. ${Math.round(a.maxHr)}` : undefined} />}
+            {typeof a.decoupling === "number" && (
+              <Stat
+                label="Desacople aeróbico"
+                value={fmtNum(a.decoupling, 1)}
+                unit="%"
+                status={decouplingLabel(a.decoupling)}
+                hint="Cuánto sube el pulso (o cae el ritmo) de la 1.ª a la 2.ª mitad, sin los 10 primeros minutos. Menos de un 5 % es buena base aeróbica; con desnivel o calor sube solo."
+              />
+            )}
             {a.avgCadence && <Stat label="Cadencia" value={Math.round(a.avgCadence)} unit="ppm" />}
             {a.steps && <Stat label="Pasos" value={fmtNum(a.steps)} />}
             {a.workout && <Stat label="Volumen" value={fmtNum(workoutVolume(a.workout))} unit="kg" sub={`${workoutSets(a.workout)} series · ${workoutReps(a.workout)} reps`} />}

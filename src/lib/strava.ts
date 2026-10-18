@@ -3,6 +3,7 @@ import "server-only";
 // Docs: https://developers.strava.com/docs/reference/
 import type { Activity, SportKind, StravaAuth } from "./types";
 import { updateDb } from "./db";
+import { aerobicDecoupling, DECOUPLING_MIN_MIN } from "./engine/decoupling";
 
 const API = "https://www.strava.com/api/v3";
 const OAUTH = "https://www.strava.com/oauth";
@@ -189,7 +190,42 @@ export async function syncActivities(auth: StravaAuth, existing: Activity[], ini
     db.lastSync = new Date().toISOString();
     if (!rateLimited) db.routesSynced = true;
   });
+  // las ya guardadas van después: conservan el desacople ya calculado
+  if (!rateLimited) await fillDecoupling(token, [...fetched, ...existing]);
   return { imported, pages: page, rateLimited };
+}
+
+// cada tirada cuesta una lectura de Strava: unas pocas por sincronización, las más recientes primero
+const DECOUPLING_PER_SYNC = 5;
+
+/** Calcula el desacople aeróbico de las tiradas de 1 h o más con pulso que aún no lo tienen. */
+async function fillDecoupling(token: string, acts: Activity[]): Promise<void> {
+  const pending = [...new Map(acts.map((a) => [a.id, a])).values()]
+    .filter((a) => a.source === "strava" && a.sport === "run" && a.avgHr && a.movingSec >= DECOUPLING_MIN_MIN * 60 && a.decoupling === undefined)
+    .sort((x, y) => y.startLocal.localeCompare(x.startLocal))
+    .slice(0, DECOUPLING_PER_SYNC);
+  const results = new Map<string, number | null>();
+  for (const a of pending) {
+    const res = await fetch(`${API}/activities/${a.id.replace("strava-", "")}/streams?keys=time,heartrate,velocity_smooth,moving&key_by_type=true`, {
+      headers: { Authorization: `Bearer ${token}` },
+      cache: "no-store",
+    });
+    if (res.status === 429) break;
+    if (!res.ok) {
+      // borrada o sin permiso: no se vuelve a pedir
+      if (res.status === 404 || res.status === 403) results.set(a.id, null);
+      continue;
+    }
+    const s = (await res.json()) as Record<string, { data: unknown[] } | undefined>;
+    const time = s.time?.data as number[] | undefined;
+    const heartrate = s.heartrate?.data as number[] | undefined;
+    const velocity = s.velocity_smooth?.data as number[] | undefined;
+    results.set(a.id, time && heartrate && velocity ? (aerobicDecoupling({ time, heartrate, velocity, moving: s.moving?.data as boolean[] | undefined }) ?? null) : null);
+  }
+  if (!results.size) return;
+  await updateDb((db) => {
+    for (const a of db.activities) if (results.has(a.id)) a.decoupling = results.get(a.id);
+  });
 }
 
 export async function deauthorize(auth: StravaAuth): Promise<void> {
