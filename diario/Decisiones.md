@@ -713,3 +713,12 @@ David preguntó si se puede «entrenar» una IA para la app. Opciones: (1) instr
 - En el iPhone los pitidos solo suenan tras tocar la pantalla: se activan al pulsar «Empezar». Si la app se cierra a mitad, al volver sigue donde iba (el tiempo va por reloj, no se pierde), y hay que tocar «Activar los pitidos».
 - Se guarda como entreno de fuerza (`workout.emom`: intervalo, rondas y completadas): cada ronda completada es una serie de su ejercicio, así cuenta en volumen, series por músculo, récords, carga, feed y logros. Nombre por defecto: «EMOM 12 min», «E2MOM 20 min»…
 - La IA lo ve en el resumen del entreno («11/12 rondas cada 60 s»).
+
+## Compartir el entreno
+*2026-10-18*
+
+- **Cuerpo humano nuevo** (`lib/strength/bodyShapes.ts`): figura de delante y de detrás en SVG, con una forma por cada uno de los 17 músculos de la app (pectorales, deltoides, abdominales en bloques y oblicuos, dorsales, trapecio, glúteos…). Se dibuja la mitad izquierda y la derecha es su reflejo. Lo usan el mapa de la portada de Fuerza y la imagen para compartir. David lo dio por bueno «de momento».
+- **«Compartir»** en la ficha de cada entreno propio: genera una imagen de historia (1080 × 1920, `/api/compartir/[id]`, con `next/og`) y abre el menú de compartir del móvil (Instagram, WhatsApp…). Si el navegador no puede compartir archivos (ordenador), la descarga.
+- Fuerza: el cuerpo con los músculos del entreno en naranja (más intenso cuantas más series; los secundarios cuentan la mitad), los ejercicios (series × repeticiones · mejor peso), tiempo, series, repeticiones y volumen; en un EMOM, también «EMOM 12 min · 11/12 rondas».
+- Running: la línea del recorrido sobre fondo oscuro, sin mapa debajo (salida en blanco y llegada en naranja), distancia, ritmo, tiempo y desnivel (o pulso medio). Sin recorrido, la distancia en grande.
+- La imagen solo la puede sacar el dueño del entreno (con su sesión); no lleva sensaciones ni notas.

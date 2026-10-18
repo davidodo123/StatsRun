@@ -1,0 +1,67 @@
+import { ImageResponse } from "next/og";
+import { getUserId } from "@/lib/session";
+import { getDb } from "@/lib/db";
+import { ACCENT, shareCard } from "@/lib/shareCard";
+import { WEEKDAYS, weekday } from "@/lib/dates";
+
+const MONTHS = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
+
+// Imagen de historia (1080 × 1920) de un entreno propio, para compartir en Instagram o WhatsApp.
+export async function GET(_: Request, { params }: RouteContext<"/api/compartir/[id]">) {
+  const uid = await getUserId();
+  if (!uid) return Response.json({ error: "Inicia sesión" }, { status: 401 });
+  const { id } = await params;
+  const db = await getDb(uid);
+  const a = db.activities.find((x) => x.id === decodeURIComponent(id));
+  if (!a) return Response.json({ error: "No existe" }, { status: 404 });
+  const c = shareCard(db, a);
+  const [y, m, d] = c.date.split("-").map(Number);
+  const date = `${WEEKDAYS[weekday(c.date)]} ${d} de ${MONTHS[m - 1]} de ${y}`;
+  const strength = c.kind === "fuerza";
+
+  return new ImageResponse(
+    (
+      <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", background: "#121211", color: "#f4f3ef", padding: "110px 80px 90px" }}>
+        <div style={{ display: "flex", alignItems: "center", fontSize: 34, color: "#a9a7a0", letterSpacing: 2 }}>
+          <svg width="56" height="56" viewBox="0 0 64 64" style={{ marginRight: 18 }}>
+            <rect width="64" height="64" rx="14" fill={ACCENT} />
+            <path d="M14 46l12-20 8 12 6-8 10 16z" fill="#fff" />
+          </svg>
+          RUN-IN-OUT
+        </div>
+        <div style={{ marginTop: 70, fontSize: 36, color: "#a9a7a0" }}>{date}</div>
+        <div style={{ marginTop: 14, fontSize: 84, lineHeight: 1.05, letterSpacing: -2, display: "flex" }}>{c.title}</div>
+        {c.subtitle && <div style={{ marginTop: 16, fontSize: 40, color: ACCENT }}>{c.subtitle}</div>}
+
+        <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", margin: "50px 0" }}>
+          {c.image ? (
+            // eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text -- imagen generada (Satori)
+            <img src={c.image} width={strength ? 830 : 920} height={strength ? 870 : 860} style={{ objectFit: "contain" }} />
+          ) : (
+            <div style={{ fontSize: 220, color: ACCENT, letterSpacing: -6 }}>{c.stats[0]?.value}</div>
+          )}
+        </div>
+
+        {c.lines.length > 0 && (
+          <div style={{ display: "flex", flexDirection: "column", marginBottom: 40 }}>
+            {c.lines.map((l) => (
+              <div key={l} style={{ fontSize: 34, color: "#d6d4ce", marginTop: 8, display: "flex" }}>
+                {l}
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div style={{ display: "flex", flexWrap: "wrap", borderTop: "2px solid #2e2e2c", paddingTop: 40 }}>
+          {c.stats.map((s) => (
+            <div key={s.label} style={{ width: "50%", display: "flex", flexDirection: "column", marginBottom: 34 }}>
+              <div style={{ fontSize: 30, color: "#a9a7a0" }}>{s.label}</div>
+              <div style={{ fontSize: 66, letterSpacing: -1 }}>{s.value}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    ),
+    { width: 1080, height: 1920, headers: { "Cache-Control": "private, no-store" } },
+  );
+}
