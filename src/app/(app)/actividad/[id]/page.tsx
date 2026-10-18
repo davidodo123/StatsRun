@@ -18,7 +18,7 @@ import { requireUserId } from "@/lib/session";
 import { WEEKDAYS, shortDate, todayLocal, weekday } from "@/lib/dates";
 import { fmtDuration, fmtKm, fmtNum, fmtPace } from "@/lib/format";
 import { SetBadge } from "@/components/RoutineEditor";
-import { estimate1RM, fmtLoad, setLoad, strengthRecords, type StrengthRecord, workoutReps, workoutSets, workoutVolume } from "@/lib/strength/workouts";
+import { emomTitle, estimate1RM, fmtLoad, setLoad, strengthRecords, type StrengthRecord, workoutReps, workoutSets, workoutVolume } from "@/lib/strength/workouts";
 import type { Workout } from "@/lib/types";
 import { Icon } from "@/components/icons";
 
@@ -141,7 +141,7 @@ async function Content({ params, searchParams }: { params: PageProps<"/actividad
 /** Ejercicios y series de un entreno de fuerza. */
 function WorkoutCard({ workout, records }: { workout: Workout; records: StrengthRecord[] }) {
   return (
-    <Card title="Ejercicios">
+    <Card title="Ejercicios" subtitle={workout.emom && `${emomTitle(workout.emom)} · ${workout.emom.done} de ${workout.emom.rounds} rondas completadas`}>
       <div className="space-y-4">
         {workout.exercises.map((e, i) => {
           const rec = records.find((r) => r.exerciseId === e.exerciseId);

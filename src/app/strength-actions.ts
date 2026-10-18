@@ -11,7 +11,7 @@ import { CHAT_SYSTEM, chatContext, chatEquipment, chatExerciseList, chatHistory,
 import { STRENGTH_SYSTEM, equipmentFromText, routinesFromAi, strengthRequest, type AiStrengthReply } from "@/lib/strength/aiRoutines";
 import { todayLocal } from "@/lib/dates";
 import { findExercise } from "@/lib/strength/catalog";
-import { cleanRoutineExercises, cleanWorkout } from "@/lib/strength/workouts";
+import { cleanRoutineExercises, cleanWorkout, emomTitle } from "@/lib/strength/workouts";
 import { applyStrengthRoutines, routinesForPlan } from "@/lib/strength/routinePlan";
 import type { BodyMeasurement, Db } from "@/lib/types";
 
@@ -262,7 +262,7 @@ export async function finishWorkout(input: {
       {
         id,
         source: "manual" as const,
-        name: String(input.name ?? "").trim().slice(0, 80) || routineName || "Entreno de fuerza",
+        name: String(input.name ?? "").trim().slice(0, 80) || routineName || (workout.emom && emomTitle(workout.emom)) || "Entreno de fuerza",
         sport: "strength" as const,
         sportRaw: "strength",
         date: startLocal.slice(0, 10),

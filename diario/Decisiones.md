@@ -696,3 +696,20 @@ David preguntó si se puede «entrenar» una IA para la app. Opciones: (1) instr
 - Al sincronizar Strava se piden los datos por segundo (streams) de **5 tiradas como mucho** cada vez, las más recientes primero, porque Strava deja unas 100 lecturas cada 15 min. Las antiguas se van rellenando en las siguientes sincronizaciones. Si una no tiene pulso por segundo, se apunta para no volver a pedirla.
 - Se ve en la ficha de la sesión («Desacople aeróbico 6,3 % · Base aeróbica mejorable»). La IA lo recibe en cada actividad y, si es alto, no alarga la tirada larga y mete más rodaje suave. Con desnivel o calor sube solo, sin ser falta de base.
 - Las carreras registradas a mano o desde archivo no lo tienen (no traen el pulso por segundo).
+
+## Ideas nuevas: orden y alcance
+*2026-10-18*
+
+- Orden: 1) EMOM (pequeño, no depende de nada); 2) compartir el entreno (lo que más se ve entre amigos); 3) chat con la IA más registrar por voz (usan la misma pieza); 4) GPS (lo más grande, con la limitación del iPhone).
+- El cuerpo humano para compartir lo dibuja Claude en SVG, con una pieza por músculo para colorearlo (una imagen de Gemini sería un dibujo plano que habría que recortar a mano).
+- Voz: con el dictado del teclado del iPhone (funciona en todas partes); un micrófono propio dentro de la web instalada puede fallar.
+- GPS: en el iPhone la web instalada deja de recibir la ubicación con la pantalla bloqueada; vale con grabar con la pantalla encendida. En Android (Capacitor) se puede en segundo plano.
+
+## EMOM
+*2026-10-18*
+
+- Fuerza → EMOM (`/fuerza/emom`). Se elige cada cuánto (30 s, 45 s, 1 min, 1:30, 2 min o 3 min) y cuántas rondas (hasta 90), y los ejercicios con repeticiones y kilos. Con varios ejercicios se turnan: ronda 1 el primero, ronda 2 el segundo…
+- En marcha: 10 s para prepararse, cuenta atrás grande, ejercicio de ahora y el siguiente, pitidos 3-2-1 y uno largo al empezar cada ronda (y vibración en Android), pausa, y la pantalla se queda encendida (Wake Lock). «No llego en esta ronda» o tocar una ronda pasada la marca como no completada.
+- En el iPhone los pitidos solo suenan tras tocar la pantalla: se activan al pulsar «Empezar». Si la app se cierra a mitad, al volver sigue donde iba (el tiempo va por reloj, no se pierde), y hay que tocar «Activar los pitidos».
+- Se guarda como entreno de fuerza (`workout.emom`: intervalo, rondas y completadas): cada ronda completada es una serie de su ejercicio, así cuenta en volumen, series por músculo, récords, carga, feed y logros. Nombre por defecto: «EMOM 12 min», «E2MOM 20 min»…
+- La IA lo ve en el resumen del entreno («11/12 rondas cada 60 s»).

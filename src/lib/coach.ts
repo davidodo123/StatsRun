@@ -284,6 +284,7 @@ function strengthSummary(db: Db, w: Workout) {
     ejercicios: w.exercises.map((e) => `${e.name} (${e.sets.length} series)`),
     series: workoutSets(w),
     volumenKg: workoutVolume(w),
+    emom: w.emom && `${w.emom.done}/${w.emom.rounds} rondas cada ${w.emom.intervalSec} s`,
   };
 }
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cleanRoutineExercises, cleanWorkout, estimate1RM, fmtLoad, exerciseHistory, lastSets, muscleSets, nextTarget, platesFor, supersetLetters, routineHistory, strengthRecords, workoutReps, workoutSets, workoutVolume } from "./workouts";
+import { cleanRoutineExercises, cleanWorkout, emomTitle, estimate1RM, fmtLoad, exerciseHistory, lastSets, muscleSets, nextTarget, platesFor, supersetLetters, routineHistory, strengthRecords, workoutReps, workoutSets, workoutVolume } from "./workouts";
 import type { Activity } from "../types";
 
 const act = (id: string, date: string, workout: Activity["workout"], movingSec = 3600): Activity => ({
@@ -143,3 +143,23 @@ describe("rutinas y entrenos", () => {
   });
 });
 
+
+describe("EMOM", () => {
+  it("guarda una serie por ronda completada y admite más de 20", () => {
+    const sets = Array.from({ length: 30 }, (_, i) => ({ reps: 10, done: i !== 4 }));
+    const w = cleanWorkout({ exercises: [{ exerciseId: "Burpee", bw: true, sets }], emom: { intervalSec: 60, rounds: 30, done: 29 } }, () => "Burpees", 70);
+    expect(w.exercises[0].sets).toHaveLength(29);
+    expect(w.emom).toEqual({ intervalSec: 60, rounds: 30, done: 29 });
+  });
+
+  it("descarta un EMOM mal formado", () => {
+    expect(cleanWorkout({ exercises: [], emom: { intervalSec: 5, rounds: 10 } }, () => "x").emom).toBeUndefined();
+    expect(cleanWorkout({ exercises: [], emom: { intervalSec: 60, rounds: 10, done: 50 } }, () => "x").emom?.done).toBe(10);
+  });
+
+  it("nombra el EMOM según el intervalo", () => {
+    expect(emomTitle({ intervalSec: 60, rounds: 12 })).toBe("EMOM 12 min");
+    expect(emomTitle({ intervalSec: 120, rounds: 10 })).toBe("E2MOM 20 min");
+    expect(emomTitle({ intervalSec: 45, rounds: 8 })).toBe("EMOM cada 45 s · 8 rondas");
+  });
+});

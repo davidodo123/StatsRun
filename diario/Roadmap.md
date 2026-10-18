@@ -153,6 +153,12 @@ Base: [[Estudio entrenamiento#6. La Pirámide de Entrenamiento (Helms, Valdez, M
 - [x] 6.6 Health Connect: pasos, calorías, pulso en reposo, VFC y sueño al abrir la app (sin atajos) — *hecho 2026-10-12: permisos y lectura probados en el emulador (sin datos); falta probarlo con datos reales en un Android*
 - [ ] 6.7 Prueba cerrada en Play (12 personas, 14 días, obligatorio en cuentas nuevas) y publicación — *en pausa: David prueba la app unos días antes (cuenta personal de Play Console, con DNI)*
 
+## ✨ Fase 7 · Ideas nuevas (2026-10-18) — *alcance y orden decididos con David* → [[Decisiones#Ideas nuevas: orden y alcance]]
+1. [x] **EMOM** (Fuerza → EMOM): intervalo y rondas, ejercicios que se turnan, pitidos 3-2-1, pantalla encendida, marcar rondas sin completar; se guarda como entreno de fuerza — *hecho 2026-10-18, pendiente de comprobar* → [[Decisiones#EMOM]]
+2. [ ] **Compartir el entreno** en Instagram/WhatsApp (imagen de historia): fuerza con el cuerpo humano y los músculos coloreados (cuerpo nuevo en SVG, lo dibuja Claude); running con la línea del recorrido sobre fondo oscuro
+3. [ ] **Chat con la IA** (running y fuerza) que crea rutinas y toca el plan, y **registrar por voz** en ese chat (dictado del teclado del iPhone)
+4. [ ] **Grabar la carrera con el GPS** en Registrar. En el iPhone (web instalada) solo con la pantalla encendida; en Android, en segundo plano
+
 ## 🧠 IA que aprende de ti (opción 2: sin entrenar el modelo) → [[Decisiones#IA que aprende de ti]]
 - [x] Bloque 1 · Valoraciones (pulgar arriba/abajo con motivo) y memoria de preferencias que leen las tres IA; el chat apunta solo lo que le cuentas — *hecho 2026-10-10, pendiente de comprobar*
 - [x] Bloque 2 · Ejemplos buenos en las instrucciones (few-shot), y las respuestas que valoras como ejemplos de lo que gusta y lo que no; el chat entrena con el material que nombras — *hecho 2026-10-11, pendiente de comprobar*

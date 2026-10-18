@@ -1,6 +1,6 @@
 // Rutinas y entrenos de fuerza: validación de lo que llega del navegador, volumen, historial y «anterior».
 import type { Equipment, Muscle } from "./labels";
-import type { Activity, RoutineExercise, RoutineSet, SetType, Workout, WorkoutExercise, WorkoutSet } from "../types";
+import type { Activity, EmomInfo, RoutineExercise, RoutineSet, SetType, Workout, WorkoutExercise, WorkoutSet } from "../types";
 
 export const SET_TYPES: SetType[] = ["normal", "calentamiento", "descendente", "fallo"];
 export const SET_TYPE_SHORT: Record<SetType, string> = { normal: "", calentamiento: "C", descendente: "D", fallo: "F" };
@@ -9,6 +9,7 @@ export const restLabel = (s: number) => (!s ? "Sin descanso" : s < 60 ? `${s} s`
 
 const MAX_EXERCISES = 30;
 const MAX_SETS = 20;
+export const MAX_EMOM_ROUNDS = 90;
 
 const numIn = (v: unknown, min: number, max: number, step = 0.25): number | undefined => {
   const n = typeof v === "string" ? Number(v.replace(",", ".")) : Number(v);
@@ -75,6 +76,7 @@ export function supersetLetters(list: { superset?: number }[]): (string | undefi
 /** Entreno terminado: solo las series marcadas como hechas (aunque no lleven kg ni repeticiones, p. ej. sin peso). */
 export function cleanWorkout(raw: unknown, nameOf: (id: string) => string | undefined, bodyKg?: number): Workout {
   const w = (raw ?? {}) as Record<string, unknown>;
+  const emom = cleanEmom(w.emom);
   const exercises: WorkoutExercise[] = (Array.isArray(w.exercises) ? w.exercises : [])
     .slice(0, MAX_EXERCISES)
     .map((r) => (r ?? {}) as Record<string, unknown>)
@@ -82,7 +84,7 @@ export function cleanWorkout(raw: unknown, nameOf: (id: string) => string | unde
       const name = typeof r.exerciseId === "string" ? nameOf(r.exerciseId) : undefined;
       if (!name) return [];
       const sets = (Array.isArray(r.sets) ? r.sets : [])
-        .slice(0, MAX_SETS)
+        .slice(0, emom ? MAX_EMOM_ROUNDS : MAX_SETS)
         .filter((s) => (s as Record<string, unknown>)?.done)
         .map(cleanSet);
       if (!sets.length) return [];
@@ -94,7 +96,23 @@ export function cleanWorkout(raw: unknown, nameOf: (id: string) => string | unde
       if (typeof r.notes === "string" && r.notes.trim()) ex.notes = r.notes.trim().slice(0, 200);
       return [ex];
     });
-  return { ...(typeof w.routineId === "string" && w.routineId ? { routineId: w.routineId } : {}), exercises };
+  return { ...(typeof w.routineId === "string" && w.routineId ? { routineId: w.routineId } : {}), exercises, ...(emom ? { emom } : {}) };
+}
+
+function cleanEmom(raw: unknown): EmomInfo | undefined {
+  const e = raw as Record<string, unknown> | undefined;
+  const intervalSec = Math.round(Number(e?.intervalSec));
+  const rounds = Math.round(Number(e?.rounds));
+  if (!(intervalSec >= 15 && intervalSec <= 600 && rounds >= 1 && rounds <= MAX_EMOM_ROUNDS)) return;
+  return { intervalSec, rounds, done: Math.min(rounds, Math.max(0, Math.round(Number(e?.done) || 0))) };
+}
+
+/** «EMOM 12 min» o «E2MOM 20 min» (cada 2 min); con otros intervalos, «EMOM cada 45 s». */
+export function emomTitle(e: Pick<EmomInfo, "intervalSec" | "rounds">): string {
+  const total = (e.intervalSec * e.rounds) / 60;
+  if (e.intervalSec === 60) return `EMOM ${total} min`;
+  if (e.intervalSec % 60 === 0) return `E${e.intervalSec / 60}MOM ${total} min`;
+  return `EMOM cada ${e.intervalSec} s · ${e.rounds} rondas`;
 }
 
 const working = (s: WorkoutSet) => s.type !== "calentamiento";

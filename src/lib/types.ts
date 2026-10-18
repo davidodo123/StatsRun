@@ -277,6 +277,14 @@ export interface WorkoutExercise {
 export interface Workout {
   routineId?: string;
   exercises: WorkoutExercise[];
+  emom?: EmomInfo; // hecho como EMOM: cada ronda completada es una serie de su ejercicio
+}
+
+/** EMOM («cada minuto, al minuto»): rondas de un intervalo fijo. */
+export interface EmomInfo {
+  intervalSec: number;
+  rounds: number; // las que tocaban
+  done: number; // las completadas
 }
 
 /** Medidas corporales de un día (todas opcionales). */
