@@ -153,11 +153,12 @@ Base: [[Estudio entrenamiento#6. La Pirámide de Entrenamiento (Helms, Valdez, M
 - [x] 6.6 Health Connect: pasos, calorías, pulso en reposo, VFC y sueño al abrir la app (sin atajos) — *hecho 2026-10-12: permisos y lectura probados en el emulador (sin datos); falta probarlo con datos reales en un Android*
 - [ ] 6.7 Prueba cerrada en Play (12 personas, 14 días, obligatorio en cuentas nuevas) y publicación — *en pausa: David prueba la app unos días antes (cuenta personal de Play Console, con DNI)*
 
-## ✨ Fase 7 · Ideas nuevas (2026-10-18) — *alcance y orden decididos con David* → [[Decisiones#Ideas nuevas: orden y alcance]]
-1. [x] **EMOM** (Fuerza → EMOM): intervalo y rondas, ejercicios que se turnan, pitidos 3-2-1, pantalla encendida, marcar rondas sin completar; se guarda como entreno de fuerza — *hecho 2026-10-18, pendiente de comprobar* → [[Decisiones#EMOM]]
-2. [x] **Compartir el entreno** en Instagram/WhatsApp (imagen de historia): fuerza con el cuerpo humano y los músculos coloreados (cuerpo nuevo en SVG, también en la portada de Fuerza); running con la línea del recorrido sobre fondo oscuro — *hecho 2026-10-18, pendiente de comprobar en el iPhone* → [[Decisiones#Compartir el entreno]]
-3. [x] **Entrenador IA** (`/entrenador`, en «Más» y desde Fuerza y Plan): chat de running y fuerza que registra los entrenos que le cuentas, crea rutinas y cambia el plan (todo con un botón para confirmar), con **micrófono** donde el navegador lo permite — *hecho 2026-10-18, pendiente de comprobar en el móvil* → [[Decisiones#Entrenador IA]]
-4. [ ] **Grabar la carrera con el GPS** en Registrar. En el iPhone (web instalada) solo con la pantalla encendida; en Android, en segundo plano
+## ✨ Fase 7 · Ideas nuevas (2026-10-18) — *7.1-7.3 comprobadas por David 2026-10-19* → [[Decisiones#Ideas nuevas: orden y alcance]]
+1. [x] **EMOM** (Fuerza → EMOM): intervalo y rondas, ejercicios que se turnan, pitidos 3-2-1, pantalla encendida, marcar rondas sin completar; se guarda como entreno de fuerza — *hecho 2026-10-18, comprobado 2026-10-19* → [[Decisiones#EMOM]]
+2. [x] **Compartir el entreno** en Instagram/WhatsApp (imagen de historia): fuerza con el cuerpo humano y los músculos coloreados (cuerpo nuevo en SVG, también en la portada de Fuerza); running con la línea del recorrido sobre fondo oscuro — *hecho 2026-10-18, comprobado 2026-10-19* → [[Decisiones#Compartir el entreno]]
+3. [x] **Entrenador IA** (`/entrenador`, en «Más» y desde Fuerza y Plan): chat de running y fuerza que registra los entrenos que le cuentas, crea rutinas y cambia el plan (todo con un botón para confirmar), con **micrófono** donde el navegador lo permite — *hecho 2026-10-18, comprobado 2026-10-19* → [[Decisiones#Entrenador IA]]
+4. [x] **Grabar la carrera con el GPS** (Registrar → Grabar con GPS): cronómetro, distancia, ritmo actual y medio, parciales, desnivel, recorrido y pausa automática; con la pantalla encendida (iPhone y Android) — *hecho 2026-10-19, pendiente de comprobar corriendo* → [[Decisiones#Grabar la carrera con el GPS]]
+   - [ ] Android: grabar también con la pantalla bloqueada (complemento de ubicación en segundo plano; Google Play pide justificarlo)
 
 ## 🧠 IA que aprende de ti (opción 2: sin entrenar el modelo) → [[Decisiones#IA que aprende de ti]]
 - [x] Bloque 1 · Valoraciones (pulgar arriba/abajo con motivo) y memoria de preferencias que leen las tres IA; el chat apunta solo lo que le cuentas — *hecho 2026-10-10, pendiente de comprobar*

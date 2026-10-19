@@ -18,6 +18,7 @@ import { tagsForDb } from "@/lib/engine/tags";
 import { estimateVdot } from "@/lib/engine/stats";
 import { requireUserId } from "@/lib/session";
 import { activityPhotoUrl } from "@/lib/photos";
+import { Icon } from "@/components/icons";
 
 export const metadata: Metadata = { title: "Registrar entreno" };
 
@@ -27,7 +28,15 @@ const DEFAULT_RPE = { suave: 3, larga: 5, calidad: 7, fuerza: 6, carrera: 9 } as
 export default function RegistrarPage({ searchParams }: PageProps<"/registrar">) {
   return (
     <>
-      <PageHeader title="Registrar entreno" subtitle="Copia los datos de tu actividad de Strava: el plan, la forma y las estadísticas se actualizan al momento." />
+      <PageHeader
+        title="Registrar entreno"
+        subtitle="Copia los datos de tu actividad de Strava: el plan, la forma y las estadísticas se actualizan al momento."
+        action={
+          <Link href="/registrar/gps" className="btn">
+            <Icon name="pin" className="mr-1 h-4 w-4 align-[-2px]" /> Grabar con GPS
+          </Link>
+        }
+      />
       <Suspense fallback={<Loading />}>
         <Content searchParams={searchParams} />
       </Suspense>

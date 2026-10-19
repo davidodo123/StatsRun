@@ -734,3 +734,13 @@ David preguntó si se puede «entrenar» una IA para la app. Opciones: (1) instr
   - **Cambiar el plan**: los días que no puede («la semana que viene solo puedo martes, jueves y sábado», «el jueves no puedo») se sacan del propio mensaje y se marcan como «No puedo ese día» (las sesiones van a sus días disponibles del perfil y sale el aviso de «Deshacer»). Otros cambios («tirada larga más corta») van a la IA del plan con su petición (`adaptWithAI(uid, petición)`), que en ese caso puede quitar sesiones.
 - **Voz**: el dictado del teclado vale siempre; además hay un botón de micrófono (reconocimiento de voz del navegador, en español) que solo sale si el navegador lo tiene.
 - El modelo barato a veces pone el nombre del ejercicio en vez del id: se acepta el nombre exacto, y «sentadilla», «press de banca» y «peso muerto» van a los básicos con barra.
+
+## Grabar la carrera con el GPS
+*2026-10-19*
+
+- Registrar → **Grabar con GPS** (`/registrar/gps`): se elige correr, caminar o bici y empieza. Muestra el estado del GPS (bueno, regular, flojo, con su precisión), cronómetro, distancia, ritmo actual (últimos 30 s), ritmo medio, el dibujo del recorrido y los parciales por km. Pausa a mano y **pausa automática** (parado no cuenta como tiempo en movimiento).
+- Filtro de puntos (`lib/gpsTrack.ts`): fuera los de precisión peor de 35 m, los saltos de más de 9 m/s y los que no se mueven (quieto, uno cada 10 s). Tras una pausa, el tramo de la pausa no cuenta. Desnivel con histéresis de 4 m, porque la altura del GPS baila.
+- Al guardar, el servidor recalcula distancia, tiempo y desnivel con los mismos puntos (`saveRecordedRun`) y guarda el recorrido simplificado (como los de Strava): sale en el mapa, el flyover, compartir y las estadísticas.
+- La grabación va guardándose en el navegador: si se cierra la app, al volver sigue en pausa con lo grabado.
+- La pantalla se queda encendida (Wake Lock). En el iPhone la web instalada no recibe la ubicación con la pantalla bloqueada; en Android tampoco de momento (haría falta un complemento de ubicación en segundo plano, y Google Play pide justificar ese permiso): queda como tarea aparte.
+- Android: permisos de ubicación añadidos al `AndroidManifest.xml`. Hace falta compilar e instalar una versión nueva de la app para que los pida (subir `versionCode` al subirla a Play).

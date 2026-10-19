@@ -48,6 +48,10 @@
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Grabar carrera con GPS (Registrar → Grabar con GPS): ubicación mientras la app está abierta -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-feature android:name="android.hardware.location.gps" android:required="false" />
 
     <!-- Health Connect: solo leer pasos, calorías activas, pulso en reposo, VFC y sueño (el complemento pide muchos más) -->
     <uses-permission android:name="android.permission.health.WRITE_STEPS" tools:node="remove" />

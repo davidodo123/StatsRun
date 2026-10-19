@@ -21,6 +21,8 @@ import type { Db, Feel, Focus, Goal, Level, Plan, Profile, Sex, TuneUpRace } fro
 import { downloadCmCourse, findCmRace } from "@/lib/cruzandolametaStore";
 import { parseCourseFile } from "@/lib/importers/course";
 import { deleteImage, jpegFromDataUrl, photoKey, putImage } from "@/lib/photoStore";
+import { acceptPoint, trackStats, type GpsPoint } from "@/lib/gpsTrack";
+import { routeFromPoints } from "@/lib/route";
 
 export interface FormState {
   ok?: boolean;
@@ -569,6 +571,57 @@ export async function saveActivity(_: FormState, fd: FormData): Promise<FormStat
 }
 
 const MAX_PHOTO = 900_000;
+// 4 h a un punto por segundo
+const MAX_GPS_POINTS = 15_000;
+
+/** Guarda una carrera grabada con el GPS del móvil: distancia, tiempo y desnivel se recalculan aquí con los mismos puntos. */
+export async function saveRecordedRun(input: { sport?: string; name?: string; startLocal?: string; points?: unknown; rpe?: number; feel?: string; feelings?: string }): Promise<FormState> {
+  const sport = (["run", "walk", "ride"] as const).find((x) => x === input.sport) ?? "run";
+  const startLocal = String(input.startLocal ?? "");
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/.test(startLocal) || startLocal.slice(0, 10) > todayLocal()) return { error: "Fecha de la carrera no válida." };
+  const raw = Array.isArray(input.points) ? input.points.slice(0, MAX_GPS_POINTS) : [];
+  const points: GpsPoint[] = [];
+  for (const r of raw) {
+    const o = (r ?? {}) as Record<string, unknown>;
+    const p: GpsPoint = { t: Number(o.t), lat: Number(o.lat), lon: Number(o.lon) };
+    if (Number.isFinite(Number(o.alt)) && o.alt !== null) p.alt = Number(o.alt);
+    if (Number.isFinite(Number(o.acc)) && o.acc !== null) p.acc = Number(o.acc);
+    if (o.b) p.b = 1;
+    if (Number.isFinite(p.t) && acceptPoint(points.at(-1), p)) points.push(p);
+  }
+  const stats = trackStats(points);
+  if (stats.distanceM < 100 || stats.movingSec < 60) return { error: "La grabación es demasiado corta para guardarla (menos de 100 m o de 1 minuto)." };
+  const elapsedSec = Math.round((points.at(-1)!.t - points[0].t) / 1000);
+  const rpe = Number(input.rpe);
+  const label = { run: "Carrera", walk: "Caminata", ride: "Bici" }[sport];
+  const id = `gps-${Date.now().toString(36)}`;
+  await updateDb((db) => {
+    db.activities = [
+      ...db.activities,
+      {
+        id,
+        source: "manual" as const,
+        name: String(input.name ?? "").trim().slice(0, 80) || `${label} con GPS`,
+        sport,
+        sportRaw: sport,
+        date: startLocal.slice(0, 10),
+        startLocal,
+        distanceM: Math.round(stats.distanceM),
+        movingSec: stats.movingSec,
+        elapsedSec: Math.max(stats.movingSec, elapsedSec),
+        elevationGainM: stats.elevationGainM,
+        maxAltitudeM: points.some((p) => p.alt !== undefined) ? Math.round(Math.max(...points.map((p) => p.alt ?? -Infinity))) : undefined,
+        rpe: rpe >= 1 && rpe <= 10 ? Math.round(rpe) : undefined,
+        feel: FEELS.find((f) => f === input.feel),
+        feelings: String(input.feelings ?? "").trim().slice(0, 1000) || undefined,
+        route: routeFromPoints(points),
+      },
+    ].sort((a, b) => a.startLocal.localeCompare(b.startLocal));
+  });
+  await scheduleAiAdapt();
+  refresh();
+  redirect(`/actividad/${id}`);
+}
 
 /** Pone, cambia (`dataUrl`) o quita (null) la foto de un entreno propio. */
 export async function setActivityPhoto(id: string, dataUrl: string | null): Promise<FormState> {
