@@ -722,3 +722,15 @@ David preguntó si se puede «entrenar» una IA para la app. Opciones: (1) instr
 - Fuerza: el cuerpo con los músculos del entreno en naranja (más intenso cuantas más series; los secundarios cuentan la mitad), los ejercicios (series × repeticiones · mejor peso), tiempo, series, repeticiones y volumen; en un EMOM, también «EMOM 12 min · 11/12 rondas».
 - Running: la línea del recorrido sobre fondo oscuro, sin mapa debajo (salida en blanco y llegada en naranja), distancia, ritmo, tiempo y desnivel (o pulso medio). Sin recorrido, la distancia en grande.
 - La imagen solo la puede sacar el dueño del entreno (con su sesión); no lleva sensaciones ni notas.
+
+## Entrenador IA
+*2026-10-18*
+
+- El chat de fuerza pasa a ser el **Entrenador IA** general (`/entrenador`; `/fuerza/entrenador` lleva allí). Está en «Más» y en la barra de quien solo hace fuerza, y se enlaza desde Fuerza y desde el Plan. Conserva la conversación y la memoria de antes.
+- Sabe de running y de fuerza: su perfil, material, rutinas, las sesiones del plan de los próximos 7 días y lo que ha hecho en 14 días.
+- Lo que propone se confirma siempre con un botón (la IA nunca guarda nada sola):
+  - **Registrar un entreno** que le cuentas («hoy 8 km en 45 minutos, me ha costado», «ayer 4×8 de sentadilla con 70 kg»): tarjeta con los datos y «Guardar entreno». Se comprueba fecha (no futura, como mucho 60 días atrás), rangos y ritmo; si falta el tiempo, pregunta. Fuerza sin tiempo: 4 min por serie.
+  - **Rutinas** de fuerza, como antes.
+  - **Cambiar el plan**: los días que no puede («la semana que viene solo puedo martes, jueves y sábado», «el jueves no puedo») se sacan del propio mensaje y se marcan como «No puedo ese día» (las sesiones van a sus días disponibles del perfil y sale el aviso de «Deshacer»). Otros cambios («tirada larga más corta») van a la IA del plan con su petición (`adaptWithAI(uid, petición)`), que en ese caso puede quitar sesiones.
+- **Voz**: el dictado del teclado vale siempre; además hay un botón de micrófono (reconocimiento de voz del navegador, en español) que solo sale si el navegador lo tiene.
+- El modelo barato a veces pone el nombre del ejercicio en vez del id: se acepta el nombre exacto, y «sentadilla», «press de banca» y «peso muerto» van a los básicos con barra.

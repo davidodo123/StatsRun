@@ -132,6 +132,7 @@ REGLAS:
 - Solo puedes quitar una sesión ({"id","remove":true}) si el diagnóstico es "descargar" o "recuperar". Con "progresar" o "mantener" NO quites ninguna: el atleta quiere entrenar todos sus días; si hay que bajar carga, acorta la sesión (menos km o minutos) o hazla más suave.
 - Las SENSACIONES ("sensacion", "comoSeSintio") comparadas con "sesionPlanificada" explican el diagnóstico: cítalas en "summary" (ej.: "Como el jueves las series se te hicieron fáciles…").
 - "desacoplePct" (desacople aeróbico de las tiradas largas): < 5 % buena base aeróbica; 5-10 % mejorable; > 10 % la base aún no aguanta esa duración, así que no alargues la tirada larga y mete más rodaje suave. Con desnivel o calor sube solo, sin ser falta de base.
+- Si viene "peticionDelAtleta" (lo que te ha pedido en el chat), cúmplela dentro de estas reglas: puedes quitar sesiones si lo pide (p. ej. menos días), y si algo no se puede (pasar del límite de carga), hazlo lo más parecido posible y dilo en "summary".
 - Usa los ritmos proporcionados (min:seg /km) en los pasos de carrera.
 - Escribe en español, pasos breves y accionables.
 ${PREFERENCES_RULE}
@@ -331,11 +332,15 @@ export interface CoachResult {
   message: string;
 }
 
-/** Ajusta con IA las sesiones de los próximos 14 días de un usuario. Evita ejecuciones simultáneas. */
-export function adaptWithAI(uid: string): Promise<CoachResult> {
+/**
+ * Ajusta con IA las sesiones de los próximos 14 días de un usuario. Evita ejecuciones simultáneas.
+ * Con `request` (lo que pidió en el chat: «esta semana solo puedo 3 días») espera a la que esté en marcha y aplica la suya.
+ */
+export function adaptWithAI(uid: string, request?: string): Promise<CoachResult> {
   let p = running.get(uid);
-  if (!p) {
-    p = run(uid).finally(() => running.delete(uid));
+  if (!p || request) {
+    const prev = p;
+    p = (prev ? prev.catch(() => undefined) : Promise.resolve()).then(() => run(uid, request)).finally(() => running.get(uid) === p && running.delete(uid));
     running.set(uid, p);
   }
   return p;
@@ -359,7 +364,7 @@ export async function adaptIfMissed(uid: string): Promise<void> {
   if (newMissed) await adaptWithAI(uid);
 }
 
-async function run(uid: string): Promise<CoachResult> {
+async function run(uid: string, request?: string): Promise<CoachResult> {
   const { configured, model } = coachConfig();
   if (!configured) return { ok: false, changed: 0, message: "Falta OPENROUTER_API_KEY en .env.local." };
   const today = todayLocal();
@@ -370,7 +375,7 @@ async function run(uid: string): Promise<CoachResult> {
   const blocked = (db.unavailableDates ?? []).join();
 
   try {
-    const ai = await chatJson<AiResponse>(SYSTEM, JSON.stringify(built.context));
+    const ai = await chatJson<AiResponse>(SYSTEM, JSON.stringify(request ? { ...built.context, peticionDelAtleta: request } : built.context));
     const byId = new Map((Array.isArray(ai?.sessions) ? ai.sessions : []).filter((s) => s && typeof s.id === "string").map((s) => [s.id, s]));
     let changed = 0;
     await updateDb((d) => {
@@ -408,7 +413,8 @@ async function run(uid: string): Promise<CoachResult> {
         }
       }
       // quitar sesiones solo con descarga o recuperación: si no, se queda (el atleta entrena todos sus días)
-      const canRemove = built.readiness.verdict === "descargar" || built.readiness.verdict === "recuperar";
+      // o si lo pide él («esta semana solo puedo 3 días»)
+      const canRemove = built.readiness.verdict === "descargar" || built.readiness.verdict === "recuperar" || Boolean(request);
       for (const [s, prop] of proposals) {
         if (prop.remove) {
           if (canRemove) changed++;

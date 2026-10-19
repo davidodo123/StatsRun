@@ -1,5 +1,5 @@
 "use server";
-// Fuerza: lugares con su material y ejercicios propios.
+// Fuerza: lugares con su material, ejercicios propios, rutinas, entrenos y el chat del entrenador IA.
 
 import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
@@ -20,7 +20,7 @@ function syncPlanRoutines(d: Db) {
   if (d.plan) applyStrengthRoutines(d.plan, routinesForPlan(d), todayLocal());
 }
 import { CATEGORIES, EQUIPMENT, MUSCLES, PLACE_PRESETS, type Equipment, type ExerciseCategory, type Muscle } from "@/lib/strength/labels";
-import type { FormState } from "./actions";
+import { markUnavailableDates, type FormState } from "./actions";
 import { addPreferences } from "@/lib/aiMemory";
 import { studyFor } from "@/lib/knowledge";
 
@@ -385,7 +385,7 @@ export async function sendStrengthChat(_: FormState, fd: FormData): Promise<Form
       if ((e as Error).message !== "NO_CREDITS" || strengthModel() === coachConfig().model) throw e;
       raw = await chatJson<AiChatReply>(CHAT_SYSTEM, request, 0.4, coachConfig().model, 3000);
     }
-    reply = chatReplyFromAi(raw, equipment, now);
+    reply = chatReplyFromAi(raw, equipment, now, db, todayLocal(), message);
     if (!reply.text) throw new Error("respuesta vacía");
   } catch (e) {
     const msg = (e as Error).message;
@@ -395,7 +395,15 @@ export async function sendStrengthChat(_: FormState, fd: FormData): Promise<Form
     d.strengthChat = [
       ...(d.strengthChat ?? []),
       { role: "user" as const, text: message, at: now },
-      { role: "assistant" as const, text: reply.text, at: new Date().toISOString(), ...(reply.routines.length ? { routines: reply.routines } : {}) },
+      {
+        role: "assistant" as const,
+        text: reply.text,
+        at: new Date().toISOString(),
+        ...(reply.routines.length ? { routines: reply.routines } : {}),
+        ...(reply.activity ? { activity: reply.activity } : {}),
+        ...(reply.planRequest ? { planRequest: reply.planRequest } : {}),
+        ...(reply.planDays ? { planDays: reply.planDays } : {}),
+      },
     ].slice(-MAX_CHAT);
     if (reply.remember.length) d.aiPreferences = addPreferences(d.aiPreferences, reply.remember.map((text) => ({ text, area: "fuerza" as const, source: "chat" as const, at: now })), () => newId());
   });
@@ -416,6 +424,77 @@ export async function saveChatRoutines(fd: FormData): Promise<void> {
     syncPlanRoutines(d);
   });
   refresh();
+}
+
+/** Guarda el entreno que contó en el chat (y que la IA dejó listo) como una actividad más. */
+export async function saveChatActivity(fd: FormData): Promise<void> {
+  const at = text(fd, "at", 40);
+  let saved = false;
+  await updateDb((d) => {
+    saved = false; // la escritura puede reintentarse
+    const m = d.strengthChat?.find((x) => x.at === at && x.role === "assistant");
+    const c = m?.activity;
+    if (!m || !c || m.activityId) return;
+    const id = `${c.exercises ? "fuerza" : "manual"}-${Date.now().toString(36)}`;
+    d.activities = [
+      ...d.activities,
+      {
+        id,
+        source: "manual" as const,
+        name: c.name,
+        sport: c.sport,
+        sportRaw: c.sport,
+        date: c.date,
+        startLocal: `${c.date}T${c.time ?? "07:00"}:00`,
+        distanceM: Math.round((c.distanceKm ?? 0) * 1000),
+        movingSec: c.durationSec,
+        elapsedSec: c.durationSec,
+        elevationGainM: c.elevationGainM ?? 0,
+        avgHr: c.avgHr,
+        rpe: c.rpe,
+        feel: c.feel,
+        feelings: c.feelings,
+        ...(c.exercises ? { workout: { exercises: c.exercises } } : {}),
+      },
+    ].sort((a, b) => a.startLocal.localeCompare(b.startLocal));
+    m.activityId = id;
+    saved = true;
+  });
+  // la IA reajusta los próximos días con el entreno nuevo
+  if (saved && coachConfig().configured) {
+    const uid = await requireUserId();
+    after(() => adaptWithAI(uid).then(() => undefined));
+  }
+  refresh();
+}
+
+/** Aplica al plan el cambio que pidió en el chat: la IA reajusta los próximos 14 días con su petición. */
+export async function applyChatPlan(_: FormState, fd: FormData): Promise<FormState> {
+  const at = text(fd, "at", 40);
+  const db = await readDbNow();
+  const m = db.strengthChat?.find((x) => x.at === at && x.role === "assistant");
+  if (!m?.planRequest && !m?.planDays?.length) return { error: "No hay ningún cambio que aplicar." };
+  if (m.planResult) return { ok: true, message: m.planResult };
+  if (!db.plan) return { error: "No tienes plan de carrera." };
+  const parts: string[] = [];
+  // los días que no puede: como «No puedo ese día» (las sesiones se mueven y se puede deshacer)
+  if (m.planDays?.length) {
+    const r = await markUnavailableDates(m.planDays);
+    if (r.error) return r;
+    parts.push(`${m.planDays.length === 1 ? "Día marcado" : `${m.planDays.length} días marcados`} sin entrenar.`);
+  }
+  if (m.planRequest) {
+    const r = await adaptWithAI(await requireUserId(), m.planRequest);
+    if (!r.ok) return { error: r.message };
+    parts.push(`${r.changed} ${r.changed === 1 ? "sesión ajustada" : "sesiones ajustadas"}. ${r.message}`);
+  } else if (coachConfig().configured) parts.push("La IA está rehaciendo tu rutina.");
+  const message = parts.join(" ").slice(0, 800);
+  await updateDb((d) => {
+    const x = d.strengthChat?.find((y) => y.at === at && y.role === "assistant");
+    if (x) x.planResult = message;
+  });
+  refresh();
+  return { ok: true, message };
 }
 
 export async function clearStrengthChat(): Promise<void> {

@@ -235,6 +235,9 @@ async function Content({ searchParams }: { searchParams: PageProps<"/plan/actual
                 {db.coach?.error && <Notice tone="warn">Último intento falló: {db.coach.error}</Notice>}
                 <p className="text-xs text-muted">Se ejecuta solo cada vez que registras o importas un entreno, marcas días sin poder entrenar, dejas sesiones sin hacer o adaptas el plan. Reajusta y reprograma carrera y fuerza de los próximos 14 días.</p>
                 <AiCoachButton />
+                <Link href="/entrenador" className="block text-xs font-semibold text-accent">
+                  Pídele un cambio del plan en el chat →
+                </Link>
               </div>
             ) : (
               <p className="text-sm text-ink-2">

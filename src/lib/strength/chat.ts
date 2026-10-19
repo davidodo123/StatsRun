@@ -1,7 +1,9 @@
-// Chat con el entrenador de fuerza (sección Fuerza): sirve corras o no. La llamada está en strength-actions.
-import type { Db, Routine, StrengthChatMessage } from "../types";
-import { addDays } from "../dates";
-import { CATALOG, allEquipment, findExercise } from "./catalog";
+// Chat con el entrenador IA (running y fuerza): sirve corras o no. La llamada está en strength-actions.
+// Además de responder, puede dejar listo un entreno que le cuentas, rutinas nuevas o un cambio del plan.
+import type { ChatActivity, Db, Feel, Routine, SportKind, StrengthChatMessage, WorkoutExercise } from "../types";
+import { WEEKDAYS, addDays, weekday } from "../dates";
+import { parseTime } from "../format";
+import { CATALOG, allEquipment, allExercises, findExercise } from "./catalog";
 import { equipmentFromText, exercisesFromAi } from "./aiRoutines";
 import { EQUIPMENT, canDo, type Equipment } from "./labels";
 import { estimate1RM } from "./workouts";
@@ -12,8 +14,10 @@ import { STUDY_RULE } from "../knowledge";
 const CANDIDATES = CATALOG.filter((x) => (x.cat === "fuerza" || x.cat === "pliometria" || x.cat === "powerlifting") && x.level !== "avanzado");
 const BY_ID = new Map(CANDIDATES.map((x) => [x.id, x]));
 
-export const CHAT_SYSTEM = `Eres un entrenador personal de fuerza con base científica, cercano y claro. Hablas en español de España, en frases cortas y sin emojis.
+export const CHAT_SYSTEM = `Eres un entrenador personal de running y de fuerza con base científica, cercano y claro. Hablas en español de España, en frases cortas y sin emojis.
 Atiendes a cualquiera: quien corre (y entonces la fuerza va al servicio de su carrera) y quien solo hace fuerza (ganar músculo, fuerza, salud, perder grasa).
+
+RUNNING: conoces su plan ("plan": próximas sesiones) y lo que ha hecho ("actividadesUltimos14Dias"). Responde sus dudas con eso (Daniels, 80/20 suave/intenso, subir como mucho un 10 % por semana, descarga cada 3-4 semanas, la tirada larga no más del 30 % de la semana).
 
 PRINCIPIOS (pirámide de Helms; Schoenfeld; para corredores, Balsalobre-Fernández 2016, Blagrove 2018, Lauersen 2014):
 - Para ganar músculo: 10-20 series efectivas por músculo y semana, cada músculo 2 veces por semana, 6-15 repeticiones a 1-3 RIR. Para fuerza: 3-6 repeticiones en los básicos, descansos largos. Para mantener: en torno a un tercio de ese volumen.
@@ -41,8 +45,22 @@ CUÁNDO PROPONER RUTINAS: solo si te las pide o si para responder hace falta una
 - Descansos: básicos pesados 120-180 s, accesorios 60-90 s, core 45-60 s.
 - Si propones rutinas, en "reply" no repitas la lista de ejercicios (ya se ve en la tarjeta): explica en 2-4 frases el planteamiento, la progresión y los avisos.
 
+REGISTRAR UN ENTRENO: si te cuenta un entreno que YA ha hecho (hoy u otro día: «hoy he corrido 8 km en 45 minutos, me ha costado», «ayer hice 3×10 de sentadilla con 60 kg»), déjalo listo en "registrar" para que él lo guarde con un botón:
+- "tipo": "run" | "walk" | "ride" | "swim" | "strength" | "other". "fecha": AAAA-MM-DD (usa "hoy" del contexto; «ayer» es el día antes). "hora": "HH:MM" solo si la dice.
+- "nombre" corto («Rodaje suave», «Pierna»). "km", "tiempo" ("h:mm:ss" o "mm:ss", en movimiento), "desnivel" (m), "fcMedia", "rpe" (1-10) solo si los dice o se deducen sin duda (ritmo × km = tiempo).
+- "sensacion": "muy_facil" | "facil" | "bien" | "duro" | "muy_duro" según cómo diga que le fue; "comoSeSintio": sus palabras sobre cómo se sintió (molestias, energía), resumidas.
+- Fuerza: "ejercicios": [{"id": "<id exacto de la lista, no el nombre>", "series": [{"kg": 60, "reps": 10}], "bw": false}] (una entrada por serie: «4 series de 8» son 4 entradas). Si dice cuánto duró («en unos 40 minutos»), "tiempo": "40:00"; si no, "tiempo": "".
+  Ejemplo: «ayer 3 de 10 de sentadilla con 60 kilos en media hora» → "registrar": {"tipo": "strength", "fecha": "<ayer>", "nombre": "Pierna", "tiempo": "30:00", "ejercicios": [{"id": "Barbell_Squat", "series": [{"kg": 60, "reps": 10}, {"kg": 60, "reps": 10}, {"kg": 60, "reps": 10}]}]}
+- Si falta algo imprescindible (en carrera, el tiempo o la distancia y el ritmo), NO inventes: pregúntaselo en "reply" y deja "registrar": null.
+- En "reply", 1-2 frases: que lo tiene listo para guardar y un comentario breve sobre el entreno. No lo registres si solo pregunta o planea algo futuro.
+
+CAMBIAR EL PLAN (solo si tiene plan; si no, dile que primero elija su carrera). Lo aplica él con un botón:
+- Días que NO puede entrenar («el jueves no puedo», «esta semana solo puedo martes, jueves y sábado»): en "diasSinEntrenar" las fechas (AAAA-MM-DD, de hoy en adelante) en que no puede. «Esta semana» va de hoy al domingo; si dice los días que SÍ puede, pon todos los demás. Las sesiones se mueven solas a los días que le quedan.
+- Otros cambios («hazme la tirada larga más corta», «quiero más series»): en "ajustarPlan" un TEXTO (no un objeto) con su petición clara y concreta, con fechas si las hay.
+- En "reply" di qué vas a cambiar y que lo aplique con el botón. Si no pide cambiar el plan, "diasSinEntrenar": [] y "ajustarPlan": null.
+
 Responde SOLO con JSON:
-{"reply": "tu respuesta (puede tener saltos de línea y listas con guiones)", "recordar": ["..."], "routines": [{"name": "Torso A", "exercises": [{"id": "...", "sets": 3, "reps": "8-12", "kg": 20, "bw": false, "restSec": 90, "notes": "...", "superset": 1}]}]}
+{"reply": "tu respuesta (puede tener saltos de línea y listas con guiones)", "recordar": ["..."], "routines": [{"name": "Torso A", "exercises": [{"id": "...", "sets": 3, "reps": "8-12", "kg": 20, "bw": false, "restSec": 90, "notes": "...", "superset": 1}]}], "registrar": null, "diasSinEntrenar": [], "ajustarPlan": null}
 Si no propones rutinas, "routines": [].`;
 
 /** Lo que el entrenador sabe del atleta: perfil, material, rutinas, entrenos de las últimas 4 semanas y su carrera. */
@@ -70,6 +88,16 @@ export function chatContext(db: Db, today: string) {
     susRutinas: (db.routines ?? []).map((r) => ({ nombre: r.name, ejercicios: r.exercises.map((e) => `${findExercise(db, e.exerciseId)?.name ?? e.exerciseId} ${e.sets.length}×${e.sets[0]?.reps ?? "?"}`) })),
     entrenosUltimas4Semanas: [...lifts.values()].map((l) => ({ nombre: l.nombre, sesiones: l.sesiones, mejorSerie: l.mejorSerie, ultimaVez: l.ultimaVez })),
     medidas: db.measurements?.at(-1),
+    plan: db.plan && {
+      objetivo: db.plan.goal.name,
+      sesionesProximos7Dias: db.plan.weeks
+        .flatMap((w) => w.sessions.map((s) => ({ s, fase: w.phase })))
+        .filter(({ s }) => s.date >= today && s.date <= addDays(today, 6))
+        .map(({ s, fase }) => ({ fecha: s.date, dia: WEEKDAYS[weekday(s.date)], fase, tipo: s.type, titulo: s.title, km: s.distanceKm || undefined, min: s.durationMin })),
+    },
+    actividadesUltimos14Dias: db.activities
+      .filter((a) => a.date >= addDays(today, -13) && a.date <= today)
+      .map((a) => ({ fecha: a.date, deporte: a.sport, nombre: a.name, km: a.distanceM ? +(a.distanceM / 1000).toFixed(2) : undefined, min: Math.round(a.movingSec / 60), rpe: a.rpe, sensacion: a.feel })),
     preferencias: preferencesFor(db, "fuerza"),
     valoraciones: ratedExamples(db, "chat"),
   };
@@ -116,10 +144,126 @@ export interface AiChatReply {
   reply?: unknown;
   recordar?: unknown;
   routines?: unknown;
+  registrar?: unknown;
+  diasSinEntrenar?: unknown;
+  ajustarPlan?: unknown;
+}
+
+const SPORTS: SportKind[] = ["run", "walk", "ride", "swim", "strength", "other"];
+const FEELS: Feel[] = ["muy_facil", "facil", "bien", "duro", "muy_duro"];
+const DEFAULT_NAME: Record<SportKind, string> = { run: "Carrera", walk: "Caminata", ride: "Bici", swim: "Natación", strength: "Fuerza", other: "Entrenamiento" };
+const between = (v: unknown, min: number, max: number) => {
+  const n = typeof v === "string" ? Number(v.replace(",", ".")) : Number(v);
+  return v !== null && v !== "" && Number.isFinite(n) && n >= min && n <= max ? n : undefined;
+};
+// sin tiempo dicho, unos 4 minutos por serie de fuerza
+const SEC_PER_SET = 240;
+
+// los básicos por su nombre corto: «sentadilla con barra» es la trasera, no la de a banco
+const COMMON_LIFTS: Record<string, string> = {
+  sentadilla: "Barbell_Squat",
+  "sentadilla con barra": "Barbell_Squat",
+  "press banca": "Barbell_Bench_Press_-_Medium_Grip",
+  "press de banca": "Barbell_Bench_Press_-_Medium_Grip",
+  "peso muerto": "Barbell_Deadlift",
+};
+
+/** Ejercicio por su id o, si la IA puso el nombre, por el nombre (sin tildes ni mayúsculas); si no, nada. */
+function exerciseFor(db: Pick<Db, "customExercises">, ref: unknown) {
+  if (typeof ref !== "string" || !ref.trim()) return;
+  const byId = findExercise(db, ref);
+  if (byId) return byId;
+  const name = plain(ref).trim();
+  const common = COMMON_LIFTS[name];
+  return common ? findExercise(db, common) : allExercises(db).find((x) => plain(x.name) === name);
+}
+
+const DAY_WORDS: [RegExp, number][] = [
+  [/\blunes\b/, 0],
+  [/\bmartes\b/, 1],
+  [/\bmiercoles\b/, 2],
+  [/\bjueves\b/, 3],
+  [/\bviernes\b/, 4],
+  [/\bsabado\b/, 5],
+  [/\bdomingo\b/, 6],
+];
+const daysIn = (t: string) => DAY_WORDS.filter(([re]) => re.test(t)).map(([, d]) => d);
+
+/**
+ * Días que dice que no puede entrenar, sacados de su mensaje: «solo puedo martes, jueves y sábado» (los demás de esa semana),
+ * «el jueves no puedo», «la semana que viene…». Sin fechas que valgan, undefined.
+ */
+export function unavailableFromText(message: string, today: string): string[] | undefined {
+  const t = plain(message);
+  const only = /solo (puedo|podre|voy a poder)/.test(t);
+  const cannot = /no (puedo|podre|voy a poder)/.test(t);
+  if (!only && !cannot) return;
+  const named = daysIn(t);
+  if (!named.length) return;
+  const nextMonday = addDays(today, 7 - weekday(today));
+  // semana a la que se refiere: la que viene, esta (lo que queda) o, si no lo dice, la que tiene por delante
+  const week = (start: string) => Array.from({ length: 7 }, (_, i) => addDays(start, i)).filter((d) => d >= today);
+  let days = /semana que viene|proxima semana|siguiente semana/.test(t) ? week(nextMonday) : week(addDays(today, -weekday(today)));
+  // si de esta semana ya no queda nada útil (es domingo), la siguiente
+  if (!/esta semana/.test(t) && days.length <= 1) days = week(nextMonday);
+  const out = only ? days.filter((d) => !named.includes(weekday(d))) : days.filter((d) => named.includes(weekday(d)));
+  return out.length ? out : undefined;
+}
+
+/** Valida el entreno que la IA sacó de lo que contó: fechas, rangos y ejercicios que existen. */
+export function activityFromAi(raw: unknown, db: Pick<Db, "customExercises" | "profile">, today: string): ChatActivity | undefined {
+  if (!raw || typeof raw !== "object") return;
+  const o = raw as Record<string, unknown>;
+  const sport = SPORTS.find((s) => s === o.tipo);
+  const date = typeof o.fecha === "string" && /^\d{4}-\d{2}-\d{2}$/.test(o.fecha) && o.fecha <= today && o.fecha >= addDays(today, -60) ? o.fecha : undefined;
+  if (!sport || !date) return;
+  const exercises: WorkoutExercise[] = [];
+  if (sport === "strength")
+    for (const e of Array.isArray(o.ejercicios) ? o.ejercicios.slice(0, 20) : []) {
+      const x = (e ?? {}) as Record<string, unknown>;
+      const ex = exerciseFor(db, x.id) ?? exerciseFor(db, x.nombre);
+      const sets = (Array.isArray(x.series) ? x.series.slice(0, 20) : [])
+        .map((s) => (s ?? {}) as Record<string, unknown>)
+        .map((s) => ({ reps: between(s.reps, 1, 200), kg: between(s.kg, 0.5, 500) }))
+        .filter((s) => s.reps)
+        .map((s) => (s.kg ? { kg: s.kg, reps: Math.round(s.reps!) } : { reps: Math.round(s.reps!) }));
+      if (!ex || !sets.length) continue;
+      exercises.push({ exerciseId: ex.id, name: ex.name, sets, ...(x.bw === true ? { bw: true, ...(db.profile?.weightKg ? { bodyKg: db.profile.weightKg } : {}) } : {}) });
+    }
+  if (sport === "strength" && !exercises.length) return;
+  const distanceKm = sport === "strength" ? undefined : between(o.km, 0.1, 400);
+  const sets = exercises.reduce((n, e) => n + e.sets.length, 0);
+  const durationSec = (typeof o.tiempo === "string" ? parseTime(o.tiempo) : undefined) ?? (sets ? sets * SEC_PER_SET : undefined);
+  if (!durationSec || durationSec < 60 || durationSec > 24 * 3600) return;
+  // ritmo imposible (más rápido que 2:30 /km): mejor que lo corrija él
+  if (sport === "run" && distanceKm && durationSec / distanceKm < 150) return;
+  const text = (v: unknown, max: number) => (typeof v === "string" && v.trim() ? v.trim().slice(0, max) : undefined);
+  const rpe = between(o.rpe, 1, 10);
+  const out: ChatActivity = { sport, date, name: text(o.nombre, 80) ?? DEFAULT_NAME[sport], durationSec };
+  if (typeof o.hora === "string" && /^\d{2}:\d{2}$/.test(o.hora)) out.time = o.hora;
+  if (distanceKm) out.distanceKm = distanceKm;
+  const elevation = between(o.desnivel, 0, 9000);
+  if (elevation) out.elevationGainM = Math.round(elevation);
+  const hr = between(o.fcMedia, 40, 230);
+  if (hr) out.avgHr = Math.round(hr);
+  if (rpe) out.rpe = Math.round(rpe);
+  const feel = FEELS.find((f) => f === o.sensacion);
+  if (feel) out.feel = feel;
+  const feelings = text(o.comoSeSintio, 1000);
+  if (feelings) out.feelings = feelings;
+  if (exercises.length) out.exercises = exercises;
+  return out;
 }
 
 /** Valida la respuesta: texto y, si hay, rutinas con ejercicios que existen y que puede hacer. */
-export function chatReplyFromAi(input: AiChatReply | null | undefined, equipment: Equipment[], now: string): { text: string; routines: Routine[]; remember: string[] } {
+export function chatReplyFromAi(
+  input: AiChatReply | null | undefined,
+  equipment: Equipment[],
+  now: string,
+  db: Pick<Db, "customExercises" | "profile" | "plan"> = {},
+  today = now.slice(0, 10),
+  message = "",
+): { text: string; routines: Routine[]; remember: string[]; activity?: ChatActivity; planRequest?: string; planDays?: string[] } {
   const raw = input && typeof input === "object" ? input : {};
   const text = typeof raw.reply === "string" ? raw.reply.trim().slice(0, 4000) : "";
   const routines: Routine[] = [];
@@ -131,5 +275,21 @@ export function chatReplyFromAi(input: AiChatReply | null | undefined, equipment
     routines.push({ id: "", name, exercises, folder: "Entrenador IA", createdAt: now, updatedAt: now });
   }
   const remember = (Array.isArray(raw.recordar) ? raw.recordar : []).map(cleanPreference).filter((t) => t.length >= 3).slice(0, 5);
-  return { text: text || (routines.length ? "Te propongo estas rutinas:" : ""), routines, remember };
+  const activity = activityFromAi(raw.registrar, db, today);
+  // si la IA marca el cambio pero no lo pone en texto, vale su propio mensaje
+  const asked = typeof raw.ajustarPlan === "string" ? raw.ajustarPlan.trim() : raw.ajustarPlan && typeof raw.ajustarPlan === "object" ? message.trim() : "";
+  // con días que marcar, el cambio ya está hecho: lo demás (la IA que reajusta) va solo después
+  const planRequest = db.plan && asked.length >= 5 && !unavailableFromText(message, today) ? asked.slice(0, 500) : undefined;
+  // los días, mejor de su propio mensaje (fiable); si no, los que diga la IA
+  const fromText = unavailableFromText(message, today);
+  const fromAi = (Array.isArray(raw.diasSinEntrenar) ? raw.diasSinEntrenar : []).filter((d): d is string => typeof d === "string" && /^\d{4}-\d{2}-\d{2}$/.test(d));
+  const planDays = db.plan ? [...new Set(fromText ?? fromAi)].filter((d) => d >= today && d <= addDays(today, 30)).sort().slice(0, 30) : [];
+  return {
+    text: text || (routines.length ? "Te propongo estas rutinas:" : activity ? "Lo tengo listo para guardar:" : ""),
+    routines,
+    remember,
+    ...(activity ? { activity } : {}),
+    ...(planRequest ? { planRequest } : {}),
+    ...(planDays.length ? { planDays } : {}),
+  };
 }

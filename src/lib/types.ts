@@ -348,6 +348,27 @@ export interface StrengthChatMessage {
   at: string;
   routines?: Routine[];
   saved?: boolean; // ya guardó las rutinas propuestas
+  activity?: ChatActivity; // entreno que contó y la IA dejó listo para guardar
+  activityId?: string; // id de la actividad ya guardada
+  planRequest?: string; // cambio del plan que pidió, listo para aplicar
+  planDays?: string[]; // días que dijo que no puede entrenar, listos para marcar
+  planResult?: string; // lo que hizo la IA al aplicarlo
+}
+
+/** Entreno contado en el chat (por escrito o por voz) y pasado a datos por la IA. */
+export interface ChatActivity {
+  sport: SportKind;
+  date: string;
+  time?: string; // HH:MM
+  name: string;
+  distanceKm?: number;
+  durationSec: number;
+  elevationGainM?: number;
+  avgHr?: number;
+  rpe?: number;
+  feel?: Feel;
+  feelings?: string;
+  exercises?: WorkoutExercise[]; // fuerza: ejercicios y series
 }
 
 export interface StrengthCoachState {

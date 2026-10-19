@@ -156,7 +156,7 @@ Base: [[Estudio entrenamiento#6. La Pirámide de Entrenamiento (Helms, Valdez, M
 ## ✨ Fase 7 · Ideas nuevas (2026-10-18) — *alcance y orden decididos con David* → [[Decisiones#Ideas nuevas: orden y alcance]]
 1. [x] **EMOM** (Fuerza → EMOM): intervalo y rondas, ejercicios que se turnan, pitidos 3-2-1, pantalla encendida, marcar rondas sin completar; se guarda como entreno de fuerza — *hecho 2026-10-18, pendiente de comprobar* → [[Decisiones#EMOM]]
 2. [x] **Compartir el entreno** en Instagram/WhatsApp (imagen de historia): fuerza con el cuerpo humano y los músculos coloreados (cuerpo nuevo en SVG, también en la portada de Fuerza); running con la línea del recorrido sobre fondo oscuro — *hecho 2026-10-18, pendiente de comprobar en el iPhone* → [[Decisiones#Compartir el entreno]]
-3. [ ] **Chat con la IA** (running y fuerza) que crea rutinas y toca el plan, y **registrar por voz** en ese chat (dictado del teclado del iPhone)
+3. [x] **Entrenador IA** (`/entrenador`, en «Más» y desde Fuerza y Plan): chat de running y fuerza que registra los entrenos que le cuentas, crea rutinas y cambia el plan (todo con un botón para confirmar), con **micrófono** donde el navegador lo permite — *hecho 2026-10-18, pendiente de comprobar en el móvil* → [[Decisiones#Entrenador IA]]
 4. [ ] **Grabar la carrera con el GPS** en Registrar. En el iPhone (web instalada) solo con la pantalla encendida; en Android, en segundo plano
 
 ## 🧠 IA que aprende de ti (opción 2: sin entrenar el modelo) → [[Decisiones#IA que aprende de ti]]

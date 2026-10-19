@@ -12,6 +12,7 @@ const ITEMS = [
   { href: "/plan", label: "Plan", icon: "M7 3v3M17 3v3M4 8h16M5 5h14a1 1 0 011 1v13a1 1 0 01-1 1H5a1 1 0 01-1-1V6a1 1 0 011-1z" },
   { href: "/fuerza", label: "Fuerza", icon: "M6 7v10M18 7v10M3 10v4M21 10v4M6 12h12" },
   { href: "/registrar", label: "Registrar", icon: "M12 5v14M5 12h14" },
+  { href: "/entrenador", label: "Entrenador IA", icon: "M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3z" },
   { href: "/estadisticas", label: "Stats", icon: "M4 20V10M10 20V4M16 20v-7M22 20H2" },
   { href: "/amigos", label: "Amigos", icon: "M9 11a4 4 0 100-8 4 4 0 000 8zm-7 10a7 7 0 0114 0M16 3.1a4 4 0 010 7.8M22 21a7 7 0 00-4-6.3" },
   { href: "/carreras", label: "Carreras", icon: "M5 21V4m0 0h11l-2 4 2 4H5" },
@@ -24,7 +25,7 @@ const ITEMS = [
 const STRENGTH_ITEMS = [
   ITEMS[0],
   ITEMS[2],
-  { href: "/fuerza/entrenador", label: "Entrenador", icon: "M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3z" },
+  { href: "/entrenador", label: "Entrenador", icon: "M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3z" },
   { href: "/fuerza/entreno", label: "Entrenar", icon: "M12 5v14M5 12h14" },
   ...ITEMS.filter((i) => ["/amigos", "/perfil", "/herramientas", "/sueno", "/registrar", "/ajustes"].includes(i.href)),
 ];
@@ -41,7 +42,7 @@ function Icon({ d, className = "h-5 w-5" }: { d: string; className?: string }) {
 // móvil: arriba el logo (Inicio) y Amigos; abajo 4 secciones con Registrar destacado en el centro, y el resto en «Más»
 const MOBILE_TOP = ["/", "/amigos"];
 const MOBILE_BOTTOM = ["/plan", "/fuerza", "/registrar", "/perfil"];
-const STRENGTH_BOTTOM = ["/fuerza", "/fuerza/entrenador", "/fuerza/entreno", "/perfil"];
+const STRENGTH_BOTTOM = ["/fuerza", "/entrenador", "/fuerza/entreno", "/perfil"];
 const CTA = ["/registrar", "/fuerza/entreno"]; // el botón naranja de la barra de abajo
 const MORE_ICON = "M5 12h.01M12 12h.01M19 12h.01";
 const TROPHY = "M8 4h8v5a4 4 0 01-8 0V4zM8 6H5a3 3 0 003 4M16 6h3a3 3 0 01-3 4M12 13v4M8 21h8M10 17h4v4";
@@ -182,7 +183,7 @@ export function lastVisited(skip: (url: string) => boolean, fallback: string): s
 /** Menú sin sección resaltada (el que se prerenderiza) o con ella. */
 export function NavView({ path, query, focus }: { path?: string; query?: string; focus?: Focus }) {
   const items = itemsFor(focus);
-  // resalta la entrada más concreta: en /fuerza/entrenador, «Entrenador» y no «Fuerza»
+  // resalta la entrada más concreta: en /fuerza/entreno, «Entrenar» y no «Fuerza»
   const matches = (href: string) => path !== undefined && (href === "/" ? path === "/" : path === href || path.startsWith(`${href}/`) || path.startsWith(`${href}?`));
   const active = (href: string) => matches(href) && !items.some((o) => o.href.length > href.length && o.href.startsWith(href) && matches(o.href));
   return (

@@ -427,7 +427,14 @@ export async function markUnavailable(_: FormState, fd: FormData): Promise<FormS
   if (diffDays(to, from) > 60) return { error: "Como máximo 60 días seguidos." };
   const dates: string[] = [];
   for (let d = from; d <= to; d = addDays(d, 1)) dates.push(d);
+  return markUnavailableDates(dates);
+}
+
+/** Marca días sueltos sin poder entrenar (p. ej. los que dijo en el chat): las sesiones se mueven a sus días libres. */
+export async function markUnavailableDates(list: string[]): Promise<FormState> {
   const today = todayLocal();
+  const dates = [...new Set(list)].filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(d) && Math.abs(diffDays(d, today)) <= 60).sort();
+  if (!dates.length) return { error: "Revisa las fechas." };
   let moved = 0;
   let dropped = 0;
   await updateDb((db) => {
