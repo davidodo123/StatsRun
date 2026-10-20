@@ -760,3 +760,12 @@ David preguntó si se puede «entrenar» una IA para la app. Opciones: (1) instr
 - Plan: fuera «Cómo se adapta tu plan», la explicación del entrenador IA, la nota de los ritmos y la leyenda «Altura = km». Los avisos del plan van en un desplegable («N avisos del plan») y las notas técnicas (de dónde sale el VDOT, el volumen de partida…) ya no se enseñan.
 - La **Temporada** no se borra: es donde se añaden las carreras B y C. Pasa del plan a la página de Carreras como «Tu temporada» (solo si ya hay carrera objetivo).
 - Perfil se queda como está.
+
+## Versión guardada antes de reorganizar
+*2026-10-20*
+
+- Etiqueta de git **`v2026-10-20`** (commit `ba52d48`), subida a GitHub: la app tal como estaba antes de la reorganización y el rediseño de la Fase 8.
+- Volver a ella si algo sale mal:
+  - **La web, al momento**: Vercel → proyecto → Deployments → el despliegue de `ba52d48` → «Promote to Production» (o «Instant Rollback»).
+  - **El código**: `git checkout v2026-10-20` para verla, o `git revert` de los commits que sobren para volver sin perder historial.
+- Los **datos** no van en git: tienen su copia cifrada cada noche en el repo privado de copias (→ [[#Copias de seguridad]]).
