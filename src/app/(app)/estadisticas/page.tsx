@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { getAnalysis } from "@/lib/analysis";
-import { Card, Empty, Loading, PageHeader, Stat } from "@/components/ui";
+import { Card, Empty, Loading, PageHeader, Stat, StatGroup } from "@/components/ui";
 import { SimpleBars, TrendLine, WeeklyKmChart } from "@/components/charts";
 import { activityLoad } from "@/lib/engine/load";
 import { activityKcal } from "@/lib/engine/stats";
@@ -13,7 +13,7 @@ export const metadata: Metadata = { title: "Estadísticas" };
 export default function StatsPage() {
   return (
     <>
-      <PageHeader title="Estadísticas" subtitle="Todo lo que dicen tus datos, con el porqué de cada métrica." />
+      <PageHeader title="Estadísticas" />
       <Suspense fallback={<Loading />}>
         <Content />
       </Suspense>
@@ -44,7 +44,7 @@ async function Content() {
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-6">
+      <StatGroup className="md:grid-cols-4 lg:grid-cols-6">
         <Stat label="Km este año" value={fmtNum(T.yearKm)} unit="km" sub={`${T.yearRuns} carreras`} />
         <Stat label="Km este mes" value={fmtKm(T.monthKm)} unit="km" />
         <Stat label="Km totales" value={fmtNum(T.allKm)} unit="km" sub={`${T.allRuns} carreras`} />
@@ -57,7 +57,7 @@ async function Content() {
         <Stat label="Strain semanal" value={fmtNum(stats.strain)} sub="Carga × monotonía" />
         <Stat label="Tiempo suave (Z1-Z2)" value={`${Math.round(easyPct)} %`} sub="Objetivo ~80 % (8 sem)" />
         <Stat label="Media 6 semanas" value={fmtKm(T.avgWeeklyKm6)} unit="km/sem" />
-      </div>
+      </StatGroup>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Card title="Kilómetros por semana" subtitle="Últimas 26 semanas">

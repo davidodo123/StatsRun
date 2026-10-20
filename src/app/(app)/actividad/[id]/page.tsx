@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
-import { Card, Loading, PageHeader, Stat } from "@/components/ui";
+import { Card, Loading, PageHeader, Stat, StatGroup } from "@/components/ui";
 import { RouteMap } from "@/components/RouteMap";
 import { ActivityPhotoButtons } from "@/components/ActivityPhoto";
 import { activityPhotoUrl } from "@/lib/photos";
@@ -54,6 +54,9 @@ async function Content({ params, searchParams }: { params: PageProps<"/actividad
 
   return (
     <>
+      <Link href={mine ? "/perfil?tab=actividades" : `/amigos/${ownerId}`} className="text-sm text-ink-2 hover:text-ink">
+        ← {mine ? "Mis entrenos" : owner!.name}
+      </Link>
       <PageHeader
         title={a.name}
         subtitle={
@@ -71,9 +74,6 @@ async function Content({ params, searchParams }: { params: PageProps<"/actividad
                 Editar
               </Link>
             )}
-            <Link href={mine ? "/perfil?tab=actividades" : `/amigos/${ownerId}`} className="btn btn-ghost">
-              ← Volver
-            </Link>
           </div>
         }
       />
@@ -96,11 +96,11 @@ async function Content({ params, searchParams }: { params: PageProps<"/actividad
           ) : (
             <Card>
               <p className="text-sm text-ink-2">
-                Esta sesión no tiene recorrido GPS. Los mapas salen de Strava o de importar el archivo del reloj (GPX, TCX o FIT) en Registrar.
+                Sin recorrido GPS: sale de Strava, del archivo del reloj o grabando con el GPS.
               </p>
             </Card>
           )}
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+          <StatGroup className="md:grid-cols-4">
             {a.distanceM > 0 && <Stat label="Distancia" value={fmtKm(a.distanceM / 1000, 2)} unit="km" />}
             <Stat label="Tiempo en movimiento" value={fmtDuration(a.movingSec)} sub={a.elapsedSec > a.movingSec + 30 ? `Total ${fmtDuration(a.elapsedSec)}` : undefined} />
             {pace ? <Stat label="Ritmo medio" value={fmtPace(pace)} unit="/km" /> : speed ? <Stat label="Velocidad media" value={fmtKm(speed)} unit="km/h" /> : null}
@@ -119,7 +119,7 @@ async function Content({ params, searchParams }: { params: PageProps<"/actividad
             {a.steps && <Stat label="Pasos" value={fmtNum(a.steps)} />}
             {a.workout && <Stat label="Volumen" value={fmtNum(workoutVolume(a.workout))} unit="kg" sub={`${workoutSets(a.workout)} series · ${workoutReps(a.workout)} reps`} />}
             {a.rpe && <Stat label="Esfuerzo (RPE)" value={a.rpe} unit="/10" />}
-          </div>
+          </StatGroup>
         </div>
         <div className="space-y-4">
           {mine && (a.feel || a.feelings || a.notes) && (

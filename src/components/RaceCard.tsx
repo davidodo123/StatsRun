@@ -1,4 +1,4 @@
-import { Card } from "@/components/ui";
+import { FoldCard } from "@/components/ui";
 import { RouteMap } from "@/components/RouteMap";
 import { RaceFileUpload } from "@/components/RaceFilesUpload";
 import { applyCourseToPlan, removeCourse } from "@/app/actions";
@@ -14,7 +14,13 @@ export function RaceCard({ goal }: { goal: Goal }) {
   const applied = c?.elevationGainM === undefined || c.elevationGainM === goal.elevationGainM;
   const kinds = c ? [...new Set(c.markers.map((m) => m.kind))] : [];
   return (
-    <Card className="mt-4" title="Recorrido de la carrera" subtitle="Sube el circuito oficial (.kmz, .kml o .gpx) para ver el mapa, la distancia y el desnivel.">
+    // sin circuito subido va plegada: es solo el recuadro de subir el archivo
+    <FoldCard
+      className="mt-4"
+      open={Boolean(c)}
+      title="Recorrido de la carrera"
+      subtitle={c ? `${fmtKm(c.distanceKm, 2)} km${c.elevationGainM !== undefined ? ` · +${c.elevationGainM} m` : ""}` : "Sube el circuito oficial (.kmz, .kml o .gpx)"}
+    >
       <div className="space-y-3">
         {c ? (
           <>
@@ -63,6 +69,6 @@ export function RaceCard({ goal }: { goal: Goal }) {
           <RaceFileUpload label={c ? "Cambiar recorrido (.kmz, .kml, .gpx)" : "Subir recorrido (.kmz, .kml, .gpx)"} />
         </div>
       </div>
-    </Card>
+    </FoldCard>
   );
 }
