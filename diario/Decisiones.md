@@ -789,3 +789,10 @@ David preguntó si se puede «entrenar» una IA para la app. Opciones: (1) instr
 - Gráficas (mismo día): un solo color por gráfica, el naranja (`S1 = var(--accent)` en `charts.tsx`); una segunda serie va en gris (la fatiga en «Forma y fatiga»), y la frescura negativa también en gris, no en rojo: entrenando es lo normal. Los colores de las fases del plan no cambian.
 - Pendiente: repasar el resto de pantallas con el estilo nuevo. *(Hecho el mismo día.)*
 - **Cambio de letra (mismo día)**: a David la Barlow Condensed le parecía alargada y prefiere una letra redondeada. Ahora **Rubik** para todo (texto, cifras y títulos), con los títulos sin mayúsculas y las cifras a 24 px. Barlow ya no se usa.
+
+## Rutinas propias en el plan
+*2026-10-20*
+
+- Fallo: las sesiones de fuerza del plan sin rutina del usuario solo llevaban los ejercicios en texto («3 × 8-12 sentadilla goblet a RPE 7»), y «Empezar entreno» abría el entreno vacío.
+- Ahora «Empezar entreno» va a `/fuerza/entreno?sesion=<id>`: la página traduce las líneas de la sesión a ejercicios del catálogo (`lib/strength/planSteps.ts`: series, repeticiones —el máximo del rango, con el rango en la nota—, «por lado», segundos y las «2 rondas» del afinado; de las alternativas, la primera). Con una rutina propia, sus ejercicios más lo que el plan le añade («+ …»). Probado con todas las plantillas del plan.
+- **Rutinas propias en el plan**: en cada rutina, «En tu plan» (`Routine.planSlot`): que la coloque el plan (por la zona que trabaja, como hasta ahora), un día concreto de los que tiene el plan (pierna, tren superior, pecho…) o «No usarla en el plan». Al cambiarlo, la fuerza del plan se rehace. Debajo dice en cuántas sesiones está.

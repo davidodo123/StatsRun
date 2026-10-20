@@ -215,6 +215,22 @@ export async function saveRoutine(input: { id?: string; name?: string; notes?: s
   redirect(`/fuerza/rutinas/${id}`);
 }
 
+const PLAN_SLOTS = ["pierna", "posterior", "superior", "completo", "pecho", "espalda", "hombro", "no"] as const;
+
+/** Elige en qué día del plan va una rutina propia (o que no se use); vacío = lo decide el plan. Rehace la fuerza del plan. */
+export async function setRoutinePlanSlot(fd: FormData): Promise<void> {
+  const id = text(fd, "id", 40);
+  const slot = PLAN_SLOTS.find((s) => s === fd.get("slot"));
+  await updateDb((d) => {
+    const r = d.routines?.find((x) => x.id === id);
+    if (!r) return;
+    if (slot) r.planSlot = slot;
+    else delete r.planSlot;
+    syncPlanRoutines(d);
+  });
+  refresh();
+}
+
 export async function duplicateRoutine(fd: FormData): Promise<void> {
   const id = String(fd.get("id") ?? "");
   await updateDb((db) => {

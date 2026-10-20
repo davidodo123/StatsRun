@@ -101,7 +101,7 @@ const range = (xs: number[]) => {
 
 /** Rutinas del usuario listas para el plan: zona, pasos («3 × 8-10 Sentadilla a 80 kg») y duración estimada. */
 export function routinesForPlan(db: Pick<Db, "routines" | "customExercises">): RoutineForPlan[] {
-  return (db.routines ?? []).map((r) => {
+  return (db.routines ?? []).filter((r) => r.planSlot !== "no").map((r) => {
     const exercises = r.exercises.map((e) => ({ e, x: findExercise(db, e.exerciseId) }));
     const steps = exercises.map(({ e, x }) => {
       const work = e.sets.filter((s) => s.type !== "calentamiento");
@@ -127,7 +127,8 @@ export function routinesForPlan(db: Pick<Db, "routines" | "customExercises">): R
       steps,
       durationMin: Math.min(120, Math.max(20, Math.round(sets * 2.5 + 5))),
       covers,
-      kind: r.kind,
+      // el día que eligió el usuario manda sobre el de la IA
+      kind: r.planSlot && r.planSlot !== "no" ? r.planSlot : r.kind,
       phases: r.phases,
     };
   });

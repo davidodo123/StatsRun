@@ -829,7 +829,7 @@ export type StrengthKind = "pierna" | "posterior" | "superior" | "completo" | "p
 // con 4, la cuarta es otra de tren superior: no carga las piernas para correr
 export const STRENGTH_KINDS: Record<number, StrengthKind[]> = { 1: ["completo"], 2: ["pierna", "superior"], 3: ["pierna", "posterior", "superior"], 4: ["pierna", "posterior", "superior", "superior"] };
 // por grupos: un día para cada parte; la pierna entera (también la posterior) va en su día
-const GROUP_KINDS: Record<number, StrengthKind[]> = { 1: ["completo"], 2: ["superior", "pierna"], 3: ["pecho", "espalda", "pierna"], 4: ["pecho", "espalda", "pierna", "hombro"] };
+export const GROUP_KINDS: Record<number, StrengthKind[]> = { 1: ["completo"], 2: ["superior", "pierna"], 3: ["pecho", "espalda", "pierna"], 4: ["pecho", "espalda", "pierna", "hombro"] };
 export const strengthKindsFor = (n: number, style: StrengthStyle = "general"): StrengthKind[] => (style === "grupos" ? GROUP_KINDS : STRENGTH_KINDS)[n] ?? [];
 export const isLowerKind = (k?: StrengthKind) => k === "pierna" || k === "posterior" || k === "completo";
 

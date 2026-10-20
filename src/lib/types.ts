@@ -256,6 +256,7 @@ export interface Routine {
   source?: "ia"; // creada por el entrenador IA de fuerza (se sustituye al volver a pedirla)
   kind?: "pierna" | "posterior" | "superior" | "completo" | "pecho" | "espalda" | "hombro"; // hueco del plan para el que está hecha
   phases?: Phase[]; // fases del plan en que se usa (sin fases = cualquiera)
+  planSlot?: "pierna" | "posterior" | "superior" | "completo" | "pecho" | "espalda" | "hombro" | "no"; // elegido por el usuario: día del plan en que va (o «no» para no usarla); sin indicar, lo decide el plan
   createdAt: string;
   updatedAt: string;
 }

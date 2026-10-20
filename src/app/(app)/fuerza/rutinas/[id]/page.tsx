@@ -7,6 +7,7 @@ import { ExerciseThumb } from "@/components/ExerciseMedia";
 import { RoutineChart } from "@/components/RoutineChart";
 import { SetBadge } from "@/components/RoutineEditor";
 import { getDb } from "@/lib/db";
+import { RoutinePlanSlot } from "@/components/RoutinePlanSlot";
 import { getUser } from "@/lib/auth";
 import { requireUserId } from "@/lib/session";
 import { findExercise } from "@/lib/strength/catalog";
@@ -32,6 +33,8 @@ async function Content({ params }: { params: PageProps<"/fuerza/rutinas/[id]">["
   const today = todayLocal();
 
   const letters = supersetLetters(routine.exercises);
+  const planSessions = (db.plan?.weeks.flatMap((w) => w.sessions) ?? []).filter((s) => s.type === "strength" && s.date >= today);
+  const planKinds = [...new Set(planSessions.map((s) => s.strengthKind).filter((k): k is NonNullable<typeof k> => Boolean(k)))];
   return (
     <>
       <Link href="/fuerza" className="text-sm text-ink-2 hover:text-ink">
@@ -48,6 +51,15 @@ async function Content({ params }: { params: PageProps<"/fuerza/rutinas/[id]">["
       <Link href={`/fuerza/entreno?rutina=${routine.id}`} className="btn mt-4 w-full text-base">
         Comenzar rutina
       </Link>
+      {db.plan && (
+        <RoutinePlanSlot
+          id={routine.id}
+          slot={routine.planSlot}
+          // los días de fuerza que tiene tu plan (si aún no tiene, todos)
+          kinds={[...new Set([...(planKinds.length ? planKinds : ["pierna", "posterior", "superior", "completo", "pecho", "espalda", "hombro"]), ...(routine.planSlot && routine.planSlot !== "no" ? [routine.planSlot] : [])])]}
+          uses={planSessions.filter((s) => s.routineId === routine.id).length}
+        />
+      )}
 
       <div className="mt-5">
         <RoutineChart points={routineHistory(db.activities, routine.id, addDays(today, -366))} today={today} />

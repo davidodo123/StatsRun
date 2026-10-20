@@ -223,9 +223,16 @@ export function WorkoutLogger({
           </button>
         </div>
         <div className="mt-2 grid grid-cols-4 items-center text-center">
-          <button type="button" onClick={togglePause} className={`mx-auto rounded-full px-3 py-1.5 text-sm font-semibold ${paused ? "bg-accent text-accent-ink" : "bg-surface-2"}`} aria-pressed={paused}>
-            <Icon name={paused ? "play" : "pause"} className="mr-1 h-3.5 w-3.5 align-[-2px]" />
-            {paused ? "Reanudar" : "Pausa"}
+          {/* solo el icono: con el texto ocupaba media fila */}
+          <button
+            type="button"
+            onClick={togglePause}
+            className={`mx-auto grid h-9 w-9 place-items-center rounded-full ${paused ? "bg-accent text-accent-ink" : "bg-surface-2"}`}
+            aria-pressed={paused}
+            aria-label={paused ? "Reanudar" : "Pausa"}
+            title={paused ? "Reanudar" : "Pausa"}
+          >
+            <Icon name={paused ? "play" : "pause"} className="h-4 w-4" />
           </button>
           <Metric label={paused ? "En pausa" : "Duración"} value={fmtClock(elapsed)} accent />
           <Metric label="Volumen" value={`${volume.toLocaleString("es-ES")} kg`} />
