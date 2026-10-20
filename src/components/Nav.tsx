@@ -72,7 +72,7 @@ function MobileNav({ active, focus, logros }: { active: (href: string) => boolea
   const tab = "flex flex-1 flex-col items-center justify-center gap-1 pb-1.5 pt-2.5 text-[11px] font-medium";
   return (
     <>
-      <header className="fixed inset-x-0 top-0 z-40 border-b border-line bg-surface/95 pt-[env(safe-area-inset-top)] backdrop-blur md:hidden">
+      <header className="vv-top fixed inset-x-0 top-0 z-40 border-b border-line bg-surface/95 pt-[env(safe-area-inset-top)] backdrop-blur md:hidden">
         <div className="flex h-14 items-center justify-between px-4">
           <Link href="/" className="flex items-center gap-2 text-lg font-bold tracking-tight" aria-label="Inicio">
             <Logo compact />
@@ -97,7 +97,7 @@ function MobileNav({ active, focus, logros }: { active: (href: string) => boolea
       </header>
 
       {more && (
-        <div className="fixed inset-0 z-40 md:hidden" onClick={() => setMore(false)}>
+        <div className="no-select fixed inset-0 z-40 md:hidden" onClick={() => setMore(false)}>
           <div className="absolute inset-0 bg-black/40" />
           <div
             className="absolute inset-x-3 bottom-[calc(4.75rem+env(safe-area-inset-bottom))] rounded-2xl border border-line bg-surface p-2 shadow-xl"

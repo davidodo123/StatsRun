@@ -8,7 +8,6 @@ import { AiCoachButton } from "@/components/AiCoachButton";
 import { StrengthCoachCard } from "@/components/StrengthCoachCard";
 import { ReadinessCard } from "@/components/ReadinessCard";
 import { RaceCard } from "@/components/RaceCard";
-import { TuneUpRaces } from "@/components/TuneUpRaces";
 import { assessReadiness } from "@/lib/engine/readiness";
 import { UnavailableForm } from "@/components/UnavailableForm";
 import { adaptIfMissed, coachConfig, strengthModel } from "@/lib/coach";
@@ -107,20 +106,19 @@ async function Content({ searchParams }: { searchParams: PageProps<"/plan/actual
         />
       </div>
 
-      {(plan.warnings.length > 0 || plan.notes.length > 0) && (
-        <div className="mt-4 space-y-2">
-          {plan.warnings.map((w) => (
-            <Notice key={w} tone="warn">
-              {w}
-            </Notice>
-          ))}
-          {plan.notes.map((n) => (
-            <Notice key={n}>{n}</Notice>
-          ))}
-        </div>
+      {/* los avisos, plegados: solo se leen si se quiere */}
+      {plan.warnings.length > 0 && (
+        <details className="mt-4 rounded-xl border border-warning/40 bg-warning/10 px-3 py-2 text-sm">
+          <summary className="cursor-pointer font-semibold">
+            {plan.warnings.length === 1 ? "1 aviso del plan" : `${plan.warnings.length} avisos del plan`}
+          </summary>
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-ink-2">
+            {plan.warnings.map((w) => (
+              <li key={w}>{w}</li>
+            ))}
+          </ul>
+        </details>
       )}
-
-      <TuneUpRaces goal={db.goal ?? plan.goal} races={db.races ?? []} today={today} />
       {db.goal && <RaceCard goal={db.goal} />}
 
       {/* Línea temporal de fases */}
@@ -153,7 +151,6 @@ async function Content({ searchParams }: { searchParams: PageProps<"/plan/actual
           <span className="flex items-center gap-1.5">
             <span className="h-2.5 w-2.5 rounded-sm bg-muted opacity-50" /> Descarga
           </span>
-          <span>Altura = km de la semana</span>
         </div>
       </Card>
 
@@ -233,7 +230,6 @@ async function Content({ searchParams }: { searchParams: PageProps<"/plan/actual
                   </p>
                 )}
                 {db.coach?.error && <Notice tone="warn">Último intento falló: {db.coach.error}</Notice>}
-                <p className="text-xs text-muted">Se ejecuta solo cada vez que registras o importas un entreno, marcas días sin poder entrenar, dejas sesiones sin hacer o adaptas el plan. Reajusta y reprograma carrera y fuerza de los próximos 14 días.</p>
                 <AiCoachButton />
                 <Link href="/entrenador" className="block text-xs font-semibold text-accent">
                   Pídele un cambio del plan en el chat →
@@ -245,7 +241,7 @@ async function Content({ searchParams }: { searchParams: PageProps<"/plan/actual
               </p>
             )}
           </Card>
-          <Card title="Fuerza con IA" subtitle="Cuéntale con qué entrenas y te prepara la fuerza para la carrera">
+          <Card title="Fuerza con IA" subtitle="Rutinas con tu material">
             <StrengthCoachCard
               material={db.strengthCoach?.material}
               ability={db.strengthCoach?.ability}
@@ -258,13 +254,7 @@ async function Content({ searchParams }: { searchParams: PageProps<"/plan/actual
           </Card>
           <Card title="Disponibilidad" subtitle={db.profile ? `Entrenas: ${availableDaysOf(db.profile).map((d) => WEEKDAYS[d].slice(0, 3)).join(", ")}` : undefined}>
             <div className="space-y-3 text-sm">
-              <p className="text-ink-2">
-                ¿Un viaje, turno o imprevisto? Marca los días y las sesiones se mueven a tus días libres; la IA rehace la rutina. Para cambiar tus días fijos, ve a tu{" "}
-                <Link href="/perfil" className="text-accent">
-                  perfil
-                </Link>
-                .
-              </p>
+              <p className="text-ink-2">¿Un imprevisto? Marca los días y las sesiones se mueven solas.</p>
               <UnavailableForm today={today} />
               {blockedSoon.length > 0 && (
                 <ul className="flex flex-wrap gap-1.5">
@@ -310,17 +300,6 @@ async function Content({ searchParams }: { searchParams: PageProps<"/plan/actual
                 ))}
               </tbody>
             </table>
-            <p className="mt-3 text-xs text-muted">Ritmos de Jack Daniels. Cada vez que pulses «Adaptar con mis datos» se recalculan con tus mejores esfuerzos recientes.</p>
-          </Card>
-          <Card title="Cómo se adapta tu plan">
-            <ul className="space-y-2 text-sm text-ink-2">
-              <li>• Cada actividad de Strava se empareja con la sesión del día y calcula el % cumplido.</li>
-              <li>• Al adaptar, el VDOT se recalcula con tus mejores esfuerzos de 90 días y el volumen con tu media real de 6 semanas.</li>
-              <li>• El plan nunca sube más de un 10 % por semana e incluye descarga cada 4 semanas.</li>
-              <li>
-                • Revisa las alertas de carga en el <Link href="/" className="text-accent">inicio</Link>.
-              </li>
-            </ul>
           </Card>
         </div>
       </div>

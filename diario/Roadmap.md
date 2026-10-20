@@ -133,6 +133,7 @@ Base: [[Estudio entrenamiento#6. La Pirámide de Entrenamiento (Helms, Valdez, M
 - [x] **Semana del 12 sin lunes a jueves**: eran días marcados como «no puedo»; quitar el día ahora devuelve las sesiones, se ven en su semana y «No puedo ese día» pide confirmación — *hecho 2026-10-11*
 - [x] **«↻ Adaptar con mis datos» no parecía hacer nada**: sí recalculaba, pero sin aviso. Ahora pone «Adaptando…» y dice qué ha cambiado (VDOT, km, días) o que sale igual, y que la IA lo está ajustando — *hecho 2026-10-18, pendiente de comprobar* → [[Decisiones#Respuesta de «Adaptar con mis datos»]]
 
+- [x] **Teclado del iPhone (2026-10-20)**: con el teclado abierto (o recién cerrado) la barra de abajo flotaba en medio, la de arriba se iba bajo la hora y el descanso del entreno tapaba las series. Ahora la barra de abajo se oculta, lo de arriba sigue a la parte visible y el descanso pasa a la cabecera del entreno — *hecho 2026-10-20, pendiente de comprobar en el iPhone* → [[Decisiones#Teclado del iPhone y barras fijas]]
 - [x] **Sección Sueño** en «Más»: a qué hora despertarse por ciclos de 90 min, o a qué hora acostarse — *hecho 2026-10-12, pendiente de comprobar*
 
 ## 💾 Copias de seguridad (2026-10-12) → [[Decisiones#Copias de seguridad]]
@@ -159,6 +160,12 @@ Base: [[Estudio entrenamiento#6. La Pirámide de Entrenamiento (Helms, Valdez, M
 3. [x] **Entrenador IA** (`/entrenador`, en «Más» y desde Fuerza y Plan): chat de running y fuerza que registra los entrenos que le cuentas, crea rutinas y cambia el plan (todo con un botón para confirmar), con **micrófono** donde el navegador lo permite — *hecho 2026-10-18, comprobado 2026-10-19* → [[Decisiones#Entrenador IA]]
 4. [x] **Grabar la carrera con el GPS** (Registrar → Grabar con GPS): cronómetro, distancia, ritmo actual y medio, parciales, desnivel, recorrido y pausa automática; con la pantalla encendida (iPhone y Android) — *hecho 2026-10-19, pendiente de comprobar corriendo* → [[Decisiones#Grabar la carrera con el GPS]]
    - [ ] Android: grabar también con la pantalla bloqueada (complemento de ubicación en segundo plano; Google Play pide justificarlo)
+
+## 📝 Fase 8 · Por hacer (apuntado por David 2026-10-20)
+- [ ] **GPS**: desmarcar las opciones de correr al empezar a grabar (ahora «Correr» sale ya marcado)
+- [ ] **Pasos**: se han dejado de actualizar solos; David tiene que ejecutar el atajo a mano. Revisar las automatizaciones del atajo y si llegan los envíos
+- [ ] **Optimizar**: repasar y redistribuir toda la app (secciones, menús, qué va en cada página) para hacerla más simple y rápida
+- [ ] **Diseño**: hacer muchos diseños nuevos, porque la app se ve muy básica
 
 ## 🧠 IA que aprende de ti (opción 2: sin entrenar el modelo) → [[Decisiones#IA que aprende de ti]]
 - [x] Bloque 1 · Valoraciones (pulgar arriba/abajo con motivo) y memoria de preferencias que leen las tres IA; el chat apunta solo lo que le cuentas — *hecho 2026-10-10, pendiente de comprobar*

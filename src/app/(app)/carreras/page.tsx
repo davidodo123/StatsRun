@@ -6,14 +6,20 @@ import { RaceList } from "@/components/RaceList";
 import { CmRaceList } from "@/components/CmRaceList";
 import { Card, PageHeader } from "@/components/ui";
 import { cmCacheStale, readCmCache, refreshCmRaces } from "@/lib/cruzandolametaStore";
+import { TuneUpRaces } from "@/components/TuneUpRaces";
+import { getDb } from "@/lib/db";
+import { todayLocal } from "@/lib/dates";
 
 export const metadata: Metadata = { title: "Carreras" };
 
 export default function CarrerasPage() {
   return (
     <>
-      <PageHeader title="Elige tu carrera objetivo" subtitle="Consulta el recorrido, el clima típico y genera un plan ajustado a ella." />
-      <Card title="Próximas carreras · Cruzando la Meta" subtitle="Las que publica cruzandolameta.es (sobre todo Andalucía), con su ficha, normativa y recorrido." className="mb-6">
+      <PageHeader title="Carreras" subtitle="Elige tu objetivo y añade las de preparación." />
+      <Suspense fallback={null}>
+        <Season />
+      </Suspense>
+      <Card title="Próximas carreras · Cruzando la Meta" className="mb-6">
         <Suspense fallback={<div className="h-40 animate-pulse rounded-xl bg-surface-2" />}>
           <CmSection />
         </Suspense>
@@ -22,6 +28,18 @@ export default function CarrerasPage() {
       <RaceList races={RACES} />
       <p className="mt-6 text-xs text-muted">Desnivel, temperatura y fechas son aproximados: confírmalos en la web oficial de cada carrera.</p>
     </>
+  );
+}
+
+/** Tu temporada (si ya tienes plan): objetivo principal y carreras de preparación. */
+async function Season() {
+  const db = await getDb();
+  const goal = db.goal ?? db.plan?.goal;
+  if (!goal) return null;
+  return (
+    <div className="mb-6">
+      <TuneUpRaces goal={goal} races={db.races ?? []} today={todayLocal()} />
+    </div>
   );
 }
 

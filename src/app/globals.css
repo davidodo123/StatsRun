@@ -163,10 +163,33 @@ body {
     font-size: 16px !important;
   }
 
-  /* con el teclado abierto, la barra de abajo subía y quedaba flotando en medio, tapando el formulario */
-  body:has(:is(input:not([type="checkbox"], [type="radio"], [type="range"], [type="file"], [type="button"], [type="submit"]), textarea, select):focus) .mobile-tabbar {
+  /* con el teclado abierto, la barra de abajo subía y quedaba flotando en medio, tapando el formulario
+     (data-kb lo pone KeyboardFix también mientras el teclado se cierra) */
+  body:has(:is(input:not([type="checkbox"], [type="radio"], [type="range"], [type="file"], [type="button"], [type="submit"]), textarea, select):focus) .mobile-tabbar,
+  html[data-kb] .mobile-tabbar,
+  html[data-kb] .hide-on-kb {
     display: none;
   }
+  html[data-kb] .only-kb {
+    display: flex;
+  }
+  /* con el teclado, el iPhone mueve la parte visible hacia abajo: lo pegado arriba la sigue (si no, se iba bajo la hora) */
+  html[data-kb] .vv-top {
+    transform: translateY(var(--vv-top, 0px));
+  }
+}
+
+/* sin seleccionar texto ni el menú de «Copiar» al mantener pulsado (el menú «Más» abierto) */
+.no-select,
+html:has(.no-select) body {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* solo con el teclado del móvil abierto (ver más arriba) */
+.only-kb {
+  display: none;
 }
 
 .tabular {

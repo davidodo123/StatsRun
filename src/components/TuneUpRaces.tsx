@@ -17,7 +17,7 @@ export function TuneUpRaces({ goal, races, today }: { goal: Goal; races: TuneUpR
   const items = [{ main: true as const, date: goal.date }, ...upcoming.map((r) => ({ main: false as const, date: r.date, r }))].sort((a, b) => a.date.localeCompare(b.date));
   const when = (date: string, km: number) => `${WEEKDAYS[weekday(date)].slice(0, 3)} ${shortDate(date)} · ${fmtKm(km, 1)} km`;
   return (
-    <Card className="mt-4" title="Temporada" subtitle="Tus carreras: los objetivos (A) con su propio afinamiento y las de preparación (B y C) dentro del plan.">
+    <Card title="Tu temporada" subtitle="A: objetivo · B: a tope · C: como entreno">
       <div className="space-y-3">
         <ul className="divide-y divide-line rounded-xl border border-line text-sm">
           {items.map((it) =>

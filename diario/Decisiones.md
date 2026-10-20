@@ -744,3 +744,19 @@ David preguntó si se puede «entrenar» una IA para la app. Opciones: (1) instr
 - La grabación va guardándose en el navegador: si se cierra la app, al volver sigue en pausa con lo grabado.
 - La pantalla se queda encendida (Wake Lock). En el iPhone la web instalada no recibe la ubicación con la pantalla bloqueada; en Android tampoco de momento (haría falta un complemento de ubicación en segundo plano, y Google Play pide justificar ese permiso): queda como tarea aparte.
 - Android: permisos de ubicación añadidos al `AndroidManifest.xml`. Hace falta compilar e instalar una versión nueva de la app para que los pida (subir `versionCode` al subirla a Play).
+
+## Teclado del iPhone y barras fijas
+*2026-10-20*
+
+- En el iPhone, al abrir el teclado la parte visible de la página se desplaza y lo fijo no la sigue: la barra de arriba (y la cabecera del entreno) se iba bajo la hora y la de abajo se quedaba flotando en medio, a veces también después de cerrarlo (capturas de David en Perfil → Editar y en el entreno de fuerza).
+- `KeyboardFix` (en el layout de la app) mira la parte visible (`visualViewport`): mientras el teclado está abierto, o hay un campo activo, pone `html[data-kb]` y `--vv-top` (cuánto se ha movido). Con eso: la barra de abajo se oculta, la de arriba y la cabecera del entreno bajan con la parte visible (`.vv-top`), y la barra del descanso se esconde (`.hide-on-kb`) y el descanso sale en la cabecera del entreno (`.only-kb`).
+- Al cerrar el teclado, un desplazamiento de un píxel hace que el iPhone recoloque lo fijo.
+
+## Menos texto en inicio y plan
+*2026-10-20*
+
+- David quiere la app más simple y con menos scroll.
+- Inicio: fuera la tarjeta «Recomendaciones» (y `lib/engine/insights.ts`, que solo servía para eso); subtítulos más cortos (forma y fatiga, volumen, predicciones, salud).
+- Plan: fuera «Cómo se adapta tu plan», la explicación del entrenador IA, la nota de los ritmos y la leyenda «Altura = km». Los avisos del plan van en un desplegable («N avisos del plan») y las notas técnicas (de dónde sale el VDOT, el volumen de partida…) ya no se enseñan.
+- La **Temporada** no se borra: es donde se añaden las carreras B y C. Pasa del plan a la página de Carreras como «Tu temporada» (solo si ya hay carrera objetivo).
+- Perfil se queda como está.

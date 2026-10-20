@@ -1,12 +1,11 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { getAnalysis } from "@/lib/analysis";
-import { Card, Empty, Loading, PageHeader, Stat, Status } from "@/components/ui";
+import { Card, Empty, Loading, PageHeader, Stat } from "@/components/ui";
 import { FitnessChart, FormChart, WeeklyKmChart } from "@/components/charts";
 import { SessionCard } from "@/components/SessionCard";
 import { UndoSkip } from "@/components/UndoSkip";
 import { acwrStatus, tsbStatus } from "@/lib/engine/load";
-import { buildInsights } from "@/lib/engine/insights";
 import { vo2maxLabel } from "@/lib/engine/physiology";
 import { fmtDuration, fmtKm, fmtNum } from "@/lib/format";
 import { healthSummary, todayMadrid } from "@/lib/health";
@@ -58,7 +57,6 @@ async function Dashboard() {
   const t = stats.today;
   const acwrS = acwrStatus(stats.acwr);
   const tsbS = tsbStatus(t.tsb);
-  const insights = buildInsights(stats, profile, plan, matches, today);
 
   const upcoming = plan?.weeks.flatMap((w) => w.sessions).filter((s) => s.date >= today && s.date <= addDays(today, 6)) ?? [];
   const plannedByWeek = new Map(plan?.weeks.map((w) => [w.start, w.targetKm]) ?? []);
@@ -102,8 +100,8 @@ async function Dashboard() {
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
         <Stat label="VDOT" value={stats.vdot.vdot.toFixed(1)} sub={vo2maxLabel(stats.vdot.vdot, profile.sex, profile.age)} hint={stats.vdot.source} />
-        <Stat label="Forma (CTL)" value={t.ctl.toFixed(0)} sub="Media de carga 42 días" />
-        <Stat label="Fatiga (ATL)" value={t.atl.toFixed(0)} sub="Media de carga 7 días" />
+        <Stat label="Forma (CTL)" value={t.ctl.toFixed(0)} sub="42 días" />
+        <Stat label="Fatiga (ATL)" value={t.atl.toFixed(0)} sub="7 días" />
         <Stat label="Frescura (TSB)" value={t.tsb.toFixed(0)} status={tsbS} />
         <Stat label="Carga aguda/crónica" value={stats.acwr ? stats.acwr.toFixed(2) : "–"} status={acwrS} />
         <Stat label="Esta semana" value={fmtKm(stats.totals.weekKm)} unit="km" sub={`Media 6 sem: ${fmtKm(stats.totals.avgWeeklyKm6)} km`} />
@@ -111,12 +109,12 @@ async function Dashboard() {
 
       <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
         <div className="space-y-4 lg:col-span-2">
-          <Card title="Volumen semanal" subtitle={plan ? "Kilómetros reales frente a los planificados" : "Kilómetros de carrera por semana"}>
+          <Card title="Volumen semanal" subtitle={plan ? "Real frente al plan" : undefined}>
             <WeeklyKmChart data={weekly} />
           </Card>
-          <Card title="Forma y fatiga" subtitle="Modelo de rendimiento de Banister (CTL/ATL), últimos 120 días">
+          <Card title="Forma y fatiga" subtitle="Últimos 120 días">
             <FitnessChart data={fitness} />
-            <p className="mb-1 mt-4 text-xs font-medium text-muted">Frescura (TSB = forma − fatiga). Franja gris: zona de entrenamiento productivo.</p>
+            <p className="mb-1 mt-4 text-xs font-medium text-muted">Frescura (TSB)</p>
             <FormChart data={fitness} />
           </Card>
         </div>
@@ -148,7 +146,7 @@ async function Dashboard() {
                 </div>
               </dl>
             ) : (
-              <p className="text-sm text-ink-2">Trae cada día tus pasos y calorías del iPhone con un atajo de la app Atajos.</p>
+              <p className="text-sm text-ink-2">Conecta la Salud del móvil.</p>
             )}
           </Card>
 
@@ -174,12 +172,12 @@ async function Dashboard() {
               )
             ) : (
               <Empty title="Sin plan activo" href="/carreras" cta="Crear plan">
-                Elige una carrera y fecha, y generamos tu plan.
+                Elige una carrera.
               </Empty>
             )}
           </Card>
 
-          <Card title="Predicciones" subtitle="Según tu VDOT y tu volumen reciente">
+          <Card title="Predicciones">
             <ul className="divide-y divide-line text-sm">
               {stats.predictions.map((p) => (
                 <li key={p.label} className="flex items-center justify-between py-2">
@@ -193,18 +191,6 @@ async function Dashboard() {
             </ul>
           </Card>
 
-          <Card title="Recomendaciones">
-            <ul className="space-y-3">
-              {insights.map((i) => (
-                <li key={i.title}>
-                  <Status tone={i.tone}>
-                    <span className="font-semibold text-ink">{i.title}</span>
-                  </Status>
-                  <p className="mt-1 pl-6 text-xs text-ink-2">{i.detail}</p>
-                </li>
-              ))}
-            </ul>
-          </Card>
         </div>
       </div>
     </>
