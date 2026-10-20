@@ -162,7 +162,7 @@ function ProfileHeader({ db, stats, tab, picture, children }: { db: Db; stats: S
           {cells.map(([label, value]) => (
             <div key={label}>
               <dt className="text-[11px] text-muted">{label}</dt>
-              <dd className="font-bold tabular">{value}</dd>
+              <dd className="font-display text-xl leading-tight font-bold tabular">{value}</dd>
             </div>
           ))}
         </dl>

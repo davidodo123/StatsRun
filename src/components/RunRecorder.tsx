@@ -200,7 +200,7 @@ export function RunRecorder() {
         </div>
         {geoError && <p className="rounded-xl border border-critical/40 bg-critical/10 p-3 text-sm">{geoError}</p>}
         <p className="text-sm text-ink-2">
-          Deja la app abierta y la pantalla encendida mientras corres (se queda encendida sola). En el iPhone, si bloqueas la pantalla o cambias de app, la ubicación deja de llegar y ese tramo se une en línea recta.
+          Deja la app abierta: la pantalla se queda encendida sola. Si la bloqueas o cambias de app, deja de grabar.
         </p>
         {/* ninguno va marcado: el que toques empieza a grabar */}
         <p className="text-sm font-semibold">¿Qué vas a hacer? Toca para empezar</p>

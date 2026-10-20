@@ -5,7 +5,7 @@ export function PageHeader({ title, subtitle, action }: { title: string; subtitl
   return (
     <header className="mb-6 flex flex-wrap items-end justify-between gap-3">
       <div>
-        <h1 className="font-display text-3xl leading-none font-bold uppercase md:text-4xl">{title}</h1>
+        <h1 className="font-display text-2xl leading-tight font-bold md:text-3xl">{title}</h1>
         {subtitle && <p className="mt-1 text-sm text-ink-2">{subtitle}</p>}
       </div>
       {action}
@@ -74,7 +74,7 @@ export function Stat({
   return (
     <div className="rounded-xl border border-line bg-surface px-3 py-2.5" title={hint}>
       <p className="text-xs font-medium text-muted">{label}</p>
-      <p className={`mt-0.5 font-display text-[1.7rem] leading-tight font-bold tabular ${accent ? "text-accent" : ""}`}>
+      <p className={`mt-0.5 font-display text-2xl leading-tight font-bold tabular ${accent ? "text-accent" : ""}`}>
         {value}
         {unit && <span className="ml-1 font-sans text-sm font-medium text-ink-2">{unit}</span>}
       </p>

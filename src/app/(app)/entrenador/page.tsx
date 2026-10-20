@@ -25,7 +25,7 @@ async function Content() {
   const names = Object.fromEntries([...ids].map((id) => [id, findExercise(db, id)?.name ?? id]));
   return (
     <div className="mx-auto max-w-2xl">
-      <PageHeader title="Entrenador IA" subtitle="Cuéntale tus entrenos, pídele rutinas o cambios del plan, y pregúntale de running y fuerza." />
+      <PageHeader title="Entrenador IA" />
       <StrengthChat messages={messages} names={names} ratings={Object.fromEntries((db.aiFeedback ?? []).filter((f) => f.area === "chat").map((f) => [f.ref, f.rating]))} />
       <Card title="Lo que la IA sabe de ti" subtitle="Lo tiene en cuenta en el chat, en tus rutinas y al ajustar el plan" className="mt-6">
         <AiMemory list={db.aiPreferences ?? []} />

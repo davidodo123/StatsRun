@@ -95,7 +95,7 @@ export function ActivityForm({
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4">
         <label className="field">
           Deporte
           <select className="input" name="sport" value={sport} onChange={(e) => setSport(e.target.value as Activity["sport"])}>
@@ -121,7 +121,7 @@ export function ActivityForm({
         </label>
       </div>
 
-      <div className={`grid gap-4 ${hasDistance ? "sm:grid-cols-3" : "sm:grid-cols-2"}`}>
+      <div className={`grid grid-cols-2 gap-3 sm:gap-4 ${hasDistance ? "sm:grid-cols-3" : ""}`}>
         {hasDistance && (
           <label className="field">
             Distancia (km)
@@ -171,7 +171,7 @@ export function ActivityForm({
       )}
 
       {hasDistance && (
-        <div className={`grid gap-4 ${hasSteps ? "sm:grid-cols-3" : "sm:grid-cols-2"}`}>
+        <div className={`grid grid-cols-2 gap-3 sm:gap-4 ${hasSteps ? "sm:grid-cols-3" : ""}`}>
           <label className="field">
             Desnivel positivo (m)
             <input className="input" type="number" min={0} name="elevationGainM" defaultValue={initial.elevationGainM ?? ""} placeholder="0" />
@@ -231,7 +231,7 @@ export function ActivityForm({
           {more ? "− Ocultar" : "+ Añadir"} datos del reloj (FC, cadencia)
         </button>
         {more && (
-          <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
             <label className="field">
               FC media
               <input className="input" type="number" name="avgHr" defaultValue={initial.avgHr ?? ""} />

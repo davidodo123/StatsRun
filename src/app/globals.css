@@ -102,7 +102,7 @@
   --color-s2: var(--series-2);
   --color-s3: var(--series-3);
   --font-sans: var(--font-body), system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-display: var(--font-display-face), var(--font-body), system-ui, sans-serif;
+  --font-display: var(--font-body), system-ui, sans-serif;
 }
 
 /* lo que queda fuera de la página (bajo la barra de abajo en el iPhone instalado, o al rebotar) toma el color

@@ -209,7 +209,7 @@ export function StrengthChat({ messages, names, ratings = {} }: { messages: Stre
       {!messages.length && !pending && (
         <div className="rounded-2xl border border-line bg-surface p-4">
           <p className="text-sm text-ink-2">
-            Cuéntale lo que has entrenado (escribiendo o hablando) y te lo deja listo para guardar. Pídele una rutina, un cambio en el plan o pregúntale lo que quieras de running y fuerza. Conoce tu perfil, tu plan, tu material y lo que has hecho.
+            Cuéntale lo que has entrenado, pídele una rutina o un cambio del plan, o pregúntale lo que quieras.
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
             {SUGGESTIONS.map((s) => (

@@ -11,7 +11,7 @@ export default function RecordPage() {
       <Link href="/registrar" className="text-sm text-ink-2 hover:text-ink">
         ← Registrar
       </Link>
-      <PageHeader title="Grabar con GPS" subtitle="Cronómetro, distancia, ritmo y recorrido con la ubicación del móvil." />
+      <PageHeader title="Grabar con GPS" />
       <RunRecorder />
     </div>
   );

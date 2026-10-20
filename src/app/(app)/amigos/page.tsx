@@ -20,7 +20,7 @@ export const metadata: Metadata = { title: "Amigos" };
 export default function AmigosPage({ searchParams }: PageProps<"/amigos">) {
   return (
     <>
-      <PageHeader title="Amigos" subtitle="Preparad la carrera juntos: mirad cómo va el otro, sus entrenos y su forma." />
+      <PageHeader title="Amigos" subtitle="Mira cómo van y entrenad juntos." />
       <Suspense fallback={<Loading />}>
         <Content searchParams={searchParams} />
       </Suspense>

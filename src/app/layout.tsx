@@ -1,12 +1,11 @@
 import type { Metadata, Viewport } from "next";
-import { Barlow, Barlow_Condensed } from "next/font/google";
+import { Rubik } from "next/font/google";
 import "./globals.css";
 import { ServiceWorkerRegister } from "@/components/Pwa";
 import { NativeBridge } from "@/components/NativeBridge";
 
-// estilo deportivo: texto en Barlow y cifras y títulos en Barlow Condensed, como un marcador de carrera
-const body = Barlow({ subsets: ["latin"], weight: ["400", "500", "600", "700"], variable: "--font-body", display: "swap" });
-const display = Barlow_Condensed({ subsets: ["latin"], weight: ["600", "700"], variable: "--font-display-face", display: "swap" });
+// estilo deportivo con letra redondeada (David no quería la condensada, alargada): Rubik para todo
+const body = Rubik({ subsets: ["latin"], variable: "--font-body", display: "swap" });
 
 export const metadata: Metadata = {
   title: { default: "Run-In-Out", template: "%s · Run-In-Out" },
@@ -30,7 +29,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="es" className={`h-full antialiased ${body.variable} ${display.variable}`}>
+    <html lang="es" className={`h-full antialiased ${body.variable}`}>
       <body className="flex min-h-full">
         {children}
         <ServiceWorkerRegister />
