@@ -212,7 +212,7 @@ export function WorkoutLogger({
 
   return (
     <div className="space-y-4 pb-20">
-      <div className="sticky top-[calc(3.5rem+env(safe-area-inset-top))] z-30 md:top-0 -mx-4 border-b border-line bg-bg/95 px-4 py-2 backdrop-blur md:-mx-8 md:px-8">
+      <div className="vv-top sticky top-[calc(3.5rem+env(safe-area-inset-top))] z-30 md:top-0 -mx-4 border-b border-line bg-bg/95 px-4 py-2 backdrop-blur md:-mx-8 md:px-8">
         <div className="flex items-center justify-between gap-2">
           <button type="button" className="text-sm text-critical" onClick={discard}>
             Descartar
@@ -231,6 +231,16 @@ export function WorkoutLogger({
           <Metric label="Volumen" value={`${volume.toLocaleString("es-ES")} kg`} />
           <Metric label="Series" value={String(doneSets.length)} />
         </div>
+        {/* escribiendo, la barra del descanso de abajo taparía las series: el descanso va aquí */}
+        {rest && restLeft > 0 && (
+          <div className="only-kb mt-2 items-center gap-2 rounded-xl bg-accent/15 px-3 py-1.5 text-sm">
+            <span className="text-ink-2">Descanso</span>
+            <strong className="tabular">{fmtClock(restLeft)}</strong>
+            <button type="button" className="ml-auto text-xs font-semibold text-accent" onClick={() => setRest(undefined)}>
+              Saltar
+            </button>
+          </div>
+        )}
       </div>
 
       {resumed && (
@@ -374,7 +384,7 @@ export function WorkoutLogger({
       </p>
 
       {rest && restLeft > 0 && (
-        <div className="fixed inset-x-0 bottom-[calc(4.75rem+env(safe-area-inset-bottom))] z-40 px-4 md:bottom-4 md:left-56">
+        <div className="hide-on-kb fixed inset-x-0 bottom-[calc(4.75rem+env(safe-area-inset-bottom))] z-40 px-4 md:bottom-4 md:left-56">
           <div className="mx-auto flex max-w-xl items-center gap-3 rounded-2xl border border-line bg-surface p-3 shadow-lg">
             <div className="min-w-0 flex-1">
               <div className="text-xs text-muted">Descanso</div>

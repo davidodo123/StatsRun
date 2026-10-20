@@ -74,7 +74,7 @@ export function GoalForm({ race, preset, defaultDate, hasProfile }: { race?: Rac
         </label>
       </div>
       <div className="flex flex-wrap items-center gap-3">
-        <button className="btn" disabled={pending}>
+        <button className="btn shrink-0" disabled={pending}>
           {pending ? "Generando plan…" : hasProfile ? "Generar mi plan" : "Guardar objetivo"}
         </button>
         {state.error && <p className="text-sm font-medium text-critical">✕ {state.error}</p>}

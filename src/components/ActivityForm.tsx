@@ -260,7 +260,7 @@ export function ActivityForm({
       {friends.length > 0 && <WithFriends friends={friends} initial={initial.with ?? []} />}
 
       <div className="flex flex-wrap items-center gap-3">
-        <button className="btn" disabled={pending}>
+        <button className="btn shrink-0" disabled={pending}>
           {pending ? "Guardando…" : initial.id ? "Guardar cambios" : "Registrar entreno"}
         </button>
         {state.error && <p className="text-sm font-medium text-critical">✕ {state.error}</p>}

@@ -167,8 +167,8 @@ export function ProfileForm({ profile, initialFocus }: { profile?: Profile; init
         </div>
       </fieldset>
 
-      <div className="flex items-center gap-3">
-        <button className="btn" disabled={pending}>
+      <div className="flex flex-wrap items-center gap-3">
+        <button className="btn shrink-0" disabled={pending}>
           {pending ? "Guardando…" : "Guardar perfil"}
         </button>
         {state.error && <p className="text-sm font-medium text-critical">✕ {state.error}</p>}
