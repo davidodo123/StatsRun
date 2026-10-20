@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import { getAnalysis } from "@/lib/analysis";
-import { Card, Empty, Loading, Notice, PageHeader, Stat, StatGroup } from "@/components/ui";
+import { Card, Empty, FoldCard, Loading, MoreMenu, Notice, PageHeader, Stat, StatGroup } from "@/components/ui";
 import { SessionCard } from "@/components/SessionCard";
 import { AiCoachButton } from "@/components/AiCoachButton";
 import { StrengthCoachCard } from "@/components/StrengthCoachCard";
@@ -79,11 +79,11 @@ async function Content({ searchParams }: { searchParams: PageProps<"/plan/actual
         action={
           <div className="flex max-w-md flex-wrap gap-2">
             <AdaptPlanButton />
-            <form action={clearPlan}>
-              <button className="btn btn-ghost" title="Pasa a «Planes anteriores»">
-                Terminar plan
-              </button>
-            </form>
+            <MoreMenu>
+              <form action={clearPlan}>
+                <button title="Pasa a «Planes anteriores»">Terminar plan</button>
+              </form>
+            </MoreMenu>
           </div>
         }
       />
@@ -252,7 +252,16 @@ async function Content({ searchParams }: { searchParams: PageProps<"/plan/actual
               model={strengthModel()}
             />
           </Card>
-          <Card title="Disponibilidad" subtitle={db.profile ? `Entrenas: ${availableDaysOf(db.profile).map((d) => WEEKDAYS[d].slice(0, 3)).join(", ")}` : undefined}>
+          <FoldCard
+            title="Disponibilidad"
+            subtitle={
+              blockedSoon.length
+                ? `${blockedSoon.length} ${blockedSoon.length === 1 ? "día marcado" : "días marcados"} sin entrenar`
+                : db.profile
+                  ? `Entrenas: ${availableDaysOf(db.profile).map((d) => WEEKDAYS[d].slice(0, 3)).join(", ")}`
+                  : undefined
+            }
+          >
             <div className="space-y-3 text-sm">
               <p className="text-ink-2">¿Un imprevisto? Marca los días y las sesiones se mueven solas.</p>
               <UnavailableForm today={today} />
@@ -272,8 +281,8 @@ async function Content({ searchParams }: { searchParams: PageProps<"/plan/actual
                 </ul>
               )}
             </div>
-          </Card>
-          <Card title="Tus ritmos de entrenamiento" subtitle={`VDOT ${plan.startVdot.toFixed(1)} (inicio) → ${plan.targetVdot.toFixed(1)} (final)`}>
+          </FoldCard>
+          <FoldCard title="Tus ritmos de entrenamiento" subtitle={`VDOT ${plan.startVdot.toFixed(1)} (inicio) → ${plan.targetVdot.toFixed(1)} (final)`}>
             <table className="w-full text-sm tabular">
               <thead className="text-left text-xs text-muted">
                 <tr>
@@ -300,7 +309,7 @@ async function Content({ searchParams }: { searchParams: PageProps<"/plan/actual
                 ))}
               </tbody>
             </table>
-          </Card>
+          </FoldCard>
         </div>
       </div>
     </>

@@ -110,12 +110,12 @@ async function Dashboard() {
       <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
         <div className="space-y-4 lg:col-span-2">
           <Card title="Volumen semanal" subtitle={plan ? "Real frente al plan" : undefined}>
-            <WeeklyKmChart data={weekly} />
+            <WeeklyKmChart data={weekly} height={190} />
           </Card>
           <Card title="Forma y fatiga" subtitle="Últimos 120 días">
-            <FitnessChart data={fitness} />
+            <FitnessChart data={fitness} height={200} />
             <p className="mb-1 mt-4 text-xs font-medium text-muted">Frescura (TSB)</p>
-            <FormChart data={fitness} />
+            <FormChart data={fitness} height={120} />
           </Card>
         </div>
 

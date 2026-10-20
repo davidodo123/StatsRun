@@ -70,6 +70,38 @@ export function Stat({ label, value, unit, sub, status, hint }: { label: string;
   );
 }
 
+/** Tarjeta que se pliega: el título siempre a la vista, el contenido al tocarlo. */
+export function FoldCard({ title, subtitle, children, open, className = "" }: { title: ReactNode; subtitle?: ReactNode; children: ReactNode; open?: boolean; className?: string }) {
+  return (
+    <details open={open} className={`group/fold rounded-2xl border border-line bg-surface ${className}`}>
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-2 p-4 md:px-5">
+        <span className="min-w-0">
+          <span className="block text-sm font-semibold">{title}</span>
+          {subtitle && <span className="mt-0.5 block text-xs text-muted">{subtitle}</span>}
+        </span>
+        <span className="text-muted transition group-open/fold:rotate-90" aria-hidden>
+          ›
+        </span>
+      </summary>
+      <div className="px-4 pb-4 md:px-5 md:pb-5">{children}</div>
+    </details>
+  );
+}
+
+/** Menú «⋯» para las acciones secundarias de una cabecera (sin JS: un desplegable). */
+export function MoreMenu({ children, label = "Más opciones" }: { children: ReactNode; label?: string }) {
+  return (
+    <details className="relative">
+      <summary className="btn btn-ghost list-none px-3" aria-label={label} title={label}>
+        ⋯
+      </summary>
+      <div className="absolute right-0 z-30 mt-2 min-w-48 rounded-xl border border-line bg-surface p-1 shadow-xl [&_button]:w-full [&_button]:rounded-lg [&_button]:px-3 [&_button]:py-2 [&_button]:text-left [&_button]:text-sm [&_button:hover]:bg-surface-2">
+        {children}
+      </div>
+    </details>
+  );
+}
+
 /** Varios datos en un solo bloque dividido por líneas (menos alto que una caja por dato). Con un número impar
  *  en el móvil, el último ocupa toda la fila. */
 export function StatGroup({ children, className = "" }: { children: ReactNode; className?: string }) {
