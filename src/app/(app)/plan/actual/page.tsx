@@ -95,7 +95,7 @@ async function Content({ searchParams }: { searchParams: PageProps<"/plan/actual
         </div>
       )}
       <StatGroup className="md:grid-cols-5">
-        <Stat label="Días para la carrera" value={Math.max(0, days)} />
+        <Stat label="Días para la carrera" value={Math.max(0, days)} accent />
         <Stat label="Tiempo previsto" value={race ? fmtDuration(race.durationMin * 60) : "–"} sub={plan.goal.targetTimeSec ? `Objetivo ${fmtDuration(plan.goal.targetTimeSec)}` : "Objetivo: terminar"} />
         <Stat label="VDOT" value={`${plan.startVdot.toFixed(1)} → ${plan.targetVdot.toFixed(1)}`} sub={stats ? `Hoy: ${stats.vdot.vdot.toFixed(1)}` : undefined} />
         <Stat label="Km totales del plan" value={Math.round(totalKm)} unit="km" />

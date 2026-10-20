@@ -101,7 +101,8 @@
   --color-s1: var(--series-1);
   --color-s2: var(--series-2);
   --color-s3: var(--series-3);
-  --font-sans: system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-sans: var(--font-body), system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: var(--font-display-face), var(--font-body), system-ui, sans-serif;
 }
 
 /* lo que queda fuera de la página (bajo la barra de abajo en el iPhone instalado, o al rebotar) toma el color
@@ -149,7 +150,7 @@ body {
   min-height: calc(100dvh + env(safe-area-inset-top));
   background: var(--bg);
   color: var(--text);
-  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-family: var(--font-body), system-ui, -apple-system, "Segoe UI", sans-serif;
   /* nada puede ensanchar la página: en el iPhone se movía todo hacia los lados */
   overflow-x: hidden;
   overflow-x: clip;

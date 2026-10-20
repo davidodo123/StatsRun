@@ -5,7 +5,7 @@ export function PageHeader({ title, subtitle, action }: { title: string; subtitl
   return (
     <header className="mb-6 flex flex-wrap items-end justify-between gap-3">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight md:text-3xl">{title}</h1>
+        <h1 className="font-display text-3xl leading-none font-bold uppercase md:text-4xl">{title}</h1>
         {subtitle && <p className="mt-1 text-sm text-ink-2">{subtitle}</p>}
       </div>
       {action}
@@ -52,14 +52,37 @@ export function Status({ tone, children }: { tone: Tone; children: ReactNode }) 
   );
 }
 
-export function Stat({ label, value, unit, sub, status, hint }: { label: string; value: ReactNode; unit?: string; sub?: ReactNode; status?: { tone: Tone; label: string }; hint?: string }) {
+export function Stat({
+  label,
+  value,
+  unit,
+  sub,
+  status,
+  hint,
+  accent,
+  progress,
+}: {
+  label: string;
+  value: ReactNode;
+  unit?: string;
+  sub?: ReactNode;
+  status?: { tone: Tone; label: string };
+  hint?: string;
+  accent?: boolean; // el dato principal de la pantalla, en naranja
+  progress?: number; // 0-1: barra bajo la cifra (p. ej. km hechos de los de la semana)
+}) {
   return (
     <div className="rounded-xl border border-line bg-surface px-3 py-2.5" title={hint}>
       <p className="text-xs font-medium text-muted">{label}</p>
-      <p className="mt-0.5 text-xl font-bold tracking-tight tabular">
+      <p className={`mt-0.5 font-display text-[1.7rem] leading-tight font-bold tabular ${accent ? "text-accent" : ""}`}>
         {value}
-        {unit && <span className="ml-1 text-sm font-medium text-ink-2">{unit}</span>}
+        {unit && <span className="ml-1 font-sans text-sm font-medium text-ink-2">{unit}</span>}
       </p>
+      {progress !== undefined && (
+        <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-surface-2" role="progressbar" aria-valuenow={Math.round(progress * 100)} aria-valuemin={0} aria-valuemax={100}>
+          <div className="h-full rounded-full bg-accent" style={{ width: `${Math.min(100, Math.max(0, progress * 100))}%` }} />
+        </div>
+      )}
       {sub && <p className="mt-0.5 text-xs text-ink-2">{sub}</p>}
       {status && (
         <div className="mt-1">

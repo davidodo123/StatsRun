@@ -779,3 +779,11 @@ David preguntó si se puede «entrenar» una IA para la app. Opciones: (1) instr
 - Siguientes rondas propuestas: datos de Inicio y Plan en un solo bloque dividido (menos alto), cabeceras de página más ligeras, y repasar Plan (lo más largo: casi 6.000 px).
 - Ronda 3 (mismo día): componentes `FoldCard` (tarjeta plegable con el título a la vista) y `MoreMenu` (menú «⋯» para acciones secundarias, sin JavaScript). «Terminar plan» va al menú; Disponibilidad y Ritmos se pliegan; gráficas del Inicio a 190/200/120 px.
 - Ronda 2 (mismo día): `StatGroup` (datos en un bloque con líneas, el último ocupa la fila si son impares), pasos de las sesiones plegados, formulario de «Fuerza con IA» plegado cuando ya hay rutinas y el porqué del «Estado de forma» plegado.
+
+## Estilo deportivo
+*2026-10-20*
+
+- David eligió el estilo **deportivo y enérgico** (frente a «limpio y premium» o mantener el actual).
+- Tipografía propia en vez de la del sistema, con `next/font` (se descarga al compilar y la sirve la app, sin llamadas a Google): **Barlow** para el texto y **Barlow Condensed** para cifras y títulos (`font-display`), como un marcador de carrera. Títulos de página en mayúscula.
+- El naranja va en el dato principal de cada pantalla (`Stat accent`: «Esta semana» en Inicio, «Días para la carrera» en Plan), no en todo. «Esta semana» lleva barra de progreso con los km del plan (`Stat progress`).
+- Pendiente: gráficas con un solo color (ahora las barras son azules) y el resto de pantallas.

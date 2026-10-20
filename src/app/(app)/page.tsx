@@ -68,6 +68,7 @@ async function Dashboard() {
   }
   const fitness = stats.fitness.slice(-120).map((p) => ({ date: p.date, ctl: p.ctl, atl: p.atl, tsb: p.tsb }));
   const daysToRace = goal ? diffDays(goal.date, today) : undefined;
+  const weekPlanKm = plannedByWeek.get(mondayOf(today));
   const health = healthSummary(db.health, todayMadrid());
 
   return (
@@ -104,7 +105,14 @@ async function Dashboard() {
         <Stat label="Fatiga (ATL)" value={t.atl.toFixed(0)} sub="7 días" />
         <Stat label="Frescura (TSB)" value={t.tsb.toFixed(0)} status={tsbS} />
         <Stat label="Carga aguda/crónica" value={stats.acwr ? stats.acwr.toFixed(2) : "–"} status={acwrS} />
-        <Stat label="Esta semana" value={fmtKm(stats.totals.weekKm)} unit="km" sub={`Media 6 sem: ${fmtKm(stats.totals.avgWeeklyKm6)} km`} />
+        <Stat
+          label="Esta semana"
+          value={fmtKm(stats.totals.weekKm)}
+          unit="km"
+          accent
+          progress={weekPlanKm ? stats.totals.weekKm / weekPlanKm : undefined}
+          sub={weekPlanKm ? `de ${fmtKm(weekPlanKm)} km del plan` : `Media 6 sem: ${fmtKm(stats.totals.avgWeeklyKm6)} km`}
+        />
       </StatGroup>
 
       <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
