@@ -128,13 +128,14 @@ function MobileNav({ active, focus, logros }: { active: (href: string) => boolea
       <nav className="mobile-tabbar fixed inset-x-0 bottom-0 z-40 flex items-center border-t border-line bg-surface/95 px-1 pb-[env(safe-area-inset-bottom)] backdrop-blur after:absolute after:inset-x-0 after:top-full after:h-40 after:bg-surface md:hidden">
         {bottom.map((it) =>
           CTA.includes(it.href) ? (
-            <div key={it.href} className="flex flex-[1.6] justify-center px-1">
+            <div key={it.href} className="flex flex-1 justify-center">
+              {/* solo un círculo con «+»: ocupa lo mismo que una pestaña */}
               <Link
                 href={it.href}
-                className={`flex w-full items-center justify-center gap-1.5 rounded-full bg-accent py-2.5 text-sm font-bold text-accent-ink shadow-md ${active(it.href) ? "ring-2 ring-accent/40 ring-offset-2 ring-offset-surface" : ""}`}
+                aria-label={LONG_LABEL[it.href] ?? it.label}
+                className={`grid h-12 w-12 place-items-center rounded-full bg-accent text-accent-ink shadow-md ${active(it.href) ? "ring-2 ring-accent/40 ring-offset-2 ring-offset-surface" : ""}`}
               >
-                <Icon d={it.icon} className="h-5 w-5" />
-                {it.label}
+                <Icon d={it.icon} className="h-6 w-6" />
               </Link>
             </div>
           ) : (

@@ -67,25 +67,26 @@ export async function StrengthHome({ title = "Fuerza", subtitle }: { title?: str
           </Link>
         }
       />
-      <Link href="/fuerza/entreno" className="flex items-center gap-3 rounded-2xl border border-line bg-surface p-4 font-semibold hover:bg-surface-2">
-        <span className="text-2xl leading-none">+</span> Empezar entrenamiento vacío
-      </Link>
-      <Link href="/fuerza/emom" className="mt-3 flex items-center gap-3 rounded-2xl border border-line bg-surface p-4 hover:bg-surface-2">
-        <Icon name="timer" className="h-6 w-6 text-accent" />
-        <span className="min-w-0">
-          <strong className="block">EMOM</strong>
-          <span className="text-xs text-ink-2">Cada minuto, al minuto: temporizador con pitidos y rondas</span>
-        </span>
-      </Link>
-      <Link href="/entrenador" className="mt-3 flex items-center gap-3 rounded-2xl border border-line bg-surface p-4 hover:border-accent">
-        <span className="grid h-9 w-9 place-items-center rounded-full bg-accent text-accent-ink">
-          <Icon name="sparkle" className="h-5 w-5" />
-        </span>
-        <span className="min-w-0">
-          <strong className="block">Entrenador IA</strong>
-          <span className="text-xs text-ink-2">Cuéntale tus entrenos, pídele una rutina o pregúntale lo que quieras</span>
-        </span>
-      </Link>
+      <nav className="divide-y divide-line overflow-hidden rounded-2xl border border-line bg-surface" aria-label="Empezar">
+        {(
+          [
+            ["/fuerza/entreno", "dumbbell", "Entreno libre", "Sin rutina: añade los ejercicios sobre la marcha"],
+            ["/fuerza/emom", "timer", "EMOM", "Cada minuto, al minuto"],
+            ["/entrenador", "sparkle", "Entrenador IA", "Rutinas, dudas y registrar entrenos"],
+          ] as const
+        ).map(([href, icon, title, sub]) => (
+          <Link key={href} href={href} className="flex items-center gap-3 px-4 py-3 hover:bg-surface-2">
+            <Icon name={icon} className="h-5 w-5 text-accent" />
+            <span className="min-w-0 flex-1">
+              <strong className="block text-sm">{title}</strong>
+              <span className="block truncate text-xs text-ink-2">{sub}</span>
+            </span>
+            <span className="text-muted" aria-hidden>
+              ›
+            </span>
+          </Link>
+        ))}
+      </nav>
 
       <div className="mt-6 flex items-center justify-between">
         <h2 className="text-lg font-bold">Rutinas</h2>

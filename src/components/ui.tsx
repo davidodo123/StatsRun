@@ -54,15 +54,15 @@ export function Status({ tone, children }: { tone: Tone; children: ReactNode }) 
 
 export function Stat({ label, value, unit, sub, status, hint }: { label: string; value: ReactNode; unit?: string; sub?: ReactNode; status?: { tone: Tone; label: string }; hint?: string }) {
   return (
-    <div className="rounded-2xl border border-line bg-surface p-4" title={hint}>
+    <div className="rounded-xl border border-line bg-surface px-3 py-2.5" title={hint}>
       <p className="text-xs font-medium text-muted">{label}</p>
-      <p className="mt-1 text-2xl font-bold tracking-tight">
+      <p className="mt-0.5 text-xl font-bold tracking-tight tabular">
         {value}
         {unit && <span className="ml-1 text-sm font-medium text-ink-2">{unit}</span>}
       </p>
       {sub && <p className="mt-0.5 text-xs text-ink-2">{sub}</p>}
       {status && (
-        <div className="mt-2">
+        <div className="mt-1">
           <Status tone={status.tone}>{status.label}</Status>
         </div>
       )}

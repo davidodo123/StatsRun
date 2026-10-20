@@ -769,3 +769,11 @@ David preguntó si se puede «entrenar» una IA para la app. Opciones: (1) instr
   - **La web, al momento**: Vercel → proyecto → Deployments → el despliegue de `ba52d48` → «Promote to Production» (o «Instant Rollback»).
   - **El código**: `git checkout v2026-10-20` para verla, o `git revert` de los commits que sobren para volver sin perder historial.
 - Los **datos** no van en git: tienen su copia cifrada cada noche en el repo privado de copias (→ [[#Copias de seguridad]]).
+
+## Rediseño, ronda 1
+*2026-10-20*
+
+- Guía: la skill `redesign-existing-projects` (que usa taste-skill, de leonxlnx, MIT) y sus reglas para pantallas de app: sin degradados ni brillos, el color en los datos, menos tarjetas con icono, listas divididas en vez de tarjetas sueltas, cifras tabulares.
+- Por primera vez con capturas de la app a 390 px (Chrome sin ventana, con un usuario de prueba con datos demo), antes y después.
+- Cambios: **Registrar** es un círculo naranja con «+» (lo pidió David, para ahorrar sitio); las **tarjetas de datos** (`Stat`) más bajas en toda la app; en **Inicio** el botón «Registrar entreno» solo sale en el ordenador; en **Fuerza** los tres accesos (entrenamiento vacío, EMOM, Entrenador IA) van en una sola lista con separadores.
+- Siguientes rondas propuestas: datos de Inicio y Plan en un solo bloque dividido (menos alto), cabeceras de página más ligeras, y repasar Plan (lo más largo: casi 6.000 px).

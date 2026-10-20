@@ -85,7 +85,7 @@ async function Dashboard() {
         }
         action={
           <div className="flex gap-2">
-            <Link href="/registrar" className="btn">
+            <Link href="/registrar" className="btn hidden md:inline-flex">
               + Registrar entreno
             </Link>
             {!plan && (

@@ -30,7 +30,7 @@ export default function RegistrarPage({ searchParams }: PageProps<"/registrar">)
     <>
       <PageHeader
         title="Registrar entreno"
-        subtitle="Copia los datos de tu actividad de Strava: el plan, la forma y las estadísticas se actualizan al momento."
+        subtitle="Copia los datos de Strava o graba con el GPS."
         action={
           <Link href="/registrar/gps" className="btn">
             <Icon name="pin" className="mr-1 h-4 w-4 align-[-2px]" /> Grabar con GPS
