@@ -3,7 +3,8 @@
 // marcas finas, rejilla tenue, tooltip en todas (al pasar el dedo o el ratón), color por identidad de serie.
 import { useEffect, useRef, useState, type ReactNode } from "react";
 
-const S1 = "var(--series-1)";
+// estilo deportivo: el dato de cada gráfica en naranja; si hay una segunda serie, en gris
+const S1 = "var(--accent)";
 const S2 = "var(--series-2)";
 
 interface Row {
@@ -255,7 +256,7 @@ export function WeeklyKmChart({ data, height = 220 }: { data: { week: string; km
 export function FitnessChart({ data, height = 240 }: { data: { date: string; ctl: number; atl: number }[]; height?: number }) {
   const series: Series[] = [
     { kind: "line", name: "Forma (CTL 42 d)", values: data.map((d) => d.ctl), color: S1 },
-    { kind: "line", name: "Fatiga (ATL 7 d)", values: data.map((d) => d.atl), color: S2 },
+    { kind: "line", name: "Fatiga (ATL 7 d)", values: data.map((d) => d.atl), color: "var(--muted)" },
   ];
   return (
     <>
@@ -276,7 +277,7 @@ export function FormChart({ data, height = 160 }: { data: { date: string; tsb: n
     <Chart
       height={height}
       labels={data.map((d) => d.date)}
-      series={[{ kind: "bar", name: "Frescura", values: data.map((d) => d.tsb), color: (i) => (data[i].tsb >= 0 ? S1 : "var(--div-neg)") }]}
+      series={[{ kind: "bar", name: "Frescura", values: data.map((d) => d.tsb), color: (i) => (data[i].tsb >= 0 ? S1 : "var(--muted)") }]}
       xFmt={dayLabel}
       band={[-30, -10]}
       zeroLine

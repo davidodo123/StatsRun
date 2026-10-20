@@ -786,4 +786,5 @@ David preguntó si se puede «entrenar» una IA para la app. Opciones: (1) instr
 - David eligió el estilo **deportivo y enérgico** (frente a «limpio y premium» o mantener el actual).
 - Tipografía propia en vez de la del sistema, con `next/font` (se descarga al compilar y la sirve la app, sin llamadas a Google): **Barlow** para el texto y **Barlow Condensed** para cifras y títulos (`font-display`), como un marcador de carrera. Títulos de página en mayúscula.
 - El naranja va en el dato principal de cada pantalla (`Stat accent`: «Esta semana» en Inicio, «Días para la carrera» en Plan), no en todo. «Esta semana» lleva barra de progreso con los km del plan (`Stat progress`).
-- Pendiente: gráficas con un solo color (ahora las barras son azules) y el resto de pantallas.
+- Gráficas (mismo día): un solo color por gráfica, el naranja (`S1 = var(--accent)` en `charts.tsx`); una segunda serie va en gris (la fatiga en «Forma y fatiga»), y la frescura negativa también en gris, no en rojo: entrenando es lo normal. Los colores de las fases del plan no cambian.
+- Pendiente: repasar el resto de pantallas con el estilo nuevo.
