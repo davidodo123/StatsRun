@@ -38,6 +38,7 @@ const localIso = (ms: number) => {
   const p = (n: number) => String(n).padStart(2, "0");
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
 };
+const SPORT_ICON = { run: "run", walk: "walk", ride: "bike" } as const;
 const SPORTS: [Sport, string][] = [
   ["run", "Correr"],
   ["walk", "Caminar"],
@@ -201,9 +202,12 @@ export function RunRecorder() {
         <p className="text-sm text-ink-2">
           Deja la app abierta y la pantalla encendida mientras corres (se queda encendida sola). En el iPhone, si bloqueas la pantalla o cambias de app, la ubicación deja de llegar y ese tramo se une en línea recta.
         </p>
+        {/* ninguno va marcado: el que toques empieza a grabar */}
+        <p className="text-sm font-semibold">¿Qué vas a hacer? Toca para empezar</p>
         <div className="grid grid-cols-3 gap-2">
           {SPORTS.map(([s, label]) => (
-            <button key={s} type="button" className={`btn py-4 text-base ${s === "run" ? "" : "btn-ghost"}`} onClick={() => begin(s)}>
+            <button key={s} type="button" className="btn btn-ghost flex-col gap-1 py-4 text-base" onClick={() => begin(s)}>
+              <Icon name={SPORT_ICON[s]} className="h-6 w-6" />
               {label}
             </button>
           ))}

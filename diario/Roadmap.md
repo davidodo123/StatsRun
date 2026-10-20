@@ -162,7 +162,7 @@ Base: [[Estudio entrenamiento#6. La Pirámide de Entrenamiento (Helms, Valdez, M
    - [ ] Android: grabar también con la pantalla bloqueada (complemento de ubicación en segundo plano; Google Play pide justificarlo)
 
 ## 📝 Fase 8 · Por hacer (apuntado por David 2026-10-20)
-- [ ] **GPS**: desmarcar las opciones de correr al empezar a grabar (ahora «Correr» sale ya marcado)
+- [x] **GPS**: desmarcar las opciones de correr al empezar a grabar (ahora «Correr» sale ya marcado) — *hecho 2026-10-20: los tres botones iguales, con su icono, y «¿Qué vas a hacer? Toca para empezar»*
 - [ ] **Pasos**: se han dejado de actualizar solos; David tiene que ejecutar el atajo a mano. Revisar las automatizaciones del atajo y si llegan los envíos
 - [ ] **Optimizar**: repasar y redistribuir toda la app (secciones, menús, qué va en cada página) para hacerla más simple y rápida
 - [ ] **Diseño**: hacer muchos diseños nuevos, porque la app se ve muy básica
