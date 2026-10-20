@@ -565,7 +565,11 @@ function Salud({ db }: { db: Db }) {
   const today = todayMadrid();
   const h = healthSummary(db.health, today);
   const endpoint = `${(process.env.APP_URL ?? "https://run-in-out.vercel.app").replace(/\/$/, "")}/api/salud`;
-  const last = db.health?.at(-1);
+  // cuándo llegó el último envío (cada envío reescribe los 7 días que manda): así se ve si fallan las automatizaciones
+  const sentAt = (db.health ?? []).reduce((m, d) => (d.updatedAt > m ? d.updatedAt : m), "");
+  const sentDay = sentAt ? todayMadrid(new Date(sentAt)) : undefined;
+  const sentAgo = sentDay ? diffDays(today, sentDay) : undefined;
+  const sentHour = sentAt ? new Date(sentAt).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Madrid" }) : undefined;
   const rec = recoverySignals(db.health, today);
   const n1 = (v?: number) => (v === undefined ? "–" : v.toLocaleString("es-ES", { maximumFractionDigits: 1 }));
   return (
@@ -586,7 +590,12 @@ function Salud({ db }: { db: Db }) {
               unit="kcal"
               sub="Activas + en reposo"
             />
-            <Stat label="Último envío" value={last ? shortDate(last.date) : "–"} sub={last ? new Date(last.updatedAt).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Madrid" }) : undefined} />
+            <Stat
+              label="Último envío"
+              value={sentAgo === undefined ? "–" : sentAgo === 0 ? "Hoy" : sentAgo === 1 ? "Ayer" : shortDate(sentDay!)}
+              sub={sentHour && `a las ${sentHour}`}
+              status={sentAgo !== undefined && sentAgo >= 2 ? { tone: "bad", label: `Hace ${sentAgo} días: revisa las automatizaciones` } : undefined}
+            />
           </div>
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
             <Card title="Pasos" subtitle="Últimos 30 días">

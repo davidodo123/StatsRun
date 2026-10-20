@@ -163,7 +163,7 @@ Base: [[Estudio entrenamiento#6. La Pirámide de Entrenamiento (Helms, Valdez, M
 
 ## 📝 Fase 8 · Por hacer (apuntado por David 2026-10-20)
 - [x] **GPS**: desmarcar las opciones de correr al empezar a grabar (ahora «Correr» sale ya marcado) — *hecho 2026-10-20: los tres botones iguales, con su icono, y «¿Qué vas a hacer? Toca para empezar»*
-- [ ] **Pasos**: se han dejado de actualizar solos; David tiene que ejecutar el atajo a mano. Revisar las automatizaciones del atajo y si llegan los envíos
+- [/] **Pasos**: se han dejado de actualizar solos; David tiene que ejecutar el atajo a mano — *causa 2026-10-20: solo tenía la automatización de las 23:50, y con el iPhone bloqueado iOS no deja leer Salud. Falta que David añada la de «Cargador → Se desconecta» (paso 5 de la guía) y lo compruebe*
 - [ ] **Optimizar**: repasar y redistribuir toda la app (secciones, menús, qué va en cada página) para hacerla más simple y rápida
 - [ ] **Diseño**: hacer muchos diseños nuevos, porque la app se ve muy básica
 
