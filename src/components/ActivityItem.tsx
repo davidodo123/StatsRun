@@ -23,12 +23,14 @@ export function TagChips({ tags }: { tags: ActivityTag[] }) {
   return (
     <span className="mt-1 flex flex-wrap gap-1">
       {tags.map((t) => (
+        // siempre en una línea: un récord con un ejercicio de nombre largo ocupaba tres
         <span
           key={t.label}
-          className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ${t.kind === "record" ? "bg-accent text-accent-ink" : "bg-surface-2 text-ink-2"}`}
+          title={t.label}
+          className={`inline-flex max-w-full min-w-0 items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ${t.kind === "record" ? "bg-accent/15 text-accent" : "bg-surface-2 text-ink-2"}`}
         >
           <Icon name={t.icon} className="h-3 w-3" />
-          {t.label}
+          <span className="truncate">{t.label}</span>
         </span>
       ))}
     </span>
