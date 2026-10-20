@@ -164,7 +164,7 @@ Base: [[Estudio entrenamiento#6. La Pirámide de Entrenamiento (Helms, Valdez, M
 ## 📝 Fase 8 · Por hacer (apuntado por David 2026-10-20)
 - [x] **GPS**: desmarcar las opciones de correr al empezar a grabar (ahora «Correr» sale ya marcado) — *hecho 2026-10-20: los tres botones iguales, con su icono, y «¿Qué vas a hacer? Toca para empezar»*
 - [/] **Pasos**: se han dejado de actualizar solos; David tiene que ejecutar el atajo a mano — *causa 2026-10-20: solo tenía la automatización de las 23:50, y con el iPhone bloqueado iOS no deja leer Salud. Falta que David añada la de «Cargador → Se desconecta» (paso 5 de la guía) y lo compruebe*
-- [ ] **Optimizar**: repasar y redistribuir toda la app (secciones, menús, qué va en cada página) para hacerla más simple y rápida
+- [x] **Optimizar**: repasar y redistribuir toda la app (secciones, menús, qué va en cada página) para hacerla más simple y rápida — *hecho 2026-10-20 en las rondas 1-5 del rediseño: menos scroll (Plan −25 %, Estadísticas −52 %), lo secundario plegado y acciones en menús* → [[Decisiones#Rediseño, ronda 1]]
 - [/] **Diseño**: hacer muchos diseños nuevos, porque la app se ve muy básica — *ronda 1 hecha 2026-10-20 (con la guía taste-skill y capturas a 390 px): Registrar como círculo con «+», tarjetas de datos más compactas, sin el botón repetido de registrar en Inicio, accesos de Fuerza en una sola lista; «Entrenamiento vacío» pasa a llamarse «Entrenamiento»* → [[Decisiones#Rediseño, ronda 1]]
 
 ## 🧠 IA que aprende de ti (opción 2: sin entrenar el modelo) → [[Decisiones#IA que aprende de ti]]

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { getAnalysis } from "@/lib/analysis";
-import { Card, Empty, Loading, PageHeader, Stat, StatGroup } from "@/components/ui";
+import { Card, Empty, FoldCard, Loading, PageHeader, Stat, StatGroup } from "@/components/ui";
 import { SimpleBars, TrendLine, WeeklyKmChart } from "@/components/charts";
 import { activityLoad } from "@/lib/engine/load";
 import { activityKcal } from "@/lib/engine/stats";
@@ -63,37 +63,37 @@ async function Content() {
         <Card title="Kilómetros por semana" subtitle="Últimas 26 semanas">
           <WeeklyKmChart data={weeks} />
         </Card>
-        <Card title="Kilómetros por mes" subtitle="Últimos 12 meses">
+        <FoldCard title="Kilómetros por mes" subtitle="Últimos 12 meses">
           <SimpleBars data={monthsKm} xKey="month" yKey="km" name="Km" unit="km" xFormat="month" height={220} />
-        </Card>
-        <Card title="Ritmo medio semanal" subtitle="Media de todas tus carreras (más arriba = más rápido)">
+        </FoldCard>
+        <Card title="Ritmo medio semanal" subtitle="Más arriba = más rápido">
           <TrendLine data={stats.paceTrend} dataKey="pace" name="Ritmo" format="pace" invert />
         </Card>
-        <Card title="Frecuencia cardiaca media semanal" subtitle="Si baja con el mismo ritmo, estás mejorando">
+        <FoldCard title="Frecuencia cardiaca media" subtitle="Si baja al mismo ritmo, mejoras">
           <TrendLine data={stats.paceTrend} dataKey="hr" name="FC media" color="s2" format="int" />
-        </Card>
-        <Card title="Efficiency Factor" subtitle="Velocidad (m/min) ÷ FC. Más alto = motor aeróbico más eficiente">
+        </FoldCard>
+        <FoldCard title="Efficiency Factor" subtitle="Velocidad ÷ FC: más alto, más eficiente">
           <TrendLine data={stats.paceTrend} dataKey="ef" name="EF" color="s3" format="dec2" />
-        </Card>
-        <Card title="Cadencia media" subtitle="Pasos por minuto. 170-185 suele ser eficiente">
+        </FoldCard>
+        <FoldCard title="Cadencia media" subtitle="170-185 ppm suele ser eficiente">
           <TrendLine data={stats.paceTrend} dataKey="cadence" name="Cadencia" format="int" />
-        </Card>
+        </FoldCard>
         <Card title="Evolución del VDOT" subtitle="Mejor esfuerzo de cada mes">
           {vdotByMonth.length ? <TrendLine data={vdotByMonth} dataKey="vdot" name="VDOT" format="dec1" xKey="month" xFormat="month" /> : <p className="text-sm text-ink-2">Sin datos suficientes.</p>}
         </Card>
-        <Card title="Distribución de intensidad" subtitle="% del tiempo por zona de FC (8 semanas, por FC media de cada actividad)">
+        <FoldCard title="Distribución de intensidad" subtitle="% del tiempo por zona de FC (8 semanas)">
           <SimpleBars data={zones} xKey="name" yKey="pct" name="Tiempo" unit="%" horizontal ordinal xFormat="none" height={220} />
-        </Card>
-        <Card title="¿Qué días corres más?" subtitle="Km por día de la semana (12 semanas)">
+        </FoldCard>
+        <FoldCard title="¿Qué días corres más?" subtitle="Km por día (12 semanas)">
           <SimpleBars data={stats.weekdayKm.map((d) => ({ day: WEEKDAYS[d.day].slice(0, 3), km: d.km }))} xKey="day" yKey="km" name="Km" unit="km" xFormat="none" />
-        </Card>
-        <Card title="Deportes" subtitle="Horas por deporte (90 días)">
+        </FoldCard>
+        <FoldCard title="Deportes" subtitle="Horas por deporte (90 días)">
           <SimpleBars data={stats.sportSplit.map((s) => ({ sport: s.sport, hours: s.hours }))} xKey="sport" yKey="hours" name="Horas" unit="h" horizontal xFormat="none" height={Math.max(120, stats.sportSplit.length * 40)} />
-        </Card>
+        </FoldCard>
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <Card title="Récords" subtitle="Estimados a partir del ritmo medio de cada actividad">
+        <Card title="Récords" subtitle="Estimados por el ritmo medio">
           <ul className="divide-y divide-line text-sm">
             {stats.records.map((r) => (
               <li key={r.label} className="flex items-center justify-between gap-2 py-2">
@@ -109,7 +109,7 @@ async function Content() {
             ))}
           </ul>
         </Card>
-        <Card title="Resumen mensual" className="lg:col-span-2">
+        <FoldCard title="Resumen mensual" className="lg:col-span-2">
           {/* en el móvil caben mes, km, carreras y ritmo; el resto, desde tableta */}
           <div>
             <table className="w-full text-sm tabular">
@@ -139,10 +139,10 @@ async function Content() {
               </tbody>
             </table>
           </div>
-        </Card>
+        </FoldCard>
       </div>
 
-      <Card title="Últimas actividades" subtitle="Carga = puntos de estrés (100 ≈ 1 h a umbral)">
+      <FoldCard title="Últimas actividades" subtitle="Carga: 100 ≈ 1 h a umbral">
         {/* en el móvil: fecha, actividad, distancia y ritmo; tiempo y FC desde tableta; lo demás en el ordenador */}
         <div>
           <table className="w-full text-sm tabular">
@@ -185,7 +185,7 @@ async function Content() {
             </tbody>
           </table>
         </div>
-      </Card>
+      </FoldCard>
     </div>
   );
 }
