@@ -79,9 +79,13 @@ export function SessionCard({
           {s.distanceKm > 0 && `${s.distanceKm.toLocaleString("es-ES")} km · `}~{s.durationMin} min
           {s.pace && s.type !== "strength" && ` · ${fmtPaceRange(s.pace)}`}
         </p>
-        {!compact && (
-          <>
-            <p className="mt-2 text-sm text-ink-2">{s.description}</p>
+        {!compact && (s.description || s.steps.length > 0) && (
+          <details className="group/steps mt-1.5" open={match?.status === "today"}>
+            <summary className="cursor-pointer list-none text-xs font-semibold text-accent">
+              <span className="group-open/steps:hidden">Ver pasos{s.steps.length ? ` (${s.steps.length})` : ""}</span>
+              <span className="hidden group-open/steps:inline">Ocultar pasos</span>
+            </summary>
+            {s.description && <p className="mt-2 text-sm text-ink-2">{s.description}</p>}
             <ul className="mt-2 space-y-1 text-sm">
               {s.steps.map((step, i) => (
                 <li key={i} className="flex gap-2">
@@ -90,7 +94,7 @@ export function SessionCard({
                 </li>
               ))}
             </ul>
-          </>
+          </details>
         )}
         {!readOnly && match?.status === "upcoming" && s.type !== "race" && !compact && (
           <SkipDayButton date={s.date} dayLabel={dayLabel} label="No puedo ese día" className="mt-2" />

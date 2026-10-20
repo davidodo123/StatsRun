@@ -70,6 +70,18 @@ export function Stat({ label, value, unit, sub, status, hint }: { label: string;
   );
 }
 
+/** Varios datos en un solo bloque dividido por líneas (menos alto que una caja por dato). Con un número impar
+ *  en el móvil, el último ocupa toda la fila. */
+export function StatGroup({ children, className = "" }: { children: ReactNode; className?: string }) {
+  return (
+    <div
+      className={`grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-line bg-line [&>*]:rounded-none [&>*]:border-0 max-md:[&>*:last-child:nth-child(odd)]:col-span-2 ${className}`}
+    >
+      {children}
+    </div>
+  );
+}
+
 export function Empty({ title, children, href, cta }: { title: string; children?: ReactNode; href?: string; cta?: string }) {
   return (
     <div className="rounded-2xl border border-dashed border-line bg-surface p-8 text-center">

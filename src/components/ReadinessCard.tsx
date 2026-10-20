@@ -30,7 +30,7 @@ const CHECK_LABEL: Record<keyof Readiness["check"], string> = {
 /** Diagnóstico del estado de forma (Selye + Banister + evaluación de recuperación). */
 export function ReadinessCard({ r }: { r: Readiness }) {
   return (
-    <Card title="Estado de forma" subtitle="Lo que la IA usa para decidir si progresar, mantener o descargar">
+    <Card title="Estado de forma">
       <div className="space-y-3 text-sm">
         <Status tone={TONE[r.verdict]}>{r.headline}</Status>
 
@@ -53,22 +53,28 @@ export function ReadinessCard({ r }: { r: Readiness }) {
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-1.5">
-          {(Object.keys(CHECK_LABEL) as (keyof Readiness["check"])[]).map((k) => (
-            <span key={k} className={`rounded-full border px-2 py-0.5 text-xs ${r.check[k] ? "border-warning text-ink" : "border-line text-muted"}`}>
-              <Icon name={r.check[k] ? "alert" : "check"} className="mr-1 h-3 w-3 align-[-1px]" />
-              {CHECK_LABEL[k]}
-            </span>
-          ))}
-        </div>
-
-        {r.reasons.length > 0 && (
-          <ul className="list-disc space-y-1 pl-5 text-ink-2">
-            {r.reasons.map((x) => (
-              <li key={x}>{x}</li>
+        <details className="group/why">
+          <summary className="cursor-pointer list-none text-xs font-semibold text-accent">
+            <span className="group-open/why:hidden">Ver por qué</span>
+            <span className="hidden group-open/why:inline">Ocultar</span>
+          </summary>
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {(Object.keys(CHECK_LABEL) as (keyof Readiness["check"])[]).map((k) => (
+              <span key={k} className={`rounded-full border px-2 py-0.5 text-xs ${r.check[k] ? "border-warning text-ink" : "border-line text-muted"}`}>
+                <Icon name={r.check[k] ? "alert" : "check"} className="mr-1 h-3 w-3 align-[-1px]" />
+                {CHECK_LABEL[k]}
+              </span>
             ))}
-          </ul>
-        )}
+          </div>
+
+          {r.reasons.length > 0 && (
+            <ul className="mt-2 list-disc space-y-1 pl-5 text-ink-2">
+              {r.reasons.map((x) => (
+                <li key={x}>{x}</li>
+              ))}
+            </ul>
+          )}
+        </details>
       </div>
     </Card>
   );

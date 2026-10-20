@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import { getAnalysis } from "@/lib/analysis";
-import { Card, Empty, Loading, Notice, PageHeader, Stat } from "@/components/ui";
+import { Card, Empty, Loading, Notice, PageHeader, Stat, StatGroup } from "@/components/ui";
 import { SessionCard } from "@/components/SessionCard";
 import { AiCoachButton } from "@/components/AiCoachButton";
 import { StrengthCoachCard } from "@/components/StrengthCoachCard";
@@ -94,7 +94,7 @@ async function Content({ searchParams }: { searchParams: PageProps<"/plan/actual
           <Notice tone="good">Sesión registrada. El cumplimiento y tu forma ya están actualizados.</Notice>
         </div>
       )}
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
+      <StatGroup className="md:grid-cols-5">
         <Stat label="Días para la carrera" value={Math.max(0, days)} />
         <Stat label="Tiempo previsto" value={race ? fmtDuration(race.durationMin * 60) : "–"} sub={plan.goal.targetTimeSec ? `Objetivo ${fmtDuration(plan.goal.targetTimeSec)}` : "Objetivo: terminar"} />
         <Stat label="VDOT" value={`${plan.startVdot.toFixed(1)} → ${plan.targetVdot.toFixed(1)}`} sub={stats ? `Hoy: ${stats.vdot.vdot.toFixed(1)}` : undefined} />
@@ -104,7 +104,7 @@ async function Content({ searchParams }: { searchParams: PageProps<"/plan/actual
           value={compliance !== undefined ? `${Math.round(compliance * 100)} %` : "–"}
           sub={past.length ? `${past.length} ${past.length === 1 ? "sesión" : "sesiones"} hasta hoy` : "Aún no hay sesiones pasadas"}
         />
-      </div>
+      </StatGroup>
 
       {/* los avisos, plegados: solo se leen si se quiere */}
       {plan.warnings.length > 0 && (

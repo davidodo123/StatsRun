@@ -70,7 +70,7 @@ export async function StrengthHome({ title = "Fuerza", subtitle }: { title?: str
       <nav className="divide-y divide-line overflow-hidden rounded-2xl border border-line bg-surface" aria-label="Empezar">
         {(
           [
-            ["/fuerza/entreno", "dumbbell", "Entreno libre", "Sin rutina: añade los ejercicios sobre la marcha"],
+            ["/fuerza/entreno", "dumbbell", "Entrenamiento", "Sin rutina: añade los ejercicios sobre la marcha"],
             ["/fuerza/emom", "timer", "EMOM", "Cada minuto, al minuto"],
             ["/entrenador", "sparkle", "Entrenador IA", "Rutinas, dudas y registrar entrenos"],
           ] as const

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { getAnalysis } from "@/lib/analysis";
-import { Card, Empty, Loading, PageHeader, Stat } from "@/components/ui";
+import { Card, Empty, Loading, PageHeader, Stat, StatGroup } from "@/components/ui";
 import { FitnessChart, FormChart, WeeklyKmChart } from "@/components/charts";
 import { SessionCard } from "@/components/SessionCard";
 import { UndoSkip } from "@/components/UndoSkip";
@@ -98,14 +98,14 @@ async function Dashboard() {
       />
       <UndoSkip db={db} today={today} />
 
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
+      <StatGroup className="md:grid-cols-3 lg:grid-cols-6">
         <Stat label="VDOT" value={stats.vdot.vdot.toFixed(1)} sub={vo2maxLabel(stats.vdot.vdot, profile.sex, profile.age)} hint={stats.vdot.source} />
         <Stat label="Forma (CTL)" value={t.ctl.toFixed(0)} sub="42 días" />
         <Stat label="Fatiga (ATL)" value={t.atl.toFixed(0)} sub="7 días" />
         <Stat label="Frescura (TSB)" value={t.tsb.toFixed(0)} status={tsbS} />
         <Stat label="Carga aguda/crónica" value={stats.acwr ? stats.acwr.toFixed(2) : "–"} status={acwrS} />
         <Stat label="Esta semana" value={fmtKm(stats.totals.weekKm)} unit="km" sub={`Media 6 sem: ${fmtKm(stats.totals.avgWeeklyKm6)} km`} />
-      </div>
+      </StatGroup>
 
       <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
         <div className="space-y-4 lg:col-span-2">
