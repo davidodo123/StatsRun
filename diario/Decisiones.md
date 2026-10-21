@@ -804,3 +804,15 @@ David preguntó si se puede «entrenar» una IA para la app. Opciones: (1) instr
 - El entreno en modo «ya hecho» (`WorkoutLogger pastStart`): sin cronómetro, sin descansos y sin mezclarse con un entreno en vivo a medias (no usa el guardado del navegador); «✓ Marcar todas» pone lo escrito o lo que se ve en gris; al terminar pide la duración en minutos (por defecto, unos 2,5 min por serie) y guarda con la fecha y la hora elegidas.
 - En el plan, «✓ Registrar» de una sesión de fuerza pasada lleva directo a apuntar sus series con su fecha.
 - Sigue valiendo guardar solo la duración y el esfuerzo con el formulario de siempre.
+
+## GPS con la pantalla apagada
+*2026-10-21*
+
+- Ahora la grabación usa la ubicación del navegador (`watchPosition`): solo llega con la app abierta y la pantalla encendida.
+- **Android** (la app de Capacitor): se puede con un complemento de ubicación en segundo plano que arranca un *servicio en primer plano* (Android lo exige para seguir leyendo el GPS con la pantalla apagada, con una notificación fija «Grabando carrera»). Por debajo usan el Fused Location Provider de Google (la API de Maps no hace falta: es para dibujar mapas, no para leer la posición). Candidatos para Capacitor 8:
+  - `@capgo/background-geolocation`: gratis (MIT), Android e iOS; el permiso de segundo plano se activa a mano.
+  - `@capawesome-team/capacitor-background-geolocation`: pensado para Android 14+, guarda los puntos en una cola nativa; de pago (suscripción).
+  - `@capacitor-community/background-geolocation`: el clásico, pero sus versiones llegan a Capacitor 6.
+  - Google Play pide justificar el permiso de ubicación (declaración en la ficha); para una app de entrenamiento que graba mientras corres se acepta.
+- **iPhone**: con la web instalada no hay forma; iOS no da la ubicación a una web en segundo plano o con la pantalla bloqueada. Core Location en segundo plano solo es para apps nativas, y una app nativa en el iPhone necesita la App Store (99 €/año) y compilar en un Mac, que se descartó (→ [[#iPhone por enlace, Android por Play Store]]).
+- Fuentes: capgo.app/docs/plugins/background-geolocation, capawesome.io (anuncio del complemento), README de @capacitor-community/background-geolocation.
