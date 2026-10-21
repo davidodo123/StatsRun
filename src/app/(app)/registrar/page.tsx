@@ -129,6 +129,8 @@ async function Content({ searchParams }: { searchParams: PageProps<"/registrar">
           session={session}
           today={today}
           friends={friends.map((f) => ({ id: f.id, name: f.name, username: f.username }))}
+          routines={(db.routines ?? []).map((r) => ({ id: r.id, name: r.name }))}
+          planStrength={sessions.filter((s) => s.type === "strength" && s.date <= today).map((s) => ({ id: s.id, date: s.date, title: s.title }))}
         />
         {editing && (
           <div className="mt-4 border-t border-line pt-4">

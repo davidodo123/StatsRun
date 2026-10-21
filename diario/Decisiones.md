@@ -796,3 +796,11 @@ David preguntó si se puede «entrenar» una IA para la app. Opciones: (1) instr
 - Fallo: las sesiones de fuerza del plan sin rutina del usuario solo llevaban los ejercicios en texto («3 × 8-12 sentadilla goblet a RPE 7»), y «Empezar entreno» abría el entreno vacío.
 - Ahora «Empezar entreno» va a `/fuerza/entreno?sesion=<id>`: la página traduce las líneas de la sesión a ejercicios del catálogo (`lib/strength/planSteps.ts`: series, repeticiones —el máximo del rango, con el rango en la nota—, «por lado», segundos y las «2 rondas» del afinado; de las alternativas, la primera). Con una rutina propia, sus ejercicios más lo que el plan le añade («+ …»). Probado con todas las plantillas del plan.
 - **Rutinas propias en el plan**: en cada rutina, «En tu plan» (`Routine.planSlot`): que la coloque el plan (por la zona que trabaja, como hasta ahora), un día concreto de los que tiene el plan (pierna, tren superior, pecho…) o «No usarla en el plan». Al cambiarlo, la fuerza del plan se rehace. Debajo dice en cuántas sesiones está.
+
+## Registrar fuerza ya hecha
+*2026-10-21*
+
+- Antes, registrar fuerza a posteriori solo guardaba duración y esfuerzo, sin ejercicios. Ahora, en Registrar con «Fuerza / gimnasio» (entreno nuevo), un bloque «¿Qué hiciste?» elige lo del plan de esa fecha, una rutina propia o un entreno libre, y «Apuntar las series →» abre `/fuerza/entreno?fecha=…&hora=…&sesion|rutina=…`.
+- El entreno en modo «ya hecho» (`WorkoutLogger pastStart`): sin cronómetro, sin descansos y sin mezclarse con un entreno en vivo a medias (no usa el guardado del navegador); «✓ Marcar todas» pone lo escrito o lo que se ve en gris; al terminar pide la duración en minutos (por defecto, unos 2,5 min por serie) y guarda con la fecha y la hora elegidas.
+- En el plan, «✓ Registrar» de una sesión de fuerza pasada lleva directo a apuntar sus series con su fecha.
+- Sigue valiendo guardar solo la duración y el esfuerzo con el formulario de siempre.

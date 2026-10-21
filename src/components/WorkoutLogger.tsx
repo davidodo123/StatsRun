@@ -106,8 +106,12 @@ export function WorkoutLogger({
   previous,
   available,
   bodyKg,
+  pastStart,
+  pastLabel,
 }: {
   routine?: Routine;
+  pastStart?: string; // apuntar un entreno ya hecho: «AAAA-MM-DDTHH:MM:00» (sin cronómetro ni descansos)
+  pastLabel?: string; // «martes 19 oct», para la cabecera
   custom: ExerciseSummary[];
   previous: Record<string, WorkoutExercise>;
   available?: Equipment[];
@@ -132,18 +136,22 @@ export function WorkoutLogger({
   // al abrir: si había un entreno a medias, se continúa
   useEffect(() => {
     if (saved.current) return;
+    // uno ya hecho: siempre desde la rutina, sin mezclarlo con un entreno en vivo a medias
+    if (pastStart) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- localStorage y la hora solo existen en el navegador
+      setW(fromRoutine(routine, suggest));
+      return;
+    }
     const stored = load();
-    /* eslint-disable react-hooks/set-state-in-effect -- localStorage solo existe en el navegador */
     if (stored?.exercises && Date.now() - stored.startedAt < 12 * 3600_000) {
       setW(stored);
       setResumed(stored.routineId !== routine?.id || Boolean(stored.exercises.some((e) => e.sets.some((s) => s.done))));
     } else setW(fromRoutine(routine, suggest));
-    /* eslint-enable react-hooks/set-state-in-effect */
     // eslint-disable-next-line react-hooks/exhaustive-deps -- solo al cambiar de rutina, no cada vez que llega el objeto
   }, [routine?.id]);
   useEffect(() => {
-    if (!saved.current) store(w);
-  }, [w]);
+    if (!saved.current && !pastStart) store(w);
+  }, [w, pastStart]);
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(t);
@@ -176,6 +184,25 @@ export function WorkoutLogger({
     edit((cur) => (cur.pausedAt ? { ...cur, pausedMs: (cur.pausedMs ?? 0) + Date.now() - cur.pausedAt, pausedAt: undefined } : { ...cur, pausedAt: Date.now() }));
   };
 
+  const markAll = () =>
+    edit((cur) => ({
+      ...cur,
+      exercises: cur.exercises.map((e) => {
+        const prev = previous[e.exerciseId]?.sets ?? [];
+        return {
+          ...e,
+          sets: e.sets.map((x, j) => {
+            if (x.done) return x;
+            const warm = x.type === "calentamiento";
+            const p = prev.filter((y) => (y.type === "calentamiento") === warm)[e.sets.slice(0, j).filter((y) => (y.type === "calentamiento") === warm).length];
+            const kg = x.kg || ((x.target?.kg ?? p?.kg)?.toString() ?? "");
+            const reps = x.reps || ((x.target?.reps ?? p?.reps)?.toString() ?? "");
+            return { ...x, done: true, kg, reps };
+          }),
+        };
+      }),
+    }));
+
   const restart = () => {
     setW(fromRoutine(routine, suggest));
     setResumed(false);
@@ -193,8 +220,8 @@ export function WorkoutLogger({
       store(undefined);
       const res = await finishWorkout({
         name: String(fd.get("name") ?? ""),
-        startLocal: localIso(w.startedAt),
-        durationSec: elapsed,
+        startLocal: pastStart ?? localIso(w.startedAt),
+        durationSec: pastStart ? Math.round((Number(fd.get("minutes")) || 0) * 60) : elapsed,
         rpe: Number(fd.get("rpe")) || undefined,
         feelings: String(fd.get("feelings") ?? ""),
         workout: {
@@ -222,22 +249,33 @@ export function WorkoutLogger({
             Terminar
           </button>
         </div>
-        <div className="mt-2 grid grid-cols-4 items-center text-center">
-          {/* solo el icono: con el texto ocupaba media fila */}
-          <button
-            type="button"
-            onClick={togglePause}
-            className={`mx-auto grid h-9 w-9 place-items-center rounded-full ${paused ? "bg-accent text-accent-ink" : "bg-surface-2"}`}
-            aria-pressed={paused}
-            aria-label={paused ? "Reanudar" : "Pausa"}
-            title={paused ? "Reanudar" : "Pausa"}
-          >
-            <Icon name={paused ? "play" : "pause"} className="h-4 w-4" />
-          </button>
-          <Metric label={paused ? "En pausa" : "Duración"} value={fmtClock(elapsed)} accent />
-          <Metric label="Volumen" value={`${volume.toLocaleString("es-ES")} kg`} />
-          <Metric label="Series" value={String(doneSets.length)} />
-        </div>
+        {pastStart ? (
+          <div className="mt-2 flex items-center justify-between gap-2 text-sm">
+            <span className="text-ink-2">
+              Entreno del <strong className="text-ink">{pastLabel ?? pastStart.slice(0, 10)}</strong> · {doneSets.length} series · {volume.toLocaleString("es-ES")} kg
+            </span>
+            <button type="button" className="shrink-0 text-xs font-semibold text-accent" onClick={markAll}>
+              ✓ Marcar todas
+            </button>
+          </div>
+        ) : (
+          <div className="mt-2 grid grid-cols-4 items-center text-center">
+            {/* solo el icono: con el texto ocupaba media fila */}
+            <button
+              type="button"
+              onClick={togglePause}
+              className={`mx-auto grid h-9 w-9 place-items-center rounded-full ${paused ? "bg-accent text-accent-ink" : "bg-surface-2"}`}
+              aria-pressed={paused}
+              aria-label={paused ? "Reanudar" : "Pausa"}
+              title={paused ? "Reanudar" : "Pausa"}
+            >
+              <Icon name={paused ? "play" : "pause"} className="h-4 w-4" />
+            </button>
+            <Metric label={paused ? "En pausa" : "Duración"} value={fmtClock(elapsed)} accent />
+            <Metric label="Volumen" value={`${volume.toLocaleString("es-ES")} kg`} />
+            <Metric label="Series" value={String(doneSets.length)} />
+          </div>
+        )}
         {/* escribiendo, la barra del descanso de abajo taparía las series: el descanso va aquí */}
         {rest && restLeft > 0 && (
           <div className="only-kb mt-2 items-center gap-2 rounded-xl bg-accent/15 px-3 py-1.5 text-sm">
@@ -336,7 +374,7 @@ export function WorkoutLogger({
                     if (s.done) return setRow({ done: false });
                     // sin escribir nada, vale lo que se ve en gris (rutina o última vez)
                     setRow({ done: true, kg: s.kg || (kgHint?.toString() ?? ""), reps: s.reps || (repsHint?.toString() ?? "") });
-                    if (e.restSec && s.type !== "calentamiento" && restAfter) setRest({ until: Date.now() + e.restSec * 1000, total: e.restSec });
+                    if (!pastStart && e.restSec && s.type !== "calentamiento" && restAfter) setRest({ until: Date.now() + e.restSec * 1000, total: e.restSec });
                   };
                   return (
                     <tr key={j} className={s.done ? "bg-good/15" : j % 2 ? "bg-surface-2" : ""}>
@@ -433,12 +471,18 @@ export function WorkoutLogger({
           <form action={finish} className="w-full space-y-3 rounded-t-2xl bg-surface p-4 pb-[max(1rem,env(safe-area-inset-bottom))] md:max-w-md md:rounded-2xl">
             <strong className="block text-lg">Terminar entreno</strong>
             <p className="text-sm text-ink-2">
-              {fmtClock(elapsed)} · {doneSets.length} series · {volume.toLocaleString("es-ES")} kg
+              {pastStart ? pastLabel : fmtClock(elapsed)} · {doneSets.length} series · {volume.toLocaleString("es-ES")} kg
             </p>
             <label className="field">
               Nombre
               <input className="input" name="name" defaultValue={w.name} maxLength={80} />
             </label>
+            {pastStart && (
+              <label className="field">
+                Duración (minutos)
+                <input className="input" name="minutes" type="number" inputMode="numeric" min={1} max={360} required defaultValue={Math.max(20, Math.round(doneSets.length * 2.5 + 5))} />
+              </label>
+            )}
             <label className="field">
               Esfuerzo de la sesión (RPE 1-10)
               <select className="input" name="rpe" defaultValue="7">

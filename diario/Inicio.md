@@ -21,7 +21,7 @@ App de entrenamiento para corredores: planes hacia una carrera, registro de entr
 - [[Configuración]] — Google Cloud, Vercel, variables de entorno
 - [[Estudio entrenamiento]] — la ciencia en la que se basa la IA (Selye, Banister, 80/20, Pirámide)
 - **Diario** — una nota por día de trabajo (carpeta `Diario/`)
-  - [[2026-10-09]] · … · [[2026-10-19]]
+  - [[2026-10-09]] · … · [[2026-10-21]]
 
 ## Cómo usamos esto
 

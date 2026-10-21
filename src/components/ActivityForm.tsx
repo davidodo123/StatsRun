@@ -57,11 +57,15 @@ export function ActivityForm({
   session,
   today,
   friends = [],
+  routines = [],
+  planStrength = [],
 }: {
   initial: ActivityFormInitial;
   session?: PlannedSession;
   today: string;
   friends?: { id: string; name: string; username: string }[];
+  routines?: { id: string; name: string }[]; // para apuntar las series de una rutina ya hecha
+  planStrength?: { id: string; date: string; title: string }[]; // sesiones de fuerza del plan hasta hoy
 }) {
   const [state, action, pending] = useActionState<FormState, FormData>(saveActivity, {});
   const [sport, setSport] = useState(initial.sport);
@@ -70,6 +74,9 @@ export function ActivityForm({
   const [paceIn, setPaceIn] = useState("");
   const [rpe, setRpe] = useState(initial.rpe ?? 5);
   const [more, setMore] = useState(Boolean(initial.avgHr || initial.maxHr || initial.avgCadence));
+  const [date, setDate] = useState(initial.date);
+  const [time, setTime] = useState(initial.time);
+  const [done, setDone] = useState(""); // fuerza: «s:<sesión>», «r:<rutina>» o «libre»
 
   const km = Number(dist.replace(",", "."));
   const sec = parseTime(dur);
@@ -113,13 +120,15 @@ export function ActivityForm({
         </label>
         <label className="field">
           Fecha
-          <input className="input" type="date" name="date" max={today} defaultValue={initial.date} required />
+          <input className="input" type="date" name="date" max={today} value={date} onChange={(e) => setDate(e.target.value)} required />
         </label>
         <label className="field">
           Hora de inicio
-          <input className="input" type="time" name="time" defaultValue={initial.time} />
+          <input className="input" type="time" name="time" value={time} onChange={(e) => setTime(e.target.value)} />
         </label>
       </div>
+
+      {sport === "strength" && !initial.id && <StrengthDone date={date} time={time} done={done} setDone={setDone} routines={routines} planStrength={planStrength} sessionId={initial.sessionId} />}
 
       <div className={`grid grid-cols-2 gap-3 sm:gap-4 ${hasDistance ? "sm:grid-cols-3" : ""}`}>
         {hasDistance && (
@@ -305,5 +314,52 @@ function WithFriends({ friends, initial }: { friends: { id: string; name: string
       </div>
       <p className="text-xs text-muted">Les aparecerá en Amigos para que la añadan a sus entrenos con un clic.</p>
     </fieldset>
+  );
+}
+
+/** Fuerza ya hecha: elige la sesión del plan de ese día o una rutina y apunta sus series (el entreno sin cronómetro). */
+function StrengthDone({
+  date,
+  time,
+  done,
+  setDone,
+  routines,
+  planStrength,
+  sessionId,
+}: {
+  date: string;
+  time: string;
+  done: string;
+  setDone: (v: string) => void;
+  routines: { id: string; name: string }[];
+  planStrength: { id: string; date: string; title: string }[];
+  sessionId?: string;
+}) {
+  const day = planStrength.find((p) => p.id === sessionId) ?? planStrength.find((p) => p.date === date);
+  // sin elegir: lo del plan de ese día, si no la primera rutina, si no un entreno libre
+  const options = [...(day ? [`s:${day.id}`] : []), ...routines.map((r) => `r:${r.id}`), "libre"];
+  const pick = options.includes(done) ? done : options[0];
+  const params = new URLSearchParams({ fecha: date, hora: time || "18:00" });
+  if (pick.startsWith("s:")) params.set("sesion", pick.slice(2));
+  if (pick.startsWith("r:")) params.set("rutina", pick.slice(2));
+  return (
+    <div className="space-y-3 rounded-xl border border-accent/40 bg-accent/10 p-3 text-sm">
+      <label className="field">
+        ¿Qué hiciste?
+        <select className="input" value={pick} onChange={(e) => setDone(e.target.value)}>
+          {day && <option value={`s:${day.id}`}>Lo del plan: {day.title}</option>}
+          {routines.map((r) => (
+            <option key={r.id} value={`r:${r.id}`}>
+              {r.name}
+            </option>
+          ))}
+          <option value="libre">Entreno libre (añades los ejercicios)</option>
+        </select>
+      </label>
+      <Link href={`/fuerza/entreno?${params}`} className="btn w-full">
+        Apuntar las series →
+      </Link>
+      <p className="text-xs text-ink-2">Se abre con sus ejercicios: marca lo que hiciste y guárdalo con esta fecha. O guarda abajo solo la duración y el esfuerzo.</p>
+    </div>
   );
 }

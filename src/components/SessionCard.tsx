@@ -114,7 +114,10 @@ export function SessionCard({
                 </Link>
               ) : (
                 match.status !== "done" && (
-                  <Link href={`/registrar?sesion=${encodeURIComponent(s.id)}`} className="rounded-md bg-accent px-2 py-1 text-xs font-semibold text-accent-ink">
+                  <Link
+                    href={s.type === "strength" ? `/fuerza/entreno?sesion=${encodeURIComponent(s.id)}&fecha=${s.date}` : `/registrar?sesion=${encodeURIComponent(s.id)}`}
+                    className="rounded-md bg-accent px-2 py-1 text-xs font-semibold text-accent-ink"
+                  >
                     ✓ Registrar
                   </Link>
                 )
