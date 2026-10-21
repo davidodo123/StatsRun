@@ -155,12 +155,16 @@ export function Pill({ children, className = "" }: { children: ReactNode; classN
   return <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold ${className}`}>{children}</span>;
 }
 
+/** Mientras carga: ocupa al menos toda la pantalla, como una página de verdad, para que al llegar el contenido
+ *  la página no encoja ni salte (si se deslizaba mientras cargaba, se iba arriba). */
 export function Loading() {
   return (
-    <div className="grid grid-cols-1 gap-4 md:grid-cols-4" aria-busy>
-      {Array.from({ length: 8 }).map((_, i) => (
-        <div key={i} className="h-24 animate-pulse rounded-2xl bg-surface" />
-      ))}
+    <div className="min-h-[calc(100dvh-6rem)] space-y-4" aria-busy aria-label="Cargando">
+      <div className="h-8 w-2/3 animate-pulse rounded-lg bg-surface" />
+      <div className="h-40 animate-pulse rounded-2xl bg-surface" />
+      <div className="h-64 animate-pulse rounded-2xl bg-surface" />
+      <div className="h-48 animate-pulse rounded-2xl bg-surface" />
+      <div className="h-48 animate-pulse rounded-2xl bg-surface" />
     </div>
   );
 }

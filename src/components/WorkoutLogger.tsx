@@ -394,7 +394,19 @@ export function WorkoutLogger({
                         <input className="input px-1 py-1.5 text-center" inputMode="numeric" placeholder={repsHint?.toString() ?? "–"} value={s.reps} onChange={(ev) => setRow({ reps: ev.target.value })} aria-label={`Repeticiones serie ${j + 1}`} />
                       </td>
                       <td className="py-1 text-center">
-                        <button type="button" onClick={check} className={`h-8 w-8 rounded-lg text-base font-bold ${s.done ? "bg-good text-white" : "bg-surface-2 text-muted"}`} aria-pressed={s.done} aria-label={`Serie ${j + 1} hecha`}>
+                        {/* el toque no quita el foco del campo: si el teclado se cerraba antes del clic, la página
+                            bajaba y el toque caía en el ✓ de la serie de arriba (y la desmarcaba) */}
+                        <button
+                          type="button"
+                          onPointerDown={(ev) => ev.preventDefault()}
+                          onClick={() => {
+                            check();
+                            (document.activeElement as HTMLElement | null)?.blur();
+                          }}
+                          className={`h-10 w-10 touch-manipulation rounded-lg text-base font-bold ${s.done ? "bg-good text-white" : "bg-surface-2 text-muted"}`}
+                          aria-pressed={s.done}
+                          aria-label={`Serie ${j + 1} hecha`}
+                        >
                           ✓
                         </button>
                       </td>

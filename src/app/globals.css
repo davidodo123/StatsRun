@@ -184,6 +184,12 @@ body {
   }
 }
 
+/* como una app: mantener pulsado un enlace o una imagen no abre la vista previa de Safari («Abrir», «Copiar enlace»…) */
+a,
+img {
+  -webkit-touch-callout: none;
+}
+
 /* sin seleccionar texto ni el menú de «Copiar» al mantener pulsado (el menú «Más» abierto) */
 .no-select,
 html:has(.no-select) body {
