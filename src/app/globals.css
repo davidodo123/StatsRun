@@ -143,11 +143,15 @@ html {
   /* con la barra de estado translúcida, el 100 % del iPhone instalado no cuenta su altura: en las páginas cortas
      la página se quedaba corta y la barra de abajo flotaba sobre una franja negra */
   min-height: calc(100% + env(safe-area-inset-top));
+  /* sin rebote al llegar arriba o abajo: arrastraba las barras fijas. «Tirar para actualizar» es de la app
+     (AppUpdates, con los toques), no del rebote, así que sigue funcionando */
+  overscroll-behavior: none;
 }
 
 body {
   /* lo mismo para el cuerpo: en el iPhone instalado, toda la pantalla aunque la página tenga poco */
   min-height: calc(100dvh + env(safe-area-inset-top));
+  overscroll-behavior: none;
   background: var(--bg);
   color: var(--text);
   font-family: var(--font-body), system-ui, -apple-system, "Segoe UI", sans-serif;

@@ -101,7 +101,8 @@ async function Content({ searchParams }: { searchParams: PageProps<"/registrar">
     const st = matches?.get(s.id)?.status;
     return st === "missed" || st === "today" || st === "partial";
   });
-  const recent = [...db.activities].reverse().slice(0, 15);
+  // solo los dos últimos: el resto, en Perfil → Entrenos
+  const recent = [...db.activities].reverse().slice(0, 2);
   // etiquetas de la sesión recién guardada (récord, más larga…) para celebrarlo
   const savedId = typeof sp.guardado === "string" ? sp.guardado : undefined;
   const savedTags = savedId && db.activities.some((a) => a.id === savedId) ? (tagsForDb(db, estimateVdot(db.activities, db.profile, today).vdot).get(savedId) ?? []) : [];
@@ -184,7 +185,16 @@ async function Content({ searchParams }: { searchParams: PageProps<"/registrar">
           </details>
         </Card>
 
-        <Card title="Últimos entrenos">
+        <Card
+          title="Últimos entrenos"
+          action={
+            db.activities.length > 2 && (
+              <Link href="/perfil?tab=actividades" className="text-xs font-semibold text-accent">
+                Ver todos →
+              </Link>
+            )
+          }
+        >
           {recent.length ? (
             <ul className="divide-y divide-line text-sm">
               {recent.map((a) => (
