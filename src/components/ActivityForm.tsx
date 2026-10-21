@@ -347,7 +347,7 @@ function StrengthDone({
       <label className="field">
         ¿Qué hiciste?
         <select className="input" value={pick} onChange={(e) => setDone(e.target.value)}>
-          {day && <option value={`s:${day.id}`}>Lo del plan: {day.title}</option>}
+          {day && <option value={`s:${day.id}`}>Planning: {day.title}</option>}
           {routines.map((r) => (
             <option key={r.id} value={`r:${r.id}`}>
               {r.name}
