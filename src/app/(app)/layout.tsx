@@ -6,6 +6,8 @@ import { AppUpdates } from "@/components/AppUpdates";
 import { KeyboardFix } from "@/components/KeyboardFix";
 import { NavHistory } from "@/components/BackLink";
 import { LiveWorkoutBar } from "@/components/LiveWorkoutBar";
+import { PushPrompt } from "@/components/PushPrompt";
+import { pushPublicKey } from "@/lib/push";
 
 // Páginas de la app (con sesión): menú lateral en escritorio y barra inferior en móvil.
 export default function AppLayout({ children }: LayoutProps<"/">) {
@@ -18,6 +20,7 @@ export default function AppLayout({ children }: LayoutProps<"/">) {
         <NavHistory />
         <LiveWorkoutBar />
       </Suspense>
+      <PushPrompt publicKey={pushPublicKey()} />
       <Suspense fallback={<NavView />}>
         <AppNav />
       </Suspense>
