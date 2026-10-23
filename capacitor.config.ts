@@ -12,6 +12,8 @@ const config: CapacitorConfig = {
   },
   android: {
     backgroundColor: "#1a1a19",
+    // grabar con el GPS en segundo plano: sin esto, Android corta las ubicaciones a los 5 min con la pantalla apagada
+    useLegacyBridge: true,
   },
 };
 

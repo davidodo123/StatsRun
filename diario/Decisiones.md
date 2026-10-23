@@ -867,3 +867,13 @@ David preguntó si se puede «entrenar» una IA para la app. Opciones: (1) instr
 - **Límites**: las carreras no se mueven; nada al día de una carrera ni al anterior; solo días de la próxima semana y dentro del plan. Si quedan dos sesiones fuertes seguidas, se hace igual (lo decide el corredor) pero lo avisa.
 - La sesión enseña «Cambiada (era el vie 23 oct)» (`movedFrom`), y sale el aviso con **Deshacer** (el mismo de «No puedo ese día», con `lastSkip.move`).
 - No se llama a la IA, y la IA ya no cambia la fecha de una sesión cambiada por el atleta (se lo dice el contexto, `cambiadaPorElAtleta`, y el código lo impide).
+
+## GPS con la pantalla apagada en Android
+*2026-10-23*
+
+- David pasó una lista de Gemini (Mapbox o Google Maps para el mapa; Transistor, Roam.ai o Radar para el GPS). Para el **mapa** no hace falta nada nuevo: el recorrido ya se dibuja (en directo, la línea; después, el mapa de la actividad). Para el **GPS**: Transistor es de pago para publicar en Android, y Roam.ai y Radar son servicios externos de pago por los que pasaría la ubicación. Se elige **`@capgo/background-geolocation` 8.4.14** (gratis, MPL-2.0, para Capacitor 8, precisa: GPS de Google Play services con servicio en primer plano). El de `@capacitor-community` es menos preciso.
+- **Cómo va**: `components/gpsSource.ts` decide de dónde salen los puntos. En la app de Android con el complemento, al grabar, el GPS nativo en segundo plano con la notificación «Grabando carrera» (y sin forzar la pantalla encendida); antes de empezar y en todo lo demás (iPhone, navegador, APK antiguo), la ubicación del navegador como hasta ahora. El filtro de puntos y las estadísticas (`gpsTrack.ts`) no cambian.
+- **Android**: `useLegacyBridge: true` en `capacitor.config.ts` (si no, Android corta las ubicaciones a los 5 min en segundo plano). Del complemento se quitan las geovallas y el arranque con el móvil (`RECEIVE_BOOT_COMPLETED`); quedan ubicación, `FOREGROUND_SERVICE_LOCATION` y notificaciones. El GPS sigue sin ser obligatorio para instalar (`tools:replace`). No se pide la ubicación «todo el tiempo» (`ACCESS_BACKGROUND_LOCATION`): con el servicio en primer plano no hace falta.
+- **Google Play**: el servicio en primer plano de tipo ubicación se declara en Play Console (para qué se usa y un vídeo corto). Hay que hacerlo antes de publicar.
+- **iPhone**: sigue sin poder (una web no recibe la ubicación con la pantalla bloqueada); pantalla encendida.
+- Compilar: `cd android` y `gradlew assembleDebug` con `JAVA_HOME` al JDK 21 y `ANDROID_HOME` al SDK (no hay `local.properties`).

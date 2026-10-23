@@ -6,6 +6,7 @@ import { acceptPoint, trackStats, type GpsPoint } from "@/lib/gpsTrack";
 import { project } from "@/lib/route";
 import { fmtDuration, fmtKm, fmtPace } from "@/lib/format";
 import { Icon } from "./icons";
+import { canRecordInBackground, openLocationSettings, watchGps, type GpsError } from "./gpsSource";
 
 type Sport = "run" | "walk" | "ride";
 interface Rec {
@@ -70,7 +71,9 @@ export function RunRecorder() {
   const [rec, setRec] = useState<Rec>();
   const [ready, setReady] = useState(false);
   const [fix, setFix] = useState<{ acc: number; at: number }>();
-  const [geoError, setGeoError] = useState<string>();
+  const [geoError, setGeoError] = useState<GpsError>();
+  // app de Android con el complemento: graba con la pantalla apagada
+  const [native, setNative] = useState(false);
   // la hora se pone al montar: la página se prerenderiza sin reloj
   const [now, setNow] = useState(0);
   const [finishing, setFinishing] = useState(false);
@@ -83,6 +86,7 @@ export function RunRecorder() {
     // una grabación de hace más de 12 h ya no sigue en curso
     // eslint-disable-next-line react-hooks/set-state-in-effect -- localStorage solo existe en el navegador
     if (stored?.points && Date.now() - stored.startedAt < 12 * 3600_000) setRec({ ...stored, pausedAt: stored.pausedAt ?? Date.now() });
+    setNative(canRecordInBackground());
     setReady(true);
   }, []);
   useEffect(() => {
@@ -95,41 +99,34 @@ export function RunRecorder() {
     return () => clearInterval(t);
   }, []);
 
+  const recording = Boolean(rec && !rec.pausedAt);
+  // en la app de Android, mientras graba, el GPS nativo en segundo plano (con su notificación)
+  const background = recording && native;
+
   // el GPS se escucha siempre en esta página: antes de empezar, para saber si hay señal
   useEffect(() => {
-    if (!("geolocation" in navigator)) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- el GPS solo existe en el navegador
-      setGeoError("Este navegador no da la ubicación.");
-      return;
-    }
-    const id = navigator.geolocation.watchPosition(
-      (pos) => {
-        const p: GpsPoint = { t: pos.timestamp || Date.now(), lat: pos.coords.latitude, lon: pos.coords.longitude, acc: Math.round(pos.coords.accuracy) };
-        if (pos.coords.altitude !== null && Number.isFinite(pos.coords.altitude)) p.alt = Math.round(pos.coords.altitude * 10) / 10;
-        setFix({ acc: p.acc!, at: Date.now() });
-        setGeoError(undefined);
-        setRec((cur) => {
-          if (!cur || cur.pausedAt) return cur;
-          const point = cur.resume ? { ...p, b: 1 as const } : p;
-          if (!acceptPoint(cur.points.at(-1), point)) return cur;
-          return { ...cur, resume: false, points: [...cur.points, point] };
-        });
-      },
-      (e) =>
-        setGeoError(
-          e.code === e.PERMISSION_DENIED
-            ? "No hay permiso de ubicación. En el iPhone: Ajustes → Privacidad → Localización → Safari (o la app) → «Mientras se usa». En Android: permisos de la app → Ubicación."
-            : "No llega la señal del GPS. Sal a cielo abierto y espera unos segundos.",
-        ),
-      { enableHighAccuracy: true, maximumAge: 0, timeout: 30_000 },
-    );
-    return () => navigator.geolocation.clearWatch(id);
-  }, []);
+    let watch: { stop: () => void } | undefined;
+    let off = false;
+    const onPoint = (p: GpsPoint) => {
+      setFix({ acc: p.acc ?? 0, at: Date.now() });
+      setGeoError(undefined);
+      setRec((cur) => {
+        if (!cur || cur.pausedAt) return cur;
+        const point = cur.resume ? { ...p, b: 1 as const } : p;
+        if (!acceptPoint(cur.points.at(-1), point)) return cur;
+        return { ...cur, resume: false, points: [...cur.points, point] };
+      });
+    };
+    watchGps(onPoint, setGeoError, background).then((w) => (off ? w.stop() : (watch = w)));
+    return () => {
+      off = true;
+      watch?.stop();
+    };
+  }, [background]);
 
-  const recording = Boolean(rec && !rec.pausedAt);
-  // pantalla encendida mientras graba: en el iPhone, con la pantalla bloqueada no llega la ubicación
+  // pantalla encendida mientras graba: en el iPhone (y sin el GPS nativo), con la pantalla bloqueada no llega la ubicación
   useEffect(() => {
-    if (!recording) return;
+    if (!recording || native) return;
     let lock: { release: () => Promise<void> } | undefined;
     const ask = () => {
       const wl = (navigator as Navigator & { wakeLock?: { request: (t: "screen") => Promise<{ release: () => Promise<void> }> } }).wakeLock;
@@ -142,12 +139,20 @@ export function RunRecorder() {
       document.removeEventListener("visibilitychange", onVisible);
       lock?.release().catch(() => {});
     };
-  }, [recording]);
+  }, [recording, native]);
 
   const stats = useMemo(() => trackStats(rec?.points ?? []), [rec?.points]);
   if (!ready) return <div className="h-64 animate-pulse rounded-2xl bg-surface" />;
 
   const signal = fix && now - fix.at < 15_000 ? fix.acc : undefined;
+  const geoText =
+    geoError === "permiso"
+      ? native
+        ? "No hay permiso de ubicación. Dale «Permitir» (y el de notificaciones, para grabar con la pantalla apagada)."
+        : "No hay permiso de ubicación. En el iPhone: Ajustes → Privacidad → Localización → Safari (o la app) → «Mientras se usa». En Android: permisos de la app → Ubicación."
+      : geoError
+        ? "No llega la señal del GPS. Sal a cielo abierto y espera unos segundos."
+        : undefined;
   const signalText = geoError ? "Sin GPS" : signal === undefined ? "Buscando señal…" : signal <= 15 ? `GPS bueno · ±${signal} m` : signal <= 35 ? `GPS regular · ±${signal} m` : `GPS flojo · ±${signal} m`;
   const signalTone = geoError || signal === undefined ? "bg-muted" : signal <= 15 ? "bg-good" : signal <= 35 ? "bg-warning" : "bg-critical";
 
@@ -198,9 +203,20 @@ export function RunRecorder() {
           <strong>GPS</strong>
           {Signal}
         </div>
-        {geoError && <p className="rounded-xl border border-critical/40 bg-critical/10 p-3 text-sm">{geoError}</p>}
+        {geoText && (
+          <p className="rounded-xl border border-critical/40 bg-critical/10 p-3 text-sm">
+            {geoText}
+            {geoError === "permiso" && native && (
+              <button type="button" className="ml-1 font-semibold text-accent underline" onClick={() => openLocationSettings()}>
+                Abrir ajustes
+              </button>
+            )}
+          </p>
+        )}
         <p className="text-sm text-ink-2">
-          Deja la app abierta: la pantalla se queda encendida sola. Si la bloqueas o cambias de app, deja de grabar.
+          {native
+            ? "Puedes bloquear el móvil o cambiar de app: sigue grabando (verás la notificación «Grabando carrera»). Para pausar o terminar, vuelve a la app."
+            : "Deja la app abierta: la pantalla se queda encendida sola. Si la bloqueas o cambias de app, deja de grabar."}
         </p>
         {/* ninguno va marcado: el que toques empieza a grabar */}
         <p className="text-sm font-semibold">¿Qué vas a hacer? Toca para empezar</p>
@@ -258,7 +274,16 @@ export function RunRecorder() {
         <Icon name={paused ? "play" : "pause"} className="mr-1 h-4 w-4 align-[-2px]" />
         {paused ? "Reanudar" : "Pausa"}
       </button>
-      {geoError && <p className="rounded-xl border border-critical/40 bg-critical/10 p-3 text-sm">{geoError}</p>}
+      {geoText && (
+          <p className="rounded-xl border border-critical/40 bg-critical/10 p-3 text-sm">
+            {geoText}
+            {geoError === "permiso" && native && (
+              <button type="button" className="ml-1 font-semibold text-accent underline" onClick={() => openLocationSettings()}>
+                Abrir ajustes
+              </button>
+            )}
+          </p>
+        )}
 
       {rec.points.length > 1 && (
         <div className="rounded-2xl border border-line bg-surface p-2">

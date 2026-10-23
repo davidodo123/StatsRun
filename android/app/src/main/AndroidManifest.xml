@@ -34,6 +34,10 @@
 
         </activity>
 
+        <!-- del complemento de GPS en segundo plano solo se usa la grabación: fuera las geovallas y el arranque con el móvil -->
+        <receiver android:name="com.capgo.capacitor_background_geolocation.GeofenceBroadcastReceiver" tools:node="remove" />
+        <receiver android:name="com.capgo.capacitor_background_geolocation.GeofenceBootReceiver" tools:node="remove" />
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"
@@ -51,7 +55,9 @@
     <!-- Grabar carrera con GPS (Registrar → Grabar con GPS): ubicación mientras la app está abierta -->
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-    <uses-feature android:name="android.hardware.location.gps" android:required="false" />
+    <uses-feature android:name="android.hardware.location.gps" android:required="false" tools:replace="android:required" />
+    <!-- con la pantalla apagada: servicio en primer plano de ubicación con la notificación «Grabando carrera» (los añade el complemento) -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" tools:node="remove" />
 
     <!-- Health Connect: solo leer pasos, calorías activas, pulso en reposo, VFC y sueño (el complemento pide muchos más) -->
     <uses-permission android:name="android.permission.health.WRITE_STEPS" tools:node="remove" />
