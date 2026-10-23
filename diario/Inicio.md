@@ -10,8 +10,8 @@ App de entrenamiento para corredores: planes hacia una carrera, registro de entr
 
 ## Dónde estamos
 
-> [!info] Fase actual: **Fase 7 · Ideas nuevas** (2026-10-19)
-> EMOM, compartir y Entrenador IA comprobados. Grabar con GPS hecho, pendiente de probarlo corriendo. Google Play, en pausa. Ver [[Roadmap]].
+> [!info] Fase actual: **Fase 8 · Por hacer** (2026-10-23)
+> Fase 7 hecha salvo el GPS con la pantalla apagada. En la 8: catálogo de fuerza ampliado (1.036 ejercicios); faltan las skills, que el Plan cargue más rápido y compartir en otro formato. Ver [[Roadmap]].
 
 ## Notas
 
@@ -21,7 +21,7 @@ App de entrenamiento para corredores: planes hacia una carrera, registro de entr
 - [[Configuración]] — Google Cloud, Vercel, variables de entorno
 - [[Estudio entrenamiento]] — la ciencia en la que se basa la IA (Selye, Banister, 80/20, Pirámide)
 - **Diario** — una nota por día de trabajo (carpeta `Diario/`)
-  - [[2026-10-09]] · … · [[2026-10-21]]
+  - [[2026-10-09]] · … · [[2026-10-23]]
 
 ## Cómo usamos esto
 

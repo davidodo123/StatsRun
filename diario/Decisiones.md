@@ -816,3 +816,11 @@ David preguntó si se puede «entrenar» una IA para la app. Opciones: (1) instr
   - Google Play pide justificar el permiso de ubicación (declaración en la ficha); para una app de entrenamiento que graba mientras corres se acepta.
 - **iPhone**: con la web instalada no hay forma; iOS no da la ubicación a una web en segundo plano o con la pantalla bloqueada. Core Location en segundo plano solo es para apps nativas, y una app nativa en el iPhone necesita la App Store (99 €/año) y compilar en un Mac, que se descartó (→ [[#iPhone por enlace, Android por Play Store]]).
 - Fuentes: capgo.app/docs/plugins/background-geolocation, capawesome.io (anuncio del complemento), README de @capacitor-community/background-geolocation.
+
+## Más ejercicios de fuerza
+*2026-10-23*
+
+- David echaba en falta ejercicios, sobre todo variantes con máquinas, mancuernas, kettlebell y gomas. Añadidos **140** en `scripts/exercises/extra.json` (el catálogo pasa de 896 a 1.036): máquinas +30 (hip thrust, multicadera, prensa horizontal y a una pierna, péndulo, belt squat, jalón y remo articulados, dominadas y fondos asistidos, pec deck…), poleas +6, mancuernas +39 (hip thrust, rumano, goblet, zancadas, cosaca, thruster, swing, arrancada, paseos…), kettlebell +34 (peso muerto, swing americano, turco completo, paseos, remo gorila, cosaca, búlgara…) y bandas +31 (remos, jalones, face pull, curl, tríceps, paso lateral, TKE y tobillo para corredores, nórdico asistido…).
+- Se escriben a mano en vez de traer otra base de datos: así siguen el formato del catálogo (material, músculos, pasos en español) y no hay que traducir ni mezclar fuentes.
+- Fotos: cada uno lleva la de un ejercicio parecido de free-exercise-db (`imgFrom`); en la ficha sale «Foto de un ejercicio parecido».
+- La IA (rutinas y Entrenador) también los tiene como candidatos.
