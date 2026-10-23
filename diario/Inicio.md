@@ -20,6 +20,7 @@ App de entrenamiento para corredores: planes hacia una carrera, registro de entr
 - [[Decisiones]] — qué decidimos y por qué
 - [[Configuración]] — Google Cloud, Vercel, variables de entorno
 - [[Infraestructura]] — base de datos, servidor, límites y qué cambiar según crezca la app
+- [[Suscripción]] — qué sería gratis y qué de pago, precio y cómo cobrar
 - [[Estudio entrenamiento]] — la ciencia en la que se basa la IA (Selye, Banister, 80/20, Pirámide)
 - **Diario** — una nota por día de trabajo (carpeta `Diario/`)
   - [[2026-10-09]] · … · [[2026-10-23]]

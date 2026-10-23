@@ -191,6 +191,15 @@ Para cuando crezca: base de datos, servidor, costes y administración. Se hace s
 - [ ] **100-500 usuarios**: Vercel Pro (Hobby no permite uso comercial) y separar las actividades con GPS del documento de cada usuario
 - [ ] **Más de 500 o cobrar**: pasar a Postgres (Neon o Supabase) con tablas de usuarios, amistades, actividades y planes; fotos a un almacén de archivos (Vercel Blob o R2)
 
+## 💳 Suscripción → [[Suscripción]]
+Propuesta de Gratis / Premium en [[Suscripción]]. Primero decidir; después, construir.
+- [ ] Decidir qué es Premium, el precio y la prueba gratis (David)
+- [ ] Decidir Android: cobrar con Google Play Billing o solo desde la web
+- [ ] Requisitos para cobrar: alta para facturar, IVA (Stripe Tax u OSS), Vercel Pro, condiciones de uso y privacidad
+- [ ] Stripe: Checkout, portal del cliente y webhook; `Db.subscription` e `isPremium()` en el servidor
+- [ ] Pantalla «Premium» (qué incluye, precio, suscribirse, gestionar) y avisos donde una función es de pago
+- [ ] Poner el límite en cada función Premium (IA, temporada, estadísticas avanzadas, sticker y vídeo…) y Premium gratis para los usuarios actuales
+
 ## 🧠 IA que aprende de ti (opción 2: sin entrenar el modelo) → [[Decisiones#IA que aprende de ti]]
 - [x] Bloque 1 · Valoraciones (pulgar arriba/abajo con motivo) y memoria de preferencias que leen las tres IA; el chat apunta solo lo que le cuentas — *hecho 2026-10-10, pendiente de comprobar*
 - [x] Bloque 2 · Ejemplos buenos en las instrucciones (few-shot), y las respuestas que valoras como ejemplos de lo que gusta y lo que no; el chat entrena con el material que nombras — *hecho 2026-10-11, pendiente de comprobar*

@@ -19,6 +19,11 @@
       "type": "file",
       "path": "Infraestructura.md",
       "title": "Infraestructura"
+    },
+    {
+      "type": "file",
+      "path": "Suscripción.md",
+      "title": "Suscripción"
     }
   ]
 }
