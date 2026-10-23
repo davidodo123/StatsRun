@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { BackLink } from "@/components/BackLink";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { Card, Loading, PageHeader, Stat } from "@/components/ui";
@@ -57,9 +57,7 @@ async function Content({ params }: { params: PageProps<"/amigos/[id]">["params"]
           )
         }
         action={
-          <Link href="/amigos" className="btn btn-ghost">
-            ← Amigos
-          </Link>
+          <BackLink href="/amigos" className="btn btn-ghost" />
         }
       />
 

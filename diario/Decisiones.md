@@ -824,3 +824,12 @@ David preguntó si se puede «entrenar» una IA para la app. Opciones: (1) instr
 - Se escriben a mano en vez de traer otra base de datos: así siguen el formato del catálogo (material, músculos, pasos en español) y no hay que traducir ni mezclar fuentes.
 - Fotos: cada uno lleva la de un ejercicio parecido de free-exercise-db (`imgFrom`); en la ficha sale «Foto de un ejercicio parecido».
 - La IA (rutinas y Entrenador) también los tiene como candidatos.
+
+
+## Volver a donde estabas
+*2026-10-23*
+
+- Fallo: el enlace de arriba de cada página iba siempre al mismo sitio («← Ejercicios» al buscador), aunque vinieras de tu rutina, del entreno o del perfil.
+- Ahora `BackLink` (`components/BackLink.tsx`): si en esta pestaña vienes de otra página de la app, vuelve atrás (`router.back()`, que además conserva dónde estabas en la página); si has entrado directamente (enlace, app recién abierta), va a la página de siempre. Para saberlo, `NavHistory` (en el layout) apunta las páginas visitadas en `sessionStorage`.
+- El texto pasa a ser «← Volver» en todas: con la vuelta atrás ya no se sabe de antemano a qué página va. Cambiado en las 13 páginas que lo tenían (ficha de ejercicio, entreno, carrera, amigo, rutina, planes, material, medidas, GPS…).
+- **Series que bajaban** (mismo día): con el teclado abierto, el descanso se mostraba en la cabecera fija del entreno y la hacía crecer unos 40 px; al tocar la serie siguiente (con el descanso en marcha) todo bajaba. Ahora el aviso del descanso flota justo debajo de la cabecera (`absolute`), sin ocupar sitio. Comprobado en Chrome a 390 px: la serie no se mueve.

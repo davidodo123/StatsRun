@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { BackLink } from "@/components/BackLink";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { Card, Loading, PageHeader, Pill, Stat } from "@/components/ui";
@@ -40,9 +41,7 @@ async function Content({ params }: { params: PageProps<"/fuerza/ejercicios/[id]"
 
   return (
     <>
-      <Link href="/fuerza/ejercicios" className="text-sm text-ink-2 hover:text-ink">
-        ← Ejercicios
-      </Link>
+      <BackLink href="/fuerza/ejercicios" />
       <PageHeader
         title={x.name}
         subtitle={

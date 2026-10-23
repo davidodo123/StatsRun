@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { BackLink } from "@/components/BackLink";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { Card, Loading, PageHeader, Stat } from "@/components/ui";
@@ -41,9 +41,7 @@ async function Content({ params }: { params: PageProps<"/plan/anterior/[id]">["p
 
   return (
     <>
-      <Link href="/plan" className="text-sm text-ink-2 hover:text-ink">
-        ← Planes
-      </Link>
+      <BackLink href="/plan" />
       <PageHeader
         title={plan.goal.name}
         subtitle={`${shortDate(plan.weeks[0]?.start ?? plan.createdAt.slice(0, 10))} → ${shortDate(plan.goal.date)} · ${plan.weeks.length} semanas · archivado el ${shortDate(past.archivedAt.slice(0, 10))}`}

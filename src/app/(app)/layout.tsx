@@ -4,6 +4,7 @@ import { AppNav } from "@/components/AppNav";
 import { InstallBanner } from "@/components/Pwa";
 import { AppUpdates } from "@/components/AppUpdates";
 import { KeyboardFix } from "@/components/KeyboardFix";
+import { NavHistory } from "@/components/BackLink";
 
 // Páginas de la app (con sesión): menú lateral en escritorio y barra inferior en móvil.
 export default function AppLayout({ children }: LayoutProps<"/">) {
@@ -12,6 +13,9 @@ export default function AppLayout({ children }: LayoutProps<"/">) {
       {/* versión con la que se ha abierto la app (el commit de Vercel; en local, «dev») */}
       <AppUpdates version={process.env.VERCEL_GIT_COMMIT_SHA ?? "dev"} />
       <KeyboardFix />
+      <Suspense fallback={null}>
+        <NavHistory />
+      </Suspense>
       <Suspense fallback={<NavView />}>
         <AppNav />
       </Suspense>

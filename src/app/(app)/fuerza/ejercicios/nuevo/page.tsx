@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { BackLink } from "@/components/BackLink";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { Card, Loading, PageHeader } from "@/components/ui";
@@ -24,9 +24,7 @@ async function Content({ searchParams }: { searchParams: PageProps<"/fuerza/ejer
 
   return (
     <>
-      <Link href={exercise ? `/fuerza/ejercicios/${exercise.id}` : "/fuerza/ejercicios"} className="text-sm text-ink-2 hover:text-ink">
-        ← {exercise ? exercise.name : "Ejercicios"}
-      </Link>
+      <BackLink href={exercise ? `/fuerza/ejercicios/${exercise.id}` : "/fuerza/ejercicios"} />
       <PageHeader title={exercise ? "Editar ejercicio" : "Crear ejercicio"} subtitle="Para lo que no esté en la biblioteca: lo verás junto al resto y podrás usarlo en tus rutinas." />
       <Card>
         <ExerciseForm exercise={exercise} />

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { BackLink } from "@/components/BackLink";
 import { Suspense } from "react";
 import { getAnalysis } from "@/lib/analysis";
 import { Card, Empty, FoldCard, Loading, MoreMenu, Notice, PageHeader, Stat, StatGroup } from "@/components/ui";
@@ -70,9 +71,7 @@ async function Content({ searchParams }: { searchParams: PageProps<"/plan/actual
 
   return (
     <>
-      <Link href="/plan" className="text-sm text-ink-2 hover:text-ink">
-        ← Planes
-      </Link>
+      <BackLink href="/plan" />
       <PageHeader
         title={planTitle(plan)}
         subtitle={`${shortDate(plan.goal.date)} · ${plan.weeks.length} semanas · creado el ${shortDate(plan.createdAt)}`}

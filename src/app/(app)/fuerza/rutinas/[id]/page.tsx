@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { BackLink } from "@/components/BackLink";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { Loading } from "@/components/ui";
@@ -37,9 +38,7 @@ async function Content({ params }: { params: PageProps<"/fuerza/rutinas/[id]">["
   const planKinds = [...new Set(planSessions.map((s) => s.strengthKind).filter((k): k is NonNullable<typeof k> => Boolean(k)))];
   return (
     <>
-      <Link href="/fuerza" className="text-sm text-ink-2 hover:text-ink">
-        ← Fuerza
-      </Link>
+      <BackLink href="/fuerza" />
       <h1 className="mt-3 text-2xl font-bold tracking-tight">{routine.name}</h1>
       <p className="mt-1 text-sm text-muted">Creada por {user?.username ?? user?.name ?? "ti"}</p>
       {routine.folder && (

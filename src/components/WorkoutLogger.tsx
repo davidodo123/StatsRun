@@ -276,9 +276,10 @@ export function WorkoutLogger({
             <Metric label="Series" value={String(doneSets.length)} />
           </div>
         )}
-        {/* escribiendo, la barra del descanso de abajo taparía las series: el descanso va aquí */}
+        {/* escribiendo, la barra del descanso de abajo taparía las series: el descanso va aquí, flotando bajo la cabecera
+            (si ocupara sitio, la cabecera crecería al tocar la serie siguiente y las series bajarían) */}
         {rest && restLeft > 0 && (
-          <div className="only-kb mt-2 items-center gap-2 rounded-xl bg-accent/15 px-3 py-1.5 text-sm">
+          <div className="only-kb absolute inset-x-4 top-full mt-1 items-center gap-2 rounded-xl border border-accent/40 bg-surface px-3 py-1.5 text-sm shadow-lg md:inset-x-8">
             <span className="text-ink-2">Descanso</span>
             <strong className="tabular">{fmtClock(restLeft)}</strong>
             <button type="button" className="ml-auto text-xs font-semibold text-accent" onClick={() => setRest(undefined)}>

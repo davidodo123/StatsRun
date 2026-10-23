@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { BackLink } from "@/components/BackLink";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { Card, Loading, PageHeader, Stat, StatGroup } from "@/components/ui";
@@ -54,9 +55,7 @@ async function Content({ params, searchParams }: { params: PageProps<"/actividad
 
   return (
     <>
-      <Link href={mine ? "/perfil?tab=actividades" : `/amigos/${ownerId}`} className="text-sm text-ink-2 hover:text-ink">
-        ← {mine ? "Mis entrenos" : owner!.name}
-      </Link>
+      <BackLink href={mine ? "/perfil?tab=actividades" : `/amigos/${ownerId}`} />
       <PageHeader
         title={a.name}
         subtitle={

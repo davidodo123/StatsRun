@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { BackLink } from "@/components/BackLink";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { RACES, findRace, PROFILE_TONE, type Race } from "@/lib/races";
@@ -36,9 +37,7 @@ async function RaceBody({ params }: { params: PageProps<"/carreras/[id]">["param
 
   return (
     <>
-      <Link href="/carreras" className="text-sm text-ink-2 hover:text-ink">
-        ← Carreras
-      </Link>
+      <BackLink href="/carreras" />
       <PageHeader
         title={race ? race.name : "Carrera personalizada"}
         subtitle={race ? `${race.city}, ${race.country} · normalmente en ${MONTHS[race.month] || "cualquier fecha"}` : "Introduce los datos de tu carrera."}

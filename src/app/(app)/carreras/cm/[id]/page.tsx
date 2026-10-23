@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { BackLink } from "@/components/BackLink";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { GoalForm } from "@/components/GoalForm";
@@ -26,9 +27,7 @@ async function Content({ params }: { params: PageProps<"/carreras/cm/[id]">["par
   const days = diffDays(r.date, today);
   return (
     <>
-      <Link href="/carreras" className="text-sm text-ink-2 hover:text-ink">
-        ← Carreras
-      </Link>
+      <BackLink href="/carreras" />
       <PageHeader title={r.name} subtitle={`${WEEKDAYS[weekday(r.date)]} ${shortDate(r.date)}${r.time ? ` · ${r.time}` : ""} · ${r.place}`} />
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <div className="space-y-4 lg:col-span-2">

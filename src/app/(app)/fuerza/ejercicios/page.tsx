@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { BackLink } from "@/components/BackLink";
 import { Suspense } from "react";
 import { Loading, PageHeader } from "@/components/ui";
 import { ExerciseBrowser, type BrowserFilters } from "@/components/ExerciseBrowser";
@@ -32,9 +33,7 @@ async function Content({ searchParams }: { searchParams: PageProps<"/fuerza/ejer
 
   return (
     <>
-      <Link href="/fuerza" className="text-sm text-ink-2 hover:text-ink">
-        ← Fuerza
-      </Link>
+      <BackLink href="/fuerza" />
       <PageHeader
         title="Ejercicios"
         subtitle={places.length ? undefined : <>Filtra por lo que tienes: <Link href="/fuerza/material" className="text-accent">añade tu material</Link>.</>}

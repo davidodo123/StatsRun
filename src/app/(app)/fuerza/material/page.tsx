@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { BackLink } from "@/components/BackLink";
 import { Suspense } from "react";
 import { Card, Loading, PageHeader, Pill } from "@/components/ui";
 import { PlaceForm } from "@/components/PlaceForm";
@@ -26,9 +26,7 @@ async function Content() {
 
   return (
     <>
-      <Link href="/fuerza" className="text-sm text-ink-2 hover:text-ink">
-        ← Fuerza
-      </Link>
+      <BackLink href="/fuerza" />
       <PageHeader title="Mi material" subtitle="Los sitios donde entrenas y lo que hay en cada uno. El marcado como «ahora» filtra los ejercicios." />
       <div className="space-y-3">
         {places.map((p) => {
