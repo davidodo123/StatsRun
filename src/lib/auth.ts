@@ -68,7 +68,7 @@ function newFriendCode(taken: Set<string>): string {
   }
 }
 
-export const normalizeUsername = (u: string) => u.trim().toLowerCase();
+const normalizeUsername = (u: string) => u.trim().toLowerCase();
 
 /** Identidad devuelta por Google tras el inicio de sesión. */
 export interface GoogleIdentity {

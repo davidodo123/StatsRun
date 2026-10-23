@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 import { getUserId } from "@/lib/session";
-import { getDb } from "@/lib/db";
+import { readDbNow as getDb } from "@/lib/db";
 import { ACCENT, shareCard } from "@/lib/shareCard";
 import { WEEKDAYS, weekday } from "@/lib/dates";
 

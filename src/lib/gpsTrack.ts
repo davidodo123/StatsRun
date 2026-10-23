@@ -11,7 +11,7 @@ export interface GpsPoint {
 }
 
 /** Peor precisión que se acepta: con más, el punto se descarta. */
-export const MAX_ACCURACY_M = 35;
+const MAX_ACCURACY_M = 35;
 // por debajo de esto se considera parado (pausa automática)
 const MIN_SPEED = 0.6; // m/s
 // más rápido que esto (≈ 1:50 /km) es un salto del GPS

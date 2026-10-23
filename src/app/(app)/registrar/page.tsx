@@ -12,11 +12,11 @@ import { fmtDuration, fmtPace } from "@/lib/format";
 import { WEEKDAYS, diffDays, shortDate, weekday } from "@/lib/dates";
 import type { PlannedSession } from "@/lib/types";
 import { DeleteActivityButton } from "@/components/DeleteActivityButton";
-import { getFriends } from "@/lib/auth";
+import { viewFriends } from "@/lib/authView";
 import { TagChips } from "@/components/ActivityItem";
 import { tagsForDb } from "@/lib/engine/tags";
 import { estimateVdot } from "@/lib/engine/stats";
-import { requireUserId } from "@/lib/session";
+import { requireViewerId } from "@/lib/session";
 import { activityPhotoUrl } from "@/lib/photos";
 import { Icon } from "@/components/icons";
 
@@ -59,8 +59,8 @@ function fromSession(s: PlannedSession, today: string): ActivityFormInitial {
 
 async function Content({ searchParams }: { searchParams: PageProps<"/registrar">["searchParams"] }) {
   const sp = await searchParams;
-  const uid = await requireUserId();
-  const [{ db, today, matches }, friends] = await Promise.all([getAnalysis(), getFriends(uid)]);
+  const uid = await requireViewerId();
+  const [{ db, today, matches }, friends] = await Promise.all([getAnalysis(), viewFriends(uid)]);
   const sessions = db.plan?.weeks.flatMap((w) => w.sessions) ?? [];
 
   const editId = typeof sp.editar === "string" ? sp.editar : undefined;

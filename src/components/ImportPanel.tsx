@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { refreshViews } from "@/app/actions";
 import type { ImportResponse } from "@/app/api/import/route";
 
 type State = { phase: "idle" } | { phase: "busy"; text: string } | { phase: "done"; res: ImportResponse } | { phase: "error"; text: string };
@@ -23,7 +23,6 @@ export function ImportPanel() {
   const [state, setState] = useState<State>({ phase: "idle" });
   const [drag, setDrag] = useState(false);
   const input = useRef<HTMLInputElement>(null);
-  const router = useRouter();
 
   async function handle(list: FileList | null) {
     if (!list?.length) return;
@@ -41,7 +40,7 @@ export function ImportPanel() {
       const res = await fetch("/api/import", { method: "POST", body: fd });
       if (!res.ok) throw new Error(`Error ${res.status}`);
       setState({ phase: "done", res: await res.json() });
-      router.refresh();
+      await refreshViews();
     } catch (e) {
       setState({ phase: "error", text: (e as Error).message });
     } finally {

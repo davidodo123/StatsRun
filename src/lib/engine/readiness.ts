@@ -69,7 +69,7 @@ const HEAVY = /(pesad|cargad|vac[ií]o|sin fuerza|reventad|agotad|me cost[oó]|n
 const ILLNESS = /(fiebre|gripe|resfriad|catarro|constipad|covid|enferm|malestar general|v[oó]mit|diarrea|anginas|infecci[oó]n)/i;
 
 /** Margen máximo sobre la tirada más larga de los últimos 30 días. */
-export const SPIKE_MARGIN = 1.1;
+const SPIKE_MARGIN = 1.1;
 
 const HARD_FEELS: Feel[] = ["duro", "muy_duro"];
 const EASY_FEELS: Feel[] = ["muy_facil", "facil"];

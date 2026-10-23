@@ -1,13 +1,12 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useRef, useState, useTransition } from "react";
+import { refreshViews } from "@/app/actions";
 import type { RaceUploadResponse } from "@/app/api/carrera/route";
 
 /** Botón para subir el recorrido de la carrera (.kmz/.kml/.gpx). */
 export function RaceFileUpload({ label }: { label: string }) {
   const input = useRef<HTMLInputElement>(null);
-  const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<RaceUploadResponse>();
   const [, startTransition] = useTransition();
@@ -25,7 +24,7 @@ export function RaceFileUpload({ label }: { label: string }) {
         ? await res.json()
         : { ok: false, error: res.status === 413 ? "El archivo es demasiado grande (máx. 4 MB)." : `Error ${res.status} al subir.` };
       setResult(json);
-      if (json.ok) startTransition(() => router.refresh());
+      if (json.ok) startTransition(() => refreshViews());
     } catch {
       setResult({ ok: false, error: "No se pudo subir: revisa la conexión." });
     } finally {

@@ -2,11 +2,11 @@
 
 const DAY_MS = 86_400_000;
 
-export function toDate(d: string): Date {
+function toDate(d: string): Date {
   return new Date(`${d}T00:00:00Z`);
 }
 
-export function fmt(d: Date): string {
+function fmt(d: Date): string {
   return d.toISOString().slice(0, 10);
 }
 
@@ -36,7 +36,6 @@ export function todayLocal(): string {
 }
 
 export const WEEKDAYS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
-export const WEEKDAYS_SHORT = ["L", "M", "X", "J", "V", "S", "D"];
 const MONTHS = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
 
 export function shortDate(d: string): string {

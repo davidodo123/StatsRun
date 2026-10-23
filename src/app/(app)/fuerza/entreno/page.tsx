@@ -7,7 +7,8 @@ import { activePlace, customSummaries } from "@/lib/strength/catalog";
 import { lastSets } from "@/lib/strength/workouts";
 import { exercisesFromSteps } from "@/lib/strength/planSteps";
 import type { Routine } from "@/lib/types";
-import { WEEKDAYS, shortDate, todayLocal, weekday } from "@/lib/dates";
+import { WEEKDAYS, shortDate, weekday } from "@/lib/dates";
+import { viewToday } from "@/lib/analysis";
 
 export const metadata: Metadata = { title: "Entreno" };
 
@@ -35,7 +36,7 @@ async function Content({ searchParams }: { searchParams: PageProps<"/fuerza/entr
       }
     : own;
   // apuntar uno ya hecho (desde Registrar o una sesión pasada del plan): con su fecha y hora, sin cronómetro
-  const fecha = typeof sp.fecha === "string" && /^\d{4}-\d{2}-\d{2}$/.test(sp.fecha) && sp.fecha <= todayLocal() ? sp.fecha : undefined;
+  const fecha = typeof sp.fecha === "string" && /^\d{4}-\d{2}-\d{2}$/.test(sp.fecha) && sp.fecha <= (await viewToday()) ? sp.fecha : undefined;
   const hora = typeof sp.hora === "string" && /^\d{2}:\d{2}$/.test(sp.hora) ? sp.hora : "18:00";
   return (
     <WorkoutLogger

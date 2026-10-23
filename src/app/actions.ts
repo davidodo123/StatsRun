@@ -1,11 +1,10 @@
 "use server";
 
-import { refresh } from "next/cache";
+import { refresh, updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { after } from "next/server";
 import { updateDb, readDbNow as getDb } from "@/lib/db";
-import { requireUserId } from "@/lib/session";
-import { deauthorize, syncActivities } from "@/lib/strava";
+import { VIEW_TAG, requireUserId } from "@/lib/session";
 import { generateDemoActivities } from "@/lib/demo";
 import { applyBlockedDates, applyTuneUpRaces, availableDaysOf, generateSeason, planChanges } from "@/lib/engine/planner";
 import { computeStats } from "@/lib/engine/stats";
@@ -276,31 +275,6 @@ export async function adaptPlanWithAI(): Promise<FormState> {
   const r = await adaptWithAI(await requireUserId());
   refresh();
   return r.ok ? { ok: true, message: `${r.changed} sesiones ajustadas. ${r.message}` } : { error: r.message };
-}
-
-export async function syncStrava(): Promise<FormState> {
-  const db = await getDb();
-  if (!db.strava) return { error: "Strava no está conectado." };
-  try {
-    const r = await syncActivities(db.strava, db.activities, 365, 10, !db.routesSynced);
-    if (r.imported > 0) await scheduleAiAdapt();
-    refresh();
-    return {
-      ok: true,
-      message: `${r.imported} actividades nuevas.${r.rateLimited ? " Límite de Strava alcanzado: vuelve a sincronizar en 15 min para traer el resto." : ""}`,
-    };
-  } catch (e) {
-    return { error: `Error al sincronizar: ${(e as Error).message}` };
-  }
-}
-
-export async function disconnectStrava(): Promise<void> {
-  const db = await getDb();
-  if (db.strava) await deauthorize(db.strava);
-  await updateDb((d) => {
-    d.strava = undefined;
-  });
-  refresh();
 }
 
 export async function loadDemo(): Promise<void> {
@@ -692,5 +666,11 @@ export async function deleteActivity(fd: FormData): Promise<void> {
   });
   await deleteImage(photoKey(await requireUserId(), id));
   // la vuelta a la página de antes la hace el botón (DeleteActivityButton), que sabe de dónde se venía
+  refresh();
+}
+
+/** Tras guardar desde una ruta de API (importar, recorrido de la carrera): fuera las páginas guardadas en el navegador. */
+export async function refreshViews(): Promise<void> {
+  updateTag(VIEW_TAG);
   refresh();
 }

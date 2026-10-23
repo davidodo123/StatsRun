@@ -2,7 +2,7 @@
 // últimos días, en el mismo formato que manda el atajo del iPhone ({ dias: [{ fecha, pasos, … }] }).
 import type { HealthDataType, HealthSample } from "@capgo/capacitor-health";
 
-export const HC_READ: HealthDataType[] = ["steps", "calories", "restingHeartRate", "heartRateVariability", "sleep"];
+const HC_READ: HealthDataType[] = ["steps", "calories", "restingHeartRate", "heartRateVariability", "sleep"];
 export const HC_ON = "rio-hc"; // en este móvil se conectó Health Connect
 const HC_LAST = "rio-hc-ultima";
 const EVERY = 30 * 60_000; // como mucho una sincronización cada 30 min al abrir la app
@@ -33,7 +33,7 @@ export async function hcOpenSettings() {
 type Day = { fecha: string; pasos?: number; kcalActivas?: number; pulsoReposo?: number; vfc?: number; sueno?: number };
 
 /** Los últimos `days` días, día a día (solo los datos con permiso). */
-export async function hcRead(days = 7): Promise<{ dias: Day[] }> {
+async function hcRead(days = 7): Promise<{ dias: Day[] }> {
   const { H } = await plugin();
   const end = new Date();
   const start = new Date(end);

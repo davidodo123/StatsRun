@@ -9,7 +9,8 @@ import { deleteCustomExercise } from "@/app/strength-actions";
 import { getDb } from "@/lib/db";
 import { ExerciseChart } from "@/components/ExerciseChart";
 import { Icon } from "@/components/icons";
-import { shortDate, todayLocal } from "@/lib/dates";
+import { shortDate } from "@/lib/dates";
+import { viewToday } from "@/lib/analysis";
 import { fmtNum } from "@/lib/format";
 import { CATALOG, activePlace, findExercise } from "@/lib/strength/catalog";
 import { exerciseHistory, fmtLoad, strengthRecords, type ExercisePoint } from "@/lib/strength/workouts";
@@ -122,7 +123,7 @@ const maxBy = (h: ExercisePoint[], f: (p: ExercisePoint) => number) => h.reduce(
 const setText = (p: ExercisePoint, s: ExercisePoint["sets"][number]) => `${p.bw || s.kg ? `${fmtLoad(p.bw, s.kg)} × ` : ""}${s.reps}`;
 
 /** Récords, evolución e historial de un ejercicio. */
-function Progress({ history, records }: { history: ExercisePoint[]; records: (activityId: string) => boolean | undefined }) {
+async function Progress({ history, records }: { history: ExercisePoint[]; records: (activityId: string) => boolean | undefined }) {
   const weighted = history.some((p) => p.topKg > 0);
   const last = history[history.length - 1];
   const rm = maxBy(history, (p) => p.oneRm ?? 0);
@@ -149,7 +150,7 @@ function Progress({ history, records }: { history: ExercisePoint[]; records: (ac
       </div>
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Card title="Evolución">
-          <ExerciseChart points={history} today={todayLocal()} />
+          <ExerciseChart points={history} today={(await viewToday())} />
         </Card>
         <Card title="Historial" subtitle={history.length > 10 ? "Las 10 últimas sesiones" : undefined}>
           <ul className="divide-y divide-line">

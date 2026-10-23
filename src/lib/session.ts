@@ -4,6 +4,7 @@ import { createHash, createHmac, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { connection } from "next/server";
+import { cacheLife, cacheTag } from "next/cache";
 
 export const SESSION_COOKIE = "sr_session";
 // identidad de Google pendiente de enlazar con una cuenta antigua o de crear cuenta nueva
@@ -69,6 +70,37 @@ export async function requireUserId(): Promise<string> {
   const uid = await getUserId();
   if (!uid) redirect("/login");
   return uid;
+}
+
+/**
+ * Para pintar páginas: el usuario de la sesión, en la caché privada (solo en el navegador, por sesión).
+ * Así la precarga de los enlaces ya lleva la página con sus datos y la navegación es instantánea.
+ * Las acciones y las rutas de API usan requireUserId (siempre en directo).
+ */
+async function viewerId(): Promise<string | undefined> {
+  "use cache: private";
+  viewCache();
+  return verifyToken((await cookies()).get(SESSION_COOKIE)?.value);
+}
+
+export async function requireViewerId(): Promise<string> {
+  const uid = await viewerId();
+  if (!uid) redirect("/login");
+  return uid;
+}
+
+/**
+ * Cuánto guarda el navegador una página ya vista o precargada: 5 min es el mínimo para que la precarga la incluya.
+ * Cualquier acción que guarda datos (con refresh() o redirect) vacía esa caché al momento.
+ */
+const VIEW_CACHE = { stale: 300, revalidate: 300, expire: 3600 };
+/** Etiqueta de todo lo que se lee para pintar: updateDb la vacía al guardar (si no, el navegador seguiría con lo de antes). */
+export const VIEW_TAG = "vista";
+
+/** Dentro de una función con "use cache: private": la caché de las páginas (ver VIEW_CACHE). */
+export function viewCache() {
+  cacheLife(VIEW_CACHE);
+  cacheTag(VIEW_TAG);
 }
 
 export async function startSession(uid: string): Promise<void> {

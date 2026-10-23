@@ -53,10 +53,10 @@ const STEP_PATTERNS: [Pattern, RegExp][] = [
   ["gemelo", /gemelo|sóleo/i],
   ["aductor", /copenhague/i],
 ];
-export const stepPatterns = (step: string) => STEP_PATTERNS.filter(([, re]) => re.test(step)).map(([p]) => p);
+const stepPatterns = (step: string) => STEP_PATTERNS.filter(([, re]) => re.test(step)).map(([p]) => p);
 
 /** Líneas de la plantilla que la rutina no cubre (las de pauta general, sin patrón, no se repiten). */
-export function complementSteps(template: string[], covers: Pattern[]): string[] {
+function complementSteps(template: string[], covers: Pattern[]): string[] {
   return template.filter((s) => {
     const p = stepPatterns(s);
     return p.length > 0 && p.some((x) => !covers.includes(x));
@@ -82,7 +82,7 @@ export function routineZone(muscles: Muscle[][]): RoutineZone {
 const GROUP_OF: Partial<Record<Muscle, UpperGroup>> = { pecho: "pecho", triceps: "pecho", espalda: "espalda", dorsal: "espalda", biceps: "espalda", trapecio: "espalda", hombros: "hombro" };
 
 /** Parte del tren superior que más trabaja una rutina (por el músculo principal de cada ejercicio). */
-export function upperGroup(muscles: Muscle[][]): UpperGroup | undefined {
+function upperGroup(muscles: Muscle[][]): UpperGroup | undefined {
   const n: Record<UpperGroup, number> = { pecho: 0, espalda: 0, hombro: 0 };
   for (const m of muscles) {
     const g = GROUP_OF[m[0]];

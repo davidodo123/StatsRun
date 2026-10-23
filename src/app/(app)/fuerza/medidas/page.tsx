@@ -4,7 +4,7 @@ import { Suspense } from "react";
 import { Loading, PageHeader } from "@/components/ui";
 import { Measurements } from "@/components/Measurements";
 import { getDb } from "@/lib/db";
-import { todayLocal } from "@/lib/dates";
+import { viewToday } from "@/lib/analysis";
 
 export const metadata: Metadata = { title: "Medidas" };
 
@@ -22,7 +22,7 @@ async function Content() {
     <>
       <BackLink href="/fuerza" />
       <PageHeader title="Medidas corporales" subtitle="Peso, % de grasa y perímetros para ver cómo cambia tu cuerpo." />
-      <Measurements list={db.measurements ?? []} today={todayLocal()} />
+      <Measurements list={db.measurements ?? []} today={(await viewToday())} />
     </>
   );
 }

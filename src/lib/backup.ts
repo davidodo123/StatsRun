@@ -23,7 +23,7 @@ async function redis(command: (string | number)[]): Promise<unknown> {
 }
 
 /** Todas las claves de la app con su valor (sin los contadores de versión, que se rehacen al restaurar). */
-export async function dumpAll(): Promise<Record<string, string>> {
+async function dumpAll(): Promise<Record<string, string>> {
   const out: Record<string, string> = {};
   if (!REDIS_URL || !REDIS_TOKEN) {
     // en local, los archivos de data/ (con su nombre de archivo como clave)

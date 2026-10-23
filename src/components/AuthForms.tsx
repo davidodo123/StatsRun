@@ -7,7 +7,7 @@ import type { FormState } from "@/app/actions";
 import { keepForm } from "./keepForm";
 import { LogoMark } from "./LogoMark";
 
-export function AuthShell({ title, subtitle, children }: { title: string; subtitle: string; children: React.ReactNode }) {
+function AuthShell({ title, subtitle, children }: { title: string; subtitle: string; children: React.ReactNode }) {
   return (
     <div className="mx-auto w-full max-w-sm py-10">
       <div className="mb-6 flex items-center gap-2 text-lg font-bold tracking-tight">

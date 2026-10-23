@@ -6,7 +6,8 @@ import { Card, Loading, PageHeader, Stat } from "@/components/ui";
 import { deletePastPlan } from "@/app/actions";
 import { getDb } from "@/lib/db";
 import { matchPlan, planCompliance, type SessionMatch } from "@/lib/engine/planner";
-import { WEEKDAYS, shortDate, todayLocal, weekday } from "@/lib/dates";
+import { WEEKDAYS, shortDate, weekday } from "@/lib/dates";
+import { viewToday } from "@/lib/analysis";
 import { fmtKm } from "@/lib/format";
 import type { Phase } from "@/lib/types";
 
@@ -34,7 +35,7 @@ async function Content({ params }: { params: PageProps<"/plan/anterior/[id]">["p
   const past = db.pastPlans?.find((p) => p.id === id);
   if (!past) notFound();
   const { plan } = past;
-  const today = todayLocal();
+  const today = (await viewToday());
   const matches = matchPlan(plan, db.activities, today);
   const c = planCompliance(plan, db.activities, today);
   const totalKm = plan.weeks.reduce((s, w) => s + w.targetKm, 0);

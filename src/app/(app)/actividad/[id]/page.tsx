@@ -13,11 +13,12 @@ import { ShareActivityButton } from "@/components/ShareActivityButton";
 import { tagsForDb } from "@/lib/engine/tags";
 import { estimateVdot } from "@/lib/engine/stats";
 import { decouplingLabel } from "@/lib/engine/decoupling";
-import { areFriends, getFriends, getUser } from "@/lib/auth";
+import { viewAreFriends, viewFriends, viewUser } from "@/lib/authView";
 import { getDb } from "@/lib/db";
 import { publicActivity } from "@/lib/feed";
-import { requireUserId } from "@/lib/session";
-import { WEEKDAYS, shortDate, todayLocal, weekday } from "@/lib/dates";
+import { requireViewerId } from "@/lib/session";
+import { WEEKDAYS, shortDate, weekday } from "@/lib/dates";
+import { viewToday } from "@/lib/analysis";
 import { fmtDuration, fmtKm, fmtNum, fmtPace } from "@/lib/format";
 import { SetBadge } from "@/components/RoutineEditor";
 import { emomTitle, estimate1RM, fmtLoad, setLoad, strengthRecords, type StrengthRecord, workoutReps, workoutSets, workoutVolume } from "@/lib/strength/workouts";
@@ -37,18 +38,18 @@ export default function ActivityPage({ params, searchParams }: PageProps<"/activ
 }
 
 async function Content({ params, searchParams }: { params: PageProps<"/actividad/[id]">["params"]; searchParams: PageProps<"/actividad/[id]">["searchParams"] }) {
-  const [{ id }, sp, uid] = await Promise.all([params, searchParams, requireUserId()]);
+  const [{ id }, sp, uid] = await Promise.all([params, searchParams, requireViewerId()]);
   const ownerId = typeof sp.de === "string" && sp.de ? sp.de : uid;
   const mine = ownerId === uid;
   // las sesiones de otro solo se ven si sois amigos
-  if (!mine && !(await areFriends(uid, ownerId))) notFound();
-  const [db, owner, friends] = await Promise.all([getDb(ownerId), getUser(ownerId), getFriends(uid)]);
+  if (!mine && !(await viewAreFriends(uid, ownerId))) notFound();
+  const [db, owner, friends] = await Promise.all([getDb(ownerId), viewUser(ownerId), viewFriends(uid)]);
   const raw = db.activities.find((a) => a.id === decodeURIComponent(id));
   if (!raw || (!mine && !owner)) notFound();
   const a = mine ? raw : publicActivity(raw);
   const names = new Map<string, string>([...friends.map((f) => [f.id, f.name] as [string, string]), [uid, "ti"], [ownerId, mine ? "ti" : owner!.name]]);
   const together = withText(a.with, names);
-  const tags = tagsForDb(db, estimateVdot(db.activities, db.profile, todayLocal()).vdot).get(a.id) ?? [];
+  const tags = tagsForDb(db, estimateVdot(db.activities, db.profile, (await viewToday())).vdot).get(a.id) ?? [];
   const pace = a.sport === "run" && a.distanceM > 0 ? a.movingSec / (a.distanceM / 1000) : undefined;
   const speed = a.distanceM > 0 && a.movingSec > 0 ? a.distanceM / 1000 / (a.movingSec / 3600) : undefined;
   const photo = activityPhotoUrl(ownerId, a);

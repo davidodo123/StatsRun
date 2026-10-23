@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Suspense } from "react";
-import { getAnalysis } from "@/lib/analysis";
+import { getAnalysis, viewTodayMadrid } from "@/lib/analysis";
 import { Card, Empty, Loading, PageHeader, Stat, StatGroup } from "@/components/ui";
 import { FitnessChart, FormChart, WeeklyKmChart } from "@/components/charts";
 import { SessionCard } from "@/components/SessionCard";
@@ -8,7 +8,7 @@ import { UndoSkip } from "@/components/UndoSkip";
 import { acwrStatus, tsbStatus } from "@/lib/engine/load";
 import { vo2maxLabel } from "@/lib/engine/physiology";
 import { fmtDuration, fmtKm, fmtNum } from "@/lib/format";
-import { healthSummary, todayMadrid } from "@/lib/health";
+import { healthSummary } from "@/lib/health";
 import { addDays, diffDays, mondayOf, shortDate } from "@/lib/dates";
 import { loadDemo } from "@/app/actions";
 import { StrengthHome } from "@/components/StrengthHome";
@@ -69,7 +69,7 @@ async function Dashboard() {
   const fitness = stats.fitness.slice(-120).map((p) => ({ date: p.date, ctl: p.ctl, atl: p.atl, tsb: p.tsb }));
   const daysToRace = goal ? diffDays(goal.date, today) : undefined;
   const weekPlanKm = plannedByWeek.get(mondayOf(today));
-  const health = healthSummary(db.health, todayMadrid());
+  const health = healthSummary(db.health, await viewTodayMadrid());
 
   return (
     <>

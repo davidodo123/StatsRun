@@ -8,14 +8,14 @@ import type { GoogleIdentity } from "./auth";
 import { sealValue, unsealValue } from "./session";
 
 export const APP_CHALLENGE_COOKIE = "google_app";
-export const APP_SCHEME = "app.runinout";
+const APP_SCHEME = "app.runinout";
 const CODE_TTL = 120;
 
 export type AppLoginResult = { kind: "session"; uid: string; to: string } | { kind: "pending"; g: GoogleIdentity };
 
 export const isChallenge = (s: string | null | undefined): s is string => typeof s === "string" && /^[A-Za-z0-9_-]{43}$/.test(s);
 
-export const challengeOf = (verifier: string) => createHash("sha256").update(verifier).digest("base64url");
+const challengeOf = (verifier: string) => createHash("sha256").update(verifier).digest("base64url");
 
 export const appLoginCode = (result: AppLoginResult, challenge: string) => sealValue({ ...result, ch: challenge }, CODE_TTL);
 

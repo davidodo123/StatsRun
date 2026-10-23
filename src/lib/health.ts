@@ -4,7 +4,7 @@ import { addDays, diffDays } from "./dates";
 import type { DailyHealth } from "./types";
 
 /** Días que se guardan (algo más de un año, para comparar con el mismo mes del año anterior). */
-export const HEALTH_KEEP_DAYS = 400;
+const HEALTH_KEEP_DAYS = 400;
 
 /** Fecha de hoy en España: el servidor (Vercel) va en UTC y el atajo puede no mandar la fecha. */
 export const todayMadrid = (now = new Date()) => new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Madrid" }).format(now);
@@ -240,7 +240,7 @@ export interface RecoverySignals {
 }
 
 /** Días mínimos de línea base para dar una alerta (con menos, cualquier día raro saltaría). */
-export const BASELINE_MIN_DAYS = 14;
+const BASELINE_MIN_DAYS = 14;
 
 const avg = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : undefined);
 

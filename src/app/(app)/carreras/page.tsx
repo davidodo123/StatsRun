@@ -8,7 +8,7 @@ import { Card, PageHeader } from "@/components/ui";
 import { cmCacheStale, readCmCache, refreshCmRaces } from "@/lib/cruzandolametaStore";
 import { TuneUpRaces } from "@/components/TuneUpRaces";
 import { getDb } from "@/lib/db";
-import { todayLocal } from "@/lib/dates";
+import { viewToday } from "@/lib/analysis";
 
 export const metadata: Metadata = { title: "Carreras" };
 
@@ -38,7 +38,7 @@ async function Season() {
   if (!goal) return null;
   return (
     <div className="mb-6">
-      <TuneUpRaces goal={goal} races={db.races ?? []} today={todayLocal()} />
+      <TuneUpRaces goal={goal} races={db.races ?? []} today={(await viewToday())} />
     </div>
   );
 }

@@ -14,7 +14,7 @@ import { UnavailableForm } from "@/components/UnavailableForm";
 import { adaptIfMissed, coachConfig, strengthModel } from "@/lib/coach";
 import { availableDaysOf, planTitle } from "@/lib/engine/planner";
 import { after } from "next/server";
-import { requireUserId } from "@/lib/session";
+import { requireViewerId } from "@/lib/session";
 import { trainingPaces } from "@/lib/engine/physiology";
 import { fmtDuration, fmtPaceRange } from "@/lib/format";
 import { WEEKDAYS, addDays, diffDays, mondayOf, shortDate, weekday } from "@/lib/dates";
@@ -40,8 +40,17 @@ export default function PlanPage({ searchParams }: PageProps<"/plan/actual">) {
   );
 }
 
+// el aviso depende de la dirección: aparte, para que el resto del plan no espere a ella (y se pueda precargar)
+async function SavedNotice({ searchParams }: { searchParams: PageProps<"/plan/actual">["searchParams"] }) {
+  if (!(await searchParams).registrado) return null;
+  return (
+    <div className="mb-4">
+      <Notice tone="good">Sesión registrada. El cumplimiento y tu forma ya están actualizados.</Notice>
+    </div>
+  );
+}
+
 async function Content({ searchParams }: { searchParams: PageProps<"/plan/actual">["searchParams"] }) {
-  const sp = await searchParams;
   const { db, matches, today, stats } = await getAnalysis();
   const plan = db.plan;
   if (!plan)
@@ -55,7 +64,7 @@ async function Content({ searchParams }: { searchParams: PageProps<"/plan/actual
     );
 
   // si se han quedado sesiones sin hacer, la IA reprograma en segundo plano (máx. 1 vez al día)
-  const uid = await requireUserId();
+  const uid = await requireViewerId();
   after(() => adaptIfMissed(uid));
   const thisWeek = mondayOf(today);
   const blockedSoon = (db.unavailableDates ?? []).filter((d) => d >= today);
@@ -88,11 +97,9 @@ async function Content({ searchParams }: { searchParams: PageProps<"/plan/actual
       />
 
       <UndoSkip db={db} today={today} />
-      {sp.registrado && (
-        <div className="mb-4">
-          <Notice tone="good">Sesión registrada. El cumplimiento y tu forma ya están actualizados.</Notice>
-        </div>
-      )}
+      <Suspense fallback={null}>
+        <SavedNotice searchParams={searchParams} />
+      </Suspense>
       <StatGroup className="md:grid-cols-5">
         <Stat label="Días para la carrera" value={Math.max(0, days)} accent />
         <Stat label="Tiempo previsto" value={race ? fmtDuration(race.durationMin * 60) : "–"} sub={plan.goal.targetTimeSec ? `Objetivo ${fmtDuration(plan.goal.targetTimeSec)}` : "Objetivo: terminar"} />

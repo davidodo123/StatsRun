@@ -5,11 +5,12 @@ import { Suspense } from "react";
 import { Card, Loading, PageHeader, Stat } from "@/components/ui";
 import { FitnessChart, WeeklyKmChart } from "@/components/charts";
 import { SessionCard } from "@/components/SessionCard";
-import { areFriends, getUser } from "@/lib/auth";
+import { viewAreFriends, viewUser } from "@/lib/authView";
 import { getDb } from "@/lib/db";
-import { requireUserId } from "@/lib/session";
+import { requireViewerId } from "@/lib/session";
 import { athleteSummary, type AthleteSummary } from "@/lib/summary";
-import { shortDate, todayLocal } from "@/lib/dates";
+import { shortDate } from "@/lib/dates";
+import { viewToday } from "@/lib/analysis";
 import { fmtDuration, fmtKm } from "@/lib/format";
 import { unfriend } from "@/app/auth-actions";
 import { ActivityItem } from "@/components/ActivityItem";
@@ -28,14 +29,14 @@ export default function FriendPage({ params }: PageProps<"/amigos/[id]">) {
 
 async function Content({ params }: { params: PageProps<"/amigos/[id]">["params"] }) {
   const { id } = await params;
-  const uid = await requireUserId();
+  const uid = await requireViewerId();
   // solo se ven las estadísticas de los amigos
-  if (!(await areFriends(uid, id))) notFound();
-  const friend = await getUser(id);
+  if (!(await viewAreFriends(uid, id))) notFound();
+  const friend = await viewUser(id);
   if (!friend) notFound();
   const [fDb, myDb] = await Promise.all([getDb(id), getDb(uid)]);
   // la fecha, después de leer datos de la petición (con cacheComponents no puede ir antes)
-  const today = todayLocal();
+  const today = (await viewToday());
   const f = athleteSummary(fDb, today);
   const me = athleteSummary(myDb, today);
   const first = friend.name.split(" ")[0];

@@ -23,7 +23,7 @@ const BARS = [
 const kg = (n: number) => n.toLocaleString("es-ES");
 
 /** Dibujo de los discos de un lado de la barra. */
-export function PlateStack({ side }: { side: number[] }) {
+function PlateStack({ side }: { side: number[] }) {
   return (
     <div className="flex h-16 items-center" aria-hidden>
       <span className="h-2 w-6 rounded-l bg-muted" />

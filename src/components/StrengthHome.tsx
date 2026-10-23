@@ -8,7 +8,8 @@ import { muscleSets, workoutSets, workoutVolume } from "@/lib/strength/workouts"
 import { MUSCLES } from "@/lib/strength/labels";
 import { MuscleMap } from "./MuscleMap";
 import { fmtDuration } from "@/lib/format";
-import { WEEKDAYS, addDays, shortDate, todayLocal, weekday } from "@/lib/dates";
+import { WEEKDAYS, addDays, shortDate, weekday } from "@/lib/dates";
+import { viewToday } from "@/lib/analysis";
 import { Icon } from "./icons";
 
 /** Portada de fuerza: rutinas, entrenador, series por músculo y últimos entrenos. También es el Inicio de quien solo hace fuerza. */
@@ -53,7 +54,7 @@ export async function StrengthHome({ title = "Fuerza", subtitle }: { title?: str
       </Link>
     </section>
   );
-  const sets = muscleSets(db.activities, addDays(todayLocal(), -6), (id) => findExercise(db, id));
+  const sets = muscleSets(db.activities, addDays((await viewToday()), -6), (id) => findExercise(db, id));
   const worked = MUSCLES.filter((m) => sets[m.id]).sort((a, b) => sets[b.id]! - sets[a.id]!);
 
   return (

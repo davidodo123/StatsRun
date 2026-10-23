@@ -18,7 +18,7 @@ const kg = (n: number) => `${fmtNum(n, Number.isInteger(n) ? 0 : 1)} kg`;
 const svgUri = (svg: string) => `data:image/svg+xml;base64,${Buffer.from(svg).toString("base64")}`;
 
 /** Cuerpo de delante y de detrás con los músculos del entreno en naranja (más intenso con más series). */
-export function bodySvg(sets: Partial<Record<Muscle, number>>): string {
+function bodySvg(sets: Partial<Record<Muscle, number>>): string {
   const max = Math.max(1, ...Object.values(sets).map((n) => n ?? 0));
   const fig = (shapes: BodyShape[], dx: number) => {
     const paths = shapes
@@ -33,7 +33,7 @@ export function bodySvg(sets: Partial<Record<Muscle, number>>): string {
 }
 
 /** Línea del recorrido encajada en w × h, con salida (blanca) y meta (naranja). */
-export function routeSvg(route: string, w: number, h: number): string | undefined {
+function routeSvg(route: string, w: number, h: number): string | undefined {
   const pts = decodePolyline(route);
   if (pts.length < 2) return;
   const px = pts.map((p) => project(p, 16));

@@ -22,7 +22,7 @@ export function findExercise(db: Pick<Db, "customExercises">, id: string): Exerc
 /** Ejercicios propios en el formato de la lista del navegador (el catálogo ya va en el JS). */
 export const customSummaries = (db: Pick<Db, "customExercises">) => (db.customExercises ?? []).map((c) => summarize(fromCustom(c)));
 
-export const summarize = ({ id, name, cat, eq, muscles, img, imgId, custom }: Exercise): ExerciseSummary => ({ id, name, cat, eq, muscles, img, ...(imgId ? { imgId } : {}), ...(custom ? { custom } : {}) });
+const summarize = ({ id, name, cat, eq, muscles, img, imgId, custom }: Exercise): ExerciseSummary => ({ id, name, cat, eq, muscles, img, ...(imgId ? { imgId } : {}), ...(custom ? { custom } : {}) });
 
 /** Lugar activo (o el primero); sin lugares, undefined = sin filtrar por material. */
 export function activePlace(db: Pick<Db, "places" | "activePlaceId">): GymPlace | undefined {

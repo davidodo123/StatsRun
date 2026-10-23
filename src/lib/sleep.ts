@@ -1,8 +1,8 @@
 // Calculadora de sueño por ciclos: despertarse al final de un ciclo (~90 min) cuesta menos que en mitad de uno.
 // Los ciclos duran entre 70 y 120 min según la persona y la noche: 90 es la media, así que las horas son orientativas.
 
-export const CYCLE_MIN = 90;
-export const FALL_ASLEEP_MIN = 15; // lo que se suele tardar en dormirse
+const CYCLE_MIN = 90;
+const FALL_ASLEEP_MIN = 15; // lo que se suele tardar en dormirse
 
 export interface SleepOption {
   cycles: number;

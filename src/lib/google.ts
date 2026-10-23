@@ -15,7 +15,7 @@ export function googleConfig() {
 
 // la URL de vuelta sale del dominio de la petición: sirve igual en local y en producción
 // (hay que darlas de alta las dos en Google Cloud)
-export const googleRedirectUri = (origin: string) => `${origin}/api/auth/google/callback`;
+const googleRedirectUri = (origin: string) => `${origin}/api/auth/google/callback`;
 
 export function googleAuthorizeUrl(origin: string, state: string): string {
   const params = new URLSearchParams({

@@ -26,6 +26,7 @@ App de entrenamiento de running y fuerza con IA, para David y sus amigos. Produc
 
 - **Next.js 16** (lee `AGENTS.md`: cambia mucho respecto a versiones anteriores; la documentación está en `node_modules/next/dist/docs/`), React 19, TypeScript, Tailwind 4, Vitest, ESLint.
   - Tras guardar en una server action que redirige, llama antes a `refresh()` de `next/cache` (si no, las listas salen viejas: `staleTimes.dynamic: 30`).
+  - Las páginas leen con `getDb`, `getAnalysis`, `requireViewerId`, `viewToday` y `lib/authView.ts`: caché privada (`"use cache: private"`, 5 min en el navegador) para que los enlaces las precarguen con los datos. Cada escritura (`kvSet`/`kvUpdate`/`kvDel`) la vacía con `updateTag("vista")`. En acciones y rutas de API, `readDbNow` y `requireUserId` (en directo). Sin `connection()`, `Date.now()` ni `todayLocal()` sueltos al pintar: cortan la precarga.
   - Las fuentes van con `next/font` (Rubik).
 - **Datos**: un JSON por usuario (`Db` en `src/lib/types.ts`). En producción, Upstash Redis (región iad1); en local, `data/` (`src/lib/db.ts`). Fotos aparte (`src/lib/photoStore.ts`). Copia cifrada cada noche a un repo privado de GitHub (`/api/cron/backup`; restaurar con `scripts/backup-restore.mjs`).
 - **Sesión**: login con Google y cookie firmada; `src/proxy.ts` protege las rutas.

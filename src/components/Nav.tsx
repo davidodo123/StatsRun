@@ -139,7 +139,8 @@ function MobileNav({ active, focus, logros }: { active: (href: string) => boolea
               </Link>
             </div>
           ) : (
-            <Link key={it.href} href={it.href} className={`${tab} ${active(it.href) ? "text-accent" : "text-muted"}`}>
+            // prefetch: las secciones principales llegan precargadas con tus datos (y la pestaña elegida)
+            <Link key={it.href} href={it.href} prefetch={true} className={`${tab} ${active(it.href) ? "text-accent" : "text-muted"}`}>
               <Icon d={it.icon} className="h-6 w-6" />
               {it.label}
             </Link>

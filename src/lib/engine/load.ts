@@ -4,7 +4,7 @@ import { addDays, diffDays } from "../dates";
 import { hrMaxOf, hrRestOf, trainingPaces } from "./physiology";
 
 /** TRIMP de Banister (min · ΔFC · factor exponencial). */
-export function trimp(minutes: number, avgHr: number, hrMax: number, hrRest: number, sex: Profile["sex"]): number {
+function trimp(minutes: number, avgHr: number, hrMax: number, hrRest: number, sex: Profile["sex"]): number {
   const hrr = Math.min(1, Math.max(0, (avgHr - hrRest) / (hrMax - hrRest)));
   const k = sex === "male" ? 0.64 * Math.exp(1.92 * hrr) : 0.86 * Math.exp(1.67 * hrr);
   return minutes * hrr * k;

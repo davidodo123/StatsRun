@@ -5,10 +5,9 @@ import "server-only";
 // - Si no, en archivos locales dentro de data/.
 import { promises as fs } from "node:fs";
 import path from "node:path";
-import { connection } from "next/server";
-import { cache } from "react";
 import type { Db } from "./types";
-import { requireUserId } from "./session";
+import { updateTag } from "next/cache";
+import { VIEW_TAG, requireUserId, requireViewerId, viewCache } from "./session";
 
 const DATA_DIR = path.join(process.cwd(), "data");
 
@@ -32,6 +31,15 @@ const redisEnabled = () => Boolean(REDIS_URL && REDIS_TOKEN);
 // nombre de archivo local seguro a partir de la clave
 const fileFor = (key: string) => path.join(DATA_DIR, `${key.replace(/^statsrun:/, "").replace(/[^\w-]/g, "_")}.json`);
 
+// Tras cualquier escritura, fuera las páginas guardadas en el navegador (getDb y compañía, ver viewCache): si no,
+// seguiría enseñando los datos de antes. Solo se puede desde una acción; lo que se guarda en segundo plano o desde la API
+// se ve al caducar esa caché (5 min) o al tirar para actualizar.
+function invalidateViews() {
+  try {
+    updateTag(VIEW_TAG);
+  } catch {}
+}
+
 /** Lee un documento JSON crudo por clave. */
 export async function kvGet(key: string): Promise<string | undefined> {
   if (redisEnabled()) return ((await redis(["GET", key])) as string | null) ?? undefined;
@@ -45,6 +53,7 @@ export async function kvGet(key: string): Promise<string | undefined> {
 
 /** Escribe un documento JSON crudo por clave. */
 export async function kvSet(key: string, json: string): Promise<void> {
+  invalidateViews();
   if (redisEnabled()) {
     await redis(["EVAL", "redis.call('SET', KEYS[1], ARGV[1]) redis.call('INCR', KEYS[2]) return 1", "2", key, `${key}:v`, json]);
     return;
@@ -59,6 +68,7 @@ export async function kvSet(key: string, json: string): Promise<void> {
 
 /** Borra un documento (y su contador de versión). */
 export async function kvDel(key: string): Promise<void> {
+  invalidateViews();
   if (redisEnabled()) {
     await redis(["DEL", key, `${key}:v`]);
     return;
@@ -93,6 +103,7 @@ return 1`;
 
 /** Modificación serializada (y atómica entre instancias con Redis) de un documento JSON. */
 export function kvUpdate<T>(key: string, empty: () => T, fn: (doc: T) => void | Promise<void>): Promise<T> {
+  invalidateViews();
   return serialize(key, async () => {
     if (!redisEnabled()) {
       const raw = await kvGet(key);
@@ -128,13 +139,17 @@ export async function readDbNow(uid?: string): Promise<Db> {
   return parseDb(await kvGet(userDbKey(uid ?? (await requireUserId()))));
 }
 
-// una sola lectura por usuario y petición aunque varios componentes pidan sus datos
-const readDbForRender = cache(async (uid: string) => readDbNow(uid));
+// en la caché privada: el servidor lee siempre en directo (una vez por petición) y el navegador guarda la página
+// ya pintada, de modo que la precarga de los enlaces la trae con los datos (ver VIEW_CACHE)
+async function readDbForRender(uid: string): Promise<Db> {
+  "use cache: private";
+  viewCache();
+  return readDbNow(uid);
+}
 
-/** Lectura para renderizado: espera a la petición (datos siempre frescos) y se comparte dentro de ella. */
+/** Lectura para pintar páginas (por defecto, el Db de la sesión). Las acciones usan readDbNow. */
 export async function getDb(uid?: string): Promise<Db> {
-  await connection();
-  return readDbForRender(uid ?? (await requireUserId()));
+  return readDbForRender(uid ?? (await requireViewerId()));
 }
 
 /** Modificación atómica y serializada del Db de un usuario (por defecto, el de la sesión actual). */

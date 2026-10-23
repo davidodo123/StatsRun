@@ -221,7 +221,7 @@ export function strengthRecords(acts: Activity[]): Map<string, StrengthRecord[]>
 // ---------- Discos ----------
 
 /** Discos habituales de un gimnasio (kg). */
-export const PLATES = [25, 20, 15, 10, 5, 2.5, 1.25];
+const PLATES = [25, 20, 15, 10, 5, 2.5, 1.25];
 
 /** Discos por lado para cargar `total` kg en una barra de `bar` kg (de los más grandes a los más pequeños). */
 export function platesFor(total: number, bar = 20, available: readonly number[] = PLATES): { side: number[]; left: number } {

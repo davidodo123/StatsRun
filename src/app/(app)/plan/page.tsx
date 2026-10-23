@@ -4,7 +4,8 @@ import { Suspense } from "react";
 import { Loading, PageHeader, Pill } from "@/components/ui";
 import { getDb } from "@/lib/db";
 import { planCompliance } from "@/lib/engine/planner";
-import { diffDays, mondayOf, shortDate, todayLocal } from "@/lib/dates";
+import { diffDays, mondayOf, shortDate } from "@/lib/dates";
+import { viewToday } from "@/lib/analysis";
 import { fmtDuration } from "@/lib/format";
 import type { Phase, Plan } from "@/lib/types";
 import { planTitle } from "@/lib/engine/planner";
@@ -23,7 +24,7 @@ export default function PlansPage() {
 
 async function Content() {
   const db = await getDb();
-  const today = todayLocal();
+  const today = (await viewToday());
   const plan = db.plan;
   const past = db.pastPlans ?? [];
 

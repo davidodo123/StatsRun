@@ -4,12 +4,12 @@ import type { PaceRange, Profile } from "../types";
 // ---------- VDOT (Daniels & Gilbert, 1979) ----------
 
 /** Consumo de O2 (ml/kg/min) a una velocidad v (m/min). */
-export function vo2AtVelocity(v: number): number {
+function vo2AtVelocity(v: number): number {
   return -4.6 + 0.182258 * v + 0.000104 * v * v;
 }
 
 /** Fracción de VO2max sostenible durante t minutos. */
-export function fractionVo2max(tMin: number): number {
+function fractionVo2max(tMin: number): number {
   return 0.8 + 0.1894393 * Math.exp(-0.012778 * tMin) + 0.2989558 * Math.exp(-0.1932605 * tMin);
 }
 
@@ -20,7 +20,7 @@ export function vdotFromRace(distanceKm: number, timeSec: number): number {
 }
 
 /** Velocidad (m/min) a la que el VO2 es `vo2`. Inversa de vo2AtVelocity. */
-export function velocityAtVo2(vo2: number): number {
+function velocityAtVo2(vo2: number): number {
   const a = 0.000104;
   const b = 0.182258;
   const c = -4.6 - vo2;
@@ -71,11 +71,6 @@ export function trainingPaces(vdot: number): TrainingPaces {
     tenK: racePace(vdot, 10),
     fiveK: racePace(vdot, 5),
   };
-}
-
-/** Ritmo objetivo de competición para cualquier distancia. */
-export function goalPace(distanceKm: number, timeSec: number): number {
-  return timeSec / distanceKm;
 }
 
 /** Fórmula de Riegel: T2 = T1 · (D2/D1)^1,06 */

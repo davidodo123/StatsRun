@@ -8,7 +8,7 @@ import { bmi, flatEquivalentKm, heatFactor, raceTimeFromVdot, trainingPaces, vdo
 
 export type DistanceCat = "5k" | "10k" | "half" | "marathon";
 
-export function distanceCat(km: number): DistanceCat {
+function distanceCat(km: number): DistanceCat {
   if (km <= 7) return "5k";
   if (km <= 13) return "10k";
   if (km <= 26) return "half";
@@ -217,7 +217,7 @@ const PHASE_FOCUS: Record<Phase, string> = {
 const avg = (r: PaceRange) => (r.fast + r.slow) / 2;
 const round1 = (x: number) => Math.round(x * 2) / 2; // a 0,5 km
 /** Subida máxima de la tirada larga respecto a la más larga reciente (Frandsen et al. 2025). */
-export const SPIKE_LIMIT = 0.1;
+const SPIKE_LIMIT = 0.1;
 
 const clamp = (x: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, x));
 

@@ -4,7 +4,7 @@
 export type LatLon = [number, number];
 
 /** Máximo de puntos guardados: suficiente para dibujar el mapa, no para análisis. */
-export const MAX_ROUTE_POINTS = 400;
+const MAX_ROUTE_POINTS = 400;
 
 export function encodePolyline(points: LatLon[]): string {
   let out = "";

@@ -9,11 +9,12 @@ import { RoutineChart } from "@/components/RoutineChart";
 import { SetBadge } from "@/components/RoutineEditor";
 import { getDb } from "@/lib/db";
 import { RoutinePlanSlot } from "@/components/RoutinePlanSlot";
-import { getUser } from "@/lib/auth";
-import { requireUserId } from "@/lib/session";
+import { viewUser } from "@/lib/authView";
+import { requireViewerId } from "@/lib/session";
 import { findExercise } from "@/lib/strength/catalog";
 import { fmtLoad, restLabel, routineHistory, supersetLetters } from "@/lib/strength/workouts";
-import { addDays, todayLocal } from "@/lib/dates";
+import { addDays } from "@/lib/dates";
+import { viewToday } from "@/lib/analysis";
 import { Icon } from "@/components/icons";
 
 export const metadata: Metadata = { title: "Rutina" };
@@ -27,11 +28,11 @@ export default function RoutinePage({ params }: PageProps<"/fuerza/rutinas/[id]"
 }
 
 async function Content({ params }: { params: PageProps<"/fuerza/rutinas/[id]">["params"] }) {
-  const [{ id }, db, uid] = await Promise.all([params, getDb(), requireUserId()]);
+  const [{ id }, db, uid] = await Promise.all([params, getDb(), requireViewerId()]);
   const routine = db.routines?.find((r) => r.id === id);
   if (!routine) notFound();
-  const user = await getUser(uid);
-  const today = todayLocal();
+  const user = await viewUser(uid);
+  const today = (await viewToday());
 
   const letters = supersetLetters(routine.exercises);
   const planSessions = (db.plan?.weeks.flatMap((w) => w.sessions) ?? []).filter((s) => s.type === "strength" && s.date >= today);

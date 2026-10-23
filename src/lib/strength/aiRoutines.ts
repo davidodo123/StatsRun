@@ -10,7 +10,7 @@ import { STUDY_RULE, studyFor } from "../knowledge";
 
 const EQ_IDS = new Set<string>(EQUIPMENT.map((e) => e.id));
 const KINDS: StrengthKind[] = ["pierna", "posterior", "superior", "completo", "pecho", "espalda", "hombro"];
-export const BLOCK_PHASES: Record<"base" | "fuerza", Phase[]> = { base: ["base"], fuerza: ["construccion", "especifico"] };
+const BLOCK_PHASES: Record<"base" | "fuerza", Phase[]> = { base: ["base"], fuerza: ["construccion", "especifico"] };
 
 // solo fuerza y pliometría, sin halterofilia, powerlifting ni strongman: lo útil para un corredor
 const CANDIDATES = CATALOG.filter((x) => (x.cat === "fuerza" || x.cat === "pliometria") && x.level !== "avanzado");

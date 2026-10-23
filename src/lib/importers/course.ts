@@ -68,7 +68,7 @@ export function parseKml(xml: string): { points: Pt[]; markers: CourseMarker[]; 
 }
 
 /** KMZ = zip con un .kml (normalmente doc.kml) y los iconos. */
-export function parseKmz(buf: Uint8Array): ReturnType<typeof parseKml> {
+function parseKmz(buf: Uint8Array): ReturnType<typeof parseKml> {
   const files = unzipSync(buf, { filter: (f) => /\.kml$/i.test(f.name) });
   const key = Object.keys(files).sort((a, b) => Number(b.endsWith("doc.kml")) - Number(a.endsWith("doc.kml")))[0];
   if (!key) throw new Error("El .kmz no contiene ningún archivo .kml.");
@@ -76,7 +76,7 @@ export function parseKmz(buf: Uint8Array): ReturnType<typeof parseKml> {
 }
 
 /** GPX de ruta o de traza (las horas, si las hay, se ignoran: es el recorrido). */
-export function parseGpxCourse(xml: string): ReturnType<typeof parseKml> {
+function parseGpxCourse(xml: string): ReturnType<typeof parseKml> {
   const read = (tag: string) =>
     [...xml.matchAll(new RegExp(`<${tag}\\b([^>]*)>([\\s\\S]*?)<\\/${tag}>|<${tag}\\b([^>]*)\\/>`, "gi"))].map((m) => {
       const attrs = m[1] ?? m[3] ?? "";
@@ -100,7 +100,7 @@ export function parseGpxCourse(xml: string): ReturnType<typeof parseKml> {
 }
 
 /** Distancia y desnivel (con umbral de 3 m para no sumar ruido de altitud). */
-export function courseFromPoints(points: Pt[], markers: CourseMarker[], fileName: string, name?: string): RaceCourse {
+function courseFromPoints(points: Pt[], markers: CourseMarker[], fileName: string, name?: string): RaceCourse {
   if (points.length < 2) throw new Error("El archivo no tiene un recorrido (línea) que leer.");
   let dist = 0;
   for (let i = 1; i < points.length; i++) dist += haversine(points[i - 1], points[i]);

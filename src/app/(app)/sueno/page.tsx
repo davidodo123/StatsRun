@@ -3,7 +3,8 @@ import { Suspense } from "react";
 import { SleepCalculator } from "@/components/SleepCalculator";
 import { Notice, PageHeader } from "@/components/ui";
 import { getDb } from "@/lib/db";
-import { addDays, todayLocal } from "@/lib/dates";
+import { addDays } from "@/lib/dates";
+import { viewToday } from "@/lib/analysis";
 import { isHardSession } from "@/lib/engine/planner";
 
 export const metadata: Metadata = { title: "Sueño" };
@@ -21,7 +22,7 @@ export default function SleepPage() {
 
 async function Content() {
   const db = await getDb();
-  const tomorrow = addDays(todayLocal(), 1);
+  const tomorrow = addDays((await viewToday()), 1);
   // lo que toca mañana en el plan: con algo duro, mejor dormir más
   const next = (db.plan?.weeks.flatMap((w) => w.sessions) ?? []).filter((s) => s.date === tomorrow && s.type !== "strength");
   const hard = next.some((s) => isHardSession(s.type) || s.type === "race");

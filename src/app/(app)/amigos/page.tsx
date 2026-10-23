@@ -4,13 +4,15 @@ import { Suspense } from "react";
 import { Card, Loading, PageHeader, Status } from "@/components/ui";
 import { FriendCodeForm } from "@/components/FriendCodeForm";
 import { ActivityItem } from "@/components/ActivityItem";
-import { getFriends, getRequests, getUser, searchUsers, type PublicUser, type SearchResult } from "@/lib/auth";
+import { searchUsers, type PublicUser, type SearchResult } from "@/lib/auth";
+import { viewFriends, viewRequests, viewUser } from "@/lib/authView";
 import { getDb } from "@/lib/db";
 import { buildFeed } from "@/lib/feed";
 import { tagsForDb } from "@/lib/engine/tags";
-import { requireUserId } from "@/lib/session";
+import { requireViewerId } from "@/lib/session";
 import { athleteSummary } from "@/lib/summary";
-import { todayLocal, shortDate } from "@/lib/dates";
+import { shortDate } from "@/lib/dates";
+import { viewToday } from "@/lib/analysis";
 import { fmtDuration, fmtKm } from "@/lib/format";
 import { answerRequest, cancelRequest, newFriendCode, requestFriend } from "@/app/auth-actions";
 import { copySharedActivity, dismissSharedActivity } from "@/app/actions";
@@ -31,10 +33,10 @@ export default function AmigosPage({ searchParams }: PageProps<"/amigos">) {
 async function Content({ searchParams }: { searchParams: PageProps<"/amigos">["searchParams"] }) {
   const sp = await searchParams;
   const q = typeof sp.q === "string" ? sp.q.slice(0, 40) : "";
-  const uid = await requireUserId();
-  const [me, friends, requests, results, myDb] = await Promise.all([getUser(uid), getFriends(uid), getRequests(uid), q ? searchUsers(uid, q) : Promise.resolve([]), getDb()]);
+  const uid = await requireViewerId();
+  const [me, friends, requests, results, myDb] = await Promise.all([viewUser(uid), viewFriends(uid), viewRequests(uid), q ? searchUsers(uid, q) : Promise.resolve([]), getDb()]);
   // la fecha, después de leer datos de la petición (con cacheComponents no puede ir antes)
-  const today = todayLocal();
+  const today = (await viewToday());
   const dbs = await Promise.all(friends.map(async (f) => ({ f, db: await getDb(f.id) })));
   const summaries = dbs.map(({ f, db }) => ({ f, s: athleteSummary(db, today) }));
   const feed = buildFeed(

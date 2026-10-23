@@ -7,7 +7,7 @@ import { aerobicDecoupling, DECOUPLING_MIN_MIN } from "./engine/decoupling";
 
 const API = "https://www.strava.com/api/v3";
 const OAUTH = "https://www.strava.com/oauth";
-export const STRAVA_SCOPE = "read,activity:read_all,profile:read_all";
+const STRAVA_SCOPE = "read,activity:read_all,profile:read_all";
 
 export function stravaConfig() {
   const clientId = process.env.STRAVA_CLIENT_ID;
@@ -111,7 +111,7 @@ const SPORT_MAP: Record<string, SportKind> = {
   HighIntensityIntervalTraining: "strength",
 };
 
-export function mapActivity(a: StravaSummaryActivity): Activity {
+function mapActivity(a: StravaSummaryActivity): Activity {
   const sport = SPORT_MAP[a.sport_type] ?? SPORT_MAP[a.type] ?? "other";
   // start_date_local viene como "2024-05-01T07:30:00Z" pero ya en hora local
   const local = a.start_date_local.replace("Z", "");

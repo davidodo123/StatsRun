@@ -232,7 +232,7 @@ export function LoadSwitch({ bw, onChange }: { bw: boolean; onChange: (bw: boole
 }
 
 /** Descanso entre series: chip que abre un panel con las opciones (el desplegable nativo no se puede estilizar). */
-export function RestChip({ value, onChange }: { value: number; onChange: (sec: number) => void }) {
+function RestChip({ value, onChange }: { value: number; onChange: (sec: number) => void }) {
   const [open, setOpen] = useState(false);
   return (
     <div className="relative">

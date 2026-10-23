@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { Suspense, type ReactNode } from "react";
-import { getAnalysis } from "@/lib/analysis";
+import { getAnalysis, viewTodayMadrid } from "@/lib/analysis";
 import { revokeHealthKey, syncProfileAverages } from "@/app/actions";
 import { HealthKey } from "@/components/HealthKey";
 import { HealthConnectCard } from "@/components/HealthConnectCard";
@@ -23,9 +23,9 @@ import { workoutVolume } from "@/lib/strength/workouts";
 import type { Stats } from "@/lib/engine/stats";
 import { ActivityItem } from "@/components/ActivityItem";
 import { tagsForDb } from "@/lib/engine/tags";
-import { getFriends, getUser } from "@/lib/auth";
+import { viewFriends, viewUser } from "@/lib/authView";
 import { AvatarPicker } from "@/components/AvatarPicker";
-import { requireUserId } from "@/lib/session";
+import { requireViewerId } from "@/lib/session";
 import { Icon } from "@/components/icons";
 import { AiMemory } from "@/components/AiMemory";
 
@@ -60,7 +60,7 @@ export default function PerfilPage({ searchParams }: PageProps<"/perfil">) {
 
 async function Content({ searchParams }: { searchParams: PageProps<"/perfil">["searchParams"] }) {
   const sp = await searchParams;
-  const [{ db, stats, matches, today }, me] = await Promise.all([getAnalysis(), requireUserId().then(getUser)]);
+  const [{ db, stats, matches, today }, me] = await Promise.all([getAnalysis(), requireViewerId().then(viewUser)]);
   // solo fuerza: sin Resumen ni Running (son de correr) y se abre en Fuerza
   const focus = focusOf(db.profile);
   const tabs = TABS.filter((t) => focus !== "fuerza" || (t.id !== "resumen" && t.id !== "running"));
@@ -561,8 +561,8 @@ function Logros({ list }: { list: Achievement[] }) {
 
 // ---------------- Pasos y calorías ----------------
 
-function Salud({ db }: { db: Db }) {
-  const today = todayMadrid();
+async function Salud({ db }: { db: Db }) {
+  const today = await viewTodayMadrid();
   const h = healthSummary(db.health, today);
   const endpoint = `${(process.env.APP_URL ?? "https://run-in-out.vercel.app").replace(/\/$/, "")}/api/salud`;
   // cuándo llegó el último envío (cada envío reescribe los 7 días que manda): así se ve si fallan las automatizaciones
@@ -944,8 +944,8 @@ function Row({ label, value, note }: { label: string; value: string; note?: stri
 
 async function ActivityList({ acts }: { acts: Activity[] }) {
   // nombres para «con quién»; la lectura de usuarios se memoriza por petición
-  const uid = await requireUserId();
-  const names = new Map((await getFriends(uid)).map((f) => [f.id, f.name]));
+  const uid = await requireViewerId();
+  const names = new Map((await viewFriends(uid)).map((f) => [f.id, f.name]));
   const { db, stats } = await getAnalysis();
   const tags = tagsForDb(db, stats?.vdot.vdot);
   return (
