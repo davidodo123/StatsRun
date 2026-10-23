@@ -180,6 +180,17 @@ Base: [[Estudio entrenamiento#6. La Pirámide de Entrenamiento (Helms, Valdez, M
 - [ ] **Notificación de lo que te toca hoy** (lo pidió David 2026-10-23): por la mañana, «Hoy: Tirada larga 12 km» (o descanso). En el **iPhone** se puede con la web instalada (notificaciones push, iOS 16.4+): pedir permiso, guardar la suscripción y un cron de Vercel que las mande; hacen falta claves VAPID (en Vercel, no en el repo). En **Android** (la app) la vista web no recibe push: notificación local programada con `@capacitor/local-notifications` (APK nuevo)
 - [ ] **Datos de la carrera en la pantalla de bloqueo, como Strava** (lo pidió David 2026-10-23): al grabar con el GPS, ver tiempo, ritmo medio y km con el móvil bloqueado. **Android**: la notificación «Grabando carrera» del complemento no se puede cambiar una vez puesta; habría que poner otra notificación fija que se actualice cada pocos segundos (`@capacitor/local-notifications`, misma id) o tocar el código nativo del complemento. **iPhone**: lo de Strava son «Actividades en directo», que solo puede hacer una app nativa (App Store); desde la web no se puede
 
+## 🏗️ Infraestructura (escalar la app) → [[Infraestructura]]
+Para cuando crezca: base de datos, servidor, costes y administración. Se hace según haga falta, no todo ya.
+- [ ] Mirar en el panel de Upstash las peticiones del mes y el espacio usado, y apuntarlo en [[Infraestructura]] (cuánto margen queda)
+- [ ] Activar los avisos por correo de Upstash y Vercel al acercarse a los límites
+- [ ] Panel de administración (solo David): usuarios, activos esta semana, tamaño de cada documento, uso de la IA y última copia de seguridad
+- [ ] Límite de uso de la IA por usuario (mensajes al día) para controlar el gasto de OpenRouter
+- [ ] Avisos de errores (Sentry, plan gratis) cuando haya más usuarios
+- [ ] **20-100 usuarios**: Upstash a pago por uso
+- [ ] **100-500 usuarios**: Vercel Pro (Hobby no permite uso comercial) y separar las actividades con GPS del documento de cada usuario
+- [ ] **Más de 500 o cobrar**: pasar a Postgres (Neon o Supabase) con tablas de usuarios, amistades, actividades y planes; fotos a un almacén de archivos (Vercel Blob o R2)
+
 ## 🧠 IA que aprende de ti (opción 2: sin entrenar el modelo) → [[Decisiones#IA que aprende de ti]]
 - [x] Bloque 1 · Valoraciones (pulgar arriba/abajo con motivo) y memoria de preferencias que leen las tres IA; el chat apunta solo lo que le cuentas — *hecho 2026-10-10, pendiente de comprobar*
 - [x] Bloque 2 · Ejemplos buenos en las instrucciones (few-shot), y las respuestas que valoras como ejemplos de lo que gusta y lo que no; el chat entrena con el material que nombras — *hecho 2026-10-11, pendiente de comprobar*

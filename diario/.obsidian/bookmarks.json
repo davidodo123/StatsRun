@@ -1,7 +1,24 @@
 {
   "items": [
-    { "type": "file", "path": "Inicio.md", "title": "Inicio" },
-    { "type": "file", "path": "Roadmap.md", "title": "Roadmap" },
-    { "type": "file", "path": "Ideas.md", "title": "Ideas" }
+    {
+      "type": "file",
+      "path": "Inicio.md",
+      "title": "Inicio"
+    },
+    {
+      "type": "file",
+      "path": "Roadmap.md",
+      "title": "Roadmap"
+    },
+    {
+      "type": "file",
+      "path": "Ideas.md",
+      "title": "Ideas"
+    },
+    {
+      "type": "file",
+      "path": "Infraestructura.md",
+      "title": "Infraestructura"
+    }
   ]
 }
