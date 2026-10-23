@@ -833,3 +833,11 @@ David preguntó si se puede «entrenar» una IA para la app. Opciones: (1) instr
 - Ahora `BackLink` (`components/BackLink.tsx`): si en esta pestaña vienes de otra página de la app, vuelve atrás (`router.back()`, que además conserva dónde estabas en la página); si has entrado directamente (enlace, app recién abierta), va a la página de siempre. Para saberlo, `NavHistory` (en el layout) apunta las páginas visitadas en `sessionStorage`.
 - El texto pasa a ser «← Volver» en todas: con la vuelta atrás ya no se sabe de antemano a qué página va. Cambiado en las 13 páginas que lo tenían (ficha de ejercicio, entreno, carrera, amigo, rutina, planes, material, medidas, GPS…).
 - **Series que bajaban** (mismo día): con el teclado abierto, el descanso se mostraba en la cabecera fija del entreno y la hacía crecer unos 40 px; al tocar la serie siguiente (con el descanso en marcha) todo bajaba. Ahora el aviso del descanso flota justo debajo de la cabecera (`absolute`), sin ocupar sitio. Comprobado en Chrome a 390 px: la serie no se mueve.
+
+## Next 16.4.2 por seguridad
+*2026-10-23*
+
+- Next 16.4.0 tenía 3 fallos publicados: dos críticos (ejecución de código en el servidor sin iniciar sesión, en la optimización de imágenes con SVG y en funciones `use cache` que devuelven arrays tipados) y uno de bloqueo (DoS) con las server actions. El build lo avisaba y terminaba con error.
+- Se actualiza a **16.4.2** (y `eslint-config-next` 16.4.2), con versión exacta: es un parche, sin cambios de API. Se hace a mano (`npm install --save-exact`) en vez de con `next upgrade --agent`, que lanza un agente para hacerlo.
+- Comprobado: `tsc`, `eslint`, 302 tests, build sin error y todas las páginas en el servidor local.
+- `npm audit` sin `--omit=dev` aún marca `braces` y `uuid` en herramientas de desarrollo; no van en la web.
