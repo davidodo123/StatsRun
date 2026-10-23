@@ -4,7 +4,8 @@ import { useEffect, useRef, useState, useTransition, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { ExercisePicker } from "./ExercisePicker";
 import { ExerciseThumb } from "./ExerciseMedia";
-import { BodyChip, LoadSwitch, RestChip, SetBadge, onlyBody } from "./RoutineEditor";
+import { BodyChip, LoadSwitch, SetBadge, onlyBody } from "./RoutineEditor";
+import { LIVE_WORKOUT_KEY, LIVE_WORKOUT_MAX_MS } from "@/lib/strength/liveWorkout";
 import { finishWorkout } from "@/app/strength-actions";
 import { withCustom } from "@/lib/strength/exerciseList";
 import type { Equipment, ExerciseSummary } from "@/lib/strength/labels";
@@ -22,7 +23,6 @@ interface LiveSet {
 interface LiveExercise {
   key: number;
   exerciseId: string;
-  restSec: number;
   bw?: boolean; // con peso corporal: los kg son lastre
   sets: LiveSet[];
   hint?: Pick<Suggestion, "text" | "up">; // progresión doble respecto a la última vez
@@ -39,7 +39,7 @@ interface Live {
 }
 
 // el entreno en curso se guarda en el navegador: si se cierra la app o se bloquea el móvil, sigue donde estaba
-const STORAGE = "rio-entreno";
+const STORAGE = LIVE_WORKOUT_KEY;
 const load = (): Live | undefined => {
   try {
     const raw = localStorage.getItem(STORAGE);
@@ -76,7 +76,7 @@ let keySeq = 0;
 type Suggest = (exerciseId: string, plan?: RoutineSet, notes?: string) => Suggestion | undefined;
 
 /** Series de un ejercicio con lo que toca hoy: lo de la rutina, salvo que la progresión doble proponga otra cosa. */
-function liveExercise(exerciseId: string, sets: RoutineSet[], suggest: Suggest, extra: Pick<LiveExercise, "restSec" | "bw" | "notes" | "superset">): LiveExercise {
+function liveExercise(exerciseId: string, sets: RoutineSet[], suggest: Suggest, extra: Pick<LiveExercise, "bw" | "notes" | "superset">): LiveExercise {
   const sug = suggest(exerciseId, sets.find((s) => s.type !== "calentamiento"), extra.notes);
   return {
     key: keySeq++,
@@ -95,11 +95,11 @@ function fromRoutine(routine: Routine | undefined, suggest: Suggest): Live {
     startedAt: Date.now(),
     routineId: routine?.id,
     name: routine?.name ?? "Entreno",
-    exercises: (routine?.exercises ?? []).map((e) => liveExercise(e.exerciseId, e.sets, suggest, { restSec: e.restSec ?? 90, bw: e.bw, notes: e.notes, superset: e.superset })),
+    exercises: (routine?.exercises ?? []).map((e) => liveExercise(e.exerciseId, e.sets, suggest, { bw: e.bw, notes: e.notes, superset: e.superset })),
   };
 }
 
-/** Entreno en vivo, como en Hevy: anterior, kg, reps y ✓ por serie, con descanso y duración. */
+/** Entreno en vivo, como en Hevy: anterior, kg, reps y ✓ por serie, con la duración. */
 export function WorkoutLogger({
   routine,
   custom,
@@ -125,7 +125,6 @@ export function WorkoutLogger({
   const [w, setW] = useState<Live>();
   const [resumed, setResumed] = useState(false);
   const [now, setNow] = useState(() => Date.now());
-  const [rest, setRest] = useState<{ until: number; total: number }>();
   const [picking, setPicking] = useState(false);
   const [finishing, setFinishing] = useState(false);
   const [error, setError] = useState<string>();
@@ -143,7 +142,7 @@ export function WorkoutLogger({
       return;
     }
     const stored = load();
-    if (stored?.exercises && Date.now() - stored.startedAt < 12 * 3600_000) {
+    if (stored?.exercises && Date.now() - stored.startedAt < LIVE_WORKOUT_MAX_MS) {
       setW(stored);
       setResumed(stored.routineId !== routine?.id || Boolean(stored.exercises.some((e) => e.sets.some((s) => s.done))));
     } else setW(fromRoutine(routine, suggest));
@@ -156,17 +155,6 @@ export function WorkoutLogger({
     const t = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(t);
   }, []);
-  // aviso al acabar el descanso
-  const restLeft = rest ? Math.ceil((rest.until - now) / 1000) : 0;
-  useEffect(() => {
-    if (rest && restLeft <= 0) {
-      try {
-        navigator.vibrate?.([200, 100, 200]);
-      } catch {}
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- el descanso acaba por tiempo
-      setRest(undefined);
-    }
-  }, [rest, restLeft]);
 
   if (!w) return <div className="h-64 animate-pulse rounded-2xl bg-surface" />;
 
@@ -180,7 +168,6 @@ export function WorkoutLogger({
   const letters = supersetLetters(w.exercises);
   const elapsed = Math.max(0, Math.floor(((w.pausedAt ?? now) - w.startedAt - (w.pausedMs ?? 0)) / 1000));
   const togglePause = () => {
-    setRest(undefined);
     edit((cur) => (cur.pausedAt ? { ...cur, pausedMs: (cur.pausedMs ?? 0) + Date.now() - cur.pausedAt, pausedAt: undefined } : { ...cur, pausedAt: Date.now() }));
   };
 
@@ -206,7 +193,6 @@ export function WorkoutLogger({
   const restart = () => {
     setW(fromRoutine(routine, suggest));
     setResumed(false);
-    setRest(undefined);
   };
   const discard = () => {
     if (!confirm("¿Descartar este entreno? Se perderá lo apuntado.")) return;
@@ -276,17 +262,6 @@ export function WorkoutLogger({
             <Metric label="Series" value={String(doneSets.length)} />
           </div>
         )}
-        {/* escribiendo, la barra del descanso de abajo taparía las series: el descanso va aquí, flotando bajo la cabecera
-            (si ocupara sitio, la cabecera crecería al tocar la serie siguiente y las series bajarían) */}
-        {rest && restLeft > 0 && (
-          <div className="only-kb absolute inset-x-4 top-full mt-1 items-center gap-2 rounded-xl border border-accent/40 bg-surface px-3 py-1.5 text-sm shadow-lg md:inset-x-8">
-            <span className="text-ink-2">Descanso</span>
-            <strong className="tabular">{fmtClock(restLeft)}</strong>
-            <button type="button" className="ml-auto text-xs font-semibold text-accent" onClick={() => setRest(undefined)}>
-              Saltar
-            </button>
-          </div>
-        )}
       </div>
 
       {resumed && (
@@ -332,7 +307,6 @@ export function WorkoutLogger({
               </button>
             </div>
             <div className="mt-3 flex flex-wrap items-center gap-2">
-              <RestChip value={e.restSec} onChange={(restSec) => update(e.key, (y) => ({ ...y, restSec }))} />
               <LoadSwitch bw={Boolean(e.bw)} onChange={(bw) => update(e.key, (y) => ({ ...y, bw }))} />
             </div>
             <input
@@ -375,7 +349,6 @@ export function WorkoutLogger({
                     if (s.done) return setRow({ done: false });
                     // sin escribir nada, vale lo que se ve en gris (rutina o última vez)
                     setRow({ done: true, kg: s.kg || (kgHint?.toString() ?? ""), reps: s.reps || (repsHint?.toString() ?? "") });
-                    if (!pastStart && e.restSec && s.type !== "calentamiento" && restAfter) setRest({ until: Date.now() + e.restSec * 1000, total: e.restSec });
                   };
                   return (
                     <tr key={j} className={s.done ? "bg-good/15" : j % 2 ? "bg-surface-2" : ""}>
@@ -441,29 +414,6 @@ export function WorkoutLogger({
         En gris, lo que toca hoy (la rutina con la progresión doble, o la última vez): si no escribes nada, al marcar ✓ se apunta eso. Toca el número de serie para marcarla como {SET_TYPE_SHORT.calentamiento} (calentamiento), {SET_TYPE_SHORT.descendente} o {SET_TYPE_SHORT.fallo}.
       </p>
 
-      {rest && restLeft > 0 && (
-        <div className="hide-on-kb fixed inset-x-0 bottom-[calc(4.75rem+env(safe-area-inset-bottom))] z-40 px-4 md:bottom-4 md:left-56">
-          <div className="mx-auto flex max-w-xl items-center gap-3 rounded-2xl border border-line bg-surface p-3 shadow-lg">
-            <div className="min-w-0 flex-1">
-              <div className="text-xs text-muted">Descanso</div>
-              <div className="tabular text-2xl font-bold">{fmtClock(restLeft)}</div>
-              <div className="mt-1 h-1 overflow-hidden rounded bg-surface-2">
-                <div className="h-full bg-accent" style={{ width: `${(restLeft / rest.total) * 100}%` }} />
-              </div>
-            </div>
-            <button type="button" className="btn btn-ghost px-3" onClick={() => setRest({ ...rest, until: rest.until - 15_000 })}>
-              −15
-            </button>
-            <button type="button" className="btn btn-ghost px-3" onClick={() => setRest({ until: rest.until + 15_000, total: rest.total + 15 })}>
-              +15
-            </button>
-            <button type="button" className="btn px-3" onClick={() => setRest(undefined)}>
-              Saltar
-            </button>
-          </div>
-        </div>
-      )}
-
       {picking && (
         <ExercisePicker
           exercises={exercises}
@@ -472,7 +422,7 @@ export function WorkoutLogger({
           onAdd={(ids) => {
             edit((cur) => ({
               ...cur,
-              exercises: [...cur.exercises, ...ids.map((exerciseId) => liveExercise(exerciseId, [{}, {}, {}], suggest, { restSec: 90, bw: onlyBody(byId.get(exerciseId)) }))],
+              exercises: [...cur.exercises, ...ids.map((exerciseId) => liveExercise(exerciseId, [{}, {}, {}], suggest, { bw: onlyBody(byId.get(exerciseId)) }))],
             }));
             setPicking(false);
           }}

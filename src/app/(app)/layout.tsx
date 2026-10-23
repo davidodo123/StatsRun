@@ -5,6 +5,7 @@ import { InstallBanner } from "@/components/Pwa";
 import { AppUpdates } from "@/components/AppUpdates";
 import { KeyboardFix } from "@/components/KeyboardFix";
 import { NavHistory } from "@/components/BackLink";
+import { LiveWorkoutBar } from "@/components/LiveWorkoutBar";
 
 // Páginas de la app (con sesión): menú lateral en escritorio y barra inferior en móvil.
 export default function AppLayout({ children }: LayoutProps<"/">) {
@@ -15,6 +16,7 @@ export default function AppLayout({ children }: LayoutProps<"/">) {
       <KeyboardFix />
       <Suspense fallback={null}>
         <NavHistory />
+        <LiveWorkoutBar />
       </Suspense>
       <Suspense fallback={<NavView />}>
         <AppNav />

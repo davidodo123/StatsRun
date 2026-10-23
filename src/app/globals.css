@@ -178,6 +178,10 @@ body {
   html[data-kb] .only-kb {
     display: flex;
   }
+  /* con la pestaña del entreno en curso encima de la barra de abajo, que no tape el final de la página */
+  body:has(.live-workout-bar) main {
+    padding-bottom: calc(10.5rem + env(safe-area-inset-bottom));
+  }
   /* con el teclado, el iPhone mueve la parte visible hacia abajo: lo pegado arriba la sigue (si no, se iba bajo la hora) */
   html[data-kb] .vv-top {
     transform: translateY(var(--vv-top, 0px));

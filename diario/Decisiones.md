@@ -841,3 +841,10 @@ David preguntó si se puede «entrenar» una IA para la app. Opciones: (1) instr
 - Se actualiza a **16.4.2** (y `eslint-config-next` 16.4.2), con versión exacta: es un parche, sin cambios de API. Se hace a mano (`npm install --save-exact`) en vez de con `next upgrade --agent`, que lanza un agente para hacerlo.
 - Comprobado: `tsc`, `eslint`, 302 tests, build sin error y todas las páginas en el servidor local.
 - `npm audit` sin `--omit=dev` aún marca `braces` y `uuid` en herramientas de desarrollo; no van en la web.
+
+## Pestaña del entreno en curso y sin descanso
+*2026-10-23*
+
+- **Pestaña del entreno en curso** (`LiveWorkoutBar`, en el layout): si hay un entreno empezado (el que ya se guardaba en el navegador, `rio-entreno`, de menos de 12 h), sale encima de la barra de abajo en todas las secciones menos en el propio entreno: «Entreno en curso» (o «en pausa»), el nombre, el tiempo, las series hechas y «Seguir →», que abre `/fuerza/entreno` y continúa donde estaba. Desaparece al terminar o descartar el entreno. En el ordenador, abajo a la derecha del menú.
+- La clave y el límite de 12 h están en un solo sitio (`lib/strength/liveWorkout.ts`), que usan el entreno y la pestaña.
+- **Sin contador de descanso** (lo pidió David): fuera la cuenta atrás al marcar una serie, la barra de abajo con −15/+15/Saltar, el aviso en la cabecera con el teclado y la vibración al acabar. También el selector de descanso de cada ejercicio dentro del entreno, que ya no hacía nada. El descanso de las rutinas se queda (lo usan el plan, la IA y el EMOM).
