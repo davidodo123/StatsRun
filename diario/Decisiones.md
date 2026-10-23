@@ -902,3 +902,14 @@ David vio en un vídeo una app montada con tres herramientas y pidió investigar
 **Orden propuesto**: 1) PostHog (gratis, una tarde; dice qué usa la gente antes de decidir Premium); 2) rediseño con Runna de modelo (hace falta ScreensDesign Pro); 3) RevenueCat al decidir Premium.
 
 Fuentes: screensdesign.com, posthog.com/pricing, revenuecat.com/pricing, revenuecat.com/docs/web/web-billing/web-sdk.
+
+## Avisos de cada mañana
+*2026-10-23*
+
+- **Web Push** (estándar de los navegadores, con la librería `web-push`): en el iPhone funciona con la web **instalada en la pantalla de inicio** (iOS 16.4+); en Safari sin instalar no. En la **app de Android** no: la vista web de Capacitor no recibe push (más adelante, `@capacitor/local-notifications`).
+- **Cómo va**: «Más → Avisos» (`/avisos`) pide permiso en el mismo toque y guarda la suscripción del móvil en el Db (`push.subs`, hasta 5 móviles). El cron de Vercel `/api/cron/avisos` (6:00 UTC: 7:00 en invierno y 8:00 en verano en España) recorre los usuarios con avisos, calcula lo que toca hoy en Madrid (`todayMessage` en `lib/pushMessage.ts`) y lo manda una sola vez al día (`push.lastSent`). Las suscripciones caducadas (410/404) se borran solas. El service worker enseña el aviso y al tocarlo abre el plan.
+- **Hora fija**: en el plan gratis de Vercel los cron van una vez al día y no a la hora exacta (dentro de esa hora); por eso no se elige hora.
+- **Texto**: «Hoy: Tirada larga · 12 km» + «Ritmo 5:30–6:00 /km.» + la descripción; si además hay fuerza, «Y además: Fuerza general». Día de carrera, mensaje propio. Días de descanso, solo si se pide.
+- **Claves**: `VAPID_PUBLIC_KEY` y `VAPID_PRIVATE_KEY` (generadas, en `.env.local`; copiarlas a Vercel). `/api/cron/` queda público en `proxy.ts` (lo protege `CRON_SECRET`).
+- **Probado**: en Chrome del emulador de Android (con la web local): permiso, suscripción de Google guardada, el servidor la envía (Google la acepta) y el cron no repite el mismo día; el aviso se ve con su icono y título (entregado al service worker con las herramientas de Chrome: el emulador no recibe push de Google sin terminar de configurar la cuenta). En Chrome sin ventana del PC los service workers no arrancan (ni el de producción): no sirve para probar esto.
+- De paso: si se recargaba la página de grabar a mitad (p. ej. al tirar para actualizar), el servicio de GPS en segundo plano de Android seguía con su notificación. Ahora, al abrir la página sin grabar, se para cualquier servicio suelto (una vez).

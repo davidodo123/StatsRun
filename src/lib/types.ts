@@ -196,6 +196,21 @@ export interface StravaAuth {
 }
 
 /** Cómo estaba todo antes del último «no puedo ese día». */
+/** Un móvil o navegador suscrito a las notificaciones (Web Push). */
+export interface PushSub {
+  endpoint: string;
+  p256dh: string;
+  auth: string;
+  at: string; // cuándo se activó
+  device?: string; // «iPhone», «Android»… para enseñarlo
+}
+
+export interface PushSettings {
+  subs: PushSub[];
+  restDays?: boolean; // avisar también los días de descanso
+  lastSent?: string; // AAAA-MM-DD del último aviso (no repetir el mismo día)
+}
+
 export interface LastSkip {
   at: string;
   dates: string[];
@@ -221,6 +236,7 @@ export interface Db {
   coach?: CoachState;
   unavailableDates?: string[]; // fechas concretas sin poder entrenar (futuras: no planificar; pasadas: "no pude")
   lastSkip?: LastSkip; // el último «no puedo ese día», para poder deshacerlo
+  push?: PushSettings; // notificación de cada mañana con lo que toca hoy
   places?: GymPlace[]; // dónde entrena fuerza y con qué material
   activePlaceId?: string;
   customExercises?: CustomExercise[]; // ejercicios creados por el usuario (además del catálogo)

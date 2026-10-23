@@ -58,3 +58,24 @@ self.addEventListener("fetch", (event) => {
     );
   }
 });
+
+// Aviso de cada mañana (Web Push): { title, body, url }
+self.addEventListener("push", (event) => {
+  let msg = { title: "Run-In-Out", body: "", url: "/plan" };
+  try {
+    msg = { ...msg, ...event.data.json() };
+  } catch {}
+  event.waitUntil(self.registration.showNotification(msg.title, { body: msg.body, icon: "/icon-192.png", badge: "/icon-192.png", tag: "hoy", data: { url: msg.url } }));
+});
+
+// al tocarlo, a la app (si ya está abierta, a esa ventana)
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const url = new URL(event.notification.data?.url || "/", self.location.origin).href;
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((wins) => {
+      const win = wins.find((w) => w.url.startsWith(self.location.origin));
+      return win ? win.navigate(url).then((w) => (w || win).focus()) : self.clients.openWindow(url);
+    }),
+  );
+});

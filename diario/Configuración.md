@@ -21,6 +21,8 @@ tags: [config]
 | `OPENROUTER_API_KEY` / `OPENROUTER_MODEL` | Entrenador IA |
 | `STRAVA_CLIENT_ID` / `STRAVA_CLIENT_SECRET` / `APP_URL` | Conexión con Strava |
 | `CONTACT_EMAIL` | Correo público de contacto en `/privacidad` (se lee en cada visita) |
+| `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` | Avisos de cada mañana (Web Push). Generadas 2026-10-23; están en `.env.local` y hay que copiarlas a Vercel. Si se cambian, todos tienen que volver a activar los avisos |
+| `CRON_SECRET` | La pone Vercel; la usan los cron (`/api/cron/backup` a las 3:00 UTC y `/api/cron/avisos` a las 6:00 UTC) |
 ## Google Cloud
 - Proyecto: **Run-In-Out** → Google Auth Platform
 - Cliente OAuth «Run-In-Out» (aplicación web). URIs de redirección:

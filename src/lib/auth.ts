@@ -315,3 +315,8 @@ export async function regenerateFriendCode(uid: string): Promise<void> {
     if (me) me.friendCode = newFriendCode(new Set(doc.users.map((u) => u.friendCode)));
   });
 }
+
+/** Ids de todos los usuarios (para el aviso de cada mañana). */
+export async function allUserIds(): Promise<string[]> {
+  return (await readUsers()).users.map((u) => u.id);
+}

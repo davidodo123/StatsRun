@@ -9,6 +9,8 @@ import { isAndroidApp } from "./healthConnect";
 export type GpsError = "permiso" | "señal";
 type Watch = { stop: () => void };
 
+let orphanChecked = false;
+
 const capacitor = () => (window as { Capacitor?: { isPluginAvailable?: (name: string) => boolean } }).Capacitor;
 
 /** ¿Se puede grabar con la pantalla apagada? Solo en la app de Android con el complemento (APK nuevo). */
@@ -50,6 +52,12 @@ export async function watchGps(onPoint: (p: GpsPoint) => void, onError: (e: GpsE
         BackgroundGeolocation.stop().catch(() => {});
       },
     };
+  }
+
+  // al abrir la página (una vez): si quedó un servicio en segundo plano suelto (se recargó a mitad de grabar), se para
+  if (canRecordInBackground() && !orphanChecked) {
+    orphanChecked = true;
+    import("@capgo/background-geolocation").then(({ BackgroundGeolocation }) => BackgroundGeolocation.stop()).catch(() => {});
   }
 
   if (!("geolocation" in navigator)) {
