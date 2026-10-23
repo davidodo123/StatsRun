@@ -58,6 +58,6 @@ Más detalles (variables, servicios): [[Configuración]].
 
 ## Herramientas de administración que faltan
 - **Panel de administración** (solo David): nº de usuarios, activos esta semana, tamaño de cada documento, uso de la IA, última copia de seguridad.
-- **Avisos de errores**: Vercel guarda los registros unos días; con más usuarios, algo como Sentry (tiene plan gratis) avisa cuando algo falla.
+- **Métricas y avisos de errores: PostHog** (gratis: 1 M de eventos, 5.000 grabaciones y 100.000 errores al mes) → [[Decisiones#Herramientas: ScreensDesign, PostHog y RevenueCat]]. Sin datos de salud, con consentimiento y en servidor de Europa.
 - **Alertas de límites**: Upstash y Vercel avisan por correo al acercarse al límite; activarlas.
 - **Prueba de restaurar la copia** de vez en cuando (`scripts/backup-restore.mjs`).

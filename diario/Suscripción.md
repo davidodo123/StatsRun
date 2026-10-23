@@ -34,10 +34,12 @@ Propuesta para decidir (2026-10-23). Nada está hecho todavía; las tareas está
 - Coste por usuario Premium: IA (según uso, céntimos a 1-2 €/mes) + su parte de servidor y base de datos.
 
 ## Cómo se cobraría
-- **Stripe** (Checkout + portal del cliente para cancelar o cambiar tarjeta). Comisión en Europa: ~1,5 % + 0,25 € por pago. Un webhook avisa a la app de altas, renovaciones y bajas.
+- **RevenueCat** (propuesta 2026-10-23 → [[Decisiones#Herramientas: ScreensDesign, PostHog y RevenueCat]]): junta en un único «premium» la web/iPhone (su Web SDK cobra con tu cuenta de Stripe e incluye pantalla de pago y portal para cancelar) y Android (Google Play Billing). Gratis hasta 2.500 $/mes de ingresos; después, 1 %. Más la comisión de Stripe en Europa: ~1,5 % + 0,25 € por pago.
+- Alternativa sin RevenueCat: **Stripe** a mano (Checkout + portal del cliente + webhook); solo vale para la web.
 - **iPhone**: la app es una web instalada, no está en la App Store → se cobra con Stripe **sin la comisión de Apple**.
 - **Android (Google Play)**: ⚠️ Google obliga a cobrar las suscripciones digitales **dentro de la app** con **Google Play Billing** (15 % en suscripciones). Opciones: (a) en la app de Android no enseñar «Suscribirse», que se haga desde la web; (b) usar Play Billing en la app. Decidir antes de publicar en Play.
-- En el código: `Db.subscription` (plan, hasta cuándo, id de Stripe) y una comprobación `isPremium()` en servidor para cada función de pago (nunca solo en la pantalla).
+- En el código: `Db.subscription` (o lo que diga RevenueCat por su webhook) y una comprobación `isPremium()` en servidor para cada función de pago (nunca solo en la pantalla).
+- **Diseño de la pantalla de pago**: tomar de modelo la de **Runna** (ScreensDesign).
 
 ## Antes de cobrar (requisitos)
 - **Darse de alta para facturar** (autónomo o empresa) y el **IVA** de cada país de la UE (Stripe Tax o ventanilla única OSS).

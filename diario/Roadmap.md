@@ -177,6 +177,7 @@ Base: [[Estudio entrenamiento#6. La Pirámide de Entrenamiento (Helms, Valdez, M
 - [x] **Cambiar una sesión de día** (lo pidió David 2026-10-23: «hoy no puedo la tirada, pero mañana sí»): «Cambiar de día» en cualquier sesión de hoy a una semana vista; si ese día ya hay otra, se intercambian; avisa si quedan dos fuertes seguidas y se puede deshacer — *hecho 2026-10-23, pendiente de comprobar* → [[Decisiones#Cambiar una sesión de día]]
 - [x] **Compartir en Instagram en otro formato** (lo pidió David 2026-10-21; eligió sticker y vídeo 2026-10-23): «Compartir» abre un menú con la imagen de historia, **Copiar sticker** / **Guardar sticker** (PNG sin fondo, para pegarlo en una historia encima de una foto propia) y, con recorrido, **Vídeo del recorrido** (MP4 de ~6 s hecho en el móvil) — *hecho 2026-10-23, pendiente de comprobar en el iPhone* → [[Decisiones#Sticker y vídeo para compartir]]
 - [/] **Diseño**: hacer muchos diseños nuevos, porque la app se ve muy básica — *ronda 1 hecha 2026-10-20 (con la guía taste-skill y capturas a 390 px): Registrar como círculo con «+», tarjetas de datos más compactas, sin el botón repetido de registrar en Inicio, accesos de Fuerza en una sola lista; «Entrenamiento vacío» pasa a llamarse «Entrenamiento». Después: estilo deportivo (letra redondeada Rubik, naranja en el dato principal y en las gráficas) y repaso de todas las pantallas. Falta que David lo vea en el iPhone* → [[Decisiones#Rediseño, ronda 1]]
+- [ ] **Rediseño con Runna de modelo** (idea de David 2026-10-23, por el vídeo): registro inicial, plan y pantalla de pago como la app de running que más factura (~5-6 M$/mes según ScreensDesign); Strava para GPS, amigos y compartir. Hace falta ScreensDesign Pro para ver sus pantallas → [[Decisiones#Herramientas: ScreensDesign, PostHog y RevenueCat]]
 - [ ] **Notificación de lo que te toca hoy** (lo pidió David 2026-10-23): por la mañana, «Hoy: Tirada larga 12 km» (o descanso). En el **iPhone** se puede con la web instalada (notificaciones push, iOS 16.4+): pedir permiso, guardar la suscripción y un cron de Vercel que las mande; hacen falta claves VAPID (en Vercel, no en el repo). En **Android** (la app) la vista web no recibe push: notificación local programada con `@capacitor/local-notifications` (APK nuevo)
 - [ ] **Datos de la carrera en la pantalla de bloqueo, como Strava** (lo pidió David 2026-10-23): al grabar con el GPS, ver tiempo, ritmo medio y km con el móvil bloqueado. **Android**: la notificación «Grabando carrera» del complemento no se puede cambiar una vez puesta; habría que poner otra notificación fija que se actualice cada pocos segundos (`@capacitor/local-notifications`, misma id) o tocar el código nativo del complemento. **iPhone**: lo de Strava son «Actividades en directo», que solo puede hacer una app nativa (App Store); desde la web no se puede
 
@@ -186,7 +187,7 @@ Para cuando crezca: base de datos, servidor, costes y administración. Se hace s
 - [ ] Activar los avisos por correo de Upstash y Vercel al acercarse a los límites
 - [ ] Panel de administración (solo David): usuarios, activos esta semana, tamaño de cada documento, uso de la IA y última copia de seguridad
 - [ ] Límite de uso de la IA por usuario (mensajes al día) para controlar el gasto de OpenRouter
-- [ ] Avisos de errores (Sentry, plan gratis) cuando haya más usuarios
+- [ ] **PostHog**: métricas (qué se usa, dónde se va la gente) y avisos de errores; sin datos de salud, con consentimiento, servidor en Europa → [[Decisiones#Herramientas: ScreensDesign, PostHog y RevenueCat]]
 - [ ] **20-100 usuarios**: Upstash a pago por uso
 - [ ] **100-500 usuarios**: Vercel Pro (Hobby no permite uso comercial) y separar las actividades con GPS del documento de cada usuario
 - [ ] **Más de 500 o cobrar**: pasar a Postgres (Neon o Supabase) con tablas de usuarios, amistades, actividades y planes; fotos a un almacén de archivos (Vercel Blob o R2)
@@ -196,8 +197,8 @@ Propuesta de Gratis / Premium en [[Suscripción]]. Primero decidir; después, co
 - [ ] Decidir qué es Premium, el precio y la prueba gratis (David)
 - [ ] Decidir Android: cobrar con Google Play Billing o solo desde la web
 - [ ] Requisitos para cobrar: alta para facturar, IVA (Stripe Tax u OSS), Vercel Pro, condiciones de uso y privacidad
-- [ ] Stripe: Checkout, portal del cliente y webhook; `Db.subscription` e `isPremium()` en el servidor
-- [ ] Pantalla «Premium» (qué incluye, precio, suscribirse, gestionar) y avisos donde una función es de pago
+- [ ] **RevenueCat**: Web SDK (web/iPhone, con Stripe) y Google Play Billing (Android) con un único «premium»; webhook e `isPremium()` en el servidor
+- [ ] Pantalla «Premium» (qué incluye, precio, suscribirse, gestionar) con la de Runna de modelo, y avisos donde una función es de pago
 - [ ] Poner el límite en cada función Premium (IA, temporada, estadísticas avanzadas, sticker y vídeo…) y Premium gratis para los usuarios actuales
 
 ## 🧠 IA que aprende de ti (opción 2: sin entrenar el modelo) → [[Decisiones#IA que aprende de ti]]

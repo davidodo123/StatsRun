@@ -886,3 +886,19 @@ David preguntó si se puede «entrenar» una IA para la app. Opciones: (1) instr
 - **Sticker** (`/api/compartir/[id]?formato=sticker`): PNG sin fondo de 1080 de ancho con el recorrido (con borde blanco) o el cuerpo con los músculos (gris claro), y las tres cifras en blanco con sombra, para que se lean sobre cualquier foto.
 - **Vídeo** (`components/routeVideo.ts`): se hace en el móvil, sin servidor. Un `<canvas>` de 720 × 1280 dibuja la línea en ~4 s y después salen los datos; `MediaRecorder` lo graba en MP4 (iPhone y Chrome de Android; Instagram no acepta WebM). Tarda lo que dura (~6 s) y pesa ~350 kB. Solo en actividades con recorrido; el servidor pasa los puntos ya normalizados (`shareVideo`, como mucho 400).
 - La imagen de historia de siempre sigue igual (PNG 1080 × 1920).
+
+## Herramientas: ScreensDesign, PostHog y RevenueCat
+*2026-10-23 · propuesta, pendiente de que David decida cada una*
+
+David vio en un vídeo una app montada con tres herramientas y pidió investigarlas.
+
+**Diseño: ScreensDesign** («App Library» no existe con ese nombre; es esta). Biblioteca de unas 2.800 apps de las listas más vendidas con su registro inicial, pantalla de pago y pantallas clave grabadas, y **cuánto factura cada una al mes** (estimación, solo App Store). Tiene versión Pro de pago y conexión con Claude (MCP).
+- Modelo elegido por lo que factura y por parecido: **Runna** (~5-6 M$/mes; planes hacia una carrera con entrenador; 19,99 $/mes o 119,99 $/año, 7 días de prueba) para el **registro inicial, el plan y la pantalla de pago**. **Strava** (7-16 M$/mes) para grabar con GPS, amigos y compartir. **Hevy** para fuerza (ya se sigue).
+
+**Métricas y errores: PostHog.** Plan gratis sin tarjeta: 1 millón de eventos/mes (qué se usa y dónde se va la gente), 5.000 grabaciones de sesión, 100.000 errores y 1 millón de peticiones de *feature flags* (interruptores por usuario: Gratis/Premium, probar dos pantallas de pago). **Sustituye a Sentry.** Cuidado con los **datos de salud**: no mandarlos, tapar lo escrito en las grabaciones, pedir consentimiento (UE) y elegir servidor en Europa (comprobar al darse de alta).
+
+**Cobrar: RevenueCat** (lo que David oyó como «revenueapp»). Gratis hasta 2.500 $/mes de ingresos; después, 1 % de lo facturado (más la comisión de Stripe). Junta en un único «premium» lo que se cobra en la **web/iPhone** (Web SDK `@revenuecat/purchases-js`, con tu cuenta de Stripe; pantalla de pago y portal para cancelar incluidos) y en **Android** (Google Play Billing, obligatorio en Play). Sustituye a montar Stripe a mano ([[Suscripción]]). Su documentación aún no es coherente sobre «Stripe Billing»: comprobar al empezar.
+
+**Orden propuesto**: 1) PostHog (gratis, una tarde; dice qué usa la gente antes de decidir Premium); 2) rediseño con Runna de modelo (hace falta ScreensDesign Pro); 3) RevenueCat al decidir Premium.
+
+Fuentes: screensdesign.com, posthog.com/pricing, revenuecat.com/pricing, revenuecat.com/docs/web/web-billing/web-sdk.
