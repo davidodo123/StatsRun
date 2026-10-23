@@ -136,6 +136,60 @@ export function applyBlockedDates(plan: Plan, blocked: string[], avail: number[]
   return { moved, dropped };
 }
 
+/** Días a los que se puede pasar una sesión con «Cambiar de día»: desde hoy, una semana. */
+export const MOVE_DAYS = 7;
+
+export type MoveResult = { error: string } | { swapped: PlannedSession[]; warning?: string };
+
+/**
+ * «Hoy no puedo la tirada, pero mañana sí»: pasa una sesión a otro día de los próximos MOVE_DAYS.
+ * Si ese día ya hay sesión del mismo tipo (carrera o fuerza), se intercambian. No se tocan las carreras
+ * ni se mueve nada al día de una carrera o al anterior. Avisa si quedan dos sesiones fuertes seguidas.
+ */
+export function moveSession(plan: Plan, sessionId: string, to: string, today: string): MoveResult {
+  const all = plan.weeks.flatMap((w) => w.sessions);
+  const s = all.find((x) => x.id === sessionId);
+  if (!s) return { error: "Esa sesión ya no está en el plan." };
+  if (s.type === "race") return { error: "Las carreras no se cambian de día." };
+  if (s.date < today) return { error: "Esa sesión ya ha pasado." };
+  if (to === s.date) return { error: "Ya está ese día." };
+  if (to < today || diffDays(to, today) > MOVE_DAYS) return { error: "Elige un día de la próxima semana." };
+  const races = all.filter((x) => x.type === "race").map((x) => x.date);
+  if (races.some((r) => diffDays(r, to) === 0 || diffDays(r, to) === 1) || diffDays(plan.goal.date, to) < 2)
+    return { error: "Ese día es de carrera o el anterior: mejor no cargarlo." };
+  const weekOf = (d: string) => plan.weeks.find((w) => d >= w.start && d <= addDays(w.start, 6));
+  if (!weekOf(to)) return { error: "Ese día queda fuera del plan." };
+
+  // lo que hay ese día del mismo tipo pasa al día de la sesión (intercambio)
+  const isStrength = s.type === "strength";
+  const swapped = all.filter((x) => x !== s && x.date === to && (x.type === "strength") === isStrength && x.type !== "race");
+  const from = s.date;
+  const place = (x: PlannedSession, d: string) => {
+    for (const w of plan.weeks) w.sessions = w.sessions.filter((y) => y !== x);
+    // se recuerda el día que le tocaba (para enseñarlo); si vuelve a él, ya no está movida
+    const original = x.movedFrom ?? x.date;
+    if (original === d) delete x.movedFrom;
+    else x.movedFrom = original;
+    x.date = d;
+    weekOf(d)!.sessions.push(x);
+  };
+  place(s, to);
+  for (const x of swapped) place(x, from);
+  for (const w of plan.weeks) {
+    w.sessions.sort((a, b) => a.date.localeCompare(b.date) || (a.type === "strength" ? 1 : -1));
+    w.targetKm = Math.round(w.sessions.reduce((t, y) => t + y.distanceKm, 0));
+  }
+
+  // dos sesiones fuertes seguidas: se avisa, pero se respeta lo que elige el corredor
+  const moved = [s, ...swapped].filter((x) => isHardSession(x.type));
+  const now = plan.weeks.flatMap((w) => w.sessions);
+  const clash = moved
+    .map((x) => [x, now.find((y) => y !== x && isHardSession(y.type) && Math.abs(diffDays(y.date, x.date)) === 1)] as const)
+    .find(([, y]) => y);
+  const warning = clash ? `Quedan seguidas «${clash[0].title}» y «${clash[1]!.title}», dos sesiones fuertes: tómate la segunda con calma o cambia otra.` : undefined;
+  return { swapped, ...(warning ? { warning } : {}) };
+}
+
 /** Días suaves tras competir a tope: uno por cada 3 km de carrera (Daniels). */
 export const recoveryDaysAfter = (km: number) => Math.max(1, Math.round(km / 3));
 

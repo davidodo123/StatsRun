@@ -6,7 +6,7 @@ import { after } from "next/server";
 import { updateDb, readDbNow as getDb } from "@/lib/db";
 import { VIEW_TAG, requireUserId } from "@/lib/session";
 import { generateDemoActivities } from "@/lib/demo";
-import { applyBlockedDates, applyTuneUpRaces, availableDaysOf, generateSeason, planChanges } from "@/lib/engine/planner";
+import { applyBlockedDates, applyTuneUpRaces, availableDaysOf, generateSeason, moveSession, planChanges } from "@/lib/engine/planner";
 import { computeStats } from "@/lib/engine/stats";
 import { profileAverages } from "@/lib/engine/profile";
 import { areFriends, getFriends } from "@/lib/auth";import { findRace } from "@/lib/races";
@@ -15,7 +15,7 @@ import { fmtNum, parsePace, parseTime } from "@/lib/format";
 import { createHealthToken, revokeHealthToken } from "@/lib/healthToken";
 import { mergeHealth, parseHealthPayload, todayMadrid } from "@/lib/health";
 import { applyStrengthRoutines, routinesForPlan } from "@/lib/strength/routinePlan";
-import { addDays, diffDays, todayLocal } from "@/lib/dates";
+import { WEEKDAYS, addDays, diffDays, shortDate, todayLocal, weekday } from "@/lib/dates";
 import type { Db, Feel, Focus, Goal, Level, Plan, Profile, Sex, TuneUpRace } from "@/lib/types";
 import { downloadCmCourse, findCmRace } from "@/lib/cruzandolametaStore";
 import { parseCourseFile } from "@/lib/importers/course";
@@ -424,6 +424,33 @@ export async function markUnavailableDates(list: string[]): Promise<FormState> {
   return { ok: true, message: `Anotado.${what ? ` Sesiones ${what}.` : ""}${coachConfig().configured ? " La IA está rehaciendo tu rutina." : ""}` };
 }
 
+/** «Cambiar de día»: pasa una sesión a otro día de la próxima semana (si ya hay otra, se intercambian). Se puede deshacer. */
+export async function moveSessionDay(_: FormState, fd: FormData): Promise<FormState> {
+  const id = String(fd.get("session") ?? "");
+  const to = String(fd.get("to") ?? "");
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(to)) return { error: "Elige un día." };
+  const today = todayLocal();
+  // se asigna dentro de updateDb: el tipo, explícito (si no, TypeScript lo deja en el valor inicial)
+  let result = { error: "No tienes plan." } as ReturnType<typeof moveSession>;
+  let title = "";
+  let from = "";
+  await updateDb((db) => {
+    if (!db.plan) return;
+    const before = structuredClone(db.plan);
+    const s = db.plan.weeks.flatMap((w) => w.sessions).find((x) => x.id === id);
+    title = s?.title ?? "";
+    from = s?.date ?? "";
+    result = moveSession(db.plan, id, to, today);
+    if ("error" in result) return;
+    db.lastSkip = { at: new Date().toISOString(), dates: [from], plan: before, unavailableDates: db.unavailableDates, move: { title, from, to } };
+  });
+  if ("error" in result) return { error: result.error };
+  refresh();
+  const day = (d: string) => `${WEEKDAYS[weekday(d)].toLowerCase()} ${shortDate(d)}`;
+  const swap = result.swapped.length ? ` y ${result.swapped.map((x) => `«${x.title}»`).join(", ")} pasa al ${day(from)}` : "";
+  return { ok: true, message: `«${title}», al ${day(to)}${swap}.${result.warning ? ` ${result.warning}` : ""}` };
+}
+
 /** "No pude hacerla": marca el día de una sesión (pasada o futura) como no disponible. */
 export async function skipSession(fd: FormData): Promise<void> {
   const date = String(fd.get("date") ?? "");
@@ -432,7 +459,7 @@ export async function skipSession(fd: FormData): Promise<void> {
   await markUnavailable({}, f);
 }
 
-/** Deshace el último «no puedo ese día»: vuelven el plan y los días tal como estaban. */
+/** Deshace el último «no puedo ese día» o «cambiar de día»: vuelven el plan y los días tal como estaban. */
 export async function undoSkip(): Promise<void> {
   await updateDb((db) => {
     const last = db.lastSkip;

@@ -204,7 +204,7 @@ async function Content({ searchParams }: { searchParams: PageProps<"/plan/actual
                       </form>
                     ))}
                   {w.sessions.map((s) => (
-                    <SessionCard key={s.id} s={s} match={matches?.get(s.id)} />
+                    <SessionCard key={s.id} s={s} match={matches?.get(s.id)} today={today} />
                   ))}
                 </div>
               </details>

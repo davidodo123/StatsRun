@@ -5,6 +5,9 @@ import { fmtPaceRange } from "@/lib/format";
 import { WEEKDAYS, shortDate, weekday } from "@/lib/dates";
 import { Status } from "./ui";
 import { SkipDayButton } from "./SkipDayButton";
+import { MoveSessionButton } from "./MoveSessionButton";
+import { MOVE_DAYS } from "@/lib/engine/planner";
+import { addDays } from "@/lib/dates";
 import { Icon } from "./icons";
 
 type Kind = "suave" | "calidad" | "larga" | "fuerza" | "carrera";
@@ -48,18 +51,21 @@ export function SessionCard({
   compact,
   showDate = true,
   readOnly,
+  today,
 }: {
   s: PlannedSession;
   match?: SessionMatch;
   compact?: boolean;
   showDate?: boolean;
   readOnly?: boolean; // plan de un amigo: sin botones de registrar ni reprogramar
+  today?: string; // con él, «Cambiar de día» en las sesiones de hoy a una semana vista
 }) {
   const linked = match?.activities.find((a) => a.sessionId === s.id);
   const canLog = !readOnly && match !== undefined && match.status !== "upcoming";
   const kind = KIND_STYLE[SESSION_KIND[s.type]];
   const st = match ? STATUS[match.status] : undefined;
   const dayLabel = `${WEEKDAYS[weekday(s.date)].toLowerCase()} ${shortDate(s.date)}`;
+  const canMove = !readOnly && today && s.type !== "race" && match && (match.status === "today" || (match.status === "upcoming" && !compact)) && s.date <= addDays(today, MOVE_DAYS);
   return (
     <article className="relative flex gap-3 overflow-hidden rounded-xl border border-line bg-surface p-3 pl-4">
       <span className={`absolute inset-y-0 left-0 w-1 ${kind.bar}`} aria-hidden />
@@ -73,6 +79,7 @@ export function SessionCard({
           <span>· {kind.label}</span>
           {s.zone && <span>· {s.zone}</span>}
           {s.aiAdjusted && <span className="text-accent">· Ajustada por IA</span>}
+          {s.movedFrom && <span>· Cambiada (era el {WEEKDAYS[weekday(s.movedFrom)].slice(0, 3).toLowerCase()} {shortDate(s.movedFrom)})</span>}
         </div>
         <h3 className="mt-0.5 font-semibold leading-snug">{s.title}</h3>
         <p className="text-xs text-ink-2 tabular">
@@ -96,8 +103,11 @@ export function SessionCard({
             </ul>
           </details>
         )}
-        {!readOnly && match?.status === "upcoming" && s.type !== "race" && !compact && (
-          <SkipDayButton date={s.date} dayLabel={dayLabel} label="No puedo ese día" className="mt-2" />
+        {((!readOnly && match?.status === "upcoming" && s.type !== "race" && !compact) || canMove) && (
+          <div className="mt-2 flex flex-wrap items-start gap-x-4 gap-y-1">
+            {!readOnly && match?.status === "upcoming" && s.type !== "race" && !compact && <SkipDayButton date={s.date} dayLabel={dayLabel} label="No puedo ese día" />}
+            {canMove && <MoveSessionButton sessionId={s.id} date={s.date} today={today} days={MOVE_DAYS} />}
+          </div>
         )}
         {(st || canLog || (match && match.activities.length > 0)) && (
           <div className="mt-2 flex flex-wrap items-center gap-3">

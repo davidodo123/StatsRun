@@ -858,3 +858,12 @@ David preguntó si se puede «entrenar» una IA para la app. Opciones: (1) instr
 - **Lo que no se actualiza solo**: lo que se guarda fuera de una acción (el atajo de Salud del iPhone, la IA que ajusta el plan en segundo plano) se ve al caducar la caché (5 min) o al **tirar para actualizar**. Antes eran 30 s.
 - Las acciones y las rutas de API siguen leyendo en directo (`readDbNow`, `requireUserId`).
 - **Código sin usar** (con knip): fuera `SyncButton` y las acciones `syncStrava`/`disconnectStrava` (Strava ya no tiene botón), `WEEKDAYS_SHORT` y `goalPace`; 38 `export` que solo se usaban en su archivo. El JS del navegador está bien (lo mayor, React: 70 kB comprimido).
+
+## Cambiar una sesión de día
+*2026-10-23*
+
+- Lo pidió David para cualquier sesión, no solo la tirada: «hoy no puedo la tirada larga, pero mañana sí». Antes solo había «No puedo ese día», que quita el día y deja que el plan recoloque las sesiones donde quiera.
+- **Cómo funciona** (`moveSession` en `planner.ts`, acción `moveSessionDay`): en cada sesión de hoy a 7 días, «Cambiar de día» enseña los próximos días; al elegir uno, la sesión pasa a ese día. Si ese día ya hay otra del mismo tipo (carrera con carrera, fuerza con fuerza), se intercambian. En Inicio y Perfil (tarjetas pequeñas) solo en la sesión de hoy; en el plan, en todas las de la próxima semana.
+- **Límites**: las carreras no se mueven; nada al día de una carrera ni al anterior; solo días de la próxima semana y dentro del plan. Si quedan dos sesiones fuertes seguidas, se hace igual (lo decide el corredor) pero lo avisa.
+- La sesión enseña «Cambiada (era el vie 23 oct)» (`movedFrom`), y sale el aviso con **Deshacer** (el mismo de «No puedo ese día», con `lastSkip.move`).
+- No se llama a la IA, y la IA ya no cambia la fecha de una sesión cambiada por el atleta (se lo dice el contexto, `cambiadaPorElAtleta`, y el código lo impide).

@@ -128,7 +128,7 @@ FUERZA ("strength", distanceKm 0) para corredores:
 
 REGLAS:
 - Solo puedes tocar las sesiones de "sesionesAAjustar" (mismo "id"). No inventes ids.
-- Puedes cambiar la fecha de una sesión ("date"), pero SOLO a una de "fechasLibres". Nunca dos sesiones de carrera el mismo día ni dos de fuerza el mismo día (fuerza + carrera el mismo día sí).
+- Puedes cambiar la fecha de una sesión ("date"), pero SOLO a una de "fechasLibres" y nunca la de una sesión con "cambiadaPorElAtleta": ese día lo eligió él. Nunca dos sesiones de carrera el mismo día ni dos de fuerza el mismo día (fuerza + carrera el mismo día sí).
 - Solo puedes quitar una sesión ({"id","remove":true}) si el diagnóstico es "descargar" o "recuperar". Con "progresar" o "mantener" NO quites ninguna: el atleta quiere entrenar todos sus días; si hay que bajar carga, acorta la sesión (menos km o minutos) o hazla más suave.
 - Las SENSACIONES ("sensacion", "comoSeSintio") comparadas con "sesionPlanificada" explican el diagnóstico: cítalas en "summary" (ej.: "Como el jueves las series se te hicieron fáciles…").
 - "desacoplePct" (desacople aeróbico de las tiradas largas): < 5 % buena base aeróbica; 5-10 % mejorable; > 10 % la base aún no aguanta esa duración, así que no alargues la tirada larga y mete más rodaje suave. Con desnivel o calor sube solo, sin ser falta de base.
@@ -271,6 +271,7 @@ function buildContext(db: Db, today: string) {
         id: s.id, date: s.date, dia: WEEKDAYS[weekday(s.date)], fase: w?.phase, semanaDescarga: w?.recovery, type: s.type, title: s.title,
         description: s.description, steps: s.steps, distanceKm: s.distanceKm, durationMin: s.durationMin,
         tipoFuerza: s.strengthKind, rutina: s.routineId && db.routines?.find((r) => r.id === s.routineId)?.name,
+        ...(s.movedFrom ? { cambiadaPorElAtleta: true } : {}),
       };
     }),
   };
@@ -424,7 +425,8 @@ async function run(uid: string, request?: string): Promise<CoachResult> {
         const strength = s.type === "strength";
         let date = s.date;
         const wanted = typeof prop.date === "string" ? prop.date.slice(0, 10) : s.date;
-        if (wanted !== s.date && free.has(wanted) && !isRunOn(wanted, strength)) date = wanted;
+        // el día de una sesión que el atleta cambió con «Cambiar de día» no se toca
+        if (wanted !== s.date && !s.movedFrom && free.has(wanted) && !isRunOn(wanted, strength)) date = wanted;
         const next = applyAi(s, prop, date, built.readiness.limits);
         // si choca con otra sesión (o pone dos duras seguidas), conservar la fecha original
         if (isRunOn(next.date, strength) || (!strength && isHardSession(next.type) && hardOn(next.date) && next.date !== s.date)) next.date = s.date;

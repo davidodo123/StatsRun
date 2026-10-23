@@ -284,7 +284,7 @@ function Preparacion({ db, matches, today }: { db: Db; matches?: Map<string, Ses
         <div className="mt-3 space-y-2">
           <UndoSkip db={db} today={today} className="" />
           {next.map((s) => (
-            <SessionCard key={s.id} s={s} match={matches?.get(s.id)} compact />
+            <SessionCard key={s.id} s={s} match={matches?.get(s.id)} compact today={today} />
           ))}
         </div>
       )}

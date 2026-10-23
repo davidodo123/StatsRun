@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { raceTimeFromVdot, trainingPaces, vdotFromRace, riegel, hrZones } from "./physiology";
 import { fitnessSeries, acwr } from "./load";
-import { applyBlockedDates, applyTuneUpRaces, availableDaysOf, generatePlan, isHardSession, matchPlan, planChanges, recoveryDaysAfter } from "./planner";
+import { applyBlockedDates, applyTuneUpRaces, availableDaysOf, generatePlan, isHardSession, matchPlan, moveSession, planChanges, recoveryDaysAfter } from "./planner";
 import { computeStats } from "./stats";
 import { generateDemoActivities } from "../demo";
 import type { Profile } from "../types";
@@ -202,6 +202,52 @@ describe("Disponibilidad", () => {
     const long = w.sessions.find((s) => s.type === "long")!;
     applyBlockedDates(plan, [long.date], [2, 5, 6], today);
     expect(w.sessions.some((s) => s.type === "long")).toBe(true);
+  });
+
+  describe("cambiar una sesión de día", () => {
+    const p = { ...profile, availableDays: [1, 3, 5, 6], daysPerWeek: 4, longRunDay: 6 };
+    const runs = (plan: ReturnType<typeof generatePlan>) => plan.weeks.flatMap((w) => w.sessions).filter((s) => s.type !== "strength");
+
+    it("pasa la tirada a un día libre y la deja en su semana", () => {
+      const plan = generatePlan({ ...base, profile: p });
+      const long = plan.weeks[0].sessions.find((s) => s.type === "long")!;
+      const free = [0, 1, 2, 3, 4, 5].map((d) => addDays(plan.weeks[0].start, d)).find((d) => d >= today && !runs(plan).some((s) => s.date === d))!;
+      const r = moveSession(plan, long.id, free, today);
+      expect("error" in r).toBe(false);
+      expect(long.date).toBe(free);
+      expect(plan.weeks[0].sessions).toContain(long);
+    });
+
+    it("si ese día hay otra sesión, se intercambian", () => {
+      const plan = generatePlan({ ...base, profile: p });
+      const [a, b] = runs(plan).filter((s) => s.date >= today && s.date <= addDays(today, 7));
+      const [da, db] = [a.date, b.date];
+      const r = moveSession(plan, a.id, db, today);
+      expect("swapped" in r && r.swapped.map((x) => x.id)).toEqual([b.id]);
+      expect(a.date).toBe(db);
+      expect(b.date).toBe(da);
+      expect(new Set(runs(plan).map((s) => s.date)).size).toBe(runs(plan).length);
+    });
+
+    it("avisa si quedan dos sesiones fuertes seguidas", () => {
+      const plan = generatePlan({ ...base, profile: p });
+      const week = plan.weeks.find((w) => w.start >= today)!;
+      const long = week.sessions.find((s) => s.type === "long")!;
+      const hard = week.sessions.find((s) => s !== long && isHardSession(s.type))!;
+      const next = addDays(hard.date, 1);
+      const r = moveSession(plan, long.id, next, addDays(week.start, -1));
+      expect("warning" in r && r.warning).toMatch(/seguidas/);
+    });
+
+    it("no mueve carreras, ni sesiones pasadas, ni más allá de una semana", () => {
+      const plan = generatePlan({ ...base, profile: p });
+      const race = runs(plan).find((s) => s.type === "race")!;
+      expect(moveSession(plan, race.id, addDays(race.date, -3), addDays(race.date, -5))).toHaveProperty("error");
+      const s = runs(plan).find((x) => x.date >= today)!;
+      expect(moveSession(plan, s.id, addDays(today, 9), today)).toHaveProperty("error");
+      expect(moveSession(plan, s.id, s.date, today)).toHaveProperty("error");
+      expect(moveSession(plan, s.id, addDays(s.date, 1), addDays(s.date, 1))).toHaveProperty("error");
+    });
   });
 });
 

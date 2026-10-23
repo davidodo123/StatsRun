@@ -159,6 +159,7 @@ export interface PlannedSession {
   aiAdjusted?: boolean; // contenido reescrito por el entrenador IA
   strengthKind?: "pierna" | "posterior" | "superior" | "completo" | "pecho" | "espalda" | "hombro"; // fuerza: qué trabaja
   routineId?: string; // fuerza: rutina del usuario que toca ese día
+  movedFrom?: string; // «Cambiar de día»: el día que tenía en el plan
 }
 
 export type Phase = "base" | "construccion" | "especifico" | "taper";
@@ -198,6 +199,7 @@ export interface StravaAuth {
 export interface LastSkip {
   at: string;
   dates: string[];
+  move?: { title: string; from: string; to: string }; // si fue «Cambiar de día» y no «No puedo ese día»
   plan?: Plan;
   unavailableDates?: string[];
 }
