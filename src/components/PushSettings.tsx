@@ -28,7 +28,10 @@ export function PushSettings({ publicKey, endpoints, restDays }: { publicKey?: s
         // en el iPhone, Safari solo deja avisos a la web instalada en la pantalla de inicio
         return setState(/iPhone|iPad/.test(navigator.userAgent) && !standalone ? "instalar" : "sin-soporte");
       if (Notification.permission === "denied") return setState("denegado");
-      const sub = await (await navigator.serviceWorker.ready).pushManager.getSubscription();
+      const reg = await navigator.serviceWorker.ready;
+      // que coja ya el service worker nuevo si lo hay (el que enseña los avisos)
+      reg.update().catch(() => {});
+      const sub = await reg.pushManager.getSubscription();
       setEndpoint(sub?.endpoint);
       setState(sub && endpoints.includes(sub.endpoint) ? "activo" : "apagado");
     })().catch(() => setState("sin-soporte"));
@@ -61,8 +64,12 @@ export function PushSettings({ publicKey, endpoints, restDays }: { publicKey?: s
     });
   const test = () =>
     start(async () => {
-      const res = await sendTestPush();
-      setNote(res.error ? { ok: false, text: res.error } : { ok: true, text: res.message ?? "Enviado." });
+      try {
+        const res = await sendTestPush();
+        setNote(res.error ? { ok: false, text: res.error } : { ok: true, text: res.message ?? "Enviado." });
+      } catch (e) {
+        setNote({ ok: false, text: `Error al enviar: ${(e as Error).message}` });
+      }
     });
 
   if (!publicKey) return <p className="text-sm text-ink-2">Los avisos aún no están configurados en el servidor.</p>;
@@ -93,7 +100,7 @@ export function PushSettings({ publicKey, endpoints, restDays }: { publicKey?: s
           </label>
           <div className="flex flex-wrap gap-2">
             <button type="button" className="btn" onClick={test} disabled={pending}>
-              {pending ? "Enviando…" : "Enviar uno de prueba"}
+              {pending ? "Enviando…" : "Enviar uno de prueba (en 10 s)"}
             </button>
             <button type="button" className="btn btn-ghost" onClick={disable} disabled={pending}>
               Desactivar

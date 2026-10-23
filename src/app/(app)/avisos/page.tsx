@@ -6,6 +6,8 @@ import { getDb } from "@/lib/db";
 import { pushPublicKey } from "@/lib/push";
 
 export const metadata: Metadata = { title: "Avisos" };
+// el aviso de prueba sale a los 10 s (las acciones de la página heredan este límite)
+export const maxDuration = 30;
 
 export default function AvisosPage() {
   return (
