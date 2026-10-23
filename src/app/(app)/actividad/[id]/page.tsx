@@ -10,6 +10,7 @@ import { activityPhotoUrl } from "@/lib/photos";
 import { SPORT_LABEL, TagChips, withText } from "@/components/ActivityItem";
 import { RouteReplay } from "@/components/RouteReplay";
 import { ShareActivityButton } from "@/components/ShareActivityButton";
+import { shareVideo } from "@/lib/shareCard";
 import { tagsForDb } from "@/lib/engine/tags";
 import { estimateVdot } from "@/lib/engine/stats";
 import { decouplingLabel } from "@/lib/engine/decoupling";
@@ -68,7 +69,7 @@ async function Content({ params, searchParams }: { params: PageProps<"/actividad
         }
         action={
           <div className="flex flex-wrap gap-2">
-            {mine && <ShareActivityButton id={a.id} name={a.name} />}
+            {mine && <ShareActivityButton id={a.id} name={a.name} video={shareVideo(db, raw)} />}
             {mine && (
               <Link href={`/registrar?editar=${encodeURIComponent(a.id)}`} className="btn btn-ghost">
                 Editar

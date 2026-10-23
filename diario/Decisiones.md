@@ -877,3 +877,12 @@ David preguntó si se puede «entrenar» una IA para la app. Opciones: (1) instr
 - **Google Play**: el servicio en primer plano de tipo ubicación se declara en Play Console (para qué se usa y un vídeo corto). Hay que hacerlo antes de publicar.
 - **iPhone**: sigue sin poder (una web no recibe la ubicación con la pantalla bloqueada); pantalla encendida.
 - Compilar: `cd android` y `gradlew assembleDebug` con `JAVA_HOME` al JDK 21 y `ANDROID_HOME` al SDK (no hay `local.properties`).
+
+## Sticker y vídeo para compartir
+*2026-10-23*
+
+- Opciones que se le dieron a David: sticker transparente, JPEG, vídeo con el recorrido animado o varias plantillas. Eligió **sticker** y **vídeo**.
+- **Abrir directamente las historias de Instagram con el sticker encima de tu foto** (como Strava) no se puede desde una web: Strava lo hace con una función de su app nativa. Lo que sí funciona en el iPhone: **Copiar sticker** y, en la historia con tu foto, mantener pulsado → «Pegar»; Instagram lo pone como sticker (se mueve y se escala). Si el navegador no deja copiar imágenes, se comparte el PNG (y se añade con el sticker «Foto»).
+- **Sticker** (`/api/compartir/[id]?formato=sticker`): PNG sin fondo de 1080 de ancho con el recorrido (con borde blanco) o el cuerpo con los músculos (gris claro), y las tres cifras en blanco con sombra, para que se lean sobre cualquier foto.
+- **Vídeo** (`components/routeVideo.ts`): se hace en el móvil, sin servidor. Un `<canvas>` de 720 × 1280 dibuja la línea en ~4 s y después salen los datos; `MediaRecorder` lo graba en MP4 (iPhone y Chrome de Android; Instagram no acepta WebM). Tarda lo que dura (~6 s) y pesa ~350 kB. Solo en actividades con recorrido; el servidor pasa los puntos ya normalizados (`shareVideo`, como mucho 400).
+- La imagen de historia de siempre sigue igual (PNG 1080 × 1920).

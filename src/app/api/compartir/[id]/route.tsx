@@ -1,19 +1,58 @@
 import { ImageResponse } from "next/og";
 import { getUserId } from "@/lib/session";
 import { readDbNow as getDb } from "@/lib/db";
-import { ACCENT, shareCard } from "@/lib/shareCard";
+import { ACCENT, shareCard, type ShareCard } from "@/lib/shareCard";
 import { WEEKDAYS, weekday } from "@/lib/dates";
 
 const MONTHS = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
 
-// Imagen de historia (1080 × 1920) de un entreno propio, para compartir en Instagram o WhatsApp.
-export async function GET(_: Request, { params }: RouteContext<"/api/compartir/[id]">) {
+const LOGO = (
+  <svg width="56" height="56" viewBox="0 0 64 64" style={{ marginRight: 18 }}>
+    <rect width="64" height="64" rx="14" fill={ACCENT} />
+    <path d="M14 46l12-20 8 12 6-8 10 16z" fill="#fff" />
+  </svg>
+);
+// texto blanco legible encima de cualquier foto
+const SHADOW = "0 2px 10px rgba(0,0,0,0.55)";
+
+/** Sticker sin fondo (1080 de ancho): el dibujo y los datos grandes, para pegarlo en una historia encima de una foto. */
+function sticker(c: ShareCard) {
+  const strength = c.kind === "fuerza";
+  const stats = c.stats.slice(0, 3);
+  return new ImageResponse(
+    (
+      <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", alignItems: "center", color: "#fff", padding: "30px 40px" }}>
+        {c.image ? (
+          // eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text -- imagen generada (Satori)
+          <img src={c.image} width={strength ? 700 : 960} height={strength ? 735 : 760} style={{ objectFit: "contain" }} />
+        ) : null}
+        <div style={{ display: "flex", width: "100%", justifyContent: "space-around", marginTop: c.image ? 30 : 0 }}>
+          {stats.map((st) => (
+            <div key={st.label} style={{ display: "flex", flexDirection: "column", alignItems: "center", textShadow: SHADOW }}>
+              <div style={{ fontSize: 30, letterSpacing: 2, textTransform: "uppercase" }}>{st.label}</div>
+              <div style={{ fontSize: stats.length > 2 ? 76 : 96, fontWeight: 700, letterSpacing: -1 }}>{st.value}</div>
+            </div>
+          ))}
+        </div>
+        <div style={{ display: "flex", alignItems: "center", marginTop: 26, fontSize: 30, letterSpacing: 3, textShadow: SHADOW }}>
+          {LOGO}
+          RUN-IN-OUT
+        </div>
+      </div>
+    ),
+    { width: 1080, height: c.image ? (strength ? 1110 : 1140) : 380, headers: { "Cache-Control": "private, no-store" } },
+  );
+}
+
+// Imagen de un entreno propio para Instagram o WhatsApp: de historia (1080 × 1920) o, con ?formato=sticker, sin fondo.
+export async function GET(req: Request, { params }: RouteContext<"/api/compartir/[id]">) {
   const uid = await getUserId();
   if (!uid) return Response.json({ error: "Inicia sesión" }, { status: 401 });
   const { id } = await params;
   const db = await getDb(uid);
   const a = db.activities.find((x) => x.id === decodeURIComponent(id));
   if (!a) return Response.json({ error: "No existe" }, { status: 404 });
+  if (new URL(req.url).searchParams.get("formato") === "sticker") return sticker(shareCard(db, a, "sticker"));
   const c = shareCard(db, a);
   const [y, m, d] = c.date.split("-").map(Number);
   const date = `${WEEKDAYS[weekday(c.date)]} ${d} de ${MONTHS[m - 1]} de ${y}`;
@@ -23,10 +62,7 @@ export async function GET(_: Request, { params }: RouteContext<"/api/compartir/[
     (
       <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", background: "#121211", color: "#f4f3ef", padding: "110px 80px 90px" }}>
         <div style={{ display: "flex", alignItems: "center", fontSize: 34, color: "#a9a7a0", letterSpacing: 2 }}>
-          <svg width="56" height="56" viewBox="0 0 64 64" style={{ marginRight: 18 }}>
-            <rect width="64" height="64" rx="14" fill={ACCENT} />
-            <path d="M14 46l12-20 8 12 6-8 10 16z" fill="#fff" />
-          </svg>
+          {LOGO}
           RUN-IN-OUT
         </div>
         <div style={{ marginTop: 70, fontSize: 36, color: "#a9a7a0" }}>{date}</div>
