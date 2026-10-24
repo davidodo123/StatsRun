@@ -49,7 +49,10 @@ export async function watchGps(onPoint: (p: GpsPoint) => void, onError: (e: GpsE
     return {
       stop: () => {
         stopped = true;
-        BackgroundGeolocation.stop().catch(() => {});
+        BackgroundGeolocation.stop()
+          .catch(() => {})
+          .then(() => runNotification()?.then((p) => p.clear()))
+          .catch(() => {});
       },
     };
   }
@@ -70,6 +73,22 @@ export async function watchGps(onPoint: (p: GpsPoint) => void, onError: (e: GpsE
     { enableHighAccuracy: true, maximumAge: 0, timeout: 30_000 },
   );
   return { stop: () => navigator.geolocation.clearWatch(id) };
+}
+
+// complemento propio del APK (RunNotificationPlugin.java): pone los datos en la notificación «Grabando carrera»
+type RunNotification = { update: (o: { title: string; text: string; chronoBase?: number }) => Promise<void>; clear: () => Promise<void> };
+let runNotif: Promise<RunNotification> | undefined;
+const runNotification = () =>
+  capacitor()?.isPluginAvailable?.("RunNotification") ? (runNotif ??= import("@capacitor/core").then(({ registerPlugin }) => registerPlugin<RunNotification>("RunNotification"))) : undefined;
+
+/**
+ * Tiempo, km y ritmo medio en la notificación y en la pantalla de bloqueo (Android, mientras graba en segundo plano).
+ * `chronoBase`: la hora a la que el cronómetro marcaría 0 (el inicio más las pausas); el reloj lo lleva Android.
+ */
+export function showRunData(title: string, text: string, chronoBase: number) {
+  runNotification()
+    ?.then((p) => p.update({ title, text, chronoBase }))
+    .catch(() => {});
 }
 
 /** Si al usuario se le negó el permiso en Android, abre los ajustes de la app. */

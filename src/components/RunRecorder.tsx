@@ -6,7 +6,7 @@ import { acceptPoint, trackStats, type GpsPoint } from "@/lib/gpsTrack";
 import { project } from "@/lib/route";
 import { fmtDuration, fmtKm, fmtPace } from "@/lib/format";
 import { Icon } from "./icons";
-import { canRecordInBackground, openLocationSettings, watchGps, type GpsError } from "./gpsSource";
+import { canRecordInBackground, openLocationSettings, showRunData, watchGps, type GpsError } from "./gpsSource";
 
 type Sport = "run" | "walk" | "ride";
 interface Rec {
@@ -40,6 +40,7 @@ const localIso = (ms: number) => {
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
 };
 const SPORT_ICON = { run: "run", walk: "walk", ride: "bike" } as const;
+const SPORT_TITLE = { run: "Corriendo", walk: "Caminando", ride: "En bici" } as const;
 const SPORTS: [Sport, string][] = [
   ["run", "Correr"],
   ["walk", "Caminar"],
@@ -142,6 +143,19 @@ export function RunRecorder() {
   }, [recording, native]);
 
   const stats = useMemo(() => trackStats(rec?.points ?? []), [rec?.points]);
+
+  // Android con la pantalla apagada: km y ritmo medio en la notificación (como mucho cada 3 s; el tiempo lo cuenta Android)
+  const lastNotif = useRef(0);
+  useEffect(() => {
+    if (!background || !rec) return;
+    const t = Date.now();
+    if (t - lastNotif.current < 3000 && rec.points.length > 1) return;
+    lastNotif.current = t;
+    const km = stats.distanceM / 1000;
+    const pace = km >= 0.05 ? `${fmtPace(stats.movingSec / km)} /km` : "–";
+    showRunData(SPORT_TITLE[rec.sport], `${fmtKm(km, 2)} km · ritmo medio ${pace}`, rec.startedAt + rec.pausedMs);
+  }, [background, rec, stats]);
+
   if (!ready) return <div className="h-64 animate-pulse rounded-2xl bg-surface" />;
 
   const signal = fix && now - fix.at < 15_000 ? fix.acc : undefined;

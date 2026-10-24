@@ -945,3 +945,12 @@ Fuentes: screensdesign.com, posthog.com/pricing, revenuecat.com/pricing, revenue
 
 - Pedido por David: si la sesión ya pasó (uno o dos días), no tiene sentido decir que no puedes. Se quita el botón «No pude → reajustar» de las sesiones no hechas; queda «Hoy no puedo» (hoy) y «No puedo ese día» (próximos).
 - El servidor también lo rechaza (`skipSession` y el formulario de días sin entrenar). La sesión pasada queda como «No realizado» y la IA ya la tiene en cuenta al reajustar.
+
+## Datos de la carrera en la notificación (Android)
+*2026-10-24*
+
+- Complemento propio en el APK, `RunNotificationPlugin.java` (registrado en `MainActivity`): reescribe la notificación «Grabando carrera» del servicio de ubicación con **el mismo id (28351) y el mismo canal**, así no sale una segunda notificación, no suena y sigue siendo la del servicio en primer plano.
+- Título según el deporte («Corriendo», «Caminando», «En bici»), un **cronómetro que lleva Android** (sigue contando aunque la web tarde) y el texto «km · ritmo medio». Visible en la pantalla de bloqueo (`VISIBILITY_PUBLIC`) y de categoría «entreno».
+- La web (`RunRecorder` → `showRunData` en `gpsSource.ts`) manda los km y el ritmo como mucho cada 3 s, solo mientras graba en segundo plano. Al pausar o terminar se para el servicio y se quita la notificación.
+- Descartado `@capacitor/local-notifications`: habría sido una segunda notificación, aparte de la del servicio. Tocar el código del complemento de ubicación se perdería al actualizarlo.
+- Para tenerlo hay que instalar un **APK nuevo**: el código nativo no llega con Vercel. iPhone: sigue sin poder hacerse desde la web.
