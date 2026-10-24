@@ -939,3 +939,9 @@ Fuentes: screensdesign.com, posthog.com/pricing, revenuecat.com/pricing, revenue
 - Arriba: el logo, el **Entrenador IA** (la estrella) y Amigos. Logros pasa a un botón en la cabecera del perfil (como en el ordenador).
 - Fuera el menú «Más»: Estadísticas, Carreras, Calculadoras, Sueño, Importar / demo y Cerrar sesión van en una cuadrícula de «Tú» (en el resumen del perfil). «Tú» se queda encendido dentro de esas secciones.
 - En el ordenador no cambia: barra lateral con todo.
+
+## «No puedo» solo para hoy o días futuros
+*2026-10-24*
+
+- Pedido por David: si la sesión ya pasó (uno o dos días), no tiene sentido decir que no puedes. Se quita el botón «No pude → reajustar» de las sesiones no hechas; queda «Hoy no puedo» (hoy) y «No puedo ese día» (próximos).
+- El servidor también lo rechaza (`skipSession` y el formulario de días sin entrenar). La sesión pasada queda como «No realizado» y la IA ya la tiene en cuenta al reajustar.

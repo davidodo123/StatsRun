@@ -133,8 +133,9 @@ export function SessionCard({
                 )
               ))}
             {st && <Status tone={st.tone}>{st.label}</Status>}
-            {!readOnly && s.type !== "race" && match && (match.status === "missed" || match.status === "today") && (
-              <SkipDayButton date={s.date} dayLabel={dayLabel} label={match.status === "missed" ? "No pude → reajustar" : "Hoy no puedo"} title="La IA reorganiza los próximos días" />
+            {/* solo hoy: un día que ya pasó no se puede mover */}
+            {!readOnly && s.type !== "race" && match?.status === "today" && (
+              <SkipDayButton date={s.date} dayLabel={dayLabel} label="Hoy no puedo" title="La IA reorganiza los próximos días" />
             )}
             {match && match.activities.length > 0 && s.type !== "strength" && (
               <span className="text-xs text-ink-2 tabular">

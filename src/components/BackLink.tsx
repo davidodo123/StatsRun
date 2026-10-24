@@ -34,7 +34,7 @@ export function NavHistory() {
  * «← Volver»: a la página de la app de la que se viene (la rutina, el entreno, el perfil…).
  * Si se ha entrado directamente (enlace o app recién abierta), a `href`.
  */
-export function BackLink({ href, className = "text-sm text-ink-2 hover:text-ink", children = "← Volver" }: { href: string; className?: string; children?: ReactNode }) {
+export function BackLink({ href, className = "mb-4 inline-block py-1 text-sm text-ink-2 hover:text-ink", children = "← Volver" }: { href: string; className?: string; children?: ReactNode }) {
   const router = useRouter();
   return (
     <Link

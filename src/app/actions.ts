@@ -401,6 +401,7 @@ export async function markUnavailable(_: FormState, fd: FormData): Promise<FormS
   const to = String(fd.get("to") ?? "") || from;
   if (!/^\d{4}-\d{2}-\d{2}$/.test(from) || !/^\d{4}-\d{2}-\d{2}$/.test(to) || to < from) return { error: "Revisa las fechas." };
   if (diffDays(to, from) > 60) return { error: "Como máximo 60 días seguidos." };
+  if (from < todayLocal()) return { error: "Elige hoy o un día que no haya pasado." };
   const dates: string[] = [];
   for (let d = from; d <= to; d = addDays(d, 1)) dates.push(d);
   return markUnavailableDates(dates);
@@ -451,9 +452,10 @@ export async function moveSessionDay(_: FormState, fd: FormData): Promise<FormSt
   return { ok: true, message: `«${title}», al ${day(to)}${swap}.${result.warning ? ` ${result.warning}` : ""}` };
 }
 
-/** "No pude hacerla": marca el día de una sesión (pasada o futura) como no disponible. */
+/** «Hoy no puedo» / «No puedo ese día»: marca el día de una sesión de hoy o futura como no disponible (los pasados ya no). */
 export async function skipSession(fd: FormData): Promise<void> {
   const date = String(fd.get("date") ?? "");
+  if (date < todayLocal()) return;
   const f = new FormData();
   f.set("from", date);
   await markUnavailable({}, f);
