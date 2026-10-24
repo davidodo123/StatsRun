@@ -917,3 +917,14 @@ Fuentes: screensdesign.com, posthog.com/pricing, revenuecat.com/pricing, revenue
 ### Avisos: sin pantalla, lo pregunta la app (mismo día)
 - David lo probó en su iPhone y funcionó; pidió quitar la opción del menú y que lo pida solo al instalar. El iPhone no deja pedir el permiso sin un toque, así que con la app instalada sale un aviso abajo: «¿Te aviso cada mañana de lo que te toca?» con **Activar** / **Ahora no** (no vuelve en 2 semanas). Con el permiso ya dado (móvil nuevo, o se reinstaló) se suscribe solo. Se quitan desde los ajustes del móvil. Fuera `/avisos` y la prueba; los días de descanso quedan sin aviso.
 - El de prueba no se veía porque **con la app abierta el iPhone no enseña el aviso** (Apple sí lo aceptaba). Por eso la prueba salía a los 10 s; ya no hace falta.
+
+## Rediseño: estilo Volt
+*2026-10-24*
+
+- Antes de tocar nada, copia del código en GitHub: etiqueta `antes-rediseno-2026-10-24` y rama `copia/antes-rediseno-2026-10-24` (commit `5feebef`). Volver: `git checkout antes-rediseno-2026-10-24` (o rehacer `main` desde ahí).
+- Se le enseñaron a David 10 diseños de Inicio en un lienzo (deportivo oscuro, coach claro, social, **Volt**, minimal suizo, datos de reloj, editorial, noche neón, pastel, brutalista). Eligió el **4, Volt** (al estilo Nike Run Club).
+- **Volt**: siempre oscuro (fuera el tema claro): fondo negro `#000`, tarjetas `#0f0f0f`, **lima `#d4ff3a`** en el dato principal, los botones y la pestaña activa (con texto negro encima). Gráficas: lima, cian `#3ec6ff` y gris claro.
+- **Letras**: **Anton** (condensada, un solo grosor) solo en títulos de página y cifras grandes, en mayúsculas; **Inter** en todo el texto. En 2026-10-20 David había descartado una condensada (Barlow) por alargada; esta vez la eligió él con el diseño, pero se limita a lo grande.
+- Botones en píldora y en negrita; etiquetas de los datos en mayúsculas pequeñas.
+- **Inicio** (`TodayHero`): «HOY TOCA» + el nombre de la sesión en grande (sin los km del final, que van debajo; más pequeño si es largo) + km gigantes en lima + ritmo, minutos y zona + **EMPEZAR** (correr → grabar con GPS; fuerza → el entreno de esa sesión) + la semana en barras (hecho en blanco, hoy en lima) + la cuenta atrás de la carrera. Sin sesión hoy: «DESCANSO» y la siguiente.
+- Pendiente: el icono de la app (hay que regenerar los PNG y reinstalar), las imágenes y el vídeo para compartir (siguen en naranja) y la pantalla de inicio de sesión.

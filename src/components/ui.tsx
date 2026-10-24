@@ -5,7 +5,7 @@ export function PageHeader({ title, subtitle, action }: { title: string; subtitl
   return (
     <header className="mb-6 flex flex-wrap items-end justify-between gap-3">
       <div>
-        <h1 className="font-display text-2xl leading-tight font-bold md:text-3xl">{title}</h1>
+        <h1 className="font-display text-4xl leading-none uppercase md:text-5xl">{title}</h1>
         {subtitle && <p className="mt-1 text-sm text-ink-2">{subtitle}</p>}
       </div>
       {action}
@@ -19,7 +19,7 @@ export function Card({ title, subtitle, children, className = "", action }: { ti
       {(title || action) && (
         <div className="mb-3 flex items-start justify-between gap-2">
           <div>
-            {title && <h2 className="text-sm font-semibold">{title}</h2>}
+            {title && <h2 className="text-xs font-bold tracking-widest text-ink-2 uppercase">{title}</h2>}
             {subtitle && <p className="mt-0.5 text-xs text-muted">{subtitle}</p>}
           </div>
           {action && <div className="shrink-0 whitespace-nowrap">{action}</div>}
@@ -73,8 +73,8 @@ export function Stat({
 }) {
   return (
     <div className="rounded-xl border border-line bg-surface px-3 py-2.5" title={hint}>
-      <p className="text-xs font-medium text-muted">{label}</p>
-      <p className={`mt-0.5 font-display text-2xl leading-tight font-bold tabular ${accent ? "text-accent" : ""}`}>
+      <p className="text-[11px] font-semibold tracking-wider text-muted uppercase">{label}</p>
+      <p className={`mt-1 font-display text-3xl leading-none tabular ${accent ? "text-accent" : ""}`}>
         {value}
         {unit && <span className="ml-1 font-sans text-sm font-medium text-ink-2">{unit}</span>}
       </p>

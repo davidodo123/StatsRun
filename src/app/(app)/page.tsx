@@ -9,7 +9,8 @@ import { acwrStatus, tsbStatus } from "@/lib/engine/load";
 import { vo2maxLabel } from "@/lib/engine/physiology";
 import { fmtDuration, fmtKm, fmtNum } from "@/lib/format";
 import { healthSummary } from "@/lib/health";
-import { addDays, diffDays, mondayOf, shortDate } from "@/lib/dates";
+import { WEEKDAYS, addDays, diffDays, mondayOf, shortDate, weekday } from "@/lib/dates";
+import { TodayHero } from "@/components/TodayHero";
 import { loadDemo } from "@/app/actions";
 import { StrengthHome } from "@/components/StrengthHome";
 import { focusOf } from "@/lib/types";
@@ -73,6 +74,17 @@ async function Dashboard() {
 
   return (
     <>
+      {plan ? (
+        <>
+          <p className="mb-5 flex justify-between text-xs font-semibold tracking-widest text-muted uppercase">
+            <span>
+              {WEEKDAYS[weekday(today)]} {shortDate(today)}
+            </span>
+            <span>Hola, {profile.name.split(" ")[0]}</span>
+          </p>
+          <TodayHero plan={plan} matches={matches} today={today} goal={goal} />
+        </>
+      ) : (
       <PageHeader
         title={`Hola, ${profile.name.split(" ")[0]}`}
         subtitle={
@@ -97,6 +109,7 @@ async function Dashboard() {
           </div>
         }
       />
+      )}
       <UndoSkip db={db} today={today} />
 
       <StatGroup className="md:grid-cols-3 lg:grid-cols-6">

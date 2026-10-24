@@ -10,7 +10,7 @@ App de entrenamiento para corredores: planes hacia una carrera, registro de entr
 
 ## Dónde estamos
 
-> [!info] Fase actual: **Fase 8 · Por hacer** (2026-10-23)
+> [!info] Fase actual: **Fase 8 · Por hacer** (2026-10-24): rediseño con el estilo Volt
 > Fase 7 hecha salvo el GPS con la pantalla apagada. En la 8: catálogo de fuerza ampliado (1.036 ejercicios); faltan las skills, que el Plan cargue más rápido y compartir en otro formato. Ver [[Roadmap]].
 
 ## Notas
@@ -23,7 +23,7 @@ App de entrenamiento para corredores: planes hacia una carrera, registro de entr
 - [[Suscripción]] — qué sería gratis y qué de pago, precio y cómo cobrar
 - [[Estudio entrenamiento]] — la ciencia en la que se basa la IA (Selye, Banister, 80/20, Pirámide)
 - **Diario** — una nota por día de trabajo (carpeta `Diario/`)
-  - [[2026-10-09]] · … · [[2026-10-23]]
+  - [[2026-10-09]] · … · [[2026-10-24]]
 
 ## Cómo usamos esto
 

@@ -1,11 +1,12 @@
 import type { Metadata, Viewport } from "next";
-import { Rubik } from "next/font/google";
+import { Anton, Inter } from "next/font/google";
 import "./globals.css";
 import { ServiceWorkerRegister } from "@/components/Pwa";
 import { NativeBridge } from "@/components/NativeBridge";
 
-// estilo deportivo con letra redondeada (David no quería la condensada, alargada): Rubik para todo
-const body = Rubik({ subsets: ["latin"], variable: "--font-body", display: "swap" });
+// estilo Volt (elegido por David 2026-10-24): Inter para el texto y Anton, condensada, solo en títulos y cifras grandes
+const body = Inter({ subsets: ["latin"], variable: "--font-body", display: "swap" });
+const heading = Anton({ subsets: ["latin"], weight: "400", variable: "--font-heading", display: "swap" });
 
 export const metadata: Metadata = {
   title: { default: "Run-In-Out", template: "%s · Run-In-Out" },
@@ -17,10 +18,7 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   // el color de las barras (no el del fondo): el iPhone lo usa para lo que queda fuera de la página
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#fcfcfb" },
-    { media: "(prefers-color-scheme: dark)", color: "#1a1a19" },
-  ],
+  themeColor: "#0f0f0f",
   width: "device-width",
   initialScale: 1,
   // a pantalla completa en iPhone (barra de estado translúcida): los márgenes usan env(safe-area-inset-*)
@@ -29,7 +27,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="es" className={`h-full antialiased ${body.variable}`}>
+    <html lang="es" className={`h-full antialiased ${body.variable} ${heading.variable}`}>
       <body className="flex min-h-full">
         {children}
         <ServiceWorkerRegister />

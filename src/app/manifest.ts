@@ -11,8 +11,8 @@ export default function manifest(): MetadataRoute.Manifest {
     scope: "/",
     display: "standalone",
     orientation: "portrait", // la app instalada en Android no gira (el iPhone no lo respeta: ver .rotate-hint)
-    background_color: "#1a1a19", // el de las barras: lo que el iPhone pinta fuera de la página (bajo la barra de abajo)
-    theme_color: "#eb6834",
+    background_color: "#0f0f0f", // el de las barras: lo que el iPhone pinta fuera de la página (bajo la barra de abajo)
+    theme_color: "#000000",
     lang: "es",
     categories: ["sports", "health", "fitness"],
     icons: [
