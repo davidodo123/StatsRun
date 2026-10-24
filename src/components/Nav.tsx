@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { logout } from "@/app/auth-actions";
 import type { Focus } from "@/lib/types";
 import { LogoMark } from "./LogoMark";
@@ -27,6 +27,7 @@ const STRENGTH_ITEMS = [
   ITEMS[2],
   { href: "/entrenador", label: "Entrenador", icon: "M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3z" },
   { href: "/fuerza/entreno", label: "Entrenar", icon: "M12 5v14M5 12h14" },
+  { href: "/fuerza/ejercicios", label: "Ejercicios", icon: "M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01" },
   ...ITEMS.filter((i) => ["/amigos", "/perfil", "/herramientas", "/sueno", "/registrar", "/ajustes"].includes(i.href)),
 ];
 const itemsFor = (focus?: Focus) => (focus === "fuerza" ? STRENGTH_ITEMS : ITEMS);
@@ -39,13 +40,12 @@ function Icon({ d, className = "h-5 w-5" }: { d: string; className?: string }) {
   );
 }
 
-// móvil: arriba el logo (Inicio) y Amigos; abajo 4 secciones con Registrar destacado en el centro, y el resto en «Más»
-const MOBILE_TOP = ["/", "/amigos"];
-const MOBILE_BOTTOM = ["/plan", "/fuerza", "/registrar", "/perfil"];
-const STRENGTH_BOTTOM = ["/fuerza", "/entrenador", "/fuerza/entreno", "/perfil"];
-const CTA = ["/registrar", "/fuerza/entreno"]; // el botón naranja de la barra de abajo
-const MORE_ICON = "M5 12h.01M12 12h.01M19 12h.01";
-const TROPHY = "M8 4h8v5a4 4 0 01-8 0V4zM8 6H5a3 3 0 003 4M16 6h3a3 3 0 01-3 4M12 13v4M8 21h8M10 17h4v4";
+// móvil: arriba el logo, el Entrenador IA y Amigos; abajo 5 pestañas con Registrar destacado en el centro.
+// Lo demás (estadísticas, carreras, sueño…) va dentro de «Tú» (el perfil)
+const MOBILE_BOTTOM = ["/", "/plan", "/registrar", "/fuerza", "/perfil"];
+const STRENGTH_BOTTOM = ["/", "/fuerza", "/fuerza/entreno", "/fuerza/ejercicios", "/perfil"];
+const CTA = ["/registrar", "/fuerza/entreno"]; // el botón lima de la barra de abajo
+const IN_TU = ["/perfil", "/estadisticas", "/carreras", "/sueno", "/herramientas", "/ajustes", "/registrar"];
 const LONG_LABEL: Record<string, string> = { "/estadisticas": "Estadísticas", "/herramientas": "Calculadoras", "/ajustes": "Importar / demo", "/registrar": "Registrar actividad" };
 const icon = (href: string) => ITEMS.find((i) => i.href === href)!.icon;
 
@@ -61,14 +61,35 @@ function Logo({ compact }: { compact?: boolean }) {
   );
 }
 
-/** Móvil: barra superior (logo = Inicio, Amigos) e inferior (Plan, Fuerza, Registrar, Perfil, Más; o la de fuerza). */
-function MobileNav({ active, focus, logros }: { active: (href: string) => boolean; focus?: Focus; logros: boolean }) {
-  const [more, setMore] = useState(false);
+/** Lo que en el móvil no cabe en la barra: va en «Tú», debajo de la cabecera del perfil. */
+export function TuLinks({ focus }: { focus?: Focus }) {
+  const bottomHrefs = focus === "fuerza" ? STRENGTH_BOTTOM : MOBILE_BOTTOM;
+  const rest = itemsFor(focus).filter((i) => IN_TU.includes(i.href) && !bottomHrefs.includes(i.href) && i.href !== "/perfil");
+  return (
+    <nav aria-label="Más secciones" className="grid grid-cols-3 gap-2 md:hidden">
+      {rest.map((it) => (
+        <Link key={it.href} href={it.href} className="flex flex-col items-center gap-1.5 rounded-xl border border-line bg-surface px-1 py-3 text-xs font-medium text-ink-2">
+          <Icon d={it.icon} className="h-6 w-6 text-accent" />
+          {LONG_LABEL[it.href] ?? it.label}
+        </Link>
+      ))}
+      <form action={logout} className="contents">
+        <button className="flex flex-col items-center justify-center gap-1.5 rounded-xl border border-line bg-surface px-1 py-3 text-xs font-medium text-ink-2">
+          <Icon d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h10" className="h-6 w-6" />
+          Cerrar sesión
+        </button>
+      </form>
+    </nav>
+  );
+}
+
+/** Móvil: barra superior (logo = Inicio, Entrenador IA, Amigos) e inferior (Inicio, Plan, Registrar, Fuerza, Tú; o la de fuerza). */
+function MobileNav({ active, focus }: { active: (href: string) => boolean; focus?: Focus }) {
   const items = itemsFor(focus);
   const bottomHrefs = focus === "fuerza" ? STRENGTH_BOTTOM : MOBILE_BOTTOM;
   const bottom = bottomHrefs.map((h) => items.find((i) => i.href === h)!);
-  const rest = items.filter((i) => !bottomHrefs.includes(i.href) && !MOBILE_TOP.includes(i.href));
-  const restActive = rest.some((i) => active(i.href));
+  // «Tú» se queda encendido en las secciones que cuelgan de él
+  const on = (href: string) => active(href) || (href === "/perfil" && IN_TU.some((h) => !bottomHrefs.includes(h) && active(h)));
   const tab = "flex flex-1 flex-col items-center justify-center gap-1 pb-1.5 pt-2.5 text-[11px] font-medium";
   return (
     <>
@@ -79,11 +100,11 @@ function MobileNav({ active, focus, logros }: { active: (href: string) => boolea
           </Link>
           <div className="flex items-center gap-1">
             <Link
-              href="/perfil?tab=logros"
-              aria-label="Logros"
-              className={`grid h-10 w-10 place-items-center rounded-full ${logros ? "bg-surface-2 text-accent" : "text-ink-2 hover:bg-surface-2"}`}
+              href="/entrenador"
+              aria-label="Entrenador IA"
+              className={`grid h-10 w-10 place-items-center rounded-full ${active("/entrenador") ? "bg-surface-2 text-accent" : "text-ink-2 hover:bg-surface-2"}`}
             >
-              <Icon d={TROPHY} className="h-6 w-6" />
+              <Icon d={icon("/entrenador")} className="h-6 w-6" />
             </Link>
             <Link
               href="/amigos"
@@ -95,33 +116,6 @@ function MobileNav({ active, focus, logros }: { active: (href: string) => boolea
           </div>
         </div>
       </header>
-
-      {more && (
-        <div className="no-select fixed inset-0 z-40 md:hidden" onClick={() => setMore(false)}>
-          <div className="absolute inset-0 bg-black/40" />
-          <div
-            className="absolute inset-x-3 bottom-[calc(4.75rem+env(safe-area-inset-bottom))] rounded-2xl border border-line bg-surface p-2 shadow-xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="grid grid-cols-3 gap-1">
-              {rest.map((it) => (
-                <Link
-                  key={it.href}
-                  href={it.href}
-                  onClick={() => setMore(false)}
-                  className={`flex flex-col items-center gap-1.5 rounded-xl px-1 py-3 text-xs font-medium ${active(it.href) ? "bg-surface-2 text-accent" : "text-ink-2 hover:bg-surface-2"}`}
-                >
-                  <Icon d={it.icon} className="h-6 w-6" />
-                  {LONG_LABEL[it.href] ?? it.label}
-                </Link>
-              ))}
-            </div>
-            <form action={logout} className="mt-1 border-t border-line pt-1">
-              <button className="w-full rounded-xl py-2.5 text-sm font-medium text-ink-2 hover:bg-surface-2">Cerrar sesión</button>
-            </form>
-          </div>
-        </div>
-      )}
 
       {/* el color de la barra sigue por debajo: en el iPhone instalado, al llegar al final de una página larga
           o al rebotar, quedaba una franja negra bajo la barra */}
@@ -140,16 +134,12 @@ function MobileNav({ active, focus, logros }: { active: (href: string) => boolea
             </div>
           ) : (
             // prefetch: las secciones principales llegan precargadas con tus datos (y la pestaña elegida)
-            <Link key={it.href} href={it.href} prefetch={true} className={`${tab} ${active(it.href) ? "text-accent" : "text-muted"}`}>
+            <Link key={it.href} href={it.href} prefetch={true} className={`${tab} ${on(it.href) ? "text-accent" : "text-muted"}`}>
               <Icon d={it.icon} className="h-6 w-6" />
-              {it.label}
+              {it.href === "/perfil" ? "Tú" : it.label}
             </Link>
           ),
         )}
-        <button type="button" onClick={() => setMore((m) => !m)} aria-expanded={more} className={`${tab} ${more || restActive ? "text-accent" : "text-muted"}`}>
-          <Icon d={MORE_ICON} className="h-6 w-6" />
-          Más
-        </button>
       </nav>
     </>
   );
@@ -167,7 +157,7 @@ export function Nav({ focus }: { focus?: Focus }) {
       if (list.at(-1) !== url) sessionStorage.setItem(VISITED, JSON.stringify([...list, url].slice(-30)));
     } catch {}
   }, [path, query]);
-  return <NavView path={path} query={query} focus={focus} />;
+  return <NavView path={path} focus={focus} />;
 }
 
 const VISITED = "rio-visitadas";
@@ -183,7 +173,7 @@ export function lastVisited(skip: (url: string) => boolean, fallback: string): s
 }
 
 /** Menú sin sección resaltada (el que se prerenderiza) o con ella. */
-export function NavView({ path, query, focus }: { path?: string; query?: string; focus?: Focus }) {
+export function NavView({ path, focus }: { path?: string; focus?: Focus }) {
   const items = itemsFor(focus);
   // resalta la entrada más concreta: en /fuerza/entreno, «Entrenar» y no «Fuerza»
   const matches = (href: string) => path !== undefined && (href === "/" ? path === "/" : path === href || path.startsWith(`${href}/`) || path.startsWith(`${href}?`));
@@ -211,7 +201,7 @@ export function NavView({ path, query, focus }: { path?: string; query?: string;
           <button className="w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-ink-2 hover:bg-surface-2">Cerrar sesión</button>
         </form>
       </nav>
-      <MobileNav active={active} focus={focus} logros={path === "/perfil" && new URLSearchParams(query).get("tab") === "logros"} />
+      <MobileNav active={active} focus={focus} />
     </>
   );
 }

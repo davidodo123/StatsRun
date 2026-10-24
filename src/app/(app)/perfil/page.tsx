@@ -28,10 +28,11 @@ import { AvatarPicker } from "@/components/AvatarPicker";
 import { requireViewerId } from "@/lib/session";
 import { Icon } from "@/components/icons";
 import { AiMemory } from "@/components/AiMemory";
+import { TuLinks } from "@/components/Nav";
 
 export const metadata: Metadata = { title: "Perfil" };
 
-// Logros (icono en la barra de arriba) y Editar (botón de la cabecera) no van en la fila de pestañas
+// Logros y Editar (botones de la cabecera) no van en la fila de pestañas
 const TABS = [
   { id: "resumen", label: "Resumen" },
   { id: "running", label: "Running" },
@@ -100,6 +101,8 @@ async function Content({ searchParams }: { searchParams: PageProps<"/perfil">["s
           </nav>
         </ProfileHeader>
       )}
+      {/* en el móvil, «Tú» guarda lo que no cabe en la barra de abajo */}
+      {db.profile && stats && tab === first && <TuLinks focus={focus} />}
 
       {tab === "resumen" && <Resumen db={db} stats={stats!} matches={matches} today={today} />}
       {tab === "running" && <Running db={db} stats={stats!} today={today} />}
@@ -150,8 +153,7 @@ function ProfileHeader({ db, stats, tab, picture, children }: { db: Db; stats: S
           </p>
         </div>
         <div className="flex gap-2 self-start sm:order-last sm:self-center">
-          {/* en el móvil, Logros está en la barra de arriba */}
-          <Link href="/perfil?tab=logros" aria-label="Logros" aria-current={tab === "logros" ? "page" : undefined} className={`hidden md:grid ${btn(tab === "logros")}`}>
+          <Link href="/perfil?tab=logros" aria-label="Logros" aria-current={tab === "logros" ? "page" : undefined} className={btn(tab === "logros")}>
             <Icon name="trophy" className="h-[18px] w-[18px]" />
           </Link>
           <Link href="/perfil?tab=editar" aria-label="Editar perfil" aria-current={tab === "editar" ? "page" : undefined} className={btn(tab === "editar")}>

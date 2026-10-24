@@ -929,3 +929,13 @@ Fuentes: screensdesign.com, posthog.com/pricing, revenuecat.com/pricing, revenue
 - **Inicio** (`TodayHero`): «HOY TOCA» + el nombre de la sesión en grande (sin los km del final, que van debajo; más pequeño si es largo) + km gigantes en lima + ritmo, minutos y zona + **EMPEZAR** (correr → grabar con GPS; fuerza → el entreno de esa sesión) + la semana en barras (hecho en blanco, hoy en lima) + la cuenta atrás de la carrera. Sin sesión hoy: «DESCANSO» y la siguiente.
 - Pendiente: el icono de la app (hay que regenerar los PNG y reinstalar), las imágenes y el vídeo para compartir (siguen en naranja) y la pantalla de inicio de sesión.
 - **Parte 2 y 3** (mismo día): el resto de pantallas ya cogía Volt de las piezas comunes; se cambió el naranja que quedaba (gris claro para las sesiones suaves y la fase de base, flechas de los desplegables en lima). Icono de la app en lima con las montañas en negro (`scripts/generate-icons.mjs`: web y Android, y la pantalla de arranque en negro), imágenes para compartir, sticker y vídeo en lima sobre negro, fondo de la app de Android en negro. La imagen de historia sigue con la letra por defecto de las imágenes (no Anton): cargarla ahí es más trabajo, se puede hacer después.
+
+## Distribución del menú: Inicio como pestaña
+*2026-10-24*
+
+- Antes, copia en GitHub: etiqueta `antes-distribucion-2026-10-24` y rama `copia/antes-distribucion-2026-10-24` (commit `6c018de`).
+- Opciones: **A** Inicio como pestaña y «Tú» con lo demás · B por deporte (Inicio · Correr · Fuerza · Tú) · C Entrenador IA en el centro · D retoque de la actual. David eligió la **A** (como Strava o Nike Run Club).
+- Móvil, abajo: **Inicio · Plan · ＋ (Registrar) · Fuerza · Tú**. Solo fuerza: Inicio · Fuerza · ＋ (Entrenar) · Ejercicios · Tú.
+- Arriba: el logo, el **Entrenador IA** (la estrella) y Amigos. Logros pasa a un botón en la cabecera del perfil (como en el ordenador).
+- Fuera el menú «Más»: Estadísticas, Carreras, Calculadoras, Sueño, Importar / demo y Cerrar sesión van en una cuadrícula de «Tú» (en el resumen del perfil). «Tú» se queda encendido dentro de esas secciones.
+- En el ordenador no cambia: barra lateral con todo.
