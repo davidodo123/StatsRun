@@ -41,6 +41,8 @@ const localIso = (ms: number) => {
 };
 const SPORT_ICON = { run: "run", walk: "walk", ride: "bike" } as const;
 const SPORT_TITLE = { run: "Corriendo", walk: "Caminando", ride: "En bici" } as const;
+// al volver a la app con una grabación en marcha: si el último punto es de hace menos de esto, sigue grabando
+const RESUME_MS = 15 * 60_000;
 const SPORTS: [Sport, string][] = [
   ["run", "Correr"],
   ["walk", "Caminar"],
@@ -85,8 +87,14 @@ export function RunRecorder() {
   useEffect(() => {
     const stored = load();
     // una grabación de hace más de 12 h ya no sigue en curso
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- localStorage solo existe en el navegador
-    if (stored?.points && Date.now() - stored.startedAt < 12 * 3600_000) setRec({ ...stored, pausedAt: stored.pausedAt ?? Date.now() });
+    if (stored?.points && Date.now() - stored.startedAt < 12 * 3600_000) {
+      // el iPhone cierra la app si se bloquea o se cambia de app: si hace poco del último punto, sigue grabando
+      // (el hueco cuenta en línea recta); si no, en pausa desde el último punto, no desde ahora
+      const lastAt = stored.points.at(-1)?.t ?? stored.startedAt;
+      const pausedAt = stored.pausedAt ?? (Date.now() - lastAt < RESUME_MS ? undefined : lastAt);
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- localStorage solo existe en el navegador
+      setRec({ ...stored, pausedAt });
+    }
     setNative(canRecordInBackground());
     setReady(true);
   }, []);
@@ -315,6 +323,12 @@ export function RunRecorder() {
             ))}
           </ol>
         </div>
+      )}
+      {stats.gapSec >= 60 && (
+        <p className="rounded-xl border border-warning/40 bg-warning/10 p-3 text-sm text-ink-2">
+          {fmtDuration(stats.gapSec)} sin GPS: esos tramos van en línea recta, así que la distancia se queda corta.
+          {!native && " En el iPhone no se graba con la pantalla bloqueada ni con otra app abierta: deja Run-In-Out en pantalla mientras corres."}
+        </p>
       )}
       <p className="text-center text-xs text-muted">
         {stats.elevationGainM > 0 && `Desnivel +${stats.elevationGainM} m · `}En movimiento {fmtDuration(stats.movingSec)} (se para solo cuando te paras)

@@ -33,6 +33,24 @@ describe("carrera con GPS", () => {
     expect(s.movingSec).toBe(200);
   });
 
+  it("un hueco sin GPS corriendo cuenta como tiempo en movimiento (y se apunta)", () => {
+    const a = line(120);
+    // 3 min sin puntos a 3 m/s y luego sigue
+    const b = line(120, 3, 2, a.at(-1)!.t + 180_000, a.at(-1)!.lat + (180 * 3) / 111_195);
+    const s = trackStats([...a, ...b]);
+    expect(s.movingSec).toBe(420);
+    expect(s.gapSec).toBe(180);
+    expect(s.distanceM).toBeGreaterThan(1250);
+    // ritmo razonable (5:33 /km), no 0:36
+    expect(s.movingSec / (s.distanceM / 1000)).toBeGreaterThan(320);
+  });
+
+  it("un hueco quieto no cuenta como movimiento", () => {
+    const a = line(120);
+    const b = line(60, 3, 2, a.at(-1)!.t + 300_000, a.at(-1)!.lat + 20 / 111_195);
+    expect(trackStats([...a, ...b]).movingSec).toBe(180);
+  });
+
   it("desnivel: suma subidas de más de 4 m e ignora el baile del GPS", () => {
     const pts = line(100).map((p, i) => ({ ...p, alt: 600 + (i % 2) * 2 + i * 0.5 }));
     const s = trackStats(pts);

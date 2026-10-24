@@ -968,3 +968,12 @@ Fuentes: screensdesign.com, posthog.com/pricing, revenuecat.com/pricing, revenue
 - Queda **un solo límite por usuario** para controlar el gasto de OpenRouter (`AI_LIMITS` en `src/lib/aiPlan.ts`): 40 mensajes al entrenador al día, 5 rutinas con IA a la semana y 15 reajustes del plan al día (los automáticos y los pedidos). Los modelos no cambian: gpt-4o para el chat y las rutinas, gpt-4o-mini para los reajustes.
 - Al llegar al límite: «Has usado tus 40 mensajes al entrenador de hoy. Vuelve mañana.» En Plan → Entrenador IA se ve cuántos quedan hoy.
 - David, sin límite mientras prueba: los correos de la variable `AI_SIN_LIMITE` (en Vercel, no en el código, que es público) no tienen tope.
+
+## GPS: huecos sin señal
+*2026-10-24*
+
+- Primera prueba de David corriendo con el iPhone: Run-In-Out marcó 1,09 km, 0:39 en movimiento y ritmo 0:36 /km; Strava, 3,01 km en 19:02. Dos causas:
+  1. **Cálculo**: en un hueco de más de 30 s sin puntos, la distancia contaba pero el tiempo no (de ahí el ritmo imposible). Ahora un hueco de hasta 15 min cuenta como movimiento si su velocidad media es de ir moviéndose; se apunta como `gapSec`.
+  2. **El iPhone dejó de dar ubicación** (pantalla bloqueada o app en segundo plano) y al volver la grabación se había pausado sola. Ahora, si el último punto es de hace menos de 15 min, sigue grabando; si no, se pausa desde el último punto (no desde que se abre).
+- Con huecos de más de 1 min sale un aviso: los tramos sin GPS van en línea recta (la distancia se queda corta en curvas e idas y vueltas) y en el iPhone hay que dejar la app en pantalla.
+- Lo de fondo no tiene arreglo desde la web: en el iPhone solo graba con la app en pantalla. Alternativa: grabar con Strava o el reloj e importar el .gpx/.fit.

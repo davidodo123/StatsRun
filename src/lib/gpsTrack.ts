@@ -16,8 +16,11 @@ const MAX_ACCURACY_M = 35;
 const MIN_SPEED = 0.6; // m/s
 // más rápido que esto (≈ 1:50 /km) es un salto del GPS
 const MAX_SPEED = 9;
-// sin puntos durante más de esto, el tramo cuenta en distancia pero no como tiempo en movimiento
+// sin puntos durante más de esto es un hueco sin GPS (pantalla bloqueada, la app en segundo plano…):
+// cuenta como tiempo en movimiento si la velocidad media del hueco es de ir moviéndose
 const MAX_GAP_SEC = 30;
+// un hueco más largo que esto ya no se da por recorrido en movimiento
+const MAX_MOVING_GAP_SEC = 15 * 60;
 // el desnivel solo cuenta subidas (o bajadas) de más de esto: la altura del GPS baila
 const ALT_STEP = 4;
 
@@ -49,12 +52,14 @@ export interface TrackStats {
   elevationGainM: number;
   splits: number[]; // segundos en movimiento de cada km completo
   paceNow?: number; // s/km de los últimos ~30 s en movimiento
+  gapSec: number; // tiempo en huecos sin GPS (la distancia de esos tramos va en línea recta: se queda corta si hubo curvas)
 }
 
 export function trackStats(points: GpsPoint[]): TrackStats {
   let distanceM = 0;
   let movingSec = 0;
   let gain = 0;
+  let gapSec = 0;
   let base: number | undefined;
   const splits: number[] = [];
   let splitStart = 0;
@@ -74,7 +79,8 @@ export function trackStats(points: GpsPoint[]): TrackStats {
     const d = haversine(prev, p);
     if (dt <= 0) continue;
     distanceM += d;
-    const moving = dt <= MAX_GAP_SEC && d / dt >= MIN_SPEED;
+    if (dt > MAX_GAP_SEC) gapSec += dt;
+    const moving = d / dt >= MIN_SPEED && (dt <= MAX_GAP_SEC || (dt <= MAX_MOVING_GAP_SEC && d / dt <= MAX_SPEED));
     const sec = moving ? dt : 0;
     // parcial: el km se cierra en el punto donde se cruza, repartiendo el tiempo del tramo
     while (distanceM >= (splits.length + 1) * 1000) {
@@ -84,11 +90,11 @@ export function trackStats(points: GpsPoint[]): TrackStats {
       splitStart = at;
     }
     movingSec += sec;
-    if (moving) recent.push({ d, s: sec, t: p.t });
+    if (moving && dt <= MAX_GAP_SEC) recent.push({ d, s: sec, t: p.t });
   }
   const last = points.at(-1)?.t ?? 0;
   const window = recent.filter((r) => last - r.t <= 30_000);
   const wd = window.reduce((s, r) => s + r.d, 0);
   const ws = window.reduce((s, r) => s + r.s, 0);
-  return { distanceM, movingSec: Math.round(movingSec), elevationGainM: Math.round(gain), splits, paceNow: wd >= 30 ? ws / (wd / 1000) : undefined };
+  return { distanceM, movingSec: Math.round(movingSec), elevationGainM: Math.round(gain), splits, paceNow: wd >= 30 ? ws / (wd / 1000) : undefined, gapSec: Math.round(gapSec) };
 }
