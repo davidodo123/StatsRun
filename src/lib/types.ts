@@ -245,6 +245,7 @@ export interface Db {
   strengthChat?: StrengthChatMessage[]; // conversación con el entrenador de fuerza (sección Fuerza)
   aiPreferences?: AiPreference[]; // lo que la IA tiene que recordar del atleta (sus gustos y correcciones)
   aiFeedback?: AiFeedback[]; // valoraciones de las respuestas de la IA (para mejorarla con ejemplos)
+  aiUsage?: Partial<Record<"chat" | "routines" | "adapt", { period: string; n: number }>>; // usos de la IA en el día o la semana (lib/aiPlan.ts)
 }
 
 export type SetType = "normal" | "calentamiento" | "descendente" | "fallo";

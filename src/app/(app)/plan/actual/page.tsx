@@ -12,6 +12,8 @@ import { RaceCard } from "@/components/RaceCard";
 import { assessReadiness } from "@/lib/engine/readiness";
 import { UnavailableForm } from "@/components/UnavailableForm";
 import { adaptIfMissed, coachConfig, strengthModel } from "@/lib/coach";
+import { AI_LIMITS, aiLeft } from "@/lib/aiPlan";
+import { viewAiUnlimited } from "@/lib/authView";
 import { availableDaysOf, planTitle } from "@/lib/engine/planner";
 import { after } from "next/server";
 import { requireViewerId } from "@/lib/session";
@@ -66,6 +68,7 @@ async function Content({ searchParams }: { searchParams: PageProps<"/plan/actual
   // si se han quedado sesiones sin hacer, la IA reprograma en segundo plano (máx. 1 vez al día)
   const uid = await requireViewerId();
   after(() => adaptIfMissed(uid));
+  const aiUnlimited = await viewAiUnlimited(uid);
   const thisWeek = mondayOf(today);
   const blockedSoon = (db.unavailableDates ?? []).filter((d) => d >= today);
   const allSessions = [...(matches?.values() ?? [])];
@@ -236,6 +239,9 @@ async function Content({ searchParams }: { searchParams: PageProps<"/plan/actual
                   </p>
                 )}
                 {db.coach?.error && <Notice tone="warn">Último intento falló: {db.coach.error}</Notice>}
+                <p className="text-xs text-muted">
+                  {aiUnlimited ? "IA sin límite (cuenta de pruebas)." : <>Hoy te quedan {aiLeft(db, "adapt", today)} de {AI_LIMITS.adapt} reajustes y {aiLeft(db, "chat", today)} de {AI_LIMITS.chat} mensajes al entrenador.</>}
+                </p>
                 <AiCoachButton />
                 <Link href="/entrenador" className="block text-xs font-semibold text-accent">
                   Pídele un cambio del plan en el chat →

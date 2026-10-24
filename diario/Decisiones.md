@@ -954,3 +954,17 @@ Fuentes: screensdesign.com, posthog.com/pricing, revenuecat.com/pricing, revenue
 - La web (`RunRecorder` → `showRunData` en `gpsSource.ts`) manda los km y el ritmo como mucho cada 3 s, solo mientras graba en segundo plano. Al pausar o terminar se para el servicio y se quita la notificación.
 - Descartado `@capacitor/local-notifications`: habría sido una segunda notificación, aparte de la del servicio. Tocar el código del complemento de ubicación se perdería al actualizarlo.
 - Para tenerlo hay que instalar un **APK nuevo**: el código nativo no llega con Vercel. iPhone: sigue sin poder hacerse desde la web.
+
+## GPS en el iPhone: descartado
+*2026-10-24*
+
+- Con la web instalada no se puede (iOS no da la ubicación a una web con la pantalla bloqueada). Opciones vistas: app nativa con la cuenta de Apple de pago (99 €/año, para todos) o gratis solo para el iPhone de David (compilada en GitHub, instalada con AltStore o Sideloadly desde Windows, **caduca cada 7 días**).
+- David lo descarta. En el iPhone se graba con la pantalla encendida (la app la mantiene sola). Si algún día hace falta: grabar con la app Entrenamiento o el reloj y pasar la carrera por el atajo de Salud.
+
+## Límite de uso de la IA
+*2026-10-24*
+
+- Se pensó en IA gratis (gpt-4o-mini) y Premium (Claude Haiku 5.5). David lo deja: la «API de Claude de 250 $» que tenía era una web de reventa (`claudeapikey.dev` / `api.oneprovider.dev`, claves que no son `sk-ant-…`), no Anthropic; no se usa por los datos de salud que pasarían por ella. Si algún día hay Premium, la clave tiene que salir de platform.claude.com.
+- Queda **un solo límite por usuario** para controlar el gasto de OpenRouter (`AI_LIMITS` en `src/lib/aiPlan.ts`): 40 mensajes al entrenador al día, 5 rutinas con IA a la semana y 15 reajustes del plan al día (los automáticos y los pedidos). Los modelos no cambian: gpt-4o para el chat y las rutinas, gpt-4o-mini para los reajustes.
+- Al llegar al límite: «Has usado tus 40 mensajes al entrenador de hoy. Vuelve mañana.» En Plan → Entrenador IA se ve cuántos quedan hoy.
+- David, sin límite mientras prueba: los correos de la variable `AI_SIN_LIMITE` (en Vercel, no en el código, que es público) no tienen tope.

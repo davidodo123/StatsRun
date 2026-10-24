@@ -4,6 +4,8 @@ import "server-only";
 // El planificador determinista sigue mandando en la estructura (fases, volumen semanal);
 // la IA reescribe, mueve o quita sesiones existentes dentro de límites seguros.
 import { readDbNow, updateDb } from "./db";
+import { aiLeft, aiLimitMessage, countAiUse } from "./aiPlan";
+import { isAiUnlimited } from "./auth";
 import { computeStats } from "./engine/stats";
 import { availableDaysOf, isHardSession, matchPlan, recoveryDaysAfter } from "./engine/planner";
 import { trainingPaces } from "./engine/physiology";
@@ -372,6 +374,7 @@ async function run(uid: string, request?: string): Promise<CoachResult> {
   const db = await readDbNow(uid);
   const built = buildContext(db, today);
   if (!built) return { ok: false, changed: 0, message: "No hay plan o sesiones próximas que ajustar." };
+  if (!aiLeft(db, "adapt", today, await isAiUnlimited(uid))) return { ok: false, changed: 0, message: aiLimitMessage("adapt") };
   const createdAt = db.plan!.createdAt;
   const blocked = (db.unavailableDates ?? []).join();
 
@@ -380,6 +383,7 @@ async function run(uid: string, request?: string): Promise<CoachResult> {
     const byId = new Map((Array.isArray(ai?.sessions) ? ai.sessions : []).filter((s) => s && typeof s.id === "string").map((s) => [s.id, s]));
     let changed = 0;
     await updateDb((d) => {
+      countAiUse(d, "adapt", today);
       changed = 0; // la escritura puede reintentarse
       // si el plan se regeneró mientras la IA pensaba, descartar;
       // o si cambiaron los días sin entrenar (p. ej. se deshizo un «no puedo ese día»), también
@@ -453,6 +457,7 @@ async function run(uid: string, request?: string): Promise<CoachResult> {
     const raw = (e as Error).message;
     const message = raw === "NO_CREDITS" ? "sin saldo en OpenRouter (recarga créditos en openrouter.ai/settings/credits)" : raw;
     await updateDb((d) => {
+      countAiUse(d, "adapt", today);
       d.coach = { ...d.coach, updatedAt: d.coach?.updatedAt ?? new Date().toISOString(), model, summary: d.coach?.summary ?? "", changed: d.coach?.changed ?? 0, error: message };
     }, uid);
     return { ok: false, changed: 0, message: `Error de la IA: ${message}` };

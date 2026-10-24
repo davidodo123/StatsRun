@@ -7,6 +7,8 @@ import { after } from "next/server";
 import { readDbNow, updateDb } from "@/lib/db";
 import { requireUserId } from "@/lib/session";
 import { adaptWithAI, chatJson, coachConfig, strengthModel } from "@/lib/coach";
+import { aiLeft, aiLimitMessage, countAiUse } from "@/lib/aiPlan";
+import { isAiUnlimited } from "@/lib/auth";
 import { CHAT_SYSTEM, chatContext, chatEquipment, chatExerciseList, chatHistory, chatReplyFromAi, type AiChatReply } from "@/lib/strength/chat";
 import { STRENGTH_SYSTEM, equipmentFromText, routinesFromAi, strengthRequest, type AiStrengthReply } from "@/lib/strength/aiRoutines";
 import { todayLocal } from "@/lib/dates";
@@ -317,8 +319,10 @@ export async function generateStrengthRoutines(_: StrengthCoachForm, fd: FormDat
   const now = new Date().toISOString();
   const today = todayLocal();
   const model = strengthModel();
+  if (!aiLeft(await readDbNow(), "routines", today, await isAiUnlimited(await requireUserId()))) return { error: aiLimitMessage("routines") };
   await updateDb((d) => {
     d.strengthCoach = { ...d.strengthCoach, material, ability, updatedAt: now, model, error: undefined };
+    countAiUse(d, "routines", today);
   });
 
   let result: ReturnType<typeof routinesFromAi>;
@@ -379,6 +383,8 @@ export async function sendStrengthChat(_: FormState, fd: FormData): Promise<Form
   if (!coachConfig().configured) return { error: "La IA no está configurada (falta OPENROUTER_API_KEY)." };
   const now = new Date().toISOString();
   const db = await readDbNow();
+  const today = todayLocal();
+  if (!aiLeft(db, "chat", today, await isAiUnlimited(await requireUserId()))) return { error: aiLimitMessage("chat") };
   const history = db.strengthChat ?? [];
   const { equipment, from } = chatEquipment(db, message);
   const request = JSON.stringify({
@@ -393,6 +399,7 @@ export async function sendStrengthChat(_: FormState, fd: FormData): Promise<Form
   });
   let reply: ReturnType<typeof chatReplyFromAi>;
   try {
+    await updateDb((d) => countAiUse(d, "chat", today));
     let raw: AiChatReply;
     try {
       raw = await chatJson<AiChatReply>(CHAT_SYSTEM, request, 0.4, strengthModel(), 3000);

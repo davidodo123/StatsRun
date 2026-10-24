@@ -1,7 +1,7 @@
 import "server-only";
 // Lecturas de usuarios para pintar páginas: en la caché privada, como getDb (ver viewCache en session.ts).
 // Las acciones usan las de auth.ts, siempre en directo.
-import { areFriends, getFriends, getRequests, getUser } from "./auth";
+import { areFriends, getFriends, getRequests, getUser, isAiUnlimited } from "./auth";
 import { viewCache } from "./session";
 
 export async function viewUser(id: string) {
@@ -26,4 +26,10 @@ export async function viewRequests(uid: string) {
   "use cache: private";
   viewCache();
   return getRequests(uid);
+}
+
+export async function viewAiUnlimited(id: string) {
+  "use cache: private";
+  viewCache();
+  return isAiUnlimited(id);
 }

@@ -163,6 +163,17 @@ export async function getUser(id: string): Promise<PublicUser | undefined> {
   return u && toPublic(u);
 }
 
+/** Sin límite de IA: su correo está en AI_SIN_LIMITE (separados por comas; para probar). */
+export async function isAiUnlimited(id: string): Promise<boolean> {
+  const list = (process.env.AI_SIN_LIMITE ?? "")
+    .split(",")
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean);
+  if (!list.length) return false;
+  const email = (await readUsers()).users.find((x) => x.id === id)?.email?.toLowerCase();
+  return Boolean(email && list.includes(email));
+}
+
 export async function getFriends(id: string): Promise<PublicUser[]> {
   const { users } = await readUsers();
   const me = users.find((u) => u.id === id);

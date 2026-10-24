@@ -19,6 +19,7 @@ tags: [config]
 | `AUTH_SECRET` | Firmar la cookie de sesión |
 | `KV_REST_API_URL` / `KV_REST_API_TOKEN` | Base de datos Upstash Redis |
 | `OPENROUTER_API_KEY` / `OPENROUTER_MODEL` | Entrenador IA |
+| `AI_SIN_LIMITE` | Correos (separados por comas) sin límite de uso de la IA, para probar |
 | `STRAVA_CLIENT_ID` / `STRAVA_CLIENT_SECRET` / `APP_URL` | Conexión con Strava |
 | `CONTACT_EMAIL` | Correo público de contacto en `/privacidad` (se lee en cada visita) |
 | `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` | Avisos de cada mañana (Web Push). Generadas 2026-10-23; están en `.env.local` y hay que copiarlas a Vercel. Si se cambian, todos tienen que volver a activar los avisos |

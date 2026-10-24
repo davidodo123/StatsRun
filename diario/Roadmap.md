@@ -161,7 +161,7 @@ Base: [[Estudio entrenamiento#6. La Pirámide de Entrenamiento (Helms, Valdez, M
 4. [x] **Grabar la carrera con el GPS** (Registrar → Grabar con GPS): cronómetro, distancia, ritmo actual y medio, parciales, desnivel, recorrido y pausa automática; con la pantalla encendida (iPhone y Android) — *hecho 2026-10-19, pendiente de comprobar corriendo* → [[Decisiones#Grabar la carrera con el GPS]]
    - [ ] **GPS con la pantalla apagada** (lo pidió David 2026-10-20: ahora solo cuenta si el móvil está en esa pantalla) → [[Decisiones#GPS con la pantalla apagada]]
      - [/] Android (app de Capacitor): `@capgo/background-geolocation` (gratis) con servicio en primer plano y la notificación «Grabando carrera»; la web lo usa solo si está en el APK (si no, como antes). APK de prueba compilado y **probado en el emulador**: con la pantalla apagada 40 s siguió grabando (de 3 a 15 puntos) — *hecho 2026-10-23; falta salir a correr con un Android de verdad; en Play hay que declarar el «servicio en primer plano de ubicación»* → [[Decisiones#GPS con la pantalla apagada en Android]]
-     - [ ] iPhone: la web instalada no puede (iOS no da la ubicación a una web con la pantalla bloqueada). Haría falta una app nativa con Core Location en segundo plano, y eso es la App Store (99 €/año y un Mac), que David descartó. Mientras tanto: pantalla encendida (ya se mantiene sola)
+     - [-] ~~iPhone: la web instalada no puede (iOS no da la ubicación a una web con la pantalla bloqueada). Haría falta una app nativa con Core Location en segundo plano, y eso es la App Store (99 €/año y un Mac), que David descartó. Mientras tanto: pantalla encendida (ya se mantiene sola)~~ — *descartado por David 2026-10-24, también la app solo para su iPhone (caduca cada 7 días)* → [[Decisiones#GPS en el iPhone: descartado]]
 
 ## 📝 Fase 8 · Por hacer (apuntado por David 2026-10-20)
 - [x] **GPS**: desmarcar las opciones de correr al empezar a grabar (ahora «Correr» sale ya marcado) — *hecho 2026-10-20: los tres botones iguales, con su icono, y «¿Qué vas a hacer? Toca para empezar»*
@@ -192,7 +192,7 @@ Para cuando crezca: base de datos, servidor, costes y administración. Se hace s
 - [ ] Mirar en el panel de Upstash las peticiones del mes y el espacio usado, y apuntarlo en [[Infraestructura]] (cuánto margen queda)
 - [ ] Activar los avisos por correo de Upstash y Vercel al acercarse a los límites
 - [ ] Panel de administración (solo David): usuarios, activos esta semana, tamaño de cada documento, uso de la IA y última copia de seguridad
-- [ ] Límite de uso de la IA por usuario (mensajes al día) para controlar el gasto de OpenRouter
+- [x] Límite de uso de la IA por usuario: 40 mensajes al día, 5 rutinas a la semana y 15 reajustes al día — *hecho 2026-10-24* → [[Decisiones#Límite de uso de la IA]]
 - [ ] **PostHog**: métricas (qué se usa, dónde se va la gente) y avisos de errores; sin datos de salud, con consentimiento, servidor en Europa → [[Decisiones#Herramientas: ScreensDesign, PostHog y RevenueCat]]
 - [ ] **20-100 usuarios**: Upstash a pago por uso
 - [ ] **100-500 usuarios**: Vercel Pro (Hobby no permite uso comercial) y separar las actividades con GPS del documento de cada usuario
