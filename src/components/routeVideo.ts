@@ -7,7 +7,7 @@ const H = 1280;
 const FPS = 30;
 const DRAW_MS = 3800; // la línea
 const HOLD_MS = 2400; // los datos, ya quietos
-const ACCENT = "#eb6834";
+const ACCENT = "#d4ff3a";
 
 /** Formato que sabe grabar este navegador (Instagram quiere MP4). */
 export function videoType(): string | undefined {
@@ -38,13 +38,13 @@ export async function recordRouteVideo(v: ShareVideo): Promise<File> {
   const total = acc.at(-1) || 1;
 
   const frame = (ms: number) => {
-    ctx.fillStyle = "#121211";
+    ctx.fillStyle = "#000000";
     ctx.fillRect(0, 0, W, H);
     ctx.textAlign = "left";
-    ctx.fillStyle = "#a9a7a0";
+    ctx.fillStyle = "#a6a6a6";
     ctx.font = `600 24px ${font}`;
     ctx.fillText("RUN-IN-OUT", 60, 110);
-    ctx.fillStyle = "#f4f3ef";
+    ctx.fillStyle = "#ffffff";
     ctx.font = `700 48px ${font}`;
     ctx.fillText(v.title.length > 26 ? `${v.title.slice(0, 25)}…` : v.title, 60, 180);
 
@@ -53,7 +53,7 @@ export async function recordRouteVideo(v: ShareVideo): Promise<File> {
     const upTo = t * total;
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
-    ctx.strokeStyle = "#2e2e2c";
+    ctx.strokeStyle = "#262626";
     ctx.lineWidth = 10;
     ctx.beginPath();
     xy.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
@@ -93,10 +93,10 @@ export async function recordRouteVideo(v: ShareVideo): Promise<File> {
     v.stats.forEach((s, i) => {
       const x = 60 + colW * i + colW / 2;
       ctx.textAlign = "center";
-      ctx.fillStyle = "#a9a7a0";
+      ctx.fillStyle = "#a6a6a6";
       ctx.font = `500 24px ${font}`;
       ctx.fillText(s.label.toUpperCase(), x, 1040);
-      ctx.fillStyle = "#f4f3ef";
+      ctx.fillStyle = "#ffffff";
       // la cifra, tan grande como quepa en su columna
       let size = v.stats.length > 2 ? 52 : 64;
       ctx.font = `700 ${size}px ${font}`;

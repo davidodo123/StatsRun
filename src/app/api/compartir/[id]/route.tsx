@@ -9,7 +9,7 @@ const MONTHS = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", 
 const LOGO = (
   <svg width="56" height="56" viewBox="0 0 64 64" style={{ marginRight: 18 }}>
     <rect width="64" height="64" rx="14" fill={ACCENT} />
-    <path d="M14 46l12-20 8 12 6-8 10 16z" fill="#fff" />
+    <path d="M14 46l12-20 8 12 6-8 10 16z" fill="#000" />
   </svg>
 );
 // texto blanco legible encima de cualquier foto
@@ -60,12 +60,12 @@ export async function GET(req: Request, { params }: RouteContext<"/api/compartir
 
   return new ImageResponse(
     (
-      <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", background: "#121211", color: "#f4f3ef", padding: "110px 80px 90px" }}>
-        <div style={{ display: "flex", alignItems: "center", fontSize: 34, color: "#a9a7a0", letterSpacing: 2 }}>
+      <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", background: "#000000", color: "#ffffff", padding: "110px 80px 90px" }}>
+        <div style={{ display: "flex", alignItems: "center", fontSize: 34, color: "#a6a6a6", letterSpacing: 2 }}>
           {LOGO}
           RUN-IN-OUT
         </div>
-        <div style={{ marginTop: 70, fontSize: 36, color: "#a9a7a0" }}>{date}</div>
+        <div style={{ marginTop: 70, fontSize: 36, color: "#a6a6a6" }}>{date}</div>
         <div style={{ marginTop: 14, fontSize: 84, lineHeight: 1.05, letterSpacing: -2, display: "flex" }}>{c.title}</div>
         {c.subtitle && <div style={{ marginTop: 16, fontSize: 40, color: ACCENT }}>{c.subtitle}</div>}
 
@@ -81,17 +81,17 @@ export async function GET(req: Request, { params }: RouteContext<"/api/compartir
         {c.lines.length > 0 && (
           <div style={{ display: "flex", flexDirection: "column", marginBottom: 40 }}>
             {c.lines.map((l) => (
-              <div key={l} style={{ fontSize: 34, color: "#d6d4ce", marginTop: 8, display: "flex" }}>
+              <div key={l} style={{ fontSize: 34, color: "#d0d0d0", marginTop: 8, display: "flex" }}>
                 {l}
               </div>
             ))}
           </div>
         )}
 
-        <div style={{ display: "flex", flexWrap: "wrap", borderTop: "2px solid #2e2e2c", paddingTop: 40 }}>
+        <div style={{ display: "flex", flexWrap: "wrap", borderTop: "2px solid #262626", paddingTop: 40 }}>
           {c.stats.map((s) => (
             <div key={s.label} style={{ width: "50%", display: "flex", flexDirection: "column", marginBottom: 34 }}>
-              <div style={{ fontSize: 30, color: "#a9a7a0" }}>{s.label}</div>
+              <div style={{ fontSize: 30, color: "#a6a6a6" }}>{s.label}</div>
               <div style={{ fontSize: 66, letterSpacing: -1 }}>{s.value}</div>
             </div>
           ))}

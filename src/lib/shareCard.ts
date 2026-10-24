@@ -7,7 +7,7 @@ import { muscleSets, workoutReps, workoutSets, workoutVolume, setLoad, emomTitle
 import { decodePolyline, project } from "./route";
 import { fmtDuration, fmtKm, fmtNum, fmtPace } from "./format";
 
-export const ACCENT = "#eb6834";
+export const ACCENT = "#d4ff3a"; // lima del estilo Volt
 // músculos sin trabajar: gris oscuro sobre el fondo de la historia; gris claro en el sticker (va encima de una foto)
 const IDLE = "#3a3a38";
 const IDLE_STICKER = "#d9d7d0";
