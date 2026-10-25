@@ -128,15 +128,17 @@ export function TodayHero({ plan, matches, today, goal }: { plan: Plan; matches?
       )}
 
       {goal && daysToRace !== undefined && daysToRace >= 0 && (
-        <Link href="/plan/actual" className="mt-5 flex items-center justify-between border-t border-line pt-4">
-          <span>
+        <Link href="/plan/actual" className="mt-5 flex items-center justify-between gap-4 border-t border-line pt-4">
+          <span className="min-w-0">
             <span className="block text-xs font-semibold tracking-wider text-muted uppercase">{goal.name}</span>
             <span className="font-bold">
               {fmtKm(goal.distanceKm, 1)} km · {shortDate(goal.date)}
             </span>
           </span>
-          <span className="font-display text-4xl">
-            {daysToRace} <span className="font-sans text-base text-muted">días</span>
+          {/* número y «días» siempre juntos en una línea: con un nombre de carrera largo, «días» bajaba a otra */}
+          <span className="flex shrink-0 items-baseline gap-1.5 whitespace-nowrap">
+            <span className="font-display text-4xl leading-none">{daysToRace}</span>
+            <span className="text-base text-muted">días</span>
           </span>
         </Link>
       )}
