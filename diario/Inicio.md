@@ -23,7 +23,7 @@ App de entrenamiento para corredores: planes hacia una carrera, registro de entr
 - [[Suscripción]] — qué sería gratis y qué de pago, precio y cómo cobrar
 - [[Estudio entrenamiento]] — la ciencia en la que se basa la IA (Selye, Banister, 80/20, Pirámide)
 - **Diario** — una nota por día de trabajo (carpeta `Diario/`)
-  - [[2026-10-09]] · … · [[2026-10-24]]
+  - [[2026-10-09]] · … · [[2026-10-25]]
 
 ## Cómo usamos esto
 

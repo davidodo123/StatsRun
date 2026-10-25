@@ -193,7 +193,7 @@ Para cuando crezca: base de datos, servidor, costes y administración. Se hace s
 - [ ] Activar los avisos por correo de Upstash y Vercel al acercarse a los límites
 - [ ] Panel de administración (solo David): usuarios, activos esta semana, tamaño de cada documento, uso de la IA y última copia de seguridad
 - [x] Límite de uso de la IA por usuario: 40 mensajes al día, 5 rutinas a la semana y 15 reajustes al día — *hecho 2026-10-24* → [[Decisiones#Límite de uso de la IA]]
-- [ ] **PostHog**: métricas (qué se usa, dónde se va la gente) y avisos de errores; sin datos de salud, con consentimiento, servidor en Europa → [[Decisiones#Herramientas: ScreensDesign, PostHog y RevenueCat]]
+- [/] **PostHog**: métricas (qué se usa, dónde se va la gente) y avisos de errores; sin datos de salud, con consentimiento, servidor en Europa — *código hecho 2026-10-25; falta que David cree la cuenta (región UE) y ponga `NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN` en Vercel* → [[Decisiones#PostHog: métricas y errores]]
 - [ ] **20-100 usuarios**: Upstash a pago por uso
 - [ ] **100-500 usuarios**: Vercel Pro (Hobby no permite uso comercial) y separar las actividades con GPS del documento de cada usuario
 - [ ] **Más de 500 o cobrar**: pasar a Postgres (Neon o Supabase) con tablas de usuarios, amistades, actividades y planes; fotos a un almacén de archivos (Vercel Blob o R2)
@@ -227,3 +227,10 @@ Propuesta de Gratis / Premium en [[Suscripción]]. Primero decidir; después, co
 - [x] `OPENROUTER_API_KEY` en Vercel: comprobado en producción el 2026-10-09 («Ajustar con IA ahora» ajustó 3 sesiones). En `.env.local` no está, así que en local la IA no ajusta.
 - [x] Región de funciones de Vercel = región de Upstash Redis (las dos en iad1)
 - [x] Borrar el proyecto duplicado `stats-run` en Vercel (David dice que ya lo ha hecho)
+
+## 🔚 Para el final (lo dejó David 2026-10-25)
+
+- [ ] **Carreras del iPhone sin grabar con Run-In-Out**: que lleguen solas las de Strava, el reloj o la app Entrenamiento → [[Decisiones#Carreras del iPhone desde fuera]]
+  - Opción A: volver a conectar Strava (el código sigue en `/api/strava`; falta el botón y las variables de Strava). Para David ya; para más gente, revisión de Strava
+  - Opción B: una app que exporte Salud (p. ej. Health Auto Export, de pago) y mande cada entreno a Run-In-Out con la clave `rio_…`
+  - Mientras tanto: exportar el GPX en Strava e importarlo en Tú → Importar

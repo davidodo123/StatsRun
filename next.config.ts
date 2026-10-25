@@ -6,6 +6,15 @@ const nextConfig: NextConfig = {
   // el indicador de desarrollo tapaba «Cerrar sesión» en la barra lateral (abajo a la izquierda)
   devIndicators: { position: "bottom-right" },
   partialPrefetching: true,
+  // métricas de PostHog (servidor de Europa) por la propia web: así no las cortan los bloqueadores
+  async rewrites() {
+    return [
+      { source: "/ingest/static/:path*", destination: "https://eu-assets.i.posthog.com/static/:path*" },
+      { source: "/ingest/array/:path*", destination: "https://eu-assets.i.posthog.com/array/:path*" },
+      { source: "/ingest/:path*", destination: "https://eu.i.posthog.com/:path*" },
+    ];
+  },
+  skipTrailingSlashRedirect: true,
   experimental: {
     // volver a una pestaña ya vista en los últimos 30 s es instantáneo; las acciones que guardan datos la refrescan igual
     staleTimes: { dynamic: 30 },

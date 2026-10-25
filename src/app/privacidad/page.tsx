@@ -2,10 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { connection } from "next/server";
 import { Suspense, type ReactNode } from "react";
+import { AnalyticsToggle } from "@/components/Analytics";
 
 export const metadata: Metadata = { title: "Política de privacidad" };
 
-const UPDATED = "9 de octubre de 2026";
+const UPDATED = "25 de octubre de 2026";
 
 /**
  * Correo de contacto para ejercer derechos (variable CONTACT_EMAIL en Vercel, no en el código).
@@ -86,7 +87,11 @@ export default function PrivacyPage() {
               <strong className="text-ink">Amigos</strong>: a quién has añadido, solicitudes pendientes y con quién has entrenado.
             </li>
           </ul>
-          <p>Usamos una única cookie, imprescindible para mantener la sesión iniciada. No usamos cookies de publicidad ni de analítica.</p>
+          <p>
+            Usamos una cookie imprescindible para mantener la sesión iniciada. Solo si aceptas las <strong className="text-ink">métricas de uso</strong>, PostHog
+            guarda en tu navegador un identificador para contar qué pantallas se usan y qué errores salen. No usamos cookies de publicidad.
+          </p>
+          <AnalyticsToggle />
         </Section>
 
         <Section title="Para qué los usamos">
@@ -114,7 +119,8 @@ export default function PrivacyPage() {
             </li>
             <li>
               <strong className="text-ink">Proveedores técnicos</strong>: Vercel (alojamiento de la web), Upstash (base de datos), Google (inicio de sesión), Strava (si lo
-              conectas), OpenStreetMap (fondos de mapa: tu navegador le pide las imágenes de la zona del recorrido) y GitHub (guarda cada noche una copia de
+              conectas), PostHog (solo si aceptas las métricas de uso: qué pantallas visitas y los errores, con tu id interno y en servidores de la UE; nunca tus
+              entrenos ni tus datos de salud), OpenStreetMap (fondos de mapa: tu navegador le pide las imágenes de la zona del recorrido) y GitHub (guarda cada noche una copia de
               seguridad cifrada, que solo puede abrir el administrador de la app, para no perder datos si algo falla).
             </li>
           </ul>

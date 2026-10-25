@@ -8,6 +8,12 @@ import { NavHistory } from "@/components/BackLink";
 import { LiveWorkoutBar } from "@/components/LiveWorkoutBar";
 import { PushPrompt } from "@/components/PushPrompt";
 import { pushPublicKey } from "@/lib/push";
+import { Analytics } from "@/components/Analytics";
+import { requireViewerId } from "@/lib/session";
+
+async function AnalyticsMount() {
+  return <Analytics uid={await requireViewerId()} />;
+}
 
 // Páginas de la app (con sesión): menú lateral en escritorio y barra inferior en móvil.
 export default function AppLayout({ children }: LayoutProps<"/">) {
@@ -19,6 +25,7 @@ export default function AppLayout({ children }: LayoutProps<"/">) {
       <Suspense fallback={null}>
         <NavHistory />
         <LiveWorkoutBar />
+        <AnalyticsMount />
       </Suspense>
       <PushPrompt publicKey={pushPublicKey()} />
       <Suspense fallback={<NavView />}>

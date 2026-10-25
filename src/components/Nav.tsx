@@ -6,6 +6,7 @@ import { useEffect } from "react";
 import { logout } from "@/app/auth-actions";
 import type { Focus } from "@/lib/types";
 import { LogoMark } from "./LogoMark";
+import { resetAnalytics } from "./Analytics";
 
 const ITEMS = [
   { href: "/", label: "Inicio", icon: "M3 12l9-8 9 8M5 10v10h5v-6h4v6h5V10" },
@@ -73,7 +74,7 @@ export function TuLinks({ focus }: { focus?: Focus }) {
           {LONG_LABEL[it.href] ?? it.label}
         </Link>
       ))}
-      <form action={logout} className="contents">
+      <form action={logout} onSubmit={resetAnalytics} className="contents">
         <button className="flex flex-col items-center justify-center gap-1.5 rounded-xl border border-line bg-surface px-1 py-3 text-xs font-medium text-ink-2">
           <Icon d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h10" className="h-6 w-6" />
           Cerrar sesión
@@ -197,7 +198,7 @@ export function NavView({ path, focus }: { path?: string; focus?: Focus }) {
             {it.label === "Stats" ? "Estadísticas" : it.label === "Calcular" ? "Calculadoras" : it.label === "Datos" ? "Importar / demo" : it.label}
           </Link>
         ))}
-        <form action={logout} className="mt-auto">
+        <form action={logout} onSubmit={resetAnalytics} className="mt-auto">
           <button className="w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-ink-2 hover:bg-surface-2">Cerrar sesión</button>
         </form>
       </nav>

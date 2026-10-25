@@ -977,3 +977,18 @@ Fuentes: screensdesign.com, posthog.com/pricing, revenuecat.com/pricing, revenue
   2. **El iPhone dejó de dar ubicación** (pantalla bloqueada o app en segundo plano) y al volver la grabación se había pausado sola. Ahora, si el último punto es de hace menos de 15 min, sigue grabando; si no, se pausa desde el último punto (no desde que se abre).
 - Con huecos de más de 1 min sale un aviso: los tramos sin GPS van en línea recta (la distancia se queda corta en curvas e idas y vueltas) y en el iPhone hay que dejar la app en pantalla.
 - Lo de fondo no tiene arreglo desde la web: en el iPhone solo graba con la app en pantalla. Alternativa: grabar con Strava o el reloj e importar el .gpx/.fit.
+
+## Carreras del iPhone desde fuera
+*2026-10-25*
+
+- Como en el iPhone la web no graba con la pantalla bloqueada, David quería que sus carreras de Strava o del reloj llegaran solas. **Atajos no puede**: en «Buscar muestras de salud» no hay «Entrenamientos» (comprobado por David en su iPhone), solo cosas como la distancia andando + corriendo del día.
+- Quedan dos vías: **A** volver a conectar Strava (reglas de su API: 1 atleta hasta que lo revisen, los datos solo los ve su dueño, nada de entrenar IAs) o **B** una app que exporte Salud a Run-In-Out. David lo deja para el final; mientras, se importa el GPX.
+
+## PostHog: métricas y errores
+*2026-10-25*
+
+- **Servidor de la UE** y por la propia web: `/ingest` (rewrites en `next.config.ts`) → `eu.i.posthog.com`, para que no lo corten los bloqueadores. `/ingest/` es pública en `proxy.ts`.
+- **Consentimiento**: al entrar sale «¿Nos ayudas a mejorar la app?» (Sí, vale / No). Hasta aceptar, PostHog va en memoria: **ni cookie ni envíos** (comprobado). La elección se guarda en el navegador (`rio-metricas`) y se cambia en /privacidad, que ahora lo explica.
+- **Qué se manda**: páginas visitadas y errores (los del navegador y los del servidor, con `onRequestError` en `src/instrumentation.ts`). **Sin** grabaciones de pantalla, **sin** clics automáticos, sin *feature flags*. El usuario va por su id interno (`identify`), nunca nombre ni correo; al cerrar sesión, `reset`.
+- Nunca datos de salud ni de entrenos: no hay eventos propios todavía. Si se añaden (p. ej. «entreno registrado»), sin cifras de salud.
+- Ojo al probar: PostHog no manda nada desde Chrome sin ventana (lo toma por un robot); se prueba con el agente de un iPhone.

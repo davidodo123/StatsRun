@@ -21,6 +21,8 @@
     "fflate": "^0.8.3",
     "fit-file-parser": "^6.1.2",
     "next": "16.4.2",
+    "posthog-js": "^1.438.21",
+    "posthog-node": "^5.57.1",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "server-only": "^0.0.1",
