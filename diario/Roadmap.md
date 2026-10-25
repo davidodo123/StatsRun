@@ -191,7 +191,7 @@ Base: [[Estudio entrenamiento#6. La Pirámide de Entrenamiento (Helms, Valdez, M
 Para cuando crezca: base de datos, servidor, costes y administración. Se hace según haga falta, no todo ya.
 - [ ] Mirar en el panel de Upstash las peticiones del mes y el espacio usado, y apuntarlo en [[Infraestructura]] (cuánto margen queda)
 - [ ] Activar los avisos por correo de Upstash y Vercel al acercarse a los límites
-- [/] Panel de administración (solo David): usuarios, activos esta semana, tamaño de cada documento, uso de la IA y última copia de seguridad — *`/admin` hecho 2026-10-25; falta `ADMIN_EMAILS` en Vercel y llevar el resumen al Centro de Operaciones* → [[Decisiones#Panel de administración]]
+- [/] Panel de administración (solo David): usuarios, activos esta semana, tamaño de cada documento, uso de la IA y última copia de seguridad — *`/admin` hecho 2026-10-25 y resumen en `/api/admin/resumen` para el Centro de Operaciones; falta `ADMIN_EMAILS` en Vercel y que David cambie el id del script en la tarea de cada noche* → [[Decisiones#Panel de administración]]
 - [x] Límite de uso de la IA por usuario: 40 mensajes al día, 5 rutinas a la semana y 15 reajustes al día — *hecho 2026-10-24* → [[Decisiones#Límite de uso de la IA]]
 - [x] **PostHog**: métricas (qué se usa, dónde se va la gente) y avisos de errores; sin datos de salud, con consentimiento, servidor en Europa — *hecho 2026-10-25: cuenta en la UE, clave en Vercel y comprobado (llegan «Opt in», «Pageview» e «Identify» desde el iPhone de David)* → [[Decisiones#PostHog: métricas y errores]]
 - [ ] **20-100 usuarios**: Upstash a pago por uso
