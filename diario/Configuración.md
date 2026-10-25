@@ -20,6 +20,7 @@ tags: [config]
 | `KV_REST_API_URL` / `KV_REST_API_TOKEN` | Base de datos Upstash Redis |
 | `OPENROUTER_API_KEY` / `OPENROUTER_MODEL` | Entrenador IA |
 | `NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN` | PostHog (métricas y errores, región UE). Es la clave pública del proyecto (`phc_…`); sin ella no se carga nada |
+| `ADMIN_EMAILS` | Correos con acceso al panel `/admin` (y sin límite de IA) |
 | `AI_SIN_LIMITE` | Correos (separados por comas) sin límite de uso de la IA, para probar |
 | `STRAVA_CLIENT_ID` / `STRAVA_CLIENT_SECRET` / `APP_URL` | Conexión con Strava |
 | `CONTACT_EMAIL` | Correo público de contacto en `/privacidad` (se lee en cada visita) |

@@ -992,3 +992,10 @@ Fuentes: screensdesign.com, posthog.com/pricing, revenuecat.com/pricing, revenue
 - **Qué se manda**: páginas visitadas y errores (los del navegador y los del servidor, con `onRequestError` en `src/instrumentation.ts`). **Sin** grabaciones de pantalla, **sin** clics automáticos, sin *feature flags*. El usuario va por su id interno (`identify`), nunca nombre ni correo; al cerrar sesión, `reset`.
 - Nunca datos de salud ni de entrenos: no hay eventos propios todavía. Si se añaden (p. ej. «entreno registrado»), sin cifras de salud.
 - Ojo al probar: PostHog no manda nada desde Chrome sin ventana (lo toma por un robot); se prueba con el agente de un iPhone.
+
+## Panel de administración
+*2026-10-25*
+
+- Página `/admin` solo para los correos de `ADMIN_EMAILS` (en Vercel, no en el código); a los demás les da «no existe». Acceso en la barra lateral y en «Tú». El administrador tampoco tiene límite de IA.
+- Enseña: usuarios, activos en 7 días (con algún entreno), nuevos y entrenos de la semana, uso de la IA hoy, estado de la última **copia de seguridad** (ahora la copia de cada noche apunta si salió bien en `statsrun:db:meta:copia`), tamaño total de los datos y, por usuario: último entreno, entrenos, plan, IA de hoy, fallos de la IA, Salud (iPhone o Android), avisos, amigos y tamaño de su documento.
+- Siguiente: llevar un resumen sin datos personales al panel del Centro de Operaciones.

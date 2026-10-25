@@ -191,9 +191,9 @@ Base: [[Estudio entrenamiento#6. La Pirámide de Entrenamiento (Helms, Valdez, M
 Para cuando crezca: base de datos, servidor, costes y administración. Se hace según haga falta, no todo ya.
 - [ ] Mirar en el panel de Upstash las peticiones del mes y el espacio usado, y apuntarlo en [[Infraestructura]] (cuánto margen queda)
 - [ ] Activar los avisos por correo de Upstash y Vercel al acercarse a los límites
-- [ ] Panel de administración (solo David): usuarios, activos esta semana, tamaño de cada documento, uso de la IA y última copia de seguridad
+- [/] Panel de administración (solo David): usuarios, activos esta semana, tamaño de cada documento, uso de la IA y última copia de seguridad — *`/admin` hecho 2026-10-25; falta `ADMIN_EMAILS` en Vercel y llevar el resumen al Centro de Operaciones* → [[Decisiones#Panel de administración]]
 - [x] Límite de uso de la IA por usuario: 40 mensajes al día, 5 rutinas a la semana y 15 reajustes al día — *hecho 2026-10-24* → [[Decisiones#Límite de uso de la IA]]
-- [/] **PostHog**: métricas (qué se usa, dónde se va la gente) y avisos de errores; sin datos de salud, con consentimiento, servidor en Europa — *código hecho 2026-10-25; falta que David cree la cuenta (región UE) y ponga `NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN` en Vercel* → [[Decisiones#PostHog: métricas y errores]]
+- [x] **PostHog**: métricas (qué se usa, dónde se va la gente) y avisos de errores; sin datos de salud, con consentimiento, servidor en Europa — *hecho 2026-10-25: cuenta en la UE, clave en Vercel y comprobado (llegan «Opt in», «Pageview» e «Identify» desde el iPhone de David)* → [[Decisiones#PostHog: métricas y errores]]
 - [ ] **20-100 usuarios**: Upstash a pago por uso
 - [ ] **100-500 usuarios**: Vercel Pro (Hobby no permite uso comercial) y separar las actividades con GPS del documento de cada usuario
 - [ ] **Más de 500 o cobrar**: pasar a Postgres (Neon o Supabase) con tablas de usuarios, amistades, actividades y planes; fotos a un almacén de archivos (Vercel Blob o R2)

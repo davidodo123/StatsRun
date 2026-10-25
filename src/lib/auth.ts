@@ -163,15 +163,27 @@ export async function getUser(id: string): Promise<PublicUser | undefined> {
   return u && toPublic(u);
 }
 
-/** Sin límite de IA: su correo está en AI_SIN_LIMITE (separados por comas; para probar). */
-export async function isAiUnlimited(id: string): Promise<boolean> {
-  const list = (process.env.AI_SIN_LIMITE ?? "")
+// ¿Está su correo en la variable (correos separados por comas)? Los correos van en Vercel, no en el código (es público).
+async function emailIn(id: string, ...vars: (string | undefined)[]): Promise<boolean> {
+  const list = vars
+    .join(",")
     .split(",")
     .map((e) => e.trim().toLowerCase())
     .filter(Boolean);
   if (!list.length) return false;
   const email = (await readUsers()).users.find((x) => x.id === id)?.email?.toLowerCase();
   return Boolean(email && list.includes(email));
+}
+
+/** Administrador (panel /admin): su correo está en ADMIN_EMAILS. */
+export const isAdmin = (id: string) => emailIn(id, process.env.ADMIN_EMAILS);
+
+/** Sin límite de IA: su correo está en AI_SIN_LIMITE (para probar) o es administrador. */
+export const isAiUnlimited = (id: string) => emailIn(id, process.env.AI_SIN_LIMITE, process.env.ADMIN_EMAILS);
+
+/** Todos los usuarios con lo que necesita el panel de administración. */
+export async function allUsersForAdmin() {
+  return (await readUsers()).users.map((u) => ({ id: u.id, name: u.name, username: u.username, email: u.email, createdAt: u.createdAt, friends: u.friends.length }));
 }
 
 export async function getFriends(id: string): Promise<PublicUser[]> {

@@ -83,6 +83,8 @@ export const LEGACY_DB_KEY = PREFIX;
 export const healthTokenKey = (hash: string) => `${PREFIX}:salud:${hash}`;
 /** Carreras de Cruzando la Meta leídas de su web (compartidas por todos los usuarios). */
 export const CM_RACES_KEY = `${PREFIX}:carreras-cm`;
+/** Cómo fue la última copia de seguridad (para el panel de administración). */
+export const BACKUP_STATUS_KEY = `${PREFIX}:meta:copia`;
 
 // colas de escritura por clave: serializan las modificaciones dentro de una misma instancia
 const queues = new Map<string, Promise<unknown>>();

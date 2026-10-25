@@ -29,6 +29,7 @@ import { requireViewerId } from "@/lib/session";
 import { Icon } from "@/components/icons";
 import { AiMemory } from "@/components/AiMemory";
 import { TuLinks } from "@/components/Nav";
+import { viewIsAdmin } from "@/lib/admin";
 
 export const metadata: Metadata = { title: "Perfil" };
 
@@ -102,7 +103,7 @@ async function Content({ searchParams }: { searchParams: PageProps<"/perfil">["s
         </ProfileHeader>
       )}
       {/* en el móvil, «Tú» guarda lo que no cabe en la barra de abajo */}
-      {db.profile && stats && tab === first && <TuLinks focus={focus} />}
+      {db.profile && stats && tab === first && <TuLinks focus={focus} admin={await viewIsAdmin(me?.id ?? "")} />}
 
       {tab === "resumen" && <Resumen db={db} stats={stats!} matches={matches} today={today} />}
       {tab === "running" && <Running db={db} stats={stats!} today={today} />}

@@ -46,7 +46,7 @@ function Icon({ d, className = "h-5 w-5" }: { d: string; className?: string }) {
 const MOBILE_BOTTOM = ["/", "/plan", "/registrar", "/fuerza", "/perfil"];
 const STRENGTH_BOTTOM = ["/", "/fuerza", "/fuerza/entreno", "/fuerza/ejercicios", "/perfil"];
 const CTA = ["/registrar", "/fuerza/entreno"]; // el botón lima de la barra de abajo
-const IN_TU = ["/perfil", "/estadisticas", "/carreras", "/sueno", "/herramientas", "/ajustes", "/registrar"];
+const IN_TU = ["/perfil", "/estadisticas", "/carreras", "/sueno", "/herramientas", "/ajustes", "/registrar", "/admin"];
 const LONG_LABEL: Record<string, string> = { "/estadisticas": "Estadísticas", "/herramientas": "Calculadoras", "/ajustes": "Importar / demo", "/registrar": "Registrar actividad" };
 const icon = (href: string) => ITEMS.find((i) => i.href === href)!.icon;
 
@@ -62,10 +62,13 @@ function Logo({ compact }: { compact?: boolean }) {
   );
 }
 
+// solo para el administrador (ADMIN_EMAILS)
+const ADMIN_ITEM = { href: "/admin", label: "Administración", icon: "M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6l8-3zM9 12l2 2 4-4" };
+
 /** Lo que en el móvil no cabe en la barra: va en «Tú», debajo de la cabecera del perfil. */
-export function TuLinks({ focus }: { focus?: Focus }) {
+export function TuLinks({ focus, admin }: { focus?: Focus; admin?: boolean }) {
   const bottomHrefs = focus === "fuerza" ? STRENGTH_BOTTOM : MOBILE_BOTTOM;
-  const rest = itemsFor(focus).filter((i) => IN_TU.includes(i.href) && !bottomHrefs.includes(i.href) && i.href !== "/perfil");
+  const rest = [...itemsFor(focus).filter((i) => IN_TU.includes(i.href) && !bottomHrefs.includes(i.href) && i.href !== "/perfil"), ...(admin ? [ADMIN_ITEM] : [])];
   return (
     <nav aria-label="Más secciones" className="grid grid-cols-3 gap-2 md:hidden">
       {rest.map((it) => (
@@ -147,7 +150,7 @@ function MobileNav({ active, focus }: { active: (href: string) => boolean; focus
 }
 
 /** Menú con la sección actual resaltada. Va dentro de <Suspense fallback={<NavView />}>: la ruta solo se conoce al pedir la página. */
-export function Nav({ focus }: { focus?: Focus }) {
+export function Nav({ focus, admin }: { focus?: Focus; admin?: boolean }) {
   const path = usePathname();
   const query = useSearchParams().toString();
   // páginas visitadas en esta pestaña: para volver al sitio de antes tras borrar algo
@@ -158,7 +161,7 @@ export function Nav({ focus }: { focus?: Focus }) {
       if (list.at(-1) !== url) sessionStorage.setItem(VISITED, JSON.stringify([...list, url].slice(-30)));
     } catch {}
   }, [path, query]);
-  return <NavView path={path} focus={focus} />;
+  return <NavView path={path} focus={focus} admin={admin} />;
 }
 
 const VISITED = "rio-visitadas";
@@ -174,8 +177,8 @@ export function lastVisited(skip: (url: string) => boolean, fallback: string): s
 }
 
 /** Menú sin sección resaltada (el que se prerenderiza) o con ella. */
-export function NavView({ path, focus }: { path?: string; focus?: Focus }) {
-  const items = itemsFor(focus);
+export function NavView({ path, focus, admin }: { path?: string; focus?: Focus; admin?: boolean }) {
+  const items = [...itemsFor(focus), ...(admin ? [ADMIN_ITEM] : [])];
   // resalta la entrada más concreta: en /fuerza/entreno, «Entrenar» y no «Fuerza»
   const matches = (href: string) => path !== undefined && (href === "/" ? path === "/" : path === href || path.startsWith(`${href}/`) || path.startsWith(`${href}?`));
   const active = (href: string) => matches(href) && !items.some((o) => o.href.length > href.length && o.href.startsWith(href) && matches(o.href));
