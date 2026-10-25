@@ -228,6 +228,14 @@ Propuesta de Gratis / Premium en [[Suscripción]]. Primero decidir; después, co
 - [x] Región de funciones de Vercel = región de Upstash Redis (las dos en iad1)
 - [x] Borrar el proyecto duplicado `stats-run` en Vercel (David dice que ya lo ha hecho)
 
+## 🌍 Idiomas (lo pidió David 2026-10-26) → [[Decisiones#Idiomas]]
+
+Español, inglés, catalán, portugués y francés, por fases.
+
+- [/] Fase 1: selector en Perfil → Editar perfil y pantallas principales (menú, Inicio, «Tú» y la cabecera del perfil) — *hecha 2026-10-26, pendiente de que David la vea*
+- [ ] Fase 2: el resto de pantallas (Plan, Fuerza, Registrar, Estadísticas, Amigos, Carreras, Entrenador IA, avisos, inicio de sesión, privacidad…)
+- [ ] Fase 3: lo generado: títulos y pasos de las sesiones del plan, respuestas de la IA, avisos de cada mañana, imágenes para compartir y pasos de los 1.036 ejercicios
+
 ## 🔚 Para el final (lo dejó David 2026-10-25)
 
 - [ ] **Carreras del iPhone sin grabar con Run-In-Out**: que lleguen solas las de Strava, el reloj o la app Entrenamiento → [[Decisiones#Carreras del iPhone desde fuera]]

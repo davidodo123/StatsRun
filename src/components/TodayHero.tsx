@@ -1,10 +1,9 @@
 import Link from "next/link";
 import type { Goal, Plan, PlannedSession } from "@/lib/types";
 import type { SessionMatch } from "@/lib/engine/planner";
-import { WEEKDAYS, addDays, diffDays, mondayOf, shortDate, weekday } from "@/lib/dates";
+import { addDays, diffDays, mondayOf } from "@/lib/dates";
 import { fmtKm, fmtPace } from "@/lib/format";
-
-const DAYS = ["L", "M", "X", "J", "V", "S", "D"];
+import { dayMonth, translator, weekdayDate, weekdayInitials, type Locale } from "@/lib/i18n";
 
 // el nombre sin los km del final («Tirada larga 12 km»): los km ya van debajo, en grande
 const heroTitle = (s: PlannedSession) => (s.type === "strength" ? s.title : s.title.replace(/\s*·?\s*\d+([.,]\d+)?\s*km$/i, "")) || s.title;
@@ -18,7 +17,9 @@ const startHref = (s: PlannedSession) => (s.type === "strength" ? `/fuerza/entre
  * Lo primero de Inicio, estilo Volt: «Hoy toca» con la sesión en grande, los km en lima, «Empezar»,
  * la semana en barras (hecho en blanco, hoy en lima) y la cuenta atrás de la carrera.
  */
-export function TodayHero({ plan, matches, today, goal }: { plan: Plan; matches?: Map<string, SessionMatch>; today: string; goal?: Goal }) {
+export function TodayHero({ plan, matches, today, goal, locale }: { plan: Plan; matches?: Map<string, SessionMatch>; today: string; goal?: Goal; locale: Locale }) {
+  const t = translator(locale);
+  const initials = weekdayInitials(locale);
   const week = plan.weeks.find((w) => today >= w.start && today <= addDays(w.start, 6));
   const sessions = plan.weeks.flatMap((w) => w.sessions);
   const todays = sessions.filter((s) => s.date === today);
@@ -41,10 +42,10 @@ export function TodayHero({ plan, matches, today, goal }: { plan: Plan; matches?
   const daysToRace = goal ? diffDays(goal.date, today) : undefined;
 
   return (
-    <section className="mb-6" aria-label="Hoy">
+    <section className="mb-6" aria-label={t("hoy.aria")}>
       {main ? (
         <>
-          <p className="text-sm font-bold tracking-[0.2em] text-accent uppercase">{done ? "Hecho hoy" : "Hoy toca"}</p>
+          <p className="text-sm font-bold tracking-[0.2em] text-accent uppercase">{done ? t("hoy.hechoHoy") : t("hoy.hoyToca")}</p>
           <h2 className={`mt-1 font-display leading-[0.92] uppercase ${titleSize(heroTitle(main))}`}>{heroTitle(main)}</h2>
           {main.type !== "strength" && main.distanceKm > 0 ? (
             <p className="mt-3 flex items-baseline gap-2">
@@ -61,52 +62,52 @@ export function TodayHero({ plan, matches, today, goal }: { plan: Plan; matches?
             {main.pace && main.type !== "strength" && (
               <div>
                 <dd className="text-xl font-bold text-ink tabular">{fmtPace((main.pace.fast + main.pace.slow) / 2)}</dd>
-                <dt>min/km</dt>
+                <dt>{t("hoy.minKm")}</dt>
               </div>
             )}
             {main.type !== "strength" && (
               <div>
                 <dd className="text-xl font-bold text-ink tabular">~{main.durationMin}</dd>
-                <dt>minutos</dt>
+                <dt>{t("hoy.minutos")}</dt>
               </div>
             )}
             {main.zone && (
               <div>
                 <dd className="text-xl font-bold text-ink">{main.zone}</dd>
-                <dt>zona</dt>
+                <dt>{t("hoy.zona")}</dt>
               </div>
             )}
           </dl>
           {extra.length > 0 && (
             <div className="mt-3 space-y-2">
-              <p className="text-sm text-ink-2">Y además: {extra.map((s) => s.title).join(", ")}</p>
+              <p className="text-sm text-ink-2">{t("hoy.yAdemas", { sesiones: extra.map((s) => s.title).join(", ") })}</p>
               {/* la rutina de fuerza de hoy también se empieza desde aquí (el botón grande es para la carrera) */}
               {extra
                 .filter((s) => s.type === "strength" && matches?.get(s.id)?.status !== "done")
                 .map((s) => (
                   <Link key={s.id} href={startHref(s)} className="btn btn-ghost w-full py-3 text-sm tracking-wider uppercase">
-                    Empezar {s.routineId ? "rutina" : "fuerza"}: {s.title}
+                    {t(s.routineId ? "hoy.empezarRutina" : "hoy.empezarFuerza", { nombre: s.title })}
                   </Link>
                 ))}
             </div>
           )}
           {done ? (
             <Link href="/plan/actual" className="btn btn-ghost mt-5 w-full py-4 text-base tracking-wider uppercase">
-              Ver en el plan
+              {t("hoy.verEnPlan")}
             </Link>
           ) : (
             <Link href={startHref(main)} className="btn mt-5 w-full py-4 text-base tracking-wider uppercase">
-              Empezar
+              {t("hoy.empezar")}
             </Link>
           )}
         </>
       ) : (
         <>
-          <p className="text-sm font-bold tracking-[0.2em] text-accent uppercase">Hoy</p>
-          <h2 className="mt-1 font-display text-6xl leading-[0.92] uppercase">Descanso</h2>
+          <p className="text-sm font-bold tracking-[0.2em] text-accent uppercase">{t("hoy.hoy")}</p>
+          <h2 className="mt-1 font-display text-6xl leading-[0.92] uppercase">{t("hoy.descanso")}</h2>
           {next && (
             <p className="mt-3 text-ink-2">
-              {next.date === addDays(today, 1) ? "Mañana" : `El ${WEEKDAYS[weekday(next.date)].toLowerCase()} ${shortDate(next.date)}`}: <strong className="text-ink">{next.title}</strong>
+              {next.date === addDays(today, 1) ? t("hoy.manana") : t("hoy.elDia", { dia: weekdayDate(next.date, locale) })}: <strong className="text-ink">{next.title}</strong>
             </p>
           )}
         </>
@@ -115,7 +116,7 @@ export function TodayHero({ plan, matches, today, goal }: { plan: Plan; matches?
       {week && (
         <div className="mt-7 border-t border-line pt-4">
           <div className="flex justify-between text-xs font-semibold tracking-wider text-muted uppercase">
-            <span>Semana</span>
+            <span>{t("hoy.semana")}</span>
             <span>
               <span className="text-ink">{Math.round(doneKm)}</span> / {week.targetKm} km
             </span>
@@ -132,7 +133,7 @@ export function TodayHero({ plan, matches, today, goal }: { plan: Plan; matches?
           <div className="mt-1.5 grid grid-cols-7 gap-1.5 text-center text-xs text-muted">
             {days.map((d, i) => (
               <span key={d.date} className={d.date === today ? "font-bold text-accent" : ""}>
-                {DAYS[i]}
+                {initials[i]}
               </span>
             ))}
           </div>
@@ -144,13 +145,13 @@ export function TodayHero({ plan, matches, today, goal }: { plan: Plan; matches?
           <span className="min-w-0">
             <span className="block text-xs font-semibold tracking-wider text-muted uppercase">{goal.name}</span>
             <span className="font-bold">
-              {fmtKm(goal.distanceKm, 1)} km · {shortDate(goal.date)}
+              {fmtKm(goal.distanceKm, 1)} km · {dayMonth(goal.date, locale)}
             </span>
           </span>
           {/* número y «días» siempre juntos en una línea: con un nombre de carrera largo, «días» bajaba a otra */}
           <span className="flex shrink-0 items-baseline gap-1.5 whitespace-nowrap">
             <span className="font-display text-4xl leading-none">{daysToRace}</span>
-            <span className="text-base text-muted">días</span>
+            <span className="text-base text-muted">{t("hoy.dias")}</span>
           </span>
         </Link>
       )}

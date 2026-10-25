@@ -29,23 +29,26 @@ import { requireViewerId } from "@/lib/session";
 import { Icon } from "@/components/icons";
 import { AiMemory } from "@/components/AiMemory";
 import { TuLinks } from "@/components/Nav";
+import { LanguageSelect } from "@/components/LanguageSelect";
+import { getT } from "@/lib/i18n/server";
+import type { Key, Locale, T } from "@/lib/i18n";
 import { viewIsAdmin } from "@/lib/admin";
 
 export const metadata: Metadata = { title: "Perfil" };
 
 // Logros y Editar (botones de la cabecera) no van en la fila de pestañas
 const TABS = [
-  { id: "resumen", label: "Resumen" },
-  { id: "running", label: "Running" },
-  { id: "fuerza", label: "Fuerza" },
-  { id: "actividades", label: "Actividades", short: "Entrenos" },
-  { id: "salud", label: "Salud" },
-  { id: "logros", label: "Logros", hidden: true },
-  { id: "editar", label: "Editar perfil", hidden: true },
-] as const;
+  { id: "resumen", label: "perfil.resumen" },
+  { id: "running", label: "perfil.running" },
+  { id: "fuerza", label: "perfil.fuerza" },
+  { id: "actividades", label: "perfil.actividades", short: "perfil.entrenos" },
+  { id: "salud", label: "perfil.salud" },
+  { id: "logros", label: "perfil.logros", hidden: true },
+  { id: "editar", label: "perfil.editar", hidden: true },
+] as const satisfies readonly { id: string; label: Key; short?: Key; hidden?: true }[];
 type Tab = (typeof TABS)[number]["id"];
 
-const LEVEL: Record<string, string> = { nuevo: "Empezando", principiante: "Principiante", intermedio: "Intermedio", avanzado: "Avanzado" };
+const LEVEL: Record<string, Key> = { nuevo: "perfil.nivel.nuevo", principiante: "perfil.nivel.principiante", intermedio: "perfil.nivel.intermedio", avanzado: "perfil.nivel.avanzado" };
 const PHASE_LABEL: Record<Phase, string> = { base: "Base", construccion: "Construcción", especifico: "Específico", taper: "Afinado" };
 const PAGE_SIZE = 25;
 
@@ -62,7 +65,7 @@ export default function PerfilPage({ searchParams }: PageProps<"/perfil">) {
 
 async function Content({ searchParams }: { searchParams: PageProps<"/perfil">["searchParams"] }) {
   const sp = await searchParams;
-  const [{ db, stats, matches, today }, me] = await Promise.all([getAnalysis(), requireViewerId().then(viewUser)]);
+  const [{ db, stats, matches, today }, me, { locale, t: tr }] = await Promise.all([getAnalysis(), requireViewerId().then(viewUser), getT()]);
   // solo fuerza: sin Resumen ni Running (son de correr) y se abre en Fuerza
   const focus = focusOf(db.profile);
   const tabs = TABS.filter((t) => focus !== "fuerza" || (t.id !== "resumen" && t.id !== "running"));
@@ -75,10 +78,11 @@ async function Content({ searchParams }: { searchParams: PageProps<"/perfil">["s
   return (
     <div className="space-y-4">
       {db.profile && stats && (
-        <ProfileHeader db={db} stats={stats} tab={tab} picture={me?.picture}>
+        <ProfileHeader db={db} stats={stats} tab={tab} picture={me?.picture} tr={tr}>
           {/* las pestañas, dentro de la misma tarjeta: todas a la vista también en el móvil */}
-          <nav aria-label="Secciones del perfil" className="mt-4 border-t border-line pt-3">
-            <div className="flex gap-1">
+          <nav aria-label={tr("perfil.secciones")} className="mt-4 border-t border-line pt-3">
+            {/* sin cortar los nombres: en otros idiomas son más largos y, si no caben, la fila se desliza */}
+            <div className="-mx-1 flex gap-1 overflow-x-auto px-1 [scrollbar-width:none]">
               {tabs
                 .filter((t) => !("hidden" in t))
                 .map((t) => (
@@ -86,15 +90,15 @@ async function Content({ searchParams }: { searchParams: PageProps<"/perfil">["s
                     key={t.id}
                     href={t.id === first ? "/perfil" : `/perfil?tab=${t.id}`}
                     aria-current={t.id === tab ? "page" : undefined}
-                    className={`min-w-0 flex-auto truncate rounded-lg px-1.5 py-1.5 text-center text-[13px] font-medium md:flex-none md:px-3 md:text-sm ${t.id === tab ? "bg-accent text-accent-ink" : "text-ink-2 hover:bg-surface-2"}`}
+                    className={`flex-auto shrink-0 whitespace-nowrap rounded-lg px-1.5 py-1.5 text-center text-[13px] font-medium md:flex-none md:px-3 md:text-sm ${t.id === tab ? "bg-accent text-accent-ink" : "text-ink-2 hover:bg-surface-2"}`}
                   >
                     {"short" in t ? (
                       <>
-                        <span className="sm:hidden">{t.short}</span>
-                        <span className="hidden sm:inline">{t.label}</span>
+                        <span className="sm:hidden">{tr(t.short)}</span>
+                        <span className="hidden sm:inline">{tr(t.label)}</span>
                       </>
                     ) : (
-                      t.label
+                      tr(t.label)
                     )}
                   </Link>
                 ))}
@@ -103,7 +107,7 @@ async function Content({ searchParams }: { searchParams: PageProps<"/perfil">["s
         </ProfileHeader>
       )}
       {/* en el móvil, «Tú» guarda lo que no cabe en la barra de abajo */}
-      {db.profile && stats && tab === first && <TuLinks focus={focus} admin={await viewIsAdmin(me?.id ?? "")} />}
+      {db.profile && stats && tab === first && <TuLinks focus={focus} admin={await viewIsAdmin(me?.id ?? "")} locale={locale} />}
 
       {tab === "resumen" && <Resumen db={db} stats={stats!} matches={matches} today={today} />}
       {tab === "running" && <Running db={db} stats={stats!} today={today} />}
@@ -111,28 +115,28 @@ async function Content({ searchParams }: { searchParams: PageProps<"/perfil">["s
       {tab === "actividades" && <Actividades db={db} sport={typeof sp.deporte === "string" ? sp.deporte : "todos"} page={Number(sp.pagina) || 1} />}
       {tab === "logros" && <Logros list={achievements(db.activities, matches)} />}
       {tab === "salud" && <Salud db={db} />}
-      {tab === "editar" && <Editar db={db} today={today} initialFocus={foco} />}
+      {tab === "editar" && <Editar db={db} today={today} initialFocus={foco} locale={locale} />}
     </div>
   );
 }
 
 // ---------------- Cabecera ----------------
 
-function ProfileHeader({ db, stats, tab, picture, children }: { db: Db; stats: Stats; tab: Tab; picture?: string; children: ReactNode }) {
+function ProfileHeader({ db, stats, tab, picture, tr, children }: { db: Db; stats: Stats; tab: Tab; picture?: string; tr: T; children: ReactNode }) {
   const p = db.profile!;
   const T = stats.totals;
   const strengthOnly = focusOf(p) === "fuerza";
   const lifts = db.activities.filter((a) => a.workout);
   const cells = strengthOnly
     ? [
-        ["Entrenos", fmtNum(lifts.length)],
-        ["Toneladas", fmtNum(lifts.reduce((t, a) => t + workoutVolume(a.workout!), 0) / 1000, 1)],
-        ["Horas", fmtNum(lifts.reduce((t, a) => t + a.movingSec, 0) / 3600)],
+        [tr("perfil.entrenos"), fmtNum(lifts.length)],
+        [tr("perfil.toneladas"), fmtNum(lifts.reduce((t, a) => t + workoutVolume(a.workout!), 0) / 1000, 1)],
+        [tr("perfil.horas"), fmtNum(lifts.reduce((t, a) => t + a.movingSec, 0) / 3600)],
       ]
     : [
-        ["Km totales", fmtKm(T.allKm, 2)],
-        ["Carreras", fmtNum(T.allRuns)],
-        ["Horas", fmtNum(T.allHours)],
+        [tr("perfil.kmTotales"), fmtKm(T.allKm, 2)],
+        [tr("perfil.carreras"), fmtNum(T.allRuns)],
+        [tr("perfil.horas"), fmtNum(T.allHours)],
       ];
   const initials = p.name
     .split(" ")
@@ -148,16 +152,16 @@ function ProfileHeader({ db, stats, tab, picture, children }: { db: Db; stats: S
         <div className="min-w-0 flex-1">
           <p className="truncate text-lg font-bold">{p.name}</p>
           <p className="text-xs text-ink-2">
-            {strengthOnly ? "Fuerza" : `${LEVEL[p.level]} · `}
-            {strengthOnly ? ` · ${p.age} años` : `${p.age} años · VDOT ${stats.vdot.vdot.toFixed(1)}`}
-            {db.goal && ` · Objetivo: ${db.goal.name}`}
+            {strengthOnly ? tr("perfil.fuerza") : `${LEVEL[p.level] ? tr(LEVEL[p.level]) : p.level} · `}
+            {strengthOnly ? ` · ${tr("perfil.anos", { edad: p.age })}` : `${tr("perfil.anos", { edad: p.age })} · VDOT ${stats.vdot.vdot.toFixed(1)}`}
+            {db.goal && ` · ${tr("perfil.objetivo", { carrera: db.goal.name })}`}
           </p>
         </div>
         <div className="flex gap-2 self-start sm:order-last sm:self-center">
-          <Link href="/perfil?tab=logros" aria-label="Logros" aria-current={tab === "logros" ? "page" : undefined} className={btn(tab === "logros")}>
+          <Link href="/perfil?tab=logros" aria-label={tr("perfil.logros")} aria-current={tab === "logros" ? "page" : undefined} className={btn(tab === "logros")}>
             <Icon name="trophy" className="h-[18px] w-[18px]" />
           </Link>
-          <Link href="/perfil?tab=editar" aria-label="Editar perfil" aria-current={tab === "editar" ? "page" : undefined} className={btn(tab === "editar")}>
+          <Link href="/perfil?tab=editar" aria-label={tr("perfil.editar")} aria-current={tab === "editar" ? "page" : undefined} className={btn(tab === "editar")}>
             <Icon name="edit" className="h-[18px] w-[18px]" />
           </Link>
         </div>
@@ -869,13 +873,14 @@ function ShortcutStep({ n, title, img, w = 600, h = 600, children }: { n: number
 
 // ---------------- Editar ----------------
 
-function Editar({ db, today, initialFocus }: { db: Db; today: string; initialFocus?: Focus }) {
+function Editar({ db, today, initialFocus, locale }: { db: Db; today: string; initialFocus?: Focus; locale: Locale }) {
   const { profile } = db;
   const avg = profileAverages(db.activities, today);
   const outdated = profile && avg && (Math.abs(avg.weeklyKm - profile.weeklyKm) >= 3 || Math.abs(avg.longestRunKm - profile.longestRunKm) >= 2);
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-      <div className="lg:col-span-2">
+      <div className="space-y-4 lg:col-span-2">
+        <LanguageSelect locale={locale} />
         <ProfileForm key={`${profile?.weeklyKm}-${profile?.longestRunKm}-${profile?.focus}`} profile={profile} initialFocus={initialFocus} />
       </div>
       {profile && (

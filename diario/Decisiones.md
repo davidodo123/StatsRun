@@ -999,3 +999,12 @@ Fuentes: screensdesign.com, posthog.com/pricing, revenuecat.com/pricing, revenue
 - Página `/admin` solo para los correos de `ADMIN_EMAILS` (en Vercel, no en el código); a los demás les da «no existe». Acceso en la barra lateral y en «Tú». El administrador tampoco tiene límite de IA.
 - Enseña: usuarios, activos en 7 días (con algún entreno), nuevos y entrenos de la semana, uso de la IA hoy, estado de la última **copia de seguridad** (ahora la copia de cada noche apunta si salió bien en `statsrun:db:meta:copia`), tamaño total de los datos y, por usuario: último entreno, entrenos, plan, IA de hoy, fallos de la IA, Salud (iPhone o Android), avisos, amigos y tamaño de su documento.
 - **Centro de Operaciones**: `/api/admin/resumen` da solo totales (usuarios, activos, entrenos de la semana, IA de hoy, fallos de la IA, tamaño de los datos y estado de la copia), sin nombres ni correos y sin clave, a propósito: así no hay que guardar ninguna clave en Claude. Se guarda 10 min en la CDN. El `actualizar.py` del panel lo lee cada noche y lo añade a la fila de StatsRun (`app_*`); la tarjeta de StatsRun lo enseña en «Uso de la app».
+
+## Idiomas
+*2026-10-26*
+
+- David quiere cambiar el idioma en las opciones del perfil: **español, inglés, catalán, portugués y francés**, por fases (1: selector y pantallas principales; 2: el resto; 3: lo generado).
+- Sin librería: diccionarios propios en `src/lib/i18n/` (`es.ts` es el original y manda; los demás son `Record<clave, string>`, así TypeScript avisa si falta una traducción; un test comprueba claves y huecos `{x}`). `translator(locale)` vale en servidor y navegador; a los componentes del navegador les llega el idioma como prop.
+- Dónde se guarda: cookie `rio_lang` (un año, en el dispositivo) y `db.lang` (en la cuenta, para los demás dispositivos). `viewLocale()` lee la cookie y, si no hay, la cuenta (caché privada, como el resto de vistas).
+- Fechas con `Intl` en el idioma (`weekdayDate`, `dayMonth`, `weekdayInitials`); en español salen igual que antes.
+- Limitación: el menú que se ve un instante antes de cargar (el prerenderizado) va en español.
