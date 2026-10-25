@@ -77,7 +77,19 @@ export function TodayHero({ plan, matches, today, goal }: { plan: Plan; matches?
               </div>
             )}
           </dl>
-          {extra.length > 0 && <p className="mt-3 text-sm text-ink-2">Y además: {extra.map((s) => s.title).join(", ")}</p>}
+          {extra.length > 0 && (
+            <div className="mt-3 space-y-2">
+              <p className="text-sm text-ink-2">Y además: {extra.map((s) => s.title).join(", ")}</p>
+              {/* la rutina de fuerza de hoy también se empieza desde aquí (el botón grande es para la carrera) */}
+              {extra
+                .filter((s) => s.type === "strength" && matches?.get(s.id)?.status !== "done")
+                .map((s) => (
+                  <Link key={s.id} href={startHref(s)} className="btn btn-ghost w-full py-3 text-sm tracking-wider uppercase">
+                    Empezar {s.routineId ? "rutina" : "fuerza"}: {s.title}
+                  </Link>
+                ))}
+            </div>
+          )}
           {done ? (
             <Link href="/plan/actual" className="btn btn-ghost mt-5 w-full py-4 text-base tracking-wider uppercase">
               Ver en el plan

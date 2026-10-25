@@ -65,6 +65,8 @@ export function SessionCard({
   const kind = KIND_STYLE[SESSION_KIND[s.type]];
   const st = match ? STATUS[match.status] : undefined;
   const dayLabel = `${WEEKDAYS[weekday(s.date)].toLowerCase()} ${shortDate(s.date)}`;
+  // las rutinas de fuerza se pueden empezar cualquier día (también las de los próximos), salvo si ya está hecha o pasó
+  const canStart = !readOnly && s.type === "strength" && match?.status !== "done" && match?.status !== "missed";
   const canMove = !readOnly && today && s.type !== "race" && match && (match.status === "today" || (match.status === "upcoming" && !compact)) && s.date <= addDays(today, MOVE_DAYS);
   return (
     <article className="relative flex gap-3 overflow-hidden rounded-xl border border-line bg-surface p-3 pl-4">
@@ -109,9 +111,9 @@ export function SessionCard({
             {canMove && <MoveSessionButton sessionId={s.id} date={s.date} today={today} days={MOVE_DAYS} />}
           </div>
         )}
-        {(st || canLog || (match && match.activities.length > 0)) && (
+        {(st || canLog || canStart || (match && match.activities.length > 0)) && (
           <div className="mt-2 flex flex-wrap items-center gap-3">
-            {!readOnly && s.type === "strength" && match?.status !== "done" && (match?.status !== "missed") && (
+            {canStart && (
               <Link href={`/fuerza/entreno?sesion=${encodeURIComponent(s.id)}`} className="rounded-md bg-accent px-2 py-1 text-xs font-semibold text-accent-ink">
                 <Icon name="play" className="mr-1 h-3 w-3 align-[-1px]" />
                 {s.routineId ? "Empezar rutina" : "Empezar entreno"}
