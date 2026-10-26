@@ -1,5 +1,6 @@
 /* eslint-disable @next/next/no-img-element -- fotos de un CDN externo, ya ligeras: sin optimizador */
 import { exerciseImage, type Exercise } from "@/lib/strength/labels";
+import { translator, type Locale } from "@/lib/i18n";
 
 type Media = Pick<Exercise, "id" | "name" | "img" | "imgId" | "cat">;
 
@@ -32,14 +33,14 @@ export function ExerciseThumb({ x, className = "h-12 w-12" }: { x: Media; classN
 }
 
 /** Foto grande: alterna la posición inicial y la final. */
-export function ExerciseAnimation({ x }: { x: Media }) {
+export function ExerciseAnimation({ x, locale = "es" }: { x: Media; locale?: Locale }) {
   if (!x.img) return <Placeholder cat={x.cat} className="aspect-[4/3] w-full rounded-xl" />;
   const id = x.imgId ?? x.id;
   return (
     <div className="relative aspect-[4/3] overflow-hidden rounded-xl bg-white">
       {x.img > 1 && <img src={exerciseImage(id, 1)} alt="" className="absolute inset-0 h-full w-full object-contain" />}
       <img src={exerciseImage(id, 0)} alt={x.name} className={`absolute inset-0 h-full w-full object-contain ${x.img > 1 ? "exercise-frame" : ""}`} />
-      {x.imgId && <span className="absolute bottom-2 left-2 rounded-full bg-black/60 px-2 py-0.5 text-[11px] text-white">Foto de un ejercicio parecido</span>}
+      {x.imgId && <span className="absolute bottom-2 left-2 rounded-full bg-black/60 px-2 py-0.5 text-[11px] text-white">{translator(locale)("exm.parecido")}</span>}
     </div>
   );
 }

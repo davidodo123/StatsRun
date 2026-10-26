@@ -10,6 +10,11 @@ import { PushPrompt } from "@/components/PushPrompt";
 import { pushPublicKey } from "@/lib/push";
 import { Analytics } from "@/components/Analytics";
 import { requireViewerId } from "@/lib/session";
+import { viewLocale } from "@/lib/i18n/server";
+
+async function LiveWorkoutMount() {
+  return <LiveWorkoutBar locale={await viewLocale()} />;
+}
 
 async function AnalyticsMount() {
   return <Analytics uid={await requireViewerId()} />;
@@ -24,7 +29,7 @@ export default function AppLayout({ children }: LayoutProps<"/">) {
       <KeyboardFix />
       <Suspense fallback={null}>
         <NavHistory />
-        <LiveWorkoutBar />
+        <LiveWorkoutMount />
         <AnalyticsMount />
       </Suspense>
       <PushPrompt publicKey={pushPublicKey()} />

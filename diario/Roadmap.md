@@ -233,7 +233,7 @@ Propuesta de Gratis / Premium en [[Suscripción]]. Primero decidir; después, co
 Español, inglés, catalán, portugués y francés, por fases.
 
 - [/] Fase 1: selector en Perfil → Editar perfil y pantallas principales (menú, Inicio, «Tú» y la cabecera del perfil) — *hecha 2026-10-26, pendiente de que David la vea*
-- [/] Fase 2: el resto de pantallas (Plan, Fuerza, Registrar, Estadísticas, Amigos, Carreras, Entrenador IA, avisos, inicio de sesión, privacidad…) — *2026-10-26: hecho el bloque Plan (resumen, detalle, sesiones, «No puedo», «Cambiar de día», disponibilidad, recorrido, estado de forma); traducidos portada de Fuerza, rutina (con «En tu plan» y su gráfica), entreno en vivo y editor de rutinas; falta EMOM, ejercicios, material, medidas, barra de entreno en curso; luego Registrar y el resto*
+- [/] Fase 2: el resto de pantallas (Plan, Fuerza, Registrar, Estadísticas, Amigos, Carreras, Entrenador IA, avisos, inicio de sesión, privacidad…) — *2026-10-26: hecho el bloque Plan (resumen, detalle, sesiones, «No puedo», «Cambiar de día», disponibilidad, recorrido, estado de forma); traducidos portada de Fuerza, rutina (con «En tu plan» y su gráfica), entreno en vivo y editor de rutinas; y el resto de Fuerza (EMOM, ejercicios, material, medidas, discos, barra de entreno en curso); falta Registrar, actividad, GPS, compartir, Estadísticas, Amigos, Carreras, calculadoras, Sueño, Entrenador IA, resto del perfil, avisos, inicio de sesión y privacidad*
 - [ ] Fase 3: lo generado: títulos y pasos de las sesiones del plan, respuestas de la IA, avisos de cada mañana, imágenes para compartir y pasos de los 1.036 ejercicios
 
 ## 📝 Pedido por David (2026-10-26)

@@ -422,6 +422,7 @@ export function WorkoutLogger({
 
       {picking && (
         <ExercisePicker
+          locale={locale}
           exercises={exercises}
           available={available}
           onClose={() => setPicking(false)}

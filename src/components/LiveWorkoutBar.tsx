@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Icon } from "./icons";
 import { readLiveWorkout, type LiveWorkoutInfo } from "@/lib/strength/liveWorkout";
+import { translator, type Locale } from "@/lib/i18n";
 
 const clock = (sec: number) => {
   const h = Math.floor(sec / 3600);
@@ -15,7 +16,8 @@ const clock = (sec: number) => {
 };
 
 /** Con un entreno empezado, una pestaña encima de la barra de abajo para volver a él desde cualquier sección. */
-export function LiveWorkoutBar() {
+export function LiveWorkoutBar({ locale }: { locale: Locale }) {
+  const t = translator(locale);
   const path = usePathname();
   const [w, setW] = useState<LiveWorkoutInfo>();
   const [now, setNow] = useState(() => Date.now());
@@ -48,14 +50,14 @@ export function LiveWorkoutBar() {
           <Icon name="dumbbell" className="h-4 w-4" />
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block text-xs text-muted">{w.pausedAt ? "Entreno en pausa" : "Entreno en curso"}</span>
+          <span className="block text-xs text-muted">{w.pausedAt ? t("lwb.enPausa") : t("lwb.enCurso")}</span>
           <span className="block truncate font-semibold">{w.name}</span>
         </span>
         <span className="shrink-0 text-right">
           <span className="tabular block font-semibold text-accent">{clock(elapsed)}</span>
-          <span className="block text-xs text-muted">{sets} {sets === 1 ? "serie" : "series"}</span>
+          <span className="block text-xs text-muted">{sets === 1 ? t("lwb.serie1") : t("fh.series", { n: sets })}</span>
         </span>
-        <ChipLink>Seguir</ChipLink>
+        <ChipLink>{t("wl.seguir")}</ChipLink>
       </Link>
     </div>
   );

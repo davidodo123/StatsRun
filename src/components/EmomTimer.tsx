@@ -8,6 +8,7 @@ import { withCustom } from "@/lib/strength/exerciseList";
 import type { Equipment, ExerciseSummary } from "@/lib/strength/labels";
 import { MAX_EMOM_ROUNDS, emomTitle, fmtLoad } from "@/lib/strength/workouts";
 import { Icon } from "./icons";
+import { translator, type Locale } from "@/lib/i18n";
 
 interface Slot {
   key: number;
@@ -72,7 +73,10 @@ const fmtClock = (sec: number) => `${Math.floor(sec / 60)}:${String(sec % 60).pa
 let keySeq = 0;
 
 /** EMOM: cada intervalo empieza una ronda; con varios ejercicios se van turnando. Pita al empezar cada ronda. */
-export function EmomTimer({ custom, available, bodyKg }: { custom: ExerciseSummary[]; available?: Equipment[]; bodyKg?: number }) {
+export function EmomTimer({ custom, available, bodyKg, locale }: { custom: ExerciseSummary[]; available?: Equipment[]; bodyKg?: number; locale: Locale }) {
+  const t = translator(locale);
+  // «EMOM 12 min» vale en todos los idiomas; con segundos sueltos va traducido
+  const title = (e: Setup) => (e.intervalSec % 60 === 0 ? emomTitle(e) : t("emom.tituloSeg", { s: e.intervalSec, n: e.rounds }));
   const exercises = useMemo(() => withCustom(custom), [custom]);
   const byId = useMemo(() => new Map(exercises.map((x) => [x.id, x])), [exercises]);
   const [s, setS] = useState<Saved>();
@@ -177,9 +181,9 @@ export function EmomTimer({ custom, available, bodyKg }: { custom: ExerciseSumma
   const slotText = (x?: Slot) => {
     if (!x) return "";
     const kg = num(x.kg);
-    return [x.reps && `${x.reps} reps`, (x.bw || kg) && fmtLoad(x.bw, kg)].filter(Boolean).join(" · ");
+    return [x.reps && t("emom.reps", { n: x.reps }), (x.bw || kg) && fmtLoad(x.bw, kg, t("re.pc"))].filter(Boolean).join(" · ");
   };
-  const name = (x?: Slot) => (x ? (byId.get(x.exerciseId)?.name ?? "Ejercicio") : "");
+  const name = (x?: Slot) => (x ? (byId.get(x.exerciseId)?.name ?? t("emom.ejercicio")) : "");
 
   // el audio solo se puede activar con un toque (iPhone)
   const enableSound = () => {
@@ -202,7 +206,7 @@ export function EmomTimer({ custom, available, bodyKg }: { custom: ExerciseSumma
     setFinishing(true);
   };
   const discard = () => {
-    if (!confirm("¿Descartar este EMOM? No se guardará.")) return;
+    if (!confirm(t("emom.descartarConfirm"))) return;
     setFinishing(false);
     setS((cur) => cur && { setup: cur.setup });
   };
@@ -241,11 +245,11 @@ export function EmomTimer({ custom, available, bodyKg }: { custom: ExerciseSumma
     return (
       <div className="space-y-4">
         <div className="rounded-2xl border border-line bg-surface p-4 text-sm text-ink-2">
-          Cada intervalo empieza una ronda: haces las repeticiones y descansas lo que quede hasta el siguiente pitido. Con varios ejercicios se turnan (ronda 1 el primero, ronda 2 el segundo…).
+          {t("emom.explica")}
         </div>
         <div className="grid grid-cols-2 gap-3">
           <label className="field">
-            Cada
+            {t("emom.cada")}
             <select className="input" value={setup.intervalSec} onChange={(e) => editSetup((cur) => ({ ...cur, intervalSec: Number(e.target.value) }))}>
               {INTERVALS.map(([v, l]) => (
                 <option key={v} value={v}>
@@ -255,7 +259,7 @@ export function EmomTimer({ custom, available, bodyKg }: { custom: ExerciseSumma
             </select>
           </label>
           <label className="field">
-            Rondas
+            {t("emom.rondas")}
             <input
               className="input"
               type="number"
@@ -267,43 +271,44 @@ export function EmomTimer({ custom, available, bodyKg }: { custom: ExerciseSumma
             />
           </label>
         </div>
-        {setup.rounds > 0 && <p className="text-sm text-ink-2">{emomTitle(setup)} · {fmtClock(setup.rounds * setup.intervalSec)} en total</p>}
+        {setup.rounds > 0 && <p className="text-sm text-ink-2">{t("emom.total", { titulo: title(setup), tiempo: fmtClock(setup.rounds * setup.intervalSec) })}</p>}
 
         <div className="space-y-2">
           {setup.slots.map((x, i) => (
             <section key={x.key} className="rounded-2xl border border-line bg-surface p-3">
               <div className="flex items-center justify-between gap-2">
                 <strong className="min-w-0 truncate">
-                  <span className="mr-2 text-xs text-muted">{setup.slots.length > 1 ? `Rondas ${i + 1}, ${i + 1 + setup.slots.length}…` : "Cada ronda"}</span>
+                  <span className="mr-2 text-xs text-muted">{setup.slots.length > 1 ? t("emom.rondasN", { a: i + 1, b: i + 1 + setup.slots.length }) : t("emom.cadaRonda")}</span>
                   {name(x)}
                 </strong>
                 <button type="button" className="text-xs text-muted hover:text-critical" onClick={() => editSetup((cur) => ({ ...cur, slots: cur.slots.filter((y) => y.key !== x.key) }))}>
-                  Quitar
+                  {t("emom.quitar")}
                 </button>
               </div>
               <div className="mt-2 grid grid-cols-2 gap-2">
                 <label className="field">
-                  Repeticiones
+                  {t("rc.reps")}
                   <input className="input" inputMode="numeric" value={x.reps} onChange={(e) => updateSlot(x.key, { reps: e.target.value.replace(/\D/g, "").slice(0, 3) })} placeholder="10" />
                 </label>
                 <label className="field">
-                  {x.bw ? "Lastre (kg)" : "Peso (kg)"}
+                  {x.bw ? t("emom.lastreKg") : t("emom.pesoKg")}
                   <input className="input" inputMode="decimal" value={x.kg} onChange={(e) => updateSlot(x.key, { kg: e.target.value.replace(/[^\d.,]/g, "").slice(0, 6) })} placeholder={x.bw ? "0" : "–"} />
                 </label>
               </div>
             </section>
           ))}
           <button type="button" className="flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-line p-3 font-medium hover:bg-surface-2" onClick={() => setPicking(true)}>
-            + Añadir ejercicio
+            {t("wl.anadirEjercicio")}
           </button>
         </div>
-        {bodyKg === undefined && setup.slots.some((x) => x.bw) && <p className="text-xs text-muted">Pon tu peso en el perfil para que el volumen cuente el peso corporal.</p>}
+        {bodyKg === undefined && setup.slots.some((x) => x.bw) && <p className="text-xs text-muted">{t("emom.ponPeso")}</p>}
         <button type="button" className="btn w-full py-3 text-base" disabled={!setup.slots.length || !setup.rounds} onClick={begin}>
-          <Icon name="play" className="mr-1 h-4 w-4 align-[-2px]" /> Empezar EMOM
+          <Icon name="play" className="mr-1 h-4 w-4 align-[-2px]" /> {t("emom.empezar")}
         </button>
 
         {picking && (
           <ExercisePicker
+            locale={locale}
             exercises={exercises}
             available={available}
             onClose={() => setPicking(false)}
@@ -326,21 +331,21 @@ export function EmomTimer({ custom, available, bodyKg }: { custom: ExerciseSumma
     <div className="space-y-4 pb-20">
       <div className="flex items-center justify-between gap-2">
         <button type="button" className="text-sm text-critical" onClick={discard}>
-          Descartar
+          {t("wl.descartar")}
         </button>
-        <strong className="truncate">{emomTitle(setup)}</strong>
+        <strong className="truncate">{title(setup)}</strong>
         <button type="button" className="btn px-4 py-1.5" onClick={endEarly} disabled={Boolean(run.endedAt)}>
-          Terminar
+          {t("wl.terminar")}
         </button>
       </div>
 
       {!sound && (
         <button type="button" className="w-full rounded-xl border border-line bg-surface p-3 text-sm font-semibold" onClick={enableSound}>
-          Toca para activar los pitidos
+          {t("emom.pitidos")}
         </button>
       )}
       <section className={`rounded-3xl border p-6 text-center ${prep ? "border-line bg-surface" : "border-accent bg-accent/10"}`}>
-        <p className="text-sm font-semibold text-ink-2">{prep ? "Prepárate" : over ? "¡Hecho!" : `Ronda ${round + 1} de ${totalRounds}`}</p>
+        <p className="text-sm font-semibold text-ink-2">{prep ? t("emom.preparate") : over ? t("emom.hecho") : t("emom.rondaDe", { n: round + 1, total: totalRounds })}</p>
         <p className={`tabular my-2 text-7xl font-bold tracking-tight ${secLeft <= 3 && !over ? "text-accent" : ""}`} aria-live="off">
           {over ? fmtClock(totalRounds * interval) : prep ? secLeft : fmtClock(secLeft)}
         </p>
@@ -353,7 +358,7 @@ export function EmomTimer({ custom, available, bodyKg }: { custom: ExerciseSumma
             <p className="text-lg text-ink-2">{slotText(current) || " "}</p>
             {setup.slots.length > 1 && round + 1 < totalRounds && (
               <p className="mt-2 text-sm text-muted">
-                Después: {name(next)} {slotText(next) && `· ${slotText(next)}`}
+                {t("emom.despues", { nombre: name(next) })} {slotText(next) && `· ${slotText(next)}`}
               </p>
             )}
           </div>
@@ -364,17 +369,18 @@ export function EmomTimer({ custom, available, bodyKg }: { custom: ExerciseSumma
         <div className="grid grid-cols-2 gap-2">
           <button type="button" onClick={togglePause} className={`btn ${paused ? "" : "btn-ghost"}`} aria-pressed={paused}>
             <Icon name={paused ? "play" : "pause"} className="mr-1 h-4 w-4 align-[-2px]" />
-            {paused ? "Reanudar" : "Pausa"}
+            {paused ? t("wl.reanudar") : t("wl.pausa")}
           </button>
           <button type="button" className="btn btn-ghost" disabled={prep} onClick={() => toggleFailed(round)}>
-            {run.failed.includes(round) ? "Sí la he completado" : "No llego en esta ronda"}
+            {run.failed.includes(round) ? t("emom.siCompletada") : t("emom.noLlego")}
           </button>
         </div>
       )}
 
       <div>
         <p className="mb-2 text-xs text-muted">
-          Rondas: {doneRounds} completadas{run.failed.length ? ` · ${run.failed.length} sin completar` : ""}. Toca una ronda pasada para cambiarla.
+          {t("emom.completadas", { n: doneRounds })}
+          {run.failed.length ? t("emom.sinCompletar", { n: run.failed.length }) : ""}. {t("emom.tocaRonda")}
         </p>
         <div className="flex flex-wrap gap-1.5">
           {Array.from({ length: totalRounds }, (_, r) => {
@@ -387,7 +393,7 @@ export function EmomTimer({ custom, available, bodyKg }: { custom: ExerciseSumma
                 type="button"
                 disabled={!past && !now_}
                 onClick={() => toggleFailed(r)}
-                aria-label={`Ronda ${r + 1}${failed ? ", sin completar" : past ? ", completada" : ""}`}
+                aria-label={t("emom.ronda", { n: r + 1 }) + (failed ? t("emom.ariaSin") : past ? t("emom.ariaHecha") : "")}
                 className={`tabular grid h-8 w-8 place-items-center rounded-full text-xs font-semibold ${
                   failed ? "bg-critical/20 text-critical" : past ? "bg-good/25 text-good-ink" : now_ ? "bg-accent text-accent-ink" : "bg-surface-2 text-muted"
                 }`}
@@ -400,20 +406,20 @@ export function EmomTimer({ custom, available, bodyKg }: { custom: ExerciseSumma
       </div>
 
       {finishing && (
-        <div className="fixed inset-0 z-50 grid place-items-end bg-black/50 md:place-items-center" role="dialog" aria-modal aria-label="Guardar EMOM">
+        <div className="fixed inset-0 z-50 grid place-items-end bg-black/50 md:place-items-center" role="dialog" aria-modal aria-label={t("emom.guardar")}>
           <form action={finish} className="w-full space-y-3 rounded-t-2xl bg-surface p-4 pb-[max(1rem,env(safe-area-inset-bottom))] md:max-w-md md:rounded-2xl">
-            <strong className="block text-lg">Guardar EMOM</strong>
+            <strong className="block text-lg">{t("emom.guardar")}</strong>
             <p className="text-sm text-ink-2">
-              {doneRounds} de {totalRounds} rondas completadas
+              {t("emom.deRondas", { n: doneRounds, total: totalRounds })}
             </p>
             <label className="field">
-              Nombre
-              <input className="input" name="name" defaultValue={emomTitle(setup)} maxLength={80} />
+              {t("wl.nombre")}
+              <input className="input" name="name" defaultValue={title(setup)} maxLength={80} />
             </label>
             <label className="field">
-              Esfuerzo de la sesión (RPE 1-10)
+              {t("wl.rpe")}
               <select className="input" name="rpe" defaultValue="8">
-                <option value="">Sin indicar</option>
+                <option value="">{t("wl.sinIndicar")}</option>
                 {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
                   <option key={n} value={n}>
                     {n}
@@ -422,22 +428,22 @@ export function EmomTimer({ custom, available, bodyKg }: { custom: ExerciseSumma
               </select>
             </label>
             <label className="field">
-              ¿Cómo te has sentido? (opcional)
-              <textarea className="input min-h-16" name="feelings" maxLength={1000} placeholder="Agujetas, molestias, energía…" />
+              {t("wl.comoTeSentiste")}
+              <textarea className="input min-h-16" name="feelings" maxLength={1000} placeholder={t("wl.sentiPh")} />
             </label>
-            {!doneRounds && <p className="text-sm text-ink-2">No hay ninguna ronda completada: no hay nada que guardar.</p>}
+            {!doneRounds && <p className="text-sm text-ink-2">{t("emom.nada")}</p>}
             {error && <p className="text-sm font-medium text-critical">✕ {error}</p>}
             <div className="flex gap-2">
               <button type="button" className="btn btn-ghost flex-1" onClick={discard}>
-                Descartar
+                {t("wl.descartar")}
               </button>
               <button className="btn flex-1" disabled={pending || !doneRounds}>
-                {pending ? "Guardando…" : "Guardar"}
+                {pending ? t("wl.guardando") : t("re.guardar")}
               </button>
             </div>
             {run.endedAt && !over && (
               <button type="button" className="w-full text-xs text-muted underline" onClick={() => (editRun((cur) => ({ ...cur, endedAt: undefined, pausedAt: cur.pausedAt ?? cur.endedAt })), setFinishing(false))}>
-                Seguir con el EMOM (queda en pausa)
+                {t("emom.seguir")}
               </button>
             )}
           </form>

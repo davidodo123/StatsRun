@@ -9,12 +9,13 @@ import { deleteCustomExercise } from "@/app/strength-actions";
 import { getDb } from "@/lib/db";
 import { ExerciseChart } from "@/components/ExerciseChart";
 import { Icon } from "@/components/icons";
-import { shortDate } from "@/lib/dates";
 import { viewToday } from "@/lib/analysis";
 import { fmtNum } from "@/lib/format";
 import { CATALOG, activePlace, findExercise } from "@/lib/strength/catalog";
 import { exerciseHistory, fmtLoad, strengthRecords, type ExercisePoint } from "@/lib/strength/workouts";
-import { CATEGORY_LABEL, EQUIPMENT, MUSCLE_LABEL, canDo } from "@/lib/strength/labels";
+import { canDo } from "@/lib/strength/labels";
+import { getT } from "@/lib/i18n/server";
+import { dayMonth, type Key, type Locale, type T } from "@/lib/i18n";
 
 const BY_ID = new Map(CATALOG.map((x) => [x.id, x.name]));
 
@@ -32,7 +33,7 @@ export default function ExercisePage({ params }: PageProps<"/fuerza/ejercicios/[
 }
 
 async function Content({ params }: { params: PageProps<"/fuerza/ejercicios/[id]">["params"] }) {
-  const [{ id }, db] = await Promise.all([params, getDb()]);
+  const [{ id }, db, { t, locale }] = await Promise.all([params, getDb(), getT()]);
   const x = findExercise(db, decodeURIComponent(id));
   if (!x) notFound();
   const place = activePlace(db);
@@ -42,14 +43,14 @@ async function Content({ params }: { params: PageProps<"/fuerza/ejercicios/[id]"
 
   return (
     <>
-      <BackLink href="/fuerza/ejercicios" />
+      <BackLink href="/fuerza/ejercicios" label={t("comun.volver")} />
       <PageHeader
         title={x.name}
         subtitle={
           <>
-            {CATEGORY_LABEL[x.cat]}
-            {!x.custom && ` · nivel ${x.level}`}
-            {x.mech && ` · ${x.mech === "compuesto" ? "multiarticular" : "aislamiento"}`}
+            {t(`categoria.${x.cat}` as Key)}
+            {!x.custom && ` · ${t("ex.nivel", { nivel: t(`ex.nivel.${x.level}` as Key) })}`}
+            {x.mech && ` · ${x.mech === "compuesto" ? t("ex.multi") : t("ex.aislamiento")}`}
             {x.nameEn && <span className="text-muted"> · {x.nameEn}</span>}
           </>
         }
@@ -57,55 +58,54 @@ async function Content({ params }: { params: PageProps<"/fuerza/ejercicios/[id]"
           x.custom && (
             <div className="flex gap-2">
               <Link href={`/fuerza/ejercicios/nuevo?editar=${x.id}`} className="btn btn-ghost">
-                Editar
+                {t("ex.editar")}
               </Link>
               <form action={deleteCustomExercise}>
                 <input type="hidden" name="id" value={x.id} />
-                <button className="btn btn-ghost text-critical">Borrar</button>
+                <button className="btn btn-ghost text-critical">{t("fh.borrar")}</button>
               </form>
             </div>
           )
         }
       />
-      {history.length > 0 && <Progress history={history} records={(id) => records.get(id)?.some((r) => r.exerciseId === x.id)} />}
+      {history.length > 0 && <Progress history={history} records={(id) => records.get(id)?.some((r) => r.exerciseId === x.id)} t={t} locale={locale} />}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <div className="space-y-4">
-          <ExerciseAnimation x={x} />
-          <Card title="Músculos">
+          <ExerciseAnimation x={x} locale={locale} />
+          <Card title={t("ex.musculos")}>
             <div className="flex flex-wrap gap-1.5">
               {x.muscles.map((m) => (
                 <Pill key={m} className="bg-accent text-accent-ink">
-                  {MUSCLE_LABEL[m]}
+                  {t(`musculo.${m}` as Key)}
                 </Pill>
               ))}
               {x.secondary.map((m) => (
                 <Pill key={m} className="bg-surface-2 text-ink-2">
-                  {MUSCLE_LABEL[m]}
+                  {t(`musculo.${m}` as Key)}
                 </Pill>
               ))}
             </div>
-            {x.secondary.length > 0 && <p className="mt-2 text-xs text-muted">En color, los principales; en gris, los que ayudan.</p>}
+            {x.secondary.length > 0 && <p className="mt-2 text-xs text-muted">{t("ex.leyenda")}</p>}
           </Card>
         </div>
         <div className="space-y-4">
           <Card
-            title="Material"
-            subtitle={place ? (ok ? `✓ Lo puedes hacer en ${place.name}.` : `✕ En ${place.name} te falta algo.`) : undefined}
+            title={t("eb.material")}
+            subtitle={place ? (ok ? t("ex.puedes", { lugar: place.name }) : t("ex.falta", { lugar: place.name })) : undefined}
           >
             <ul className="flex flex-wrap gap-1.5">
               {x.eq.map((e) => {
-                const it = EQUIPMENT.find((q) => q.id === e)!;
                 const has = !place || e === "corporal" || place.equipment.includes(e);
                 return (
                   <li key={e} className={`rounded-full px-2.5 py-1 text-xs ${has ? "bg-surface-2" : "border border-critical text-critical"}`}>
-                    {it.label}
+                    {t(`equipo.${e}` as Key)}
                   </li>
                 );
               })}
             </ul>
           </Card>
           {x.steps.length > 0 && (
-            <Card title="Cómo se hace">
+            <Card title={t("ex.comoSeHace")}>
               <ol className="list-inside list-decimal space-y-2 text-sm">
                 {x.steps.map((s, i) => (
                   <li key={i}>{s}</li>
@@ -120,10 +120,11 @@ async function Content({ params }: { params: PageProps<"/fuerza/ejercicios/[id]"
 }
 
 const maxBy = (h: ExercisePoint[], f: (p: ExercisePoint) => number) => h.reduce((b, p) => (f(p) > f(b) ? p : b));
-const setText = (p: ExercisePoint, s: ExercisePoint["sets"][number]) => `${p.bw || s.kg ? `${fmtLoad(p.bw, s.kg)} × ` : ""}${s.reps}`;
+const setText = (p: ExercisePoint, s: ExercisePoint["sets"][number], pc: string) => `${p.bw || s.kg ? `${fmtLoad(p.bw, s.kg, pc)} × ` : ""}${s.reps}`;
 
 /** Récords, evolución e historial de un ejercicio. */
-async function Progress({ history, records }: { history: ExercisePoint[]; records: (activityId: string) => boolean | undefined }) {
+async function Progress({ history, records, t, locale }: { history: ExercisePoint[]; records: (activityId: string) => boolean | undefined; t: T; locale: Locale }) {
+  const shortDate = (d: string) => dayMonth(d, locale);
   const weighted = history.some((p) => p.topKg > 0);
   const last = history[history.length - 1];
   const rm = maxBy(history, (p) => p.oneRm ?? 0);
@@ -136,23 +137,23 @@ async function Progress({ history, records }: { history: ExercisePoint[]; record
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         {weighted ? (
           <>
-            {rm.oneRm ? <Stat label="1RM estimado" value={fmtNum(rm.oneRm, 1)} unit="kg" sub={shortDate(rm.date)} hint="Fórmula de Epley con tu mejor serie de 1-12 repeticiones" /> : null}
-            <Stat label="Más peso" value={fmtLoad(heavy.bw, heavy.topKg)} sub={`× ${heavySet.reps} · ${shortDate(heavy.date)}`} />
-            <Stat label="Mejor volumen" value={fmtNum(vol.volume)} unit="kg" sub={shortDate(vol.date)} />
+            {rm.oneRm ? <Stat label={t("ech.rm")} value={fmtNum(rm.oneRm, 1)} unit="kg" sub={shortDate(rm.date)} hint={t("ex.epley")} /> : null}
+            <Stat label={t("ech.masPeso")} value={fmtLoad(heavy.bw, heavy.topKg, t("re.pc"))} sub={`× ${heavySet.reps} · ${shortDate(heavy.date)}`} />
+            <Stat label={t("ex.mejorVolumen")} value={fmtNum(vol.volume)} unit="kg" sub={shortDate(vol.date)} />
           </>
         ) : (
           <>
-            <Stat label="Mejor serie" value={reps.maxReps} unit="reps" sub={shortDate(reps.date)} />
-            <Stat label="Más repeticiones en una sesión" value={maxBy(history, (p) => p.reps).reps} unit="reps" />
+            <Stat label={t("ech.mejorSerie")} value={reps.maxReps} unit="reps" sub={shortDate(reps.date)} />
+            <Stat label={t("ex.masRepsSesion")} value={maxBy(history, (p) => p.reps).reps} unit="reps" />
           </>
         )}
-        <Stat label="Sesiones" value={history.length} sub={`Última: ${shortDate(last.date)}`} />
+        <Stat label={t("ex.sesiones")} value={history.length} sub={t("ex.ultima", { fecha: shortDate(last.date) })} />
       </div>
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <Card title="Evolución">
-          <ExerciseChart points={history} today={(await viewToday())} />
+        <Card title={t("ex.evolucion")}>
+          <ExerciseChart points={history} today={(await viewToday())} locale={locale} />
         </Card>
-        <Card title="Historial" subtitle={history.length > 10 ? "Las 10 últimas sesiones" : undefined}>
+        <Card title={t("ex.historial")} subtitle={history.length > 10 ? t("ex.ultimas10") : undefined}>
           <ul className="divide-y divide-line">
             {history
               .slice(-10)
@@ -164,9 +165,9 @@ async function Progress({ history, records }: { history: ExercisePoint[]; record
                       {shortDate(p.date)}
                       {records(p.activityId) && <Icon name="trophy" className="h-3.5 w-3.5 text-accent" />}
                     </Link>
-                    {p.oneRm ? <span className="text-xs text-muted">1RM est. {fmtNum(p.oneRm, 1)} kg</span> : null}
+                    {p.oneRm ? <span className="text-xs text-muted">{t("ex.rmEst", { kg: fmtNum(p.oneRm, 1) })}</span> : null}
                   </div>
-                  <p className="tabular text-xs text-ink-2">{p.sets.map((s) => setText(p, s)).join(" · ")}</p>
+                  <p className="tabular text-xs text-ink-2">{p.sets.map((s) => setText(p, s, t("re.pc"))).join(" · ")}</p>
                 </li>
               ))}
           </ul>

@@ -2,7 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { ExerciseThumb } from "./ExerciseMedia";
-import { MUSCLES, MUSCLE_LABEL, canDo, type Equipment, type ExerciseSummary } from "@/lib/strength/labels";
+import { MUSCLES, canDo, type Equipment, type ExerciseSummary } from "@/lib/strength/labels";
+import { translator, type Key, type Locale } from "@/lib/i18n";
 
 const norm = (s: string) => s.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
 const PAGE = 50;
@@ -13,12 +14,16 @@ export function ExercisePicker({
   available,
   onAdd,
   onClose,
+  locale = "es",
 }: {
   exercises: ExerciseSummary[];
   available?: Equipment[]; // material del lugar activo: filtro activado por defecto
   onAdd: (ids: string[]) => void;
   onClose: () => void;
+  locale?: Locale;
 }) {
+  const t = translator(locale);
+  const muscleName = (m: string) => t(`musculo.${m}` as Key);
   const [q, setQ] = useState("");
   const [muscle, setMuscle] = useState("");
   // apagado de inicio: con él encendido «desaparecían» los ejercicios que tu lugar no tiene
@@ -33,36 +38,36 @@ export function ExercisePicker({
   const toggle = (id: string) => setPicked((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id]));
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-bg" role="dialog" aria-modal aria-label="Añadir ejercicios">
+    <div className="fixed inset-0 z-50 flex flex-col bg-bg" role="dialog" aria-modal aria-label={t("ep.titulo")}>
       <div className="space-y-2 border-b border-line p-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
         <div className="flex items-center justify-between gap-2">
           <button type="button" className="text-sm text-ink-2" onClick={onClose}>
-            Cancelar
+            {t("re.cancelar")}
           </button>
-          <strong className="text-sm">Añadir ejercicios</strong>
+          <strong className="text-sm">{t("ep.titulo")}</strong>
           <span className="w-16" />
         </div>
-        <input className="input" type="search" placeholder="Buscar ejercicio…" value={q} onChange={(e) => (setQ(e.target.value), setShown(PAGE))} autoFocus aria-label="Buscar" />
+        <input className="input" type="search" placeholder={t("eb.buscar")} value={q} onChange={(e) => (setQ(e.target.value), setShown(PAGE))} autoFocus aria-label={t("ep.buscar")} />
         <div className="flex gap-2">
-          <select className="input flex-1 text-sm" value={muscle} onChange={(e) => (setMuscle(e.target.value), setShown(PAGE))} aria-label="Músculo">
-            <option value="">Todos los músculos</option>
+          <select className="input flex-1 text-sm" value={muscle} onChange={(e) => (setMuscle(e.target.value), setShown(PAGE))} aria-label={t("eb.musculo")}>
+            <option value="">{t("ep.todos")}</option>
             {MUSCLES.map((m) => (
               <option key={m.id} value={m.id}>
-                {m.label}
+                {muscleName(m.id)}
               </option>
             ))}
           </select>
           {available && (
             <label className="flex shrink-0 items-center gap-1.5 rounded-lg border border-line px-3 text-xs has-checked:border-accent">
               <input type="checkbox" checked={onlyMine} onChange={(e) => setOnlyMine(e.target.checked)} />
-              Mi material
+              {t("ep.miMaterial")}
             </label>
           )}
         </div>
       </div>
       {hidden > 0 && (
         <button type="button" onClick={() => setOnlyMine(false)} className="border-b border-line bg-surface-2 px-3 py-2 text-left text-xs text-ink-2">
-          {hidden} ejercicios ocultos porque necesitan material que no tienes. <span className="font-semibold text-accent">Ver todos</span>
+          {t("ep.ocultos", { n: hidden })} <span className="font-semibold text-accent">{t("ep.verTodos")}</span>
         </button>
       )}
       <ul className="flex-1 divide-y divide-line overflow-y-auto">
@@ -75,7 +80,7 @@ export function ExercisePicker({
                 <ExerciseThumb x={x} className="h-11 w-11" />
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-sm font-medium">{x.name}</span>
-                  <span className="block truncate text-xs text-muted">{x.muscles.map((m) => MUSCLE_LABEL[m]).join(", ")}</span>
+                  <span className="block truncate text-xs text-muted">{x.muscles.map(muscleName).join(", ")}</span>
                 </span>
                 {on && <span className="text-accent">✓</span>}
               </button>
@@ -85,15 +90,15 @@ export function ExercisePicker({
         {list.length > shown && (
           <li className="p-3">
             <button type="button" className="btn btn-ghost w-full" onClick={() => setShown((n) => n + PAGE)}>
-              Mostrar más ({list.length - shown})
+              {t("eb.mostrarMas", { n: list.length - shown })}
             </button>
           </li>
         )}
-        {!list.length && <li className="p-4 text-sm text-ink-2">Nada con esa búsqueda.</li>}
+        {!list.length && <li className="p-4 text-sm text-ink-2">{t("ep.nada")}</li>}
       </ul>
       <div className="border-t border-line p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
         <button type="button" className="btn w-full" disabled={!picked.length} onClick={() => onAdd(picked)}>
-          {picked.length ? `Añadir ${picked.length} ${picked.length === 1 ? "ejercicio" : "ejercicios"}` : "Elige ejercicios"}
+          {picked.length === 1 ? t("ep.anadir1") : picked.length ? t("ep.anadirN", { n: picked.length }) : t("ep.elige")}
         </button>
       </div>
     </div>

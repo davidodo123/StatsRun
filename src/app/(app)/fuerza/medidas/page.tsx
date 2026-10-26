@@ -5,6 +5,7 @@ import { Loading, PageHeader } from "@/components/ui";
 import { Measurements } from "@/components/Measurements";
 import { getDb } from "@/lib/db";
 import { viewToday } from "@/lib/analysis";
+import { getT } from "@/lib/i18n/server";
 
 export const metadata: Metadata = { title: "Medidas" };
 
@@ -17,12 +18,12 @@ export default function MeasurementsPage() {
 }
 
 async function Content() {
-  const db = await getDb();
+  const [db, { t, locale }] = await Promise.all([getDb(), getT()]);
   return (
     <>
-      <BackLink href="/fuerza" />
-      <PageHeader title="Medidas corporales" subtitle="Peso, % de grasa y perímetros para ver cómo cambia tu cuerpo." />
-      <Measurements list={db.measurements ?? []} today={(await viewToday())} />
+      <BackLink href="/fuerza" label={t("comun.volver")} />
+      <PageHeader title={t("med.titulo")} subtitle={t("med.sub")} />
+      <Measurements list={db.measurements ?? []} today={(await viewToday())} locale={locale} />
     </>
   );
 }

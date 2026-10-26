@@ -6,7 +6,9 @@ import { PlaceForm } from "@/components/PlaceForm";
 import { addPresetPlace, deletePlace, setActivePlace } from "@/app/strength-actions";
 import { getDb } from "@/lib/db";
 import { CATALOG, activePlace } from "@/lib/strength/catalog";
-import { EQUIPMENT, PLACE_PRESETS, canDo } from "@/lib/strength/labels";
+import { PLACE_PRESETS, canDo } from "@/lib/strength/labels";
+import { getT } from "@/lib/i18n/server";
+import type { Key } from "@/lib/i18n";
 
 export const metadata: Metadata = { title: "Mi material" };
 
@@ -19,15 +21,15 @@ export default function EquipmentPage() {
 }
 
 async function Content() {
-  const db = await getDb();
+  const [db, { t, locale }] = await Promise.all([getDb(), getT()]);
   const places = db.places ?? [];
   const active = activePlace(db);
   const presets = PLACE_PRESETS.filter((p) => !places.some((q) => q.name === p.name));
 
   return (
     <>
-      <BackLink href="/fuerza" />
-      <PageHeader title="Mi material" subtitle="Los sitios donde entrenas y lo que hay en cada uno. El marcado como «ahora» filtra los ejercicios." />
+      <BackLink href="/fuerza" label={t("comun.volver")} />
+      <PageHeader title={t("mat.titulo")} subtitle={t("mat.sub")} />
       <div className="space-y-3">
         {places.map((p) => {
           const doable = CATALOG.filter((x) => canDo(x.eq, p.equipment)).length;
@@ -38,22 +40,22 @@ async function Content() {
               title={
                 <span className="flex items-center gap-2">
                   {p.name}
-                  {isActive && <Pill className="bg-accent text-accent-ink">Ahora</Pill>}
+                  {isActive && <Pill className="bg-accent text-accent-ink">{t("mat.ahora")}</Pill>}
                 </span>
               }
-              subtitle={`${doable} ejercicios posibles`}
+              subtitle={t("mat.posibles", { n: doable })}
               action={
                 <div className="flex items-center gap-3">
                   {!isActive && (
                     <form action={setActivePlace}>
                       <input type="hidden" name="id" value={p.id} />
-                      <button className="text-xs font-medium text-accent">Entreno aquí</button>
+                      <button className="text-xs font-medium text-accent">{t("mat.entrenoAqui")}</button>
                     </form>
                   )}
                   <form action={deletePlace}>
                     <input type="hidden" name="id" value={p.id} />
-                    <button className="text-xs text-muted underline hover:text-critical" aria-label={`Borrar ${p.name}`}>
-                      Borrar
+                    <button className="text-xs text-muted underline hover:text-critical" aria-label={t("mat.borrarAria", { nombre: p.name })}>
+                      {t("fh.borrar")}
                     </button>
                   </form>
                 </div>
@@ -61,19 +63,18 @@ async function Content() {
             >
               <ul className="flex flex-wrap gap-1.5">
                 {p.equipment.map((e) => {
-                  const it = EQUIPMENT.find((q) => q.id === e)!;
                   return (
                     <li key={e} className="rounded-full bg-surface-2 px-2.5 py-1 text-xs">
-                      {it.label}
+                      {t(`equipo.${e}` as Key)}
                     </li>
                   );
                 })}
               </ul>
               {p.notes && <p className="mt-2 text-xs text-ink-2">{p.notes}</p>}
               <details className="mt-3 rounded-xl border border-line p-3">
-                <summary className="cursor-pointer text-sm font-semibold">Editar</summary>
+                <summary className="cursor-pointer text-sm font-semibold">{t("ex.editar")}</summary>
                 <div className="mt-3">
-                  <PlaceForm place={p} />
+                  <PlaceForm place={p} locale={locale} />
                 </div>
               </details>
             </Card>
@@ -81,7 +82,7 @@ async function Content() {
         })}
 
         {presets.length > 0 && (
-          <Card title={places.length ? "Añadir un lugar rápido" : "Empieza con uno de estos"} subtitle="Luego puedes editar el material.">
+          <Card title={places.length ? t("mat.rapido") : t("mat.empieza")} subtitle={t("mat.luego")}>
             <div className="flex flex-wrap gap-2">
               {presets.map((p) => (
                 <form key={p.name} action={addPresetPlace}>
@@ -93,8 +94,8 @@ async function Content() {
           </Card>
         )}
 
-        <Card title="Nuevo lugar">
-          <PlaceForm />
+        <Card title={t("mat.nuevo")}>
+          <PlaceForm locale={locale} />
         </Card>
       </div>
     </>

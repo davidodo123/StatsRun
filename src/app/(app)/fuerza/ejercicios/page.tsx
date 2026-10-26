@@ -6,6 +6,7 @@ import { Loading, PageHeader } from "@/components/ui";
 import { ExerciseBrowser, type BrowserFilters } from "@/components/ExerciseBrowser";
 import { getDb } from "@/lib/db";
 import { activePlace, customSummaries } from "@/lib/strength/catalog";
+import { getT } from "@/lib/i18n/server";
 
 export const metadata: Metadata = { title: "Ejercicios" };
 
@@ -18,9 +19,11 @@ export default function ExercisesPage({ searchParams }: PageProps<"/fuerza/ejerc
 }
 
 async function Content({ searchParams }: { searchParams: PageProps<"/fuerza/ejercicios">["searchParams"] }) {
-  const [sp, db] = await Promise.all([searchParams, getDb()]);
+  const [sp, db, { t, locale }] = await Promise.all([searchParams, getDb(), getT()]);
   const str = (k: string) => (typeof sp[k] === "string" ? (sp[k] as string) : "");
   const places = db.places ?? [];
+  // el texto con el enlace a la fuente en medio
+  const credits = t("eb.creditos").split("{fuente}");
   // sin filtro de lugar en la URL, se filtra por el lugar activo; «todo» = cualquier material
   const placeParam = str("place");
   const initial: BrowserFilters = {
@@ -33,23 +36,23 @@ async function Content({ searchParams }: { searchParams: PageProps<"/fuerza/ejer
 
   return (
     <>
-      <BackLink href="/fuerza" />
+      <BackLink href="/fuerza" label={t("comun.volver")} />
       <PageHeader
-        title="Ejercicios"
-        subtitle={places.length ? undefined : <>Filtra por lo que tienes: <Link href="/fuerza/material" className="text-accent">añade tu material</Link>.</>}
+        title={t("nav.ejercicios")}
+        subtitle={places.length ? undefined : <>{t("eb.filtra")} <Link href="/fuerza/material" className="text-accent">{t("eb.anadeMaterial")}</Link>.</>}
         action={
           <Link href="/fuerza/ejercicios/nuevo" className="btn">
-            + Crear
+            {t("eb.crear")}
           </Link>
         }
       />
-      <ExerciseBrowser custom={customSummaries(db)} places={places} initial={initial} />
+      <ExerciseBrowser custom={customSummaries(db)} places={places} initial={initial} locale={locale} />
       <p className="mt-4 text-xs text-muted">
-        Fotos e instrucciones originales de{" "}
+        {credits[0]}
         <a href="https://github.com/yuhonas/free-exercise-db" className="underline" target="_blank" rel="noreferrer">
           free-exercise-db
-        </a>{" "}
-        (dominio público), traducidas al español.
+        </a>
+        {credits[1]}
       </p>
     </>
   );

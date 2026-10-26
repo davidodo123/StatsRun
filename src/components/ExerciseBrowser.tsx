@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { ExerciseThumb } from "./ExerciseMedia";
-import { CATEGORIES, EQUIPMENT, EQUIPMENT_LABEL, MUSCLES, MUSCLE_LABEL, canDo, type Equipment, type ExerciseSummary } from "@/lib/strength/labels";
+import { CATEGORIES, EQUIPMENT, MUSCLES, canDo, type Equipment, type ExerciseSummary } from "@/lib/strength/labels";
+import { translator, type Key, type Locale } from "@/lib/i18n";
 import { withCustom } from "@/lib/strength/exerciseList";
 import type { GymPlace } from "@/lib/types";
 
@@ -20,7 +21,8 @@ const PAGE = 40;
 const norm = (s: string) => s.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
 
 /** Lista de ejercicios con búsqueda y filtros (los filtros se guardan en la URL para volver atrás sin perderlos). */
-export function ExerciseBrowser({ custom, places, initial }: { custom: ExerciseSummary[]; places: GymPlace[]; initial: BrowserFilters }) {
+export function ExerciseBrowser({ custom, places, initial, locale }: { custom: ExerciseSummary[]; places: GymPlace[]; initial: BrowserFilters; locale: Locale }) {
+  const t = translator(locale);
   const [f, setF] = useState(initial);
   const [shown, setShown] = useState(PAGE);
   const exercises = useMemo(() => withCustom(custom), [custom]);
@@ -50,45 +52,45 @@ export function ExerciseBrowser({ custom, places, initial }: { custom: ExerciseS
 
   return (
     <div className="space-y-3">
-      <input className="input" type="search" placeholder="Buscar ejercicio…" value={f.q} onChange={(e) => set({ q: e.target.value })} aria-label="Buscar ejercicio" />
+      <input className="input" type="search" placeholder={t("eb.buscar")} value={f.q} onChange={(e) => set({ q: e.target.value })} aria-label={t("eb.buscar")} />
       <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
-        <select className="input text-sm" value={f.muscle} onChange={(e) => set({ muscle: e.target.value })} aria-label="Músculo">
-          <option value="">Músculo: todos</option>
+        <select className="input text-sm" value={f.muscle} onChange={(e) => set({ muscle: e.target.value })} aria-label={t("eb.musculo")}>
+          <option value="">{t("eb.musculoTodos")}</option>
           {MUSCLES.map((m) => (
             <option key={m.id} value={m.id}>
-              {m.label}
+              {t(`musculo.${m.id}` as Key)}
             </option>
           ))}
         </select>
-        <select className="input text-sm" value={f.cat} onChange={(e) => set({ cat: e.target.value })} aria-label="Tipo">
-          <option value="">Tipo: todos</option>
+        <select className="input text-sm" value={f.cat} onChange={(e) => set({ cat: e.target.value })} aria-label={t("eb.tipo")}>
+          <option value="">{t("eb.tipoTodos")}</option>
           {CATEGORIES.map((c) => (
             <option key={c.id} value={c.id}>
-              {c.label}
+              {t(`categoria.${c.id}` as Key)}
             </option>
           ))}
-          <option value="propios">Mis ejercicios</option>
+          <option value="propios">{t("eb.mios")}</option>
         </select>
-        <select className="input text-sm" value={f.place} onChange={(e) => set({ place: e.target.value })} aria-label="Lugar">
-          <option value="">Lugar: cualquiera</option>
+        <select className="input text-sm" value={f.place} onChange={(e) => set({ place: e.target.value })} aria-label={t("eb.lugar")}>
+          <option value="">{t("eb.lugarCualquiera")}</option>
           {places.map((p) => (
             <option key={p.id} value={p.id}>
-              En {p.name}
+              {t("eb.en", { lugar: p.name })}
             </option>
           ))}
         </select>
-        <select className="input text-sm" value={f.eq} onChange={(e) => set({ eq: e.target.value })} aria-label="Material">
-          <option value="">Material: todo</option>
+        <select className="input text-sm" value={f.eq} onChange={(e) => set({ eq: e.target.value })} aria-label={t("eb.material")}>
+          <option value="">{t("eb.materialTodo")}</option>
           {EQUIPMENT.map((e) => (
             <option key={e.id} value={e.id}>
-              {e.label}
+              {t(`equipo.${e.id}` as Key)}
             </option>
           ))}
         </select>
       </div>
       <p className="text-xs text-muted">
-        {list.length} {list.length === 1 ? "ejercicio" : "ejercicios"}
-        {available && ` que puedes hacer en ${places.find((p) => p.id === f.place)?.name}`}
+        {list.length === 1 ? t("eb.n1") : t("eb.n", { n: list.length })}
+        {available && t("eb.puedesEn", { lugar: places.find((p) => p.id === f.place)?.name ?? "" })}
       </p>
       <ul className="divide-y divide-line rounded-xl border border-line">
         {list.slice(0, shown).map((x) => (
@@ -98,20 +100,20 @@ export function ExerciseBrowser({ custom, places, initial }: { custom: ExerciseS
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-sm font-medium">
                   {x.name}
-                  {x.custom && <span className="ml-1.5 rounded bg-accent px-1.5 py-0.5 text-[10px] font-semibold text-accent-ink">Propio</span>}
+                  {x.custom && <span className="ml-1.5 rounded bg-accent px-1.5 py-0.5 text-[10px] font-semibold text-accent-ink">{t("eb.propio")}</span>}
                 </span>
                 <span className="block truncate text-xs text-muted">
-                  {x.muscles.map((m) => MUSCLE_LABEL[m]).join(", ")} · {x.eq.map((e) => EQUIPMENT_LABEL[e]).join(", ")}
+                  {x.muscles.map((m) => t(`musculo.${m}` as Key)).join(", ")} · {x.eq.map((e) => t(`equipo.${e}` as Key)).join(", ")}
                 </span>
               </span>
             </Link>
           </li>
         ))}
-        {!list.length && <li className="p-4 text-sm text-ink-2">Ningún ejercicio con estos filtros.</li>}
+        {!list.length && <li className="p-4 text-sm text-ink-2">{t("eb.ninguno")}</li>}
       </ul>
       {list.length > shown && (
         <button type="button" className="btn btn-ghost w-full" onClick={() => setShown((n) => n + PAGE)}>
-          Mostrar más ({list.length - shown})
+          {t("eb.mostrarMas", { n: list.length - shown })}
         </button>
       )}
     </div>

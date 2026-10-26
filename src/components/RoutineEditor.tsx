@@ -202,6 +202,7 @@ export function RoutineEditor({ routine, custom, available, folders = [], locale
 
       {picking && (
         <ExercisePicker
+          locale={locale}
           exercises={exercises}
           available={available}
           onClose={() => setPicking(false)}

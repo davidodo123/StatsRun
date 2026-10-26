@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Card } from "./ui";
 import { platesFor } from "@/lib/strength/workouts";
+import { intlLocale, translator, type Locale } from "@/lib/i18n";
 
 // colores de competición: el tamaño y el color ayudan a reconocer cada disco de un vistazo
 const PLATE_STYLE: Record<number, { color: string; h: number }> = {
@@ -20,10 +21,9 @@ const BARS = [
   { kg: 10, label: "10 kg" },
   { kg: 7, label: "7 kg (Z)" },
 ];
-const kg = (n: number) => n.toLocaleString("es-ES");
 
 /** Dibujo de los discos de un lado de la barra. */
-function PlateStack({ side }: { side: number[] }) {
+function PlateStack({ side, kg }: { side: number[]; kg: (n: number) => string }) {
   return (
     <div className="flex h-16 items-center" aria-hidden>
       <span className="h-2 w-6 rounded-l bg-muted" />
@@ -37,20 +37,22 @@ function PlateStack({ side }: { side: number[] }) {
 }
 
 /** Calculadora de discos: qué poner en cada lado para un peso total. */
-export function PlateCalc() {
+export function PlateCalc({ locale = "es" }: { locale?: Locale }) {
+  const t = translator(locale);
+  const kg = (n: number) => n.toLocaleString(intlLocale(locale));
   const [total, setTotal] = useState("60");
   const [bar, setBar] = useState(20);
-  const t = Number(total.replace(",", "."));
-  const r = Number.isFinite(t) && t > 0 ? platesFor(t, bar) : undefined;
+  const w = Number(total.replace(",", "."));
+  const r = Number.isFinite(w) && w > 0 ? platesFor(w, bar) : undefined;
   return (
-    <Card title="Discos para la barra" subtitle="Qué poner en cada lado para llegar a un peso">
+    <Card title={t("pc.titulo")} subtitle={t("pc.sub")}>
       <div className="grid grid-cols-2 gap-3">
         <label className="field">
-          Peso total (kg)
+          {t("pc.total")}
           <input className="input" inputMode="decimal" value={total} onChange={(e) => setTotal(e.target.value)} />
         </label>
         <label className="field">
-          Barra
+          {t("pc.barra")}
           <select className="input" value={bar} onChange={(e) => setBar(Number(e.target.value))}>
             {BARS.map((b) => (
               <option key={b.kg} value={b.kg}>
@@ -60,18 +62,18 @@ export function PlateCalc() {
           </select>
         </label>
       </div>
-      {r && t >= bar ? (
+      {r && w >= bar ? (
         <div className="mt-4">
-          <PlateStack side={r.side} />
+          <PlateStack side={r.side} kg={kg} />
           <p className="mt-2 text-sm">
-            <strong>Por lado:</strong> {r.side.length ? r.side.map(kg).join(" + ") + " kg" : "nada, solo la barra"}
+            <strong>{t("pc.porLado")}</strong> {r.side.length ? r.side.map(kg).join(" + ") + " kg" : t("pc.soloBarra")}
           </p>
-          {r.left > 0 && <p className="mt-1 text-xs text-warning">Con discos estándar no se llega exacto: faltan {kg(r.left)} kg por lado ({kg(t - r.left * 2)} kg en total).</p>}
+          {r.left > 0 && <p className="mt-1 text-xs text-warning">{t("pc.noExacto", { kg: kg(r.left), total: kg(w - r.left * 2) })}</p>}
         </div>
       ) : (
-        <p className="mt-3 text-sm text-critical">El peso tiene que ser al menos el de la barra ({bar} kg).</p>
+        <p className="mt-3 text-sm text-critical">{t("pc.minimo", { kg: bar })}</p>
       )}
-      <p className="mt-3 text-xs text-muted">Discos de 25, 20, 15, 10, 5, 2,5 y 1,25 kg.</p>
+      <p className="mt-3 text-xs text-muted">{t("pc.discos")}</p>
     </Card>
   );
 }

@@ -6,9 +6,11 @@ import type { FormState } from "@/app/actions";
 import { CATEGORIES, EQUIPMENT, MUSCLES } from "@/lib/strength/labels";
 import type { CustomExercise } from "@/lib/types";
 import { keepForm } from "./keepForm";
+import { translator, type Key, type Locale } from "@/lib/i18n";
 
 /** Crear o editar un ejercicio propio. */
-export function ExerciseForm({ exercise }: { exercise?: CustomExercise }) {
+export function ExerciseForm({ exercise, locale }: { exercise?: CustomExercise; locale: Locale }) {
+  const t = translator(locale);
   const [state, action, pending] = useActionState<FormState, FormData>(saveCustomExercise, {});
   const eq = new Set(exercise?.eq ?? ["corporal"]);
   return (
@@ -16,46 +18,46 @@ export function ExerciseForm({ exercise }: { exercise?: CustomExercise }) {
       {exercise && <input type="hidden" name="id" value={exercise.id} />}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <label className="field">
-          Nombre
-          <input className="input" name="name" defaultValue={exercise?.name} placeholder="Ej.: Sentadilla con mochila" maxLength={60} required />
+          {t("wl.nombre")}
+          <input className="input" name="name" defaultValue={exercise?.name} placeholder={t("ef.nombrePh")} maxLength={60} required />
         </label>
         <label className="field">
-          Tipo
+          {t("eb.tipo")}
           <select className="input" name="cat" defaultValue={exercise?.cat ?? "fuerza"}>
             {CATEGORIES.map((c) => (
               <option key={c.id} value={c.id}>
-                {c.label}
+                {t(`categoria.${c.id}` as Key)}
               </option>
             ))}
           </select>
         </label>
       </div>
-      <MuscleChecks name="muscles" legend="Músculos principales" checked={exercise?.muscles} />
-      <MuscleChecks name="secondary" legend="Músculos secundarios (opcional)" checked={exercise?.secondary} />
+      <MuscleChecks name="muscles" legend={t("ef.principales")} checked={exercise?.muscles} t={t} />
+      <MuscleChecks name="secondary" legend={t("ef.secundarios")} checked={exercise?.secondary} t={t} />
       <fieldset>
-        <legend className="mb-2 text-sm text-ink-2">Material</legend>
+        <legend className="mb-2 text-sm text-ink-2">{t("eb.material")}</legend>
         <div className="flex flex-wrap gap-1.5">
           {EQUIPMENT.map((e) => (
             <label key={e.id} className="flex items-center gap-1.5 rounded-full border border-line px-3 py-1 text-xs has-checked:border-accent has-checked:bg-surface-2">
               <input type="checkbox" name="eq" value={e.id} defaultChecked={eq.has(e.id)} className="sr-only" />
-              {e.label}
+              {t(`equipo.${e.id}` as Key)}
             </label>
           ))}
         </div>
       </fieldset>
       <label className="field">
-        Cómo se hace (opcional, un paso por línea)
+        {t("ef.pasos")}
         <textarea className="input min-h-28" name="steps" defaultValue={exercise?.steps.join("\n")} maxLength={2000} />
       </label>
       <button className="btn" disabled={pending}>
-        {pending ? "Guardando…" : exercise ? "Guardar cambios" : "Crear ejercicio"}
+        {pending ? t("wl.guardando") : exercise ? t("ef.guardarCambios") : t("ef.crear")}
       </button>
       {state.error && <p className="text-sm font-medium text-critical">✕ {state.error}</p>}
     </form>
   );
 }
 
-function MuscleChecks({ name, legend, checked = [] }: { name: string; legend: string; checked?: string[] }) {
+function MuscleChecks({ name, legend, checked = [], t }: { name: string; legend: string; checked?: string[]; t: ReturnType<typeof translator> }) {
   return (
     <fieldset>
       <legend className="mb-2 text-sm text-ink-2">{legend}</legend>
@@ -63,7 +65,7 @@ function MuscleChecks({ name, legend, checked = [] }: { name: string; legend: st
         {MUSCLES.map((m) => (
           <label key={m.id} className="rounded-full border border-line px-3 py-1 text-xs has-checked:border-accent has-checked:bg-accent has-checked:text-accent-ink">
             <input type="checkbox" name={name} value={m.id} defaultChecked={checked.includes(m.id)} className="sr-only" />
-            {m.label}
+            {t(`musculo.${m.id}` as Key)}
           </label>
         ))}
       </div>
