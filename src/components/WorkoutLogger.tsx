@@ -9,9 +9,10 @@ import { LIVE_WORKOUT_KEY, LIVE_WORKOUT_MAX_MS } from "@/lib/strength/liveWorkou
 import { finishWorkout } from "@/app/strength-actions";
 import { withCustom } from "@/lib/strength/exerciseList";
 import type { Equipment, ExerciseSummary } from "@/lib/strength/labels";
-import { SET_TYPES, SET_TYPE_SHORT, fmtLoad, nextTarget, platesFor, supersetLetters, type Suggestion } from "@/lib/strength/workouts";
+import { SET_TYPES, fmtLoad, nextTarget, platesFor, supersetLetters, type Suggestion } from "@/lib/strength/workouts";
 import type { Routine, RoutineSet, SetType, WorkoutExercise, WorkoutSet } from "@/lib/types";
 import { Icon } from "./icons";
+import { intlLocale, translator, type Locale } from "@/lib/i18n";
 
 interface LiveSet {
   type: SetType;
@@ -70,8 +71,9 @@ const localIso = (ms: number) => {
   const p = (n: number) => String(n).padStart(2, "0");
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
 };
-const fmtPrev = (bw: boolean | undefined, s?: WorkoutSet) => (s ? `${bw || s.kg ? `${fmtLoad(bw, s.kg)} × ` : ""}${s.reps ?? "–"}` : "–");
+const fmtPrev = (bw: boolean | undefined, s: WorkoutSet | undefined, pc: string) => (s ? `${bw || s.kg ? `${fmtLoad(bw, s.kg, pc)} × ` : ""}${s.reps ?? "–"}` : "–");
 let keySeq = 0;
+const RPE_KEYS: Record<number, "rpe.suave" | "rpe.moderado" | "rpe.duro" | "rpe.muyDuro" | "rpe.maximo"> = { 3: "rpe.suave", 5: "rpe.moderado", 7: "rpe.duro", 9: "rpe.muyDuro", 10: "rpe.maximo" };
 
 type Suggest = (exerciseId: string, plan?: RoutineSet, notes?: string) => Suggestion | undefined;
 
@@ -90,11 +92,11 @@ function liveExercise(exerciseId: string, sets: RoutineSet[], suggest: Suggest, 
   };
 }
 
-function fromRoutine(routine: Routine | undefined, suggest: Suggest): Live {
+function fromRoutine(routine: Routine | undefined, suggest: Suggest, name: string): Live {
   return {
     startedAt: Date.now(),
     routineId: routine?.id,
-    name: routine?.name ?? "Entreno",
+    name: routine?.name ?? name,
     exercises: (routine?.exercises ?? []).map((e) => liveExercise(e.exerciseId, e.sets, suggest, { bw: e.bw, notes: e.notes, superset: e.superset })),
   };
 }
@@ -108,6 +110,7 @@ export function WorkoutLogger({
   bodyKg,
   pastStart,
   pastLabel,
+  locale,
 }: {
   routine?: Routine;
   pastStart?: string; // apuntar un entreno ya hecho: «AAAA-MM-DDTHH:MM:00» (sin cronómetro ni descansos)
@@ -116,8 +119,11 @@ export function WorkoutLogger({
   previous: Record<string, WorkoutExercise>;
   available?: Equipment[];
   bodyKg?: number; // peso del perfil, para los ejercicios con peso corporal
+  locale: Locale;
 }) {
   const router = useRouter();
+  const t = translator(locale);
+  const nf = intlLocale(locale);
   // el reloj repinta cada segundo: la lista y el índice se calculan una vez
   const exercises = useMemo(() => withCustom(custom), [custom]);
   const byId = useMemo(() => new Map(exercises.map((x) => [x.id, x])), [exercises]);
@@ -138,14 +144,14 @@ export function WorkoutLogger({
     // uno ya hecho: siempre desde la rutina, sin mezclarlo con un entreno en vivo a medias
     if (pastStart) {
       // eslint-disable-next-line react-hooks/set-state-in-effect -- localStorage y la hora solo existen en el navegador
-      setW(fromRoutine(routine, suggest));
+      setW(fromRoutine(routine, suggest, t("wl.entreno")));
       return;
     }
     const stored = load();
     if (stored?.exercises && Date.now() - stored.startedAt < LIVE_WORKOUT_MAX_MS) {
       setW(stored);
       setResumed(stored.routineId !== routine?.id || Boolean(stored.exercises.some((e) => e.sets.some((s) => s.done))));
-    } else setW(fromRoutine(routine, suggest));
+    } else setW(fromRoutine(routine, suggest, t("wl.entreno")));
     // eslint-disable-next-line react-hooks/exhaustive-deps -- solo al cambiar de rutina, no cada vez que llega el objeto
   }, [routine?.id]);
   useEffect(() => {
@@ -191,11 +197,11 @@ export function WorkoutLogger({
     }));
 
   const restart = () => {
-    setW(fromRoutine(routine, suggest));
+    setW(fromRoutine(routine, suggest, t("wl.entreno")));
     setResumed(false);
   };
   const discard = () => {
-    if (!confirm("¿Descartar este entreno? Se perderá lo apuntado.")) return;
+    if (!confirm(t("wl.descartarConfirm"))) return;
     store(undefined);
     router.push("/fuerza");
   };
@@ -228,20 +234,20 @@ export function WorkoutLogger({
       <div className="vv-top sticky top-[calc(3.5rem+env(safe-area-inset-top))] z-30 md:top-0 -mx-4 border-b border-line bg-bg/95 px-4 py-2 backdrop-blur md:-mx-8 md:px-8">
         <div className="flex items-center justify-between gap-2">
           <button type="button" className="text-sm text-critical" onClick={discard}>
-            Descartar
+            {t("wl.descartar")}
           </button>
           <strong className="truncate">{w.name}</strong>
           <button type="button" className="btn px-4 py-1.5" onClick={() => setFinishing(true)}>
-            Terminar
+            {t("wl.terminar")}
           </button>
         </div>
         {pastStart ? (
           <div className="mt-2 flex items-center justify-between gap-2 text-sm">
             <span className="text-ink-2">
-              Entreno del <strong className="text-ink">{pastLabel ?? pastStart.slice(0, 10)}</strong> · {doneSets.length} series · {volume.toLocaleString("es-ES")} kg
+              {t("wl.entrenoDel", { fecha: pastLabel ?? pastStart.slice(0, 10), series: doneSets.length, kg: volume.toLocaleString(nf) })}
             </span>
             <button type="button" className="shrink-0 text-xs font-semibold text-accent" onClick={markAll}>
-              ✓ Marcar todas
+              {t("wl.marcarTodas")}
             </button>
           </div>
         ) : (
@@ -252,23 +258,23 @@ export function WorkoutLogger({
               onClick={togglePause}
               className={`mx-auto grid h-9 w-9 place-items-center rounded-full ${paused ? "bg-accent text-accent-ink" : "bg-surface-2"}`}
               aria-pressed={paused}
-              aria-label={paused ? "Reanudar" : "Pausa"}
-              title={paused ? "Reanudar" : "Pausa"}
+              aria-label={paused ? t("wl.reanudar") : t("wl.pausa")}
+              title={paused ? t("wl.reanudar") : t("wl.pausa")}
             >
               <Icon name={paused ? "play" : "pause"} className="h-4 w-4" />
             </button>
-            <Metric label={paused ? "En pausa" : "Duración"} value={fmtClock(elapsed)} accent />
-            <Metric label="Volumen" value={`${volume.toLocaleString("es-ES")} kg`} />
-            <Metric label="Series" value={String(doneSets.length)} />
+            <Metric label={paused ? t("wl.enPausa") : t("wl.duracion")} value={fmtClock(elapsed)} accent />
+            <Metric label={t("wl.volumen")} value={`${volume.toLocaleString(nf)} kg`} />
+            <Metric label={t("wl.series")} value={String(doneSets.length)} />
           </div>
         )}
       </div>
 
       {resumed && (
         <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-line bg-surface p-3 text-sm">
-          <span>Continúas el entreno «{w.name}» que dejaste a medias.</span>
-          <button type="button" className="text-xs text-muted underline" onClick={() => confirm("¿Empezar de nuevo? Se perderá lo apuntado.") && restart()}>
-            Empezar de nuevo
+          <span>{t("wl.continuas", { nombre: w.name })}</span>
+          <button type="button" className="text-xs text-muted underline" onClick={() => confirm(t("wl.empezarNuevoConfirm")) && restart()}>
+            {t("wl.empezarNuevo")}
           </button>
         </div>
       )}
@@ -288,8 +294,8 @@ export function WorkoutLogger({
           <section key={e.key} className={`rounded-2xl border bg-surface p-3 ${letter ? "border-accent" : "border-line"}`}>
             {letter && (
               <p className="mb-2 inline-flex items-center gap-1 text-xs font-semibold text-accent">
-                <Icon name="link" className="h-3.5 w-3.5" /> Superserie {letter}
-                {!restAfter && <span className="font-normal text-muted"> · sin descanso, sigue con el siguiente</span>}
+                <Icon name="link" className="h-3.5 w-3.5" /> {t("rut.superserie", { letra: letter })}
+                {!restAfter && <span className="font-normal text-muted"> {t("wl.sinDescanso")}</span>}
               </p>
             )}
             <div className="flex items-center gap-3">
@@ -300,39 +306,39 @@ export function WorkoutLogger({
               <button
                 type="button"
                 className="px-1 text-muted hover:text-critical"
-                onClick={() => confirm(`¿Quitar ${x?.name ?? "el ejercicio"} de este entreno?`) && edit((cur) => ({ ...cur, exercises: cur.exercises.filter((y) => y.key !== e.key) }))}
-                aria-label="Quitar ejercicio"
+                onClick={() => confirm(t("wl.quitarConfirm", { nombre: x?.name ?? t("wl.elEjercicio") })) && edit((cur) => ({ ...cur, exercises: cur.exercises.filter((y) => y.key !== e.key) }))}
+                aria-label={t("wl.quitarEjercicio")}
               >
                 ✕
               </button>
             </div>
             <div className="mt-3 flex flex-wrap items-center gap-2">
-              <LoadSwitch bw={Boolean(e.bw)} onChange={(bw) => update(e.key, (y) => ({ ...y, bw }))} />
+              <LoadSwitch locale={locale} bw={Boolean(e.bw)} onChange={(bw) => update(e.key, (y) => ({ ...y, bw }))} />
             </div>
             <input
               className="input mt-2 py-1.5 text-sm"
-              placeholder="Nota (agarre, asiento, sensaciones…)"
+              placeholder={t("wl.notaPh")}
               value={e.notes ?? ""}
               onChange={(ev) => update(e.key, (y) => ({ ...y, notes: ev.target.value }))}
               maxLength={200}
-              aria-label="Nota del ejercicio"
+              aria-label={t("wl.notaAria")}
             />
             {e.hint && <p className={`mt-2 text-xs ${e.hint.up ? "font-semibold text-accent" : "text-ink-2"}`}>{e.hint.up ? "↑ " : ""}{e.hint.text}</p>}
             {plates && (
               <p className="mt-1 text-xs text-ink-2">
-                Discos por lado para {fmtLoad(false, nextKg)}: <strong>{plates.side.map((p) => p.toLocaleString("es-ES")).join(" + ")}</strong>
-                {plates.left > 0 && ` (+${plates.left.toLocaleString("es-ES")} sin disco)`} · barra de 20
+                {t("wl.discos", { kg: fmtLoad(false, nextKg), discos: plates.side.map((p) => p.toLocaleString(nf)).join(" + ") })}
+                {plates.left > 0 && ` ${t("wl.sinDisco", { kg: plates.left.toLocaleString(nf) })}`} {t("wl.barra20")}
               </p>
             )}
-            {e.bw && !bodyKg && <p className="mt-1 text-xs text-muted">Pon tu peso en Perfil para contar el peso corporal en el volumen.</p>}
+            {e.bw && !bodyKg && <p className="mt-1 text-xs text-muted">{t("wl.ponPeso")}</p>}
             <table className="mt-2 w-full table-fixed text-sm">
               <thead>
                 <tr className="text-[11px] text-muted">
-                  <th className="w-11 py-1 text-left font-medium">SERIE</th>
-                  <th className="py-1 text-left font-medium">ANTERIOR</th>
-                  {e.bw && <th className="w-12 py-1 font-medium">PESO</th>}
-                  <th className={`${e.bw ? "w-[3.75rem]" : "w-[4.5rem]"} py-1 font-medium`}>{e.bw ? "LASTRE" : "KG"}</th>
-                  <th className="w-[3.75rem] py-1 font-medium">REPS</th>
+                  <th className="w-11 py-1 text-left font-medium">{t("tab.serie")}</th>
+                  <th className="py-1 text-left font-medium">{t("tab.anterior")}</th>
+                  {e.bw && <th className="w-12 py-1 font-medium">{t("tab.peso")}</th>}
+                  <th className={`${e.bw ? "w-[3.75rem]" : "w-[4.5rem]"} py-1 font-medium`}>{e.bw ? t("tab.lastre") : t("tab.kg")}</th>
+                  <th className="w-[3.75rem] py-1 font-medium">{t("tab.reps")}</th>
                   <th className="w-10 py-1 font-medium">✓</th>
                 </tr>
               </thead>
@@ -353,19 +359,19 @@ export function WorkoutLogger({
                   return (
                     <tr key={j} className={s.done ? "bg-good/15" : j % 2 ? "bg-surface-2" : ""}>
                       <td className="py-1">
-                        <SetBadge type={s.type} n={n} onClick={() => setRow({ type: SET_TYPES[(SET_TYPES.indexOf(s.type) + 1) % SET_TYPES.length] })} />
+                        <SetBadge locale={locale} type={s.type} n={n} onClick={() => setRow({ type: SET_TYPES[(SET_TYPES.indexOf(s.type) + 1) % SET_TYPES.length] })} />
                       </td>
-                      <td className="truncate py-1 text-xs text-muted">{fmtPrev(last?.bw, p)}</td>
+                      <td className="truncate py-1 text-xs text-muted">{fmtPrev(last?.bw, p, t("re.pc"))}</td>
                       {e.bw && (
                         <td className="px-0.5 py-1">
-                          <BodyChip kg={bodyKg} />
+                          <BodyChip locale={locale} kg={bodyKg} />
                         </td>
                       )}
                       <td className="px-0.5 py-1">
-                        <input className="input px-1 py-1.5 text-center" inputMode="decimal" placeholder={kgHint?.toString() ?? (e.bw ? "+0" : "–")} value={s.kg} onChange={(ev) => setRow({ kg: ev.target.value })} aria-label={`${e.bw ? "Lastre" : "Kg"} serie ${j + 1}`} />
+                        <input className="input px-1 py-1.5 text-center" inputMode="decimal" placeholder={kgHint?.toString() ?? (e.bw ? "+0" : "–")} value={s.kg} onChange={(ev) => setRow({ kg: ev.target.value })} aria-label={t(e.bw ? "wl.lastreSerie" : "wl.kgSerie", { n: j + 1 })} />
                       </td>
                       <td className="px-0.5 py-1">
-                        <input className="input px-1 py-1.5 text-center" inputMode="numeric" placeholder={repsHint?.toString() ?? "–"} value={s.reps} onChange={(ev) => setRow({ reps: ev.target.value })} aria-label={`Repeticiones serie ${j + 1}`} />
+                        <input className="input px-1 py-1.5 text-center" inputMode="numeric" placeholder={repsHint?.toString() ?? "–"} value={s.reps} onChange={(ev) => setRow({ reps: ev.target.value })} aria-label={t("wl.repsSerie", { n: j + 1 })} />
                       </td>
                       <td className="py-1 text-center">
                         {/* el toque no quita el foco del campo: si el teclado se cerraba antes del clic, la página
@@ -379,7 +385,7 @@ export function WorkoutLogger({
                           }}
                           className={`h-10 w-10 touch-manipulation rounded-lg text-base font-bold ${s.done ? "bg-good text-white" : "bg-surface-2 text-muted"}`}
                           aria-pressed={s.done}
-                          aria-label={`Serie ${j + 1} hecha`}
+                          aria-label={t("wl.serieHecha", { n: j + 1 })}
                         >
                           ✓
                         </button>
@@ -395,11 +401,11 @@ export function WorkoutLogger({
                 className="btn btn-ghost flex-1 py-1.5 text-sm"
                 onClick={() => update(e.key, (y) => ({ ...y, sets: [...y.sets, { type: "normal", kg: y.sets.at(-1)?.kg ?? "", reps: y.sets.at(-1)?.reps ?? "", done: false, target: y.sets.at(-1)?.target }] }))}
               >
-                + Añadir serie
+                {t("wl.anadirSerie")}
               </button>
               {e.sets.length > 1 && (
-                <button type="button" className="btn btn-ghost py-1.5 text-sm" onClick={() => update(e.key, (y) => ({ ...y, sets: y.sets.slice(0, -1) }))} aria-label="Quitar la última serie">
-                  − Serie
+                <button type="button" className="btn btn-ghost py-1.5 text-sm" onClick={() => update(e.key, (y) => ({ ...y, sets: y.sets.slice(0, -1) }))} aria-label={t("wl.quitarUltima")}>
+                  {t("wl.menosSerie")}
                 </button>
               )}
             </div>
@@ -408,10 +414,10 @@ export function WorkoutLogger({
       })}
 
       <button type="button" className="btn w-full" onClick={() => setPicking(true)}>
-        + Añadir ejercicio
+        {t("wl.anadirEjercicio")}
       </button>
       <p className="text-center text-xs text-muted">
-        En gris, lo que toca hoy (la rutina con la progresión doble, o la última vez): si no escribes nada, al marcar ✓ se apunta eso. Toca el número de serie para marcarla como {SET_TYPE_SHORT.calentamiento} (calentamiento), {SET_TYPE_SHORT.descendente} o {SET_TYPE_SHORT.fallo}.
+        {t("wl.ayuda", { c: t("set.c"), d: t("set.d"), f: t("set.f") })}
       </p>
 
       {picking && (
@@ -430,45 +436,45 @@ export function WorkoutLogger({
       )}
 
       {finishing && (
-        <div className="fixed inset-0 z-50 grid place-items-end bg-black/50 md:place-items-center" role="dialog" aria-modal aria-label="Terminar entreno">
+        <div className="fixed inset-0 z-50 grid place-items-end bg-black/50 md:place-items-center" role="dialog" aria-modal aria-label={t("wl.terminarEntreno")}>
           <form action={finish} className="w-full space-y-3 rounded-t-2xl bg-surface p-4 pb-[max(1rem,env(safe-area-inset-bottom))] md:max-w-md md:rounded-2xl">
-            <strong className="block text-lg">Terminar entreno</strong>
+            <strong className="block text-lg">{t("wl.terminarEntreno")}</strong>
             <p className="text-sm text-ink-2">
-              {pastStart ? pastLabel : fmtClock(elapsed)} · {doneSets.length} series · {volume.toLocaleString("es-ES")} kg
+              {t("wl.resumen", { tiempo: (pastStart ? pastLabel : fmtClock(elapsed)) ?? "", series: doneSets.length, kg: volume.toLocaleString(nf) })}
             </p>
             <label className="field">
-              Nombre
+              {t("wl.nombre")}
               <input className="input" name="name" defaultValue={w.name} maxLength={80} />
             </label>
             {pastStart && (
               <label className="field">
-                Duración (minutos)
+                {t("wl.duracionMin")}
                 <input className="input" name="minutes" type="number" inputMode="numeric" min={1} max={360} required defaultValue={Math.max(20, Math.round(doneSets.length * 2.5 + 5))} />
               </label>
             )}
             <label className="field">
-              Esfuerzo de la sesión (RPE 1-10)
+              {t("wl.rpe")}
               <select className="input" name="rpe" defaultValue="7">
-                <option value="">Sin indicar</option>
+                <option value="">{t("wl.sinIndicar")}</option>
                 {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
                   <option key={n} value={n}>
                     {n}
-                    {n === 3 ? " · suave" : n === 5 ? " · moderado" : n === 7 ? " · duro" : n === 9 ? " · muy duro" : n === 10 ? " · máximo" : ""}
+                    {RPE_KEYS[n] ? ` · ${t(RPE_KEYS[n])}` : ""}
                   </option>
                 ))}
               </select>
             </label>
             <label className="field">
-              ¿Cómo te has sentido? (opcional)
-              <textarea className="input min-h-16" name="feelings" maxLength={1000} placeholder="Agujetas, molestias, energía…" />
+              {t("wl.comoTeSentiste")}
+              <textarea className="input min-h-16" name="feelings" maxLength={1000} placeholder={t("wl.sentiPh")} />
             </label>
             {error && <p className="text-sm font-medium text-critical">✕ {error}</p>}
             <div className="flex gap-2">
               <button type="button" className="btn btn-ghost flex-1" onClick={() => setFinishing(false)}>
-                Seguir
+                {t("wl.seguir")}
               </button>
               <button className="btn flex-1" disabled={pending}>
-                {pending ? "Guardando…" : "Guardar entreno"}
+                {pending ? t("wl.guardando") : t("wl.guardarEntreno")}
               </button>
             </div>
           </form>

@@ -7,7 +7,8 @@ import { activePlace, customSummaries } from "@/lib/strength/catalog";
 import { lastSets } from "@/lib/strength/workouts";
 import { exercisesFromSteps } from "@/lib/strength/planSteps";
 import type { Routine } from "@/lib/types";
-import { WEEKDAYS, shortDate, weekday } from "@/lib/dates";
+import { viewLocale } from "@/lib/i18n/server";
+import { weekdayDate } from "@/lib/i18n";
 import { viewToday } from "@/lib/analysis";
 
 export const metadata: Metadata = { title: "Entreno" };
@@ -21,7 +22,7 @@ export default function WorkoutPage({ searchParams }: PageProps<"/fuerza/entreno
 }
 
 async function Content({ searchParams }: { searchParams: PageProps<"/fuerza/entreno">["searchParams"] }) {
-  const [sp, db] = await Promise.all([searchParams, getDb()]);
+  const [sp, db, locale] = await Promise.all([searchParams, getDb(), viewLocale()]);
   const session = typeof sp.sesion === "string" ? db.plan?.weeks.flatMap((w) => w.sessions).find((x) => x.id === sp.sesion && x.type === "strength") : undefined;
   const id = session?.routineId ?? (typeof sp.rutina === "string" ? sp.rutina : undefined);
   const own = id ? db.routines?.find((r) => r.id === id) : undefined;
@@ -46,7 +47,8 @@ async function Content({ searchParams }: { searchParams: PageProps<"/fuerza/entr
       available={activePlace(db)?.equipment}
       bodyKg={db.profile?.weightKg}
       pastStart={fecha && `${fecha}T${hora}:00`}
-      pastLabel={fecha && `${WEEKDAYS[weekday(fecha)].toLowerCase()} ${shortDate(fecha)}`}
+      pastLabel={fecha && weekdayDate(fecha, locale)}
+      locale={locale}
     />
   );
 }

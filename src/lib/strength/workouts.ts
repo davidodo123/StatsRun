@@ -5,7 +5,8 @@ import type { Activity, EmomInfo, RoutineExercise, RoutineSet, SetType, Workout,
 export const SET_TYPES: SetType[] = ["normal", "calentamiento", "descendente", "fallo"];
 export const SET_TYPE_SHORT: Record<SetType, string> = { normal: "", calentamiento: "C", descendente: "D", fallo: "F" };
 export const REST_OPTIONS = [0, 30, 45, 60, 90, 120, 150, 180, 240, 300];
-export const restLabel = (s: number) => (!s ? "Sin descanso" : s < 60 ? `${s} s` : s % 60 ? `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")} min` : `${s / 60} min`);
+// el texto de «sin descanso» y el de peso corporal llegan traducidos donde se pinta
+export const restLabel = (s: number, none = "Sin descanso") => (!s ? none : s < 60 ? `${s} s` : s % 60 ? `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")} min` : `${s / 60} min`);
 
 const MAX_EXERCISES = 30;
 const MAX_SETS = 20;
@@ -123,7 +124,7 @@ export const setLoad = (e: Pick<WorkoutExercise, "bw" | "bodyKg">, s: WorkoutSet
 const fmtNum = (n: number) => n.toLocaleString("es-ES", { maximumFractionDigits: 2 });
 
 /** Texto de la carga: «PC», «PC + 10 kg» o «80 kg». */
-export const fmtLoad = (bw: boolean | undefined, kg?: number) => (bw ? (kg ? `PC + ${fmtNum(kg)} kg` : "PC") : kg !== undefined ? `${fmtNum(kg)} kg` : "–");
+export const fmtLoad = (bw: boolean | undefined, kg?: number, pc = "PC") => (bw ? (kg ? `${pc} + ${fmtNum(kg)} kg` : pc) : kg !== undefined ? `${fmtNum(kg)} kg` : "–");
 
 /** Kilos totales movidos (series efectivas: sin calentamiento). */
 export const workoutVolume = (w: Workout) => Math.round(w.exercises.reduce((t, e) => t + e.sets.filter(working).reduce((s, x) => s + setLoad(e, x) * (x.reps ?? 0), 0), 0));

@@ -233,14 +233,14 @@ Propuesta de Gratis / Premium en [[Suscripción]]. Primero decidir; después, co
 Español, inglés, catalán, portugués y francés, por fases.
 
 - [/] Fase 1: selector en Perfil → Editar perfil y pantallas principales (menú, Inicio, «Tú» y la cabecera del perfil) — *hecha 2026-10-26, pendiente de que David la vea*
-- [/] Fase 2: el resto de pantallas (Plan, Fuerza, Registrar, Estadísticas, Amigos, Carreras, Entrenador IA, avisos, inicio de sesión, privacidad…) — *2026-10-26: hecho el bloque Plan (resumen, detalle, sesiones, «No puedo», «Cambiar de día», disponibilidad, recorrido, estado de forma); preparados los textos de Fuerza (portada, rutina, entreno y editor), falta aplicarlos; luego Registrar y el resto*
+- [/] Fase 2: el resto de pantallas (Plan, Fuerza, Registrar, Estadísticas, Amigos, Carreras, Entrenador IA, avisos, inicio de sesión, privacidad…) — *2026-10-26: hecho el bloque Plan (resumen, detalle, sesiones, «No puedo», «Cambiar de día», disponibilidad, recorrido, estado de forma); traducidos portada de Fuerza, rutina (con «En tu plan» y su gráfica), entreno en vivo y editor de rutinas; falta EMOM, ejercicios, material, medidas, barra de entreno en curso; luego Registrar y el resto*
 - [ ] Fase 3: lo generado: títulos y pasos de las sesiones del plan, respuestas de la IA, avisos de cada mañana, imágenes para compartir y pasos de los 1.036 ejercicios
 
 ## 📝 Pedido por David (2026-10-26)
 
 - [x] **Inicio**: pulsar una barra de la semana y ver los entrenos de ese día — *hecho 2026-10-26: debajo salen sus sesiones, con su estado y «Empezar» en las de fuerza*
 - [x] **Foto de perfil**: quitar el «Quitar» de debajo; que salga al pulsar la foto (junto a cambiarla) — *hecho 2026-10-26: con foto propia, al pulsarla sale «Cambiar foto» / «Quitar foto»*
-- [ ] **Portfolio** (repo Portfolio): en la versión de ordenador, la tarjeta de Run-In-Out con sus colores nuevos (negro y lima, estilo Volt)
+- [x] **Portfolio** (repo Portfolio): en la versión de ordenador, la tarjeta de Run-In-Out con sus colores nuevos (negro y lima, estilo Volt) — *ficha negra con acento lima, icono y captura nuevos (Portfolio 073f773)*
 - [ ] **Patreon**: una versión para que donen y se quiten los anuncios — *la app no tiene anuncios todavía: falta decidir si se ponen y la página de Patreon de David*
 
 ## 🔚 Para el final (lo dejó David 2026-10-25)
