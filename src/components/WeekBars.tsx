@@ -33,10 +33,11 @@ export function WeekBars({ days, today, locale }: { days: WeekBarDay[]; today: s
             aria-selected={d.date === sel}
             aria-label={weekdayDate(d.date, locale)}
             onClick={() => setSel(d.date)}
-            className="flex h-full flex-1 items-end"
+            className="group flex h-full flex-1 items-end"
           >
             <span
-              className={`block w-full rounded-sm transition ${d.date === today ? "bg-accent" : d.done ? "bg-ink" : "bg-surface-2"} ${d.date === sel ? "ring-2 ring-ink/60 ring-offset-2 ring-offset-bg" : ""}`}
+              // solo el día elegido va en verde; al pasar por encima se ilumina
+              className={`block w-full rounded-sm transition ${d.date === sel ? "bg-accent" : `${d.done ? "bg-ink" : "bg-surface-2"} group-hover:bg-accent/60`}`}
               style={{ height: `${d.km > 0 ? Math.max(14, (d.km / maxKm) * 100) : d.any ? 10 : 4}%` }}
             />
           </button>
@@ -44,7 +45,7 @@ export function WeekBars({ days, today, locale }: { days: WeekBarDay[]; today: s
       </div>
       <div className="mt-1.5 grid grid-cols-7 gap-1.5 text-center text-xs text-muted">
         {days.map((d, i) => (
-          <button key={d.date} type="button" onClick={() => setSel(d.date)} className={d.date === today ? "font-bold text-accent" : d.date === sel ? "font-bold text-ink" : ""}>
+          <button key={d.date} type="button" onClick={() => setSel(d.date)} className={d.date === sel ? "font-bold text-accent" : d.date === today ? "font-bold text-ink" : "hover:text-accent"}>
             {initials[i]}
           </button>
         ))}

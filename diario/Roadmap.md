@@ -241,6 +241,8 @@ Español, inglés, catalán, portugués y francés, por fases.
 - [x] **Inicio**: pulsar una barra de la semana y ver los entrenos de ese día — *hecho 2026-10-26: debajo salen sus sesiones, con su estado y «Empezar» en las de fuerza*
 - [x] **Foto de perfil**: quitar el «Quitar» de debajo; que salga al pulsar la foto (junto a cambiarla) — *hecho 2026-10-26: con foto propia, al pulsarla sale «Cambiar foto» / «Quitar foto»*
 - [x] **Portfolio** (repo Portfolio): en la versión de ordenador, la tarjeta de Run-In-Out con sus colores nuevos (negro y lima, estilo Volt) — *ficha negra con acento lima, icono y captura nuevos (Portfolio 073f773)*
+- [x] **Entreno de fuerza**: al terminarlo (y al abrirlo) sale el dibujo de los músculos trabajados, no solo en la imagen para compartir
+- [x] **Barras de Inicio**: el día elegido en verde (y verde suave al pasar por encima); los demás pierden el color
 - [ ] **Patreon**: una versión para que donen y se quiten los anuncios — *la app no tiene anuncios todavía: falta decidir si se ponen y la página de Patreon de David*
 
 ## 🔚 Para el final (lo dejó David 2026-10-25)

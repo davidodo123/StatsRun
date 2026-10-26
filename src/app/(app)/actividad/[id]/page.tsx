@@ -22,8 +22,11 @@ import { WEEKDAYS, shortDate, weekday } from "@/lib/dates";
 import { viewToday } from "@/lib/analysis";
 import { fmtDuration, fmtKm, fmtNum, fmtPace } from "@/lib/format";
 import { SetBadge } from "@/components/RoutineEditor";
-import { emomTitle, estimate1RM, fmtLoad, setLoad, strengthRecords, type StrengthRecord, workoutReps, workoutSets, workoutVolume } from "@/lib/strength/workouts";
-import type { Workout } from "@/lib/types";
+import { emomTitle, estimate1RM, fmtLoad, muscleSets, setLoad, strengthRecords, type StrengthRecord, workoutReps, workoutSets, workoutVolume } from "@/lib/strength/workouts";
+import { findExercise } from "@/lib/strength/catalog";
+import { MUSCLES } from "@/lib/strength/labels";
+import { MuscleMap } from "@/components/MuscleMap";
+import type { Activity, Db, Workout } from "@/lib/types";
 import { Icon } from "@/components/icons";
 
 export const metadata: Metadata = { title: "Sesión" };
@@ -88,6 +91,7 @@ async function Content({ params, searchParams }: { params: PageProps<"/actividad
             <img src={photo} alt={`Foto de ${a.name}`} className="max-h-[70vh] w-full rounded-2xl border border-line object-cover" />
           )}
           {mine && <ActivityPhotoButtons id={a.id} hasPhoto={Boolean(photo)} />}
+          {a.workout && <MusclesCard db={db} a={a} />}
           {a.workout ? (
             <WorkoutCard workout={a.workout} records={strengthRecords(db.activities).get(a.id) ?? []} />
           ) : a.route ? (
@@ -138,6 +142,23 @@ async function Content({ params, searchParams }: { params: PageProps<"/actividad
         </div>
       </div>
     </>
+  );
+}
+
+/** Músculos que ha trabajado este entreno, en el dibujo del cuerpo (como en la imagen para compartir). */
+function MusclesCard({ db, a }: { db: Pick<Db, "customExercises">; a: Activity }) {
+  const sets = muscleSets([{ ...a, date: "0000-00-00" }], "0000-00-00", (id) => findExercise(db, id));
+  const worked = MUSCLES.filter((m) => sets[m.id]).sort((x, y) => sets[y.id]! - sets[x.id]!);
+  if (!worked.length) return null;
+  return (
+    <Card title="Músculos trabajados">
+      {/* color pleno en el músculo que más series ha tenido en este entreno */}
+      <MuscleMap sets={sets} full={Math.max(...worked.map((m) => sets[m.id]!))} />
+      <p className="mt-3 text-xs text-ink-2">
+        {worked.map((m) => `${m.label} ${sets[m.id]!.toLocaleString("es-ES")}`).join(" · ")}
+      </p>
+      <p className="mt-1 text-xs text-muted">Series por músculo: 1 para el principal y ½ para los que ayudan.</p>
+    </Card>
   );
 }
 
