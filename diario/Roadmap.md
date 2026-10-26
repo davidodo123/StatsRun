@@ -245,7 +245,7 @@ Español, inglés, catalán, portugués y francés, por fases.
 - [x] **Barras de Inicio**: el día elegido en verde (y verde suave al pasar por encima); los demás pierden el color
 - [x] **Títulos grandes**: más espacio entre letras (Inicio y cabeceras) y «7×(3′+1.5′)» ya no se parte en dos líneas
 - [x] **Enlaces con flecha** («Ver plan», «Ver más», «Seguir»…): chip con borde fino y flecha dibujada; en los botones grandes, la flecha dibujada en vez de «→»
-- [x] **Calendario en el perfil** (Resumen): mes con flechas; verde lo hecho, contorno lo que queda del plan; al pulsar un día se ven sus sesiones (y las del plan que no se hicieron)
+- [x] **Calendario en el perfil** (Resumen): mes con flechas; verde lo hecho, contorno lo que queda del plan; al pulsar un día se ven sus sesiones (y las del plan que no se hicieron, con un puntito rojo en el día)
 - [ ] **Patreon**: una versión para que donen y se quiten los anuncios — *la app no tiene anuncios todavía: falta decidir si se ponen y la página de Patreon de David*
 
 ## 🔚 Para el final (lo dejó David 2026-10-25)

@@ -58,6 +58,8 @@ export function ProfileCalendar({ days, today, locale }: { days: Record<string, 
           const d = days[date];
           const done = Boolean(d?.acts.length);
           const pending = !done && Boolean(d?.plan.some((p) => p.pending));
+          // sesión del plan que pasó sin hacerse: puntito rojo
+          const missed = Boolean(d?.plan.some((p) => !p.pending));
           const selected = date === sel;
           return (
             <button
@@ -66,11 +68,12 @@ export function ProfileCalendar({ days, today, locale }: { days: Record<string, 
               onClick={() => setSel(date)}
               aria-pressed={selected}
               aria-label={weekdayDate(date, locale)}
-              className={`grid aspect-square place-items-center rounded-full text-sm tabular transition ${
+              className={`relative grid aspect-square place-items-center rounded-full text-sm tabular transition ${
                 done ? "bg-accent font-bold text-accent-ink" : pending ? "border border-accent text-ink" : "text-ink-2 hover:bg-surface-2"
               } ${selected ? "ring-2 ring-ink ring-offset-2 ring-offset-surface" : ""} ${date === today && !done ? "font-bold text-accent" : ""}`}
             >
               {i + 1}
+              {missed && <span className="absolute bottom-1 h-1.5 w-1.5 rounded-full bg-critical" />}
             </button>
           );
         })}
@@ -81,6 +84,9 @@ export function ProfileCalendar({ days, today, locale }: { days: Record<string, 
         </span>
         <span className="inline-flex items-center gap-1.5">
           <span className="h-3 w-3 rounded-full border border-accent" /> {t("cal.porHacer")}
+        </span>
+        <span className="inline-flex items-center gap-1.5">
+          <span className="h-1.5 w-1.5 rounded-full bg-critical" /> {t("cal.noHecho")}
         </span>
       </div>
 
