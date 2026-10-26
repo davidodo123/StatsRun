@@ -25,6 +25,7 @@ import { ActivityItem } from "@/components/ActivityItem";
 import { tagsForDb } from "@/lib/engine/tags";
 import { viewFriends, viewUser } from "@/lib/authView";
 import { AvatarPicker } from "@/components/AvatarPicker";
+import { ProfileCalendar, type CalendarDay } from "@/components/ProfileCalendar";
 import { requireViewerId } from "@/lib/session";
 import { Icon } from "@/components/icons";
 import { AiMemory } from "@/components/AiMemory";
@@ -109,7 +110,7 @@ async function Content({ searchParams }: { searchParams: PageProps<"/perfil">["s
       {/* en el móvil, «Tú» guarda lo que no cabe en la barra de abajo */}
       {db.profile && stats && tab === first && <TuLinks focus={focus} admin={await viewIsAdmin(me?.id ?? "")} locale={locale} />}
 
-      {tab === "resumen" && <Resumen db={db} stats={stats!} matches={matches} today={today} />}
+      {tab === "resumen" && <Resumen db={db} stats={stats!} matches={matches} today={today} locale={locale} />}
       {tab === "running" && <Running db={db} stats={stats!} today={today} />}
       {tab === "fuerza" && <Fuerza db={db} today={today} />}
       {tab === "actividades" && <Actividades db={db} sport={typeof sp.deporte === "string" ? sp.deporte : "todos"} page={Number(sp.pagina) || 1} />}
@@ -181,7 +182,7 @@ function ProfileHeader({ db, stats, tab, picture, tr, children }: { db: Db; stat
 
 // ---------------- Resumen ----------------
 
-function Resumen({ db, stats, matches, today }: { db: Db; stats: Stats; matches?: Map<string, SessionMatch>; today: string }) {
+function Resumen({ db, stats, matches, today, locale }: { db: Db; stats: Stats; matches?: Map<string, SessionMatch>; today: string; locale: Locale }) {
   const recent = [...db.activities].sort((a, b) => b.startLocal.localeCompare(a.startLocal)).slice(0, 5);
   const logros = achievements(db.activities, matches);
   const unlocked = logros.filter((a) => a.unlocked).sort((a, b) => (b.date ?? "").localeCompare(a.date ?? ""));
@@ -189,6 +190,7 @@ function Resumen({ db, stats, matches, today }: { db: Db; stats: Stats; matches?
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
       <div className="space-y-4 lg:col-span-2">
         <Preparacion db={db} matches={matches} today={today} />
+        <ProfileCalendar days={calendarDays(db, matches, today)} today={today} locale={locale} />
         <Card
           title="Sesiones recientes"
           action={
@@ -231,6 +233,20 @@ function Resumen({ db, stats, matches, today }: { db: Db; stats: Stats; matches?
       </div>
     </div>
   );
+}
+
+/** Lo de cada día para el calendario: entrenos hechos y sesiones del plan (por hacer o que no se hicieron). */
+function calendarDays(db: Db, matches: Map<string, SessionMatch> | undefined, today: string): Record<string, CalendarDay> {
+  const days: Record<string, CalendarDay> = {};
+  const at = (d: string) => (days[d] ??= { acts: [], plan: [] });
+  for (const a of db.activities) at(a.date).acts.push({ id: a.id, name: a.name, sport: a.sport, km: Math.round(a.distanceM / 10) / 100, min: Math.round(a.movingSec / 60) });
+  for (const s of db.plan?.weeks.flatMap((w) => w.sessions) ?? []) {
+    const status = matches?.get(s.id)?.status;
+    // las hechas ya salen como entreno; las pasadas sin hacer, como «no hecho»
+    if (status === "done" || status === "partial") continue;
+    at(s.date).plan.push({ id: s.id, title: s.title, km: s.distanceKm, min: s.durationMin, strength: s.type === "strength", pending: s.date >= today });
+  }
+  return days;
 }
 
 function Preparacion({ db, matches, today }: { db: Db; matches?: Map<string, SessionMatch>; today: string }) {
