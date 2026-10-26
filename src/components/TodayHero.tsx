@@ -3,7 +3,8 @@ import type { Goal, Plan, PlannedSession } from "@/lib/types";
 import type { SessionMatch } from "@/lib/engine/planner";
 import { addDays, diffDays, mondayOf } from "@/lib/dates";
 import { fmtKm, fmtPace } from "@/lib/format";
-import { dayMonth, translator, weekdayDate, weekdayInitials, type Locale } from "@/lib/i18n";
+import { dayMonth, translator, weekdayDate, type Locale } from "@/lib/i18n";
+import { WeekBars, type WeekBarDay } from "./WeekBars";
 
 // el nombre sin los km del final («Tirada larga 12 km»): los km ya van debajo, en grande
 const heroTitle = (s: PlannedSession) => (s.type === "strength" ? s.title : s.title.replace(/\s*·?\s*\d+([.,]\d+)?\s*km$/i, "")) || s.title;
@@ -19,7 +20,6 @@ const startHref = (s: PlannedSession) => (s.type === "strength" ? `/fuerza/entre
  */
 export function TodayHero({ plan, matches, today, goal, locale }: { plan: Plan; matches?: Map<string, SessionMatch>; today: string; goal?: Goal; locale: Locale }) {
   const t = translator(locale);
-  const initials = weekdayInitials(locale);
   const week = plan.weeks.find((w) => today >= w.start && today <= addDays(w.start, 6));
   const sessions = plan.weeks.flatMap((w) => w.sessions);
   const todays = sessions.filter((s) => s.date === today);
@@ -30,14 +30,28 @@ export function TodayHero({ plan, matches, today, goal, locale }: { plan: Plan; 
 
   // barras: km de carrera planeados por día; los días de solo fuerza, una barra corta
   const start = week?.start ?? mondayOf(today);
-  const days = Array.from({ length: 7 }, (_, i) => {
+  const days: WeekBarDay[] = Array.from({ length: 7 }, (_, i) => {
     const date = addDays(start, i);
     const ofDay = (week?.sessions ?? []).filter((s) => s.date === date);
     const km = ofDay.reduce((t, s) => t + s.distanceKm, 0);
     const status = ofDay.map((s) => matches?.get(s.id)?.status);
-    return { date, km, any: ofDay.length > 0, done: status.includes("done") || status.includes("partial") };
+    return {
+      date,
+      km,
+      any: ofDay.length > 0,
+      done: status.includes("done") || status.includes("partial"),
+      // lo que se ve al tocar la barra de ese día
+      sessions: ofDay.map((s) => ({
+        id: s.id,
+        title: s.title,
+        km: s.distanceKm,
+        min: s.durationMin,
+        strength: s.type === "strength",
+        routine: Boolean(s.routineId),
+        status: matches?.get(s.id)?.status,
+      })),
+    };
   });
-  const maxKm = Math.max(1, ...days.map((d) => d.km));
   const doneKm = (week?.sessions ?? []).filter((s) => s.type !== "strength").reduce((t, s) => t + (matches?.get(s.id)?.doneKm ?? 0), 0);
   const daysToRace = goal ? diffDays(goal.date, today) : undefined;
 
@@ -121,22 +135,7 @@ export function TodayHero({ plan, matches, today, goal, locale }: { plan: Plan; 
               <span className="text-ink">{Math.round(doneKm)}</span> / {week.targetKm} km
             </span>
           </div>
-          <div className="mt-3 flex h-16 items-end gap-1.5" aria-hidden>
-            {days.map((d) => (
-              <div
-                key={d.date}
-                className={`flex-1 rounded-sm ${d.date === today ? "bg-accent" : d.done ? "bg-ink" : "bg-surface-2"}`}
-                style={{ height: `${d.km > 0 ? Math.max(14, (d.km / maxKm) * 100) : d.any ? 10 : 4}%` }}
-              />
-            ))}
-          </div>
-          <div className="mt-1.5 grid grid-cols-7 gap-1.5 text-center text-xs text-muted">
-            {days.map((d, i) => (
-              <span key={d.date} className={d.date === today ? "font-bold text-accent" : ""}>
-                {initials[i]}
-              </span>
-            ))}
-          </div>
+          <WeekBars days={days} today={today} locale={locale} />
         </div>
       )}
 

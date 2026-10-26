@@ -5,12 +5,13 @@ import { removeAvatar, saveAvatar } from "@/app/auth-actions";
 import { Icon } from "./icons";
 import { toJpeg } from "./imageFile";
 
-/** Foto de perfil: al tocarla se elige otra (de la galería o la cámara); si es subida, se puede quitar. */
+/** Foto de perfil: al tocarla se elige otra (de la galería o la cámara); si es una subida, sale un menú para cambiarla o quitarla. */
 export function AvatarPicker({ picture, initials, custom }: { picture?: string; initials: string; custom: boolean }) {
   const input = useRef<HTMLInputElement>(null);
   const [pending, start] = useTransition();
   const [error, setError] = useState<string>();
   const [preview, setPreview] = useState<string>();
+  const [menu, setMenu] = useState(false);
   const shown = preview ?? picture;
 
   const pick = (file?: File) => {
@@ -34,10 +35,11 @@ export function AvatarPicker({ picture, initials, custom }: { picture?: string; 
   };
 
   return (
-    <div className="flex shrink-0 flex-col items-center gap-1">
+    <div className="relative flex shrink-0 flex-col items-center gap-1">
       <button
         type="button"
-        onClick={() => input.current?.click()}
+        onClick={() => (custom ? setMenu((m) => !m) : input.current?.click())}
+        aria-expanded={custom ? menu : undefined}
         disabled={pending}
         aria-label="Cambiar foto de perfil"
         className="relative grid h-14 w-14 place-items-center rounded-full bg-accent text-lg font-bold text-accent-ink"
@@ -54,14 +56,38 @@ export function AvatarPicker({ picture, initials, custom }: { picture?: string; 
         </span>
       </button>
       <input ref={input} type="file" accept="image/*" className="hidden" onChange={(e) => pick(e.target.files?.[0])} />
-      {custom && !pending && (
-        <button
-          type="button"
-          onClick={() => start(async () => { setPreview(undefined); await removeAvatar(); })}
-          className="text-[11px] text-muted underline hover:text-critical"
-        >
-          Quitar
-        </button>
+      {menu && (
+        <>
+          {/* capa invisible: tocar fuera cierra */}
+          <button type="button" className="fixed inset-0 z-30 cursor-default" onClick={() => setMenu(false)} aria-label="Cerrar" tabIndex={-1} />
+          <div className="absolute left-0 top-16 z-40 w-40 overflow-hidden rounded-xl border border-line bg-surface text-sm shadow-lg" role="menu">
+            <button
+              type="button"
+              role="menuitem"
+              className="block w-full px-3 py-2 text-left hover:bg-surface-2"
+              onClick={() => {
+                setMenu(false);
+                input.current?.click();
+              }}
+            >
+              Cambiar foto
+            </button>
+            <button
+              type="button"
+              role="menuitem"
+              className="block w-full px-3 py-2 text-left text-critical hover:bg-surface-2"
+              onClick={() => {
+                setMenu(false);
+                start(async () => {
+                  setPreview(undefined);
+                  await removeAvatar();
+                });
+              }}
+            >
+              Quitar foto
+            </button>
+          </div>
+        </>
       )}
       {error && <span className="max-w-24 text-center text-[11px] text-critical">{error}</span>}
     </div>
