@@ -6,9 +6,11 @@ import type { FormState } from "@/app/actions";
 import type { AiArea } from "@/lib/types";
 import { Icon } from "./icons";
 import { keepForm } from "./keepForm";
+import { DEFAULT_LOCALE, translator, type Locale } from "@/lib/i18n";
 
 /** «¿Te ha servido?» con pulgar arriba o abajo; abajo pide el motivo, que la IA recordará. */
-export function AiRating({ area, refId, rating }: { area: AiArea; refId?: string; rating?: 1 | -1 }) {
+export function AiRating({ area, refId, rating, locale = DEFAULT_LOCALE }: { area: AiArea; refId?: string; rating?: 1 | -1; locale?: Locale }) {
+  const t = translator(locale);
   const [state, action, pending] = useActionState<FormState, FormData>(rateAi, {});
   const [down, setDown] = useState(false);
   if (!refId) return null;
@@ -24,13 +26,13 @@ export function AiRating({ area, refId, rating }: { area: AiArea; refId?: string
   return (
     <div className="space-y-2 text-xs">
       <div className="flex items-center gap-2">
-        <span className="text-muted">¿Te ha servido?</span>
+        <span className="text-muted">{t("ia.teHaServido")}</span>
         <form onSubmit={keepForm(() => action(send(1)))}>
-          <button className={btn(rating === 1)} disabled={pending} aria-label="Me ha servido" aria-pressed={rating === 1}>
+          <button className={btn(rating === 1)} disabled={pending} aria-label={t("ia.meHaServido")} aria-pressed={rating === 1}>
             <Icon name="thumbUp" className="h-4 w-4" />
           </button>
         </form>
-        <button type="button" className={btn(rating === -1 || down)} disabled={pending} onClick={() => setDown((d) => !d)} aria-label="No me ha servido" aria-pressed={rating === -1}>
+        <button type="button" className={btn(rating === -1 || down)} disabled={pending} onClick={() => setDown((d) => !d)} aria-label={t("ia.noMeHaServido")} aria-pressed={rating === -1}>
           <Icon name="thumbDown" className="h-4 w-4" />
         </button>
         {state.message && !down && <span className="text-good-ink">{state.message}</span>}
@@ -43,9 +45,9 @@ export function AiRating({ area, refId, rating }: { area: AiArea; refId?: string
           })}
           className="flex gap-2"
         >
-          <input className="input flex-1 py-1.5 text-sm" name="reason" maxLength={200} placeholder="¿Qué no te ha gustado? Lo recordará" autoFocus aria-label="Qué no te ha gustado" />
+          <input className="input flex-1 py-1.5 text-sm" name="reason" maxLength={200} placeholder={t("ia.queNoGusto")} autoFocus aria-label={t("ia.queNoGustoAria")} />
           <button className="btn px-3 py-1.5 text-sm" disabled={pending}>
-            Enviar
+            {t("comun.enviar")}
           </button>
         </form>
       )}

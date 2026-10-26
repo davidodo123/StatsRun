@@ -19,7 +19,9 @@ import { after } from "next/server";
 import { requireViewerId } from "@/lib/session";
 import { trainingPaces } from "@/lib/engine/physiology";
 import { fmtDuration, fmtPaceRange } from "@/lib/format";
-import { WEEKDAYS, addDays, diffDays, mondayOf, shortDate, weekday } from "@/lib/dates";
+import { addDays, diffDays, mondayOf } from "@/lib/dates";
+import { getT } from "@/lib/i18n/server";
+import { dayMonth, intlLocale, shortWeekdayDate, weekdayDate, type Key } from "@/lib/i18n";
 import type { Phase } from "@/lib/types";
 import { clearPlan, clearUnavailable } from "@/app/actions";
 import { AdaptPlanButton } from "@/components/AdaptPlanButton";
@@ -31,7 +33,7 @@ export const metadata: Metadata = { title: "Plan" };
 // crear las rutinas con IA puede tardar un minuto (las acciones de la página heredan este límite)
 export const maxDuration = 180;
 
-const PHASE_LABEL: Record<Phase, string> = { base: "Base", construccion: "Construcción", especifico: "Específico", taper: "Afinado" };
+const PHASE_LABEL: Record<Phase, Key> = { base: "plan.fase.base", construccion: "plan.fase.construccion", especifico: "plan.fase.especifico", taper: "plan.fase.taper" };
 const PHASE_BG: Record<Phase, string> = { base: "bg-s3", construccion: "bg-s1", especifico: "bg-s2", taper: "bg-muted" };
 
 export default function PlanPage({ searchParams }: PageProps<"/plan/actual">) {
@@ -45,22 +47,23 @@ export default function PlanPage({ searchParams }: PageProps<"/plan/actual">) {
 // el aviso depende de la dirección: aparte, para que el resto del plan no espere a ella (y se pueda precargar)
 async function SavedNotice({ searchParams }: { searchParams: PageProps<"/plan/actual">["searchParams"] }) {
   if (!(await searchParams).registrado) return null;
+  const { t } = await getT();
   return (
     <div className="mb-4">
-      <Notice tone="good">Sesión registrada. El cumplimiento y tu forma ya están actualizados.</Notice>
+      <Notice tone="good">{t("plan.registrada")}</Notice>
     </div>
   );
 }
 
 async function Content({ searchParams }: { searchParams: PageProps<"/plan/actual">["searchParams"] }) {
-  const { db, matches, today, stats } = await getAnalysis();
+  const [{ db, matches, today, stats }, { locale, t }] = await Promise.all([getAnalysis(), getT()]);
   const plan = db.plan;
   if (!plan)
     return (
       <>
-        <PageHeader title="Plan de entrenamiento" />
-        <Empty title="Aún no tienes plan" href="/carreras" cta="Elegir carrera objetivo">
-          {db.profile ? "Elige la carrera que quieres preparar y la fecha." : "Primero completa tu perfil y después elige tu carrera."}
+        <PageHeader title={t("plan.titulo")} />
+        <Empty title={t("plan.aunNo")} href="/carreras" cta={t("plan.elegirObjetivo")}>
+          {db.profile ? t("plan.eligeCarreraFecha") : t("plan.primeroPerfil")}
         </Empty>
       </>
     );
@@ -83,35 +86,39 @@ async function Content({ searchParams }: { searchParams: PageProps<"/plan/actual
 
   return (
     <>
-      <BackLink href="/plan" />
+      <BackLink href="/plan" label={t("comun.volver")} />
       <PageHeader
         title={planTitle(plan)}
-        subtitle={`${shortDate(plan.goal.date)} · ${plan.weeks.length} semanas · creado el ${shortDate(plan.createdAt)}`}
+        subtitle={t("plan.subtitulo", { fecha: dayMonth(plan.goal.date, locale), n: plan.weeks.length, creado: dayMonth(plan.createdAt.slice(0, 10), locale) })}
         action={
           <div className="flex max-w-md flex-wrap gap-2">
-            <AdaptPlanButton />
-            <MoreMenu>
+            <AdaptPlanButton locale={locale} />
+            <MoreMenu label={t("comun.masOpciones")}>
               <form action={clearPlan}>
-                <button title="Pasa a «Planes anteriores»">Terminar plan</button>
+                <button title={t("plan.pasaAnteriores")}>{t("plan.terminarPlan")}</button>
               </form>
             </MoreMenu>
           </div>
         }
       />
 
-      <UndoSkip db={db} today={today} />
+      <UndoSkip db={db} today={today} locale={locale} />
       <Suspense fallback={null}>
         <SavedNotice searchParams={searchParams} />
       </Suspense>
       <StatGroup className="md:grid-cols-5">
-        <Stat label="Días para la carrera" value={Math.max(0, days)} accent />
-        <Stat label="Tiempo previsto" value={race ? fmtDuration(race.durationMin * 60) : "–"} sub={plan.goal.targetTimeSec ? `Objetivo ${fmtDuration(plan.goal.targetTimeSec)}` : "Objetivo: terminar"} />
-        <Stat label="VDOT" value={`${plan.startVdot.toFixed(1)} → ${plan.targetVdot.toFixed(1)}`} sub={stats ? `Hoy: ${stats.vdot.vdot.toFixed(1)}` : undefined} />
-        <Stat label="Km totales del plan" value={Math.round(totalKm)} unit="km" />
+        <Stat label={t("plan.diasCarrera")} value={Math.max(0, days)} accent />
         <Stat
-          label="Cumplimiento"
+          label={t("plan.tiempoPrevisto")}
+          value={race ? fmtDuration(race.durationMin * 60) : "–"}
+          sub={plan.goal.targetTimeSec ? t("plan.objetivoMayus", { tiempo: fmtDuration(plan.goal.targetTimeSec) }) : t("plan.objetivoTerminar")}
+        />
+        <Stat label="VDOT" value={`${plan.startVdot.toFixed(1)} → ${plan.targetVdot.toFixed(1)}`} sub={stats ? t("plan.hoyVdot", { vdot: stats.vdot.vdot.toFixed(1) }) : undefined} />
+        <Stat label={t("plan.kmTotales")} value={Math.round(totalKm)} unit="km" />
+        <Stat
+          label={t("plan.cumplimiento")}
           value={compliance !== undefined ? `${Math.round(compliance * 100)} %` : "–"}
-          sub={past.length ? `${past.length} ${past.length === 1 ? "sesión" : "sesiones"} hasta hoy` : "Aún no hay sesiones pasadas"}
+          sub={past.length ? t(past.length === 1 ? "plan.sesionHastaHoy" : "plan.sesionesHastaHoy", { n: past.length }) : t("plan.sinPasadas")}
         />
       </StatGroup>
 
@@ -119,7 +126,7 @@ async function Content({ searchParams }: { searchParams: PageProps<"/plan/actual
       {plan.warnings.length > 0 && (
         <details className="mt-4 rounded-xl border border-warning/40 bg-warning/10 px-3 py-2 text-sm">
           <summary className="cursor-pointer font-semibold">
-            {plan.warnings.length === 1 ? "1 aviso del plan" : `${plan.warnings.length} avisos del plan`}
+            {plan.warnings.length === 1 ? t("plan.unAviso") : t("plan.avisos", { n: plan.warnings.length })}
           </summary>
           <ul className="mt-2 list-disc space-y-1 pl-5 text-ink-2">
             {plan.warnings.map((w) => (
@@ -128,16 +135,16 @@ async function Content({ searchParams }: { searchParams: PageProps<"/plan/actual
           </ul>
         </details>
       )}
-      {db.goal && <RaceCard goal={db.goal} />}
+      {db.goal && <RaceCard goal={db.goal} t={t} />}
 
       {/* Línea temporal de fases */}
-      <Card className="mt-4" title="Periodización">
-        <div className="flex gap-0.5" role="img" aria-label="Semanas del plan por fase">
+      <Card className="mt-4" title={t("plan.periodizacion")}>
+        <div className="flex gap-0.5" role="img" aria-label={t("plan.semanasPorFase")}>
           {plan.weeks.map((w) => (
             <a
               key={w.index}
               href={`#semana-${w.index + 1}`}
-              title={`Semana ${w.index + 1} · ${PHASE_LABEL[w.phase]}${w.recovery ? " (descarga)" : ""} · ${w.targetKm} km`}
+              title={`${t("plan.semana", { n: w.index + 1 })} · ${t(PHASE_LABEL[w.phase])}${w.recovery ? ` (${t("plan.descarga")})` : ""} · ${w.targetKm} km`}
               className="flex flex-1 flex-col items-center gap-1"
             >
               <span className="flex h-20 w-full items-end">
@@ -154,11 +161,11 @@ async function Content({ searchParams }: { searchParams: PageProps<"/plan/actual
           {(Object.keys(PHASE_LABEL) as Phase[]).map((p) => (
             <span key={p} className="flex items-center gap-1.5">
               <span className={`h-2.5 w-2.5 rounded-sm ${PHASE_BG[p]}`} />
-              {PHASE_LABEL[p]}
+              {t(PHASE_LABEL[p])}
             </span>
           ))}
           <span className="flex items-center gap-1.5">
-            <span className="h-2.5 w-2.5 rounded-sm bg-muted opacity-50" /> Descarga
+            <span className="h-2.5 w-2.5 rounded-sm bg-muted opacity-50" /> {t("plan.descargaMayus")}
           </span>
         </div>
       </Card>
@@ -174,14 +181,14 @@ async function Content({ searchParams }: { searchParams: PageProps<"/plan/actual
               <details key={w.index} id={`semana-${w.index + 1}`} open={current} className="group rounded-2xl border border-line bg-surface">
                 <summary className="flex cursor-pointer list-none flex-wrap items-center gap-x-3 gap-y-1 p-4">
                   <span className={`h-3 w-3 rounded-sm ${PHASE_BG[w.phase]}`} aria-hidden />
-                  <span className="font-semibold">Semana {w.index + 1}</span>
+                  <span className="font-semibold">{t("plan.semana", { n: w.index + 1 })}</span>
                   <span className="text-sm text-ink-2">
-                    {shortDate(w.start)} – {shortDate(addDays(w.start, 6))}
+                    {dayMonth(w.start, locale)} – {dayMonth(addDays(w.start, 6), locale)}
                   </span>
                   <span className="text-xs text-muted">
-                    {PHASE_LABEL[w.phase]}
-                    {w.recovery && " · descarga"}
-                    {current && " · esta semana"}
+                    {t(PHASE_LABEL[w.phase])}
+                    {w.recovery && ` · ${t("plan.descarga")}`}
+                    {current && ` · ${t("plan.estaSemana")}`}
                   </span>
                   <span className="ml-auto text-sm tabular">
                     {(ended || current) && doneKm > 0 && <span className="text-ink-2">{doneKm.toFixed(0)} / </span>}
@@ -198,16 +205,13 @@ async function Content({ searchParams }: { searchParams: PageProps<"/plan/actual
                       <form key={d} action={clearUnavailable} className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-xl border border-dashed border-line px-3 py-2 text-sm">
                         <input type="hidden" name="date" value={d} />
                         <span className="text-ink-2">
-                          <strong className="text-ink">
-                            {WEEKDAYS[weekday(d)]} {shortDate(d)}
-                          </strong>{" "}
-                          · marcado como «no puedo»
+                          <strong className="text-ink">{weekdayDate(d, locale)}</strong> · {t("plan.marcadoNoPuedo")}
                         </span>
-                        {d >= today && <button className="text-xs font-semibold text-accent">Vuelvo a estar disponible</button>}
+                        {d >= today && <button className="text-xs font-semibold text-accent">{t("plan.vuelvoDisponible")}</button>}
                       </form>
                     ))}
                   {w.sessions.map((s) => (
-                    <SessionCard key={s.id} s={s} match={matches?.get(s.id)} today={today} />
+                    <SessionCard key={s.id} s={s} match={matches?.get(s.id)} today={today} locale={locale} />
                   ))}
                 </div>
               </details>
@@ -226,34 +230,35 @@ async function Content({ searchParams }: { searchParams: PageProps<"/plan/actual
                 raceDate: plan.goal.date,
                 health: db.health,
               })}
+              t={t}
             />
           )}
-          <Card title="Entrenador IA" subtitle={coachConfig().configured ? `Modelo ${coachConfig().model}` : "Desactivado"}>
+          <Card title={t("plan.entrenadorIA")} subtitle={coachConfig().configured ? t("plan.modelo", { modelo: coachConfig().model }) : t("plan.desactivado")}>
             {coachConfig().configured ? (
               <div className="space-y-3 text-sm text-ink-2">
-                {db.coach?.summary ? <p>{db.coach.summary}</p> : <p>Aún no ha revisado tu plan.</p>}
-                {db.coach?.summary && <AiRating area="plan" refId={db.coach.updatedAt} rating={feedbackFor(db, "plan", db.coach.updatedAt)?.rating} />}
+                {db.coach?.summary ? <p>{db.coach.summary}</p> : <p>{t("plan.aunNoReviso")}</p>}
+                {db.coach?.summary && <AiRating area="plan" refId={db.coach.updatedAt} rating={feedbackFor(db, "plan", db.coach.updatedAt)?.rating} locale={locale} />}
                 {db.coach?.updatedAt && (
                   <p className="text-xs text-muted">
-                    Última revisión: {new Date(db.coach.updatedAt).toLocaleString("es-ES")} · {db.coach.changed} sesiones ajustadas
+                    {t("plan.ultimaRevision", { fecha: new Date(db.coach.updatedAt).toLocaleString(intlLocale(locale)), n: db.coach.changed })}
                   </p>
                 )}
-                {db.coach?.error && <Notice tone="warn">Último intento falló: {db.coach.error}</Notice>}
+                {db.coach?.error && <Notice tone="warn">{t("plan.ultimoFallo", { error: db.coach.error })}</Notice>}
                 <p className="text-xs text-muted">
-                  {aiUnlimited ? "IA sin límite (cuenta de pruebas)." : <>Hoy te quedan {aiLeft(db, "adapt", today)} de {AI_LIMITS.adapt} reajustes y {aiLeft(db, "chat", today)} de {AI_LIMITS.chat} mensajes al entrenador.</>}
+                  {aiUnlimited
+                    ? t("plan.iaSinLimite")
+                    : t("plan.teQuedan", { reajustes: aiLeft(db, "adapt", today), maxReajustes: AI_LIMITS.adapt, mensajes: aiLeft(db, "chat", today), maxMensajes: AI_LIMITS.chat })}
                 </p>
-                <AiCoachButton />
+                <AiCoachButton locale={locale} />
                 <Link href="/entrenador" className="block text-xs font-semibold text-accent">
-                  Pídele un cambio del plan en el chat →
+                  {t("plan.pideCambio")}
                 </Link>
               </div>
             ) : (
-              <p className="text-sm text-ink-2">
-                Añade <code>OPENROUTER_API_KEY</code> en <code>.env.local</code> para que la IA adapte tus entrenos.
-              </p>
+              <p className="text-sm text-ink-2">{t("plan.sinIA", { clave: "OPENROUTER_API_KEY" })}</p>
             )}
           </Card>
-          <Card title="Fuerza con IA" subtitle="Rutinas con tu material">
+          <Card title={t("plan.fuerzaIA")} subtitle={t("plan.rutinasMaterial")}>
             <StrengthCoachCard
               material={db.strengthCoach?.material}
               ability={db.strengthCoach?.ability}
@@ -262,29 +267,35 @@ async function Content({ searchParams }: { searchParams: PageProps<"/plan/actual
               rating={feedbackFor(db, "fuerza", db.strengthCoach?.updatedAt)?.rating}
               routines={(db.routines ?? []).filter((r) => r.source === "ia").map((r) => ({ id: r.id, name: r.name }))}
               model={strengthModel()}
+              locale={locale}
             />
           </Card>
           <FoldCard
-            title="Disponibilidad"
+            title={t("plan.disponibilidad")}
             subtitle={
               blockedSoon.length
-                ? `${blockedSoon.length} ${blockedSoon.length === 1 ? "día marcado" : "días marcados"} sin entrenar`
+                ? t(blockedSoon.length === 1 ? "plan.diaMarcado" : "plan.diasMarcados", { n: blockedSoon.length })
                 : db.profile
-                  ? `Entrenas: ${availableDaysOf(db.profile).map((d) => WEEKDAYS[d].slice(0, 3)).join(", ")}`
+                  ? t("plan.entrenas", {
+                      // 2024-01-01 es lunes: el día d de la semana (0 = lunes)
+                      dias: availableDaysOf(db.profile)
+                        .map((d) => new Date(Date.UTC(2024, 0, 1 + d)).toLocaleDateString(intlLocale(locale), { weekday: "short", timeZone: "UTC" }).replace(/\.$/, ""))
+                        .join(", "),
+                    })
                   : undefined
             }
           >
             <div className="space-y-3 text-sm">
-              <p className="text-ink-2">¿Un imprevisto? Marca los días y las sesiones se mueven solas.</p>
-              <UnavailableForm today={today} />
+              <p className="text-ink-2">{t("plan.imprevisto")}</p>
+              <UnavailableForm today={today} locale={locale} />
               {blockedSoon.length > 0 && (
                 <ul className="flex flex-wrap gap-1.5">
                   {blockedSoon.map((d) => (
                     <li key={d}>
                       <form action={clearUnavailable} className="flex items-center gap-1 rounded-full border border-line px-2 py-0.5 text-xs">
                         <input type="hidden" name="date" value={d} />
-                        {WEEKDAYS[weekday(d)].slice(0, 3)} {shortDate(d)}
-                        <button className="text-muted hover:text-critical" title="Vuelvo a estar disponible" aria-label={`Quitar ${d}`}>
+                        {shortWeekdayDate(d, locale)}
+                        <button className="text-muted hover:text-critical" title={t("plan.vuelvoDisponible")} aria-label={t("plan.quitar", { fecha: d })}>
                           ✕
                         </button>
                       </form>
@@ -294,27 +305,27 @@ async function Content({ searchParams }: { searchParams: PageProps<"/plan/actual
               )}
             </div>
           </FoldCard>
-          <FoldCard title="Tus ritmos de entrenamiento" subtitle={`VDOT ${plan.startVdot.toFixed(1)} (inicio) → ${plan.targetVdot.toFixed(1)} (final)`}>
+          <FoldCard title={t("plan.tusRitmos")} subtitle={t("plan.ritmosSub", { inicio: plan.startVdot.toFixed(1), final: plan.targetVdot.toFixed(1) })}>
             <table className="w-full text-sm tabular">
               <thead className="text-left text-xs text-muted">
                 <tr>
-                  <th className="pb-2 font-medium">Ritmo</th>
-                  <th className="pb-2 font-medium">Ahora</th>
-                  <th className="pb-2 font-medium">Final</th>
+                  <th className="pb-2 font-medium">{t("plan.ritmo")}</th>
+                  <th className="pb-2 font-medium">{t("plan.ahora")}</th>
+                  <th className="pb-2 font-medium">{t("plan.final")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-line">
                 {(
                   [
-                    ["E · Suave", "easy"],
-                    ["M · Maratón", "marathon"],
-                    ["T · Umbral", "threshold"],
-                    ["I · Intervalos", "interval"],
-                    ["R · Repeticiones", "repetition"],
+                    ["plan.ritmo.easy", "easy"],
+                    ["plan.ritmo.marathon", "marathon"],
+                    ["plan.ritmo.threshold", "threshold"],
+                    ["plan.ritmo.interval", "interval"],
+                    ["plan.ritmo.repetition", "repetition"],
                   ] as const
                 ).map(([l, k]) => (
                   <tr key={k}>
-                    <td className="py-2">{l}</td>
+                    <td className="py-2">{t(l)}</td>
                     <td className="py-2">{fmtPaceRange(curPaces[k])}</td>
                     <td className="py-2">{fmtPaceRange(paces[k])}</td>
                   </tr>

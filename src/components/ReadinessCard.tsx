@@ -1,15 +1,23 @@
 import { Card, Status } from "@/components/ui";
-import { PHASE_LABEL, type Readiness, type SelyePhase } from "@/lib/engine/readiness";
+import { type Readiness, type SelyePhase } from "@/lib/engine/readiness";
+import { translator, type Key, type T } from "@/lib/i18n";
 import { Icon } from "./icons";
 
 const ORDER: SelyePhase[] = ["desentrenamiento", "alarma", "adaptacion", "agotamiento", "supercompensacion"];
 
-const SHORT: Record<SelyePhase, string> = {
-  desentrenamiento: "Desentreno",
-  alarma: "Alarma",
-  adaptacion: "Adaptación",
-  agotamiento: "Agotado",
-  supercompensacion: "Supercomp.",
+const FULL: Record<SelyePhase, Key> = {
+  desentrenamiento: "forma.fase.desentrenamiento",
+  alarma: "forma.fase.alarma",
+  adaptacion: "forma.fase.adaptacion",
+  agotamiento: "forma.fase.agotamiento",
+  supercompensacion: "forma.fase.supercompensacion",
+};
+const SHORT: Record<SelyePhase, Key> = {
+  desentrenamiento: "forma.corto.desentrenamiento",
+  alarma: "forma.corto.alarma",
+  adaptacion: "forma.corto.adaptacion",
+  agotamiento: "forma.corto.agotamiento",
+  supercompensacion: "forma.corto.supercompensacion",
 };
 
 const TONE = {
@@ -19,23 +27,23 @@ const TONE = {
   descargar: "bad",
 } as const;
 
-const CHECK_LABEL: Record<keyof Readiness["check"], string> = {
-  motivacionBaja: "Motivación",
-  malDescanso: "Descanso",
-  rendimientoBaja: "Rendimiento",
-  estresAlto: "Estrés",
-  molestias: "Molestias",
+const CHECK_LABEL: Record<keyof Readiness["check"], Key> = {
+  motivacionBaja: "forma.check.motivacionBaja",
+  malDescanso: "forma.check.malDescanso",
+  rendimientoBaja: "forma.check.rendimientoBaja",
+  estresAlto: "forma.check.estresAlto",
+  molestias: "forma.check.molestias",
 };
 
 /** Diagnóstico del estado de forma (Selye + Banister + evaluación de recuperación). */
-export function ReadinessCard({ r }: { r: Readiness }) {
+export function ReadinessCard({ r, t = translator("es") }: { r: Readiness; t?: T }) {
   return (
-    <Card title="Estado de forma">
+    <Card title={t("forma.titulo")}>
       <div className="space-y-3 text-sm">
         <Status tone={TONE[r.verdict]}>{r.headline}</Status>
 
         <div>
-          <p className="mb-1 text-xs text-muted">Fase de adaptación (Selye)</p>
+          <p className="mb-1 text-xs text-muted">{t("forma.faseSelye")}</p>
           <div className="flex gap-1" role="list">
             {ORDER.map((p) => (
               <span
@@ -43,11 +51,11 @@ export function ReadinessCard({ r }: { r: Readiness }) {
                 role="listitem"
                 aria-current={p === r.phase ? "step" : undefined}
                 className={`min-w-0 flex-1 break-words rounded-md px-1 py-1 text-center text-[10px] leading-tight ${p === r.phase ? "bg-accent font-semibold text-accent-ink" : "bg-surface-2 text-muted"}`}
-                title={PHASE_LABEL[p]}
+                title={t(FULL[p])}
               >
                 {/* en móvil no caben los nombres largos («Supercompensación») */}
-                <span className="sm:hidden">{SHORT[p]}</span>
-                <span className="hidden sm:inline">{PHASE_LABEL[p]}</span>
+                <span className="sm:hidden">{t(SHORT[p])}</span>
+                <span className="hidden sm:inline">{t(FULL[p])}</span>
               </span>
             ))}
           </div>
@@ -55,14 +63,14 @@ export function ReadinessCard({ r }: { r: Readiness }) {
 
         <details className="group/why">
           <summary className="cursor-pointer list-none text-xs font-semibold text-accent">
-            <span className="group-open/why:hidden">Ver por qué</span>
-            <span className="hidden group-open/why:inline">Ocultar</span>
+            <span className="group-open/why:hidden">{t("forma.verPorQue")}</span>
+            <span className="hidden group-open/why:inline">{t("forma.ocultar")}</span>
           </summary>
           <div className="mt-2 flex flex-wrap gap-1.5">
             {(Object.keys(CHECK_LABEL) as (keyof Readiness["check"])[]).map((k) => (
               <span key={k} className={`rounded-full border px-2 py-0.5 text-xs ${r.check[k] ? "border-warning text-ink" : "border-line text-muted"}`}>
                 <Icon name={r.check[k] ? "alert" : "check"} className="mr-1 h-3 w-3 align-[-1px]" />
-                {CHECK_LABEL[k]}
+                {t(CHECK_LABEL[k])}
               </span>
             ))}
           </div>

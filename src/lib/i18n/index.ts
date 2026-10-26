@@ -5,6 +5,7 @@ import { en } from "./en";
 import { ca } from "./ca";
 import { pt } from "./pt";
 import { fr } from "./fr";
+import { AREAS } from "./areas";
 
 export const LOCALES = ["es", "en", "ca", "pt", "fr"] as const;
 export type Locale = (typeof LOCALES)[number];
@@ -17,17 +18,22 @@ export const LOCALE_NAMES: Record<Locale, string> = { es: "Español", en: "Engli
 // para Intl (fechas y números)
 const INTL: Record<Locale, string> = { es: "es-ES", en: "en-GB", ca: "ca-ES", pt: "pt-PT", fr: "fr-FR" };
 
-export type Key = keyof typeof es;
+// textos base (es.ts y compañía) más los de cada zona (areas/)
+// todas las claves de todas las zonas (por zona, no solo las comunes)
+type KeysOf<A> = A extends { es: infer E } ? keyof E : never;
+type AreaKey = KeysOf<(typeof AREAS)[number]>;
+export type Key = keyof typeof es | AreaKey;
 export type Dict = Record<Key, string>;
-const DICTS: Record<Locale, Dict> = { es, en, ca, pt, fr };
+const merge = (l: Locale, base: Record<string, string>) => Object.assign({}, base, ...AREAS.map((a) => a[l])) as Dict;
+const DICTS: Record<Locale, Dict> = { es: merge("es", es), en: merge("en", en), ca: merge("ca", ca), pt: merge("pt", pt), fr: merge("fr", fr) };
 
 export const isLocale = (x: unknown): x is Locale => typeof x === "string" && (LOCALES as readonly string[]).includes(x);
 
 /** Traductor: t("nav.inicio"), t("inicio.hola", { nombre: "David" }) sustituye {nombre}. */
 export function translator(locale: Locale) {
-  const d = DICTS[locale] ?? es;
+  const d = DICTS[locale] ?? DICTS.es;
   return (key: Key, vars?: Record<string, string | number>) => {
-    let s = d[key] ?? es[key] ?? key;
+    let s = d[key] ?? DICTS.es[key] ?? key;
     if (vars) for (const [k, v] of Object.entries(vars)) s = s.replaceAll(`{${k}}`, String(v));
     return s;
   };
@@ -40,6 +46,15 @@ export function weekdayDate(date: string, locale: Locale): string {
   const weekday = d.toLocaleDateString(INTL[locale], { weekday: "long", timeZone: "UTC" });
   return `${weekday} ${dayMonth(date, locale)}`;
 }
+
+/** «lun 26 oct» / «Mon 26 Oct»: día de la semana abreviado y fecha. */
+export function shortWeekdayDate(date: string, locale: Locale): string {
+  const w = new Date(`${date}T00:00:00Z`).toLocaleDateString(INTL[locale], { weekday: "short", timeZone: "UTC" }).replace(/\.$/, "");
+  return `${w} ${dayMonth(date, locale)}`;
+}
+
+/** Locale de Intl para números y fechas («es-ES», «en-GB»…). */
+export const intlLocale = (locale: Locale) => INTL[locale];
 
 /** «25 oct» / «25 Oct» en el idioma. */
 export function dayMonth(date: string, locale: Locale): string {

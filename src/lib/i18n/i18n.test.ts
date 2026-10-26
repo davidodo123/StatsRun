@@ -5,6 +5,7 @@ import { en } from "./en";
 import { ca } from "./ca";
 import { pt } from "./pt";
 import { fr } from "./fr";
+import { AREAS } from "./areas";
 
 describe("idiomas", () => {
   it("cada idioma tiene todas las claves y ninguna vacía", () => {
@@ -17,6 +18,26 @@ describe("idiomas", () => {
   it("los huecos {x} de cada texto son los mismos que en español", () => {
     const huecos = (s: string) => (s.match(/\{\w+\}/g) ?? []).sort().join();
     for (const d of [en, ca, pt, fr]) for (const k of Object.keys(es) as (keyof typeof es)[]) expect(huecos(d[k])).toBe(huecos(es[k]));
+  });
+
+  it("cada zona: mismas claves, sin textos vacíos y los mismos huecos en los cinco idiomas", () => {
+    const huecos = (s: string) => (s.match(/\{\w+\}/g) ?? []).sort().join();
+    for (const a of AREAS) {
+      const base = a.es as Record<string, string>;
+      for (const l of ["en", "ca", "pt", "fr"] as const) {
+        const d = a[l] as Record<string, string>;
+        expect(Object.keys(d).sort()).toEqual(Object.keys(base).sort());
+        for (const k of Object.keys(base)) {
+          expect(d[k].trim().length, `${l} ${k}`).toBeGreaterThan(0);
+          expect(huecos(d[k]), `${l} ${k}`).toBe(huecos(base[k]));
+        }
+      }
+    }
+  });
+
+  it("ninguna clave se repite entre zonas", () => {
+    const todas = [Object.keys(es), ...AREAS.map((a) => Object.keys(a.es))].flat();
+    expect(new Set(todas).size).toBe(todas.length);
   });
 
   it("sustituye los huecos", () => {

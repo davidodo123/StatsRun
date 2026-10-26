@@ -182,7 +182,7 @@ async function Dashboard() {
               upcoming.length ? (
                 <div className="space-y-2">
                   {upcoming.map((s) => (
-                    <SessionCard key={s.id} s={s} match={matches?.get(s.id)} compact today={today} />
+                    <SessionCard key={s.id} s={s} match={matches?.get(s.id)} compact today={today} locale={locale} />
                   ))}
                 </div>
               ) : (

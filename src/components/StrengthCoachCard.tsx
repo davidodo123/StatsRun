@@ -5,6 +5,7 @@ import { useActionState } from "react";
 import { generateStrengthRoutines, type StrengthCoachForm } from "@/app/strength-actions";
 import { keepForm } from "./keepForm";
 import { AiRating } from "./AiRating";
+import { DEFAULT_LOCALE, translator, type Locale } from "@/lib/i18n";
 
 /** Le cuentas a la IA tu material y lo que sabes hacer, y crea tus rutinas de fuerza para la carrera. */
 export function StrengthCoachCard({
@@ -15,6 +16,7 @@ export function StrengthCoachCard({
   model,
   refId,
   rating,
+  locale = DEFAULT_LOCALE,
 }: {
   material?: string;
   ability?: string;
@@ -23,13 +25,15 @@ export function StrengthCoachCard({
   model: string;
   refId?: string;
   rating?: 1 | -1;
+  locale?: Locale;
 }) {
+  const t = translator(locale);
   const [state, action, pending] = useActionState<StrengthCoachForm, FormData>(generateStrengthRoutines, {});
   const list = state.routines ?? routines;
   return (
     <form onSubmit={keepForm(action)} className="space-y-3 text-sm">
       {(state.message || summary) && <p className="text-ink-2">{state.message || summary}</p>}
-      {!pending && (state.message || summary) && <AiRating area="fuerza" refId={refId} rating={rating} />}
+      {!pending && (state.message || summary) && <AiRating area="fuerza" refId={refId} rating={rating} locale={locale} />}
       {list.length > 0 && (
         <ul className="divide-y divide-line rounded-xl border border-line">
           {list.map((r) => (
@@ -44,33 +48,33 @@ export function StrengthCoachCard({
       )}
       {/* con rutinas ya hechas, el formulario va plegado */}
       <details open={!list.length} className="space-y-3">
-        <summary className={`cursor-pointer list-none text-xs font-semibold text-accent ${list.length ? "" : "hidden"}`}>Cambiar material o rehacer las rutinas</summary>
+        <summary className={`cursor-pointer list-none text-xs font-semibold text-accent ${list.length ? "" : "hidden"}`}>{t("fia.cambiarMaterial")}</summary>
         <div className="mt-3 space-y-3">
           <label className="field">
-            ¿Qué material tienes?
+            {t("fia.queMaterial")}
             <textarea
               className="input min-h-20"
               name="material"
               defaultValue={material}
               maxLength={600}
-              placeholder="Ej.: kettlebell de 16 kg, mancuernas de 15 y 18 kg, cinta elástica y barra de dominadas"
+              placeholder={t("fia.materialPh")}
               required
             />
           </label>
           <label className="field">
-            ¿Qué sueles hacer o qué puedes hacer?
+            {t("fia.queHaces")}
             <textarea
               className="input min-h-24"
               name="ability"
               defaultValue={ability}
               maxLength={1200}
-              placeholder="Ej.: 3 × 15 flexiones, 3 × 6 dominadas, sentadilla goblet con la kettlebell 3 × 12, me cuesta el equilibrio en la búlgara"
+              placeholder={t("fia.queHacesPh")}
             />
           </label>
           <button className="btn w-full" disabled={pending}>
-            {pending ? "Creando tus rutinas… (≈ 30-60 s)" : list.length ? "↻ Rehacer mis rutinas con IA" : "Crear mis rutinas con IA"}
+            {pending ? t("fia.creando") : list.length ? t("fia.rehacer") : t("fia.crear")}
           </button>
-          <p className="text-xs text-muted">El plan las coloca solas. Modelo: {model}.</p>
+          <p className="text-xs text-muted">{t("fia.planColoca", { modelo: model })}</p>
         </div>
       </details>
       {state.error && <p className="font-medium text-critical">✕ {state.error}</p>}

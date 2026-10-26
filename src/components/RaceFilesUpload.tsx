@@ -5,7 +5,7 @@ import { refreshViews } from "@/app/actions";
 import type { RaceUploadResponse } from "@/app/api/carrera/route";
 
 /** Botón para subir el recorrido de la carrera (.kmz/.kml/.gpx). */
-export function RaceFileUpload({ label }: { label: string }) {
+export function RaceFileUpload({ label, busyLabel = "Subiendo…" }: { label: string; busyLabel?: string }) {
   const input = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<RaceUploadResponse>();
@@ -36,7 +36,7 @@ export function RaceFileUpload({ label }: { label: string }) {
   return (
     <div className="space-y-1">
       <button type="button" className="btn btn-ghost w-full text-sm" disabled={busy} onClick={() => input.current?.click()}>
-        {busy ? "Subiendo…" : label}
+        {busy ? busyLabel : label}
       </button>
       <input
         ref={input}

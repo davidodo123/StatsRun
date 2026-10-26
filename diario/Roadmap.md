@@ -185,7 +185,7 @@ Base: [[Estudio entrenamiento#6. La Pirámide de Entrenamiento (Helms, Valdez, M
   - [/] Parte 3: icono de la app (web y Android, también la pantalla de arranque), imágenes, sticker y vídeo para compartir en lima — *hecho 2026-10-24; en el iPhone el icono nuevo solo sale quitando la app de la pantalla de inicio y volviéndola a añadir; en Android, con un APK nuevo*
   - [/] Parte 4: nueva distribución del menú del móvil (opción A de 4): abajo Inicio · Plan · ＋ · Fuerza · Tú; arriba Entrenador IA y Amigos; fuera «Más», lo que había va en «Tú» — *hecho 2026-10-24, pendiente de que David lo vea* → [[Decisiones#Distribución del menú: Inicio como pestaña]]
 - [x] **Notificación de lo que te toca hoy** (lo pidió David 2026-10-23): al abrir la app instalada pregunta «¿Te aviso cada mañana de lo que te toca?» (Activar / Ahora no, 2 semanas); con el permiso ya dado se activa solo; cada mañana (6:00 UTC) llega «Hoy: Tirada larga · 12 km» con el ritmo y al tocarla abre el plan. Se quita desde los ajustes del móvil — *hecho y comprobado por David en su iPhone 2026-10-23. En la app de Android aún no (la vista web no recibe push): `@capacitor/local-notifications`* → [[Decisiones#Avisos de cada mañana]]
-- [/] **Datos de la carrera en la pantalla de bloqueo, como Strava** (lo pidió David 2026-10-23) — *Android hecho 2026-10-24: «Corriendo · 12:55 / 2,41 km · ritmo medio 5:13 /km», probado en el emulador; falta un APK nuevo y probarlo corriendo con el Android de David* → [[Decisiones#Datos de la carrera en la notificación (Android)]]. Lo que se vio antes: al grabar con el GPS, ver tiempo, ritmo medio y km con el móvil bloqueado. **Android**: la notificación «Grabando carrera» del complemento no se puede cambiar una vez puesta; habría que poner otra notificación fija que se actualice cada pocos segundos (`@capacitor/local-notifications`, misma id) o tocar el código nativo del complemento. **iPhone**: lo de Strava son «Actividades en directo», que solo puede hacer una app nativa (App Store); desde la web no se puede
+- [ ] **Datos de la carrera en la pantalla de bloqueo, como Strava** (lo pidió David 2026-10-23) — *Android hecho 2026-10-24: «Corriendo · 12:55 / 2,41 km · ritmo medio 5:13 /km», probado en el emulador; falta un APK nuevo y probarlo corriendo con el Android de David* → [[Decisiones#Datos de la carrera en la notificación (Android)]]. Lo que se vio antes: al grabar con el GPS, ver tiempo, ritmo medio y km con el móvil bloqueado. **Android**: la notificación «Grabando carrera» del complemento no se puede cambiar una vez puesta; habría que poner otra notificación fija que se actualice cada pocos segundos (`@capacitor/local-notifications`, misma id) o tocar el código nativo del complemento. **iPhone**: lo de Strava son «Actividades en directo», que solo puede hacer una app nativa (App Store); desde la web no se puede
 
 ## 🏗️ Infraestructura (escalar la app) → [[Infraestructura]]
 Para cuando crezca: base de datos, servidor, costes y administración. Se hace según haga falta, no todo ya.
@@ -233,8 +233,15 @@ Propuesta de Gratis / Premium en [[Suscripción]]. Primero decidir; después, co
 Español, inglés, catalán, portugués y francés, por fases.
 
 - [/] Fase 1: selector en Perfil → Editar perfil y pantallas principales (menú, Inicio, «Tú» y la cabecera del perfil) — *hecha 2026-10-26, pendiente de que David la vea*
-- [ ] Fase 2: el resto de pantallas (Plan, Fuerza, Registrar, Estadísticas, Amigos, Carreras, Entrenador IA, avisos, inicio de sesión, privacidad…)
+- [/] Fase 2: el resto de pantallas (Plan, Fuerza, Registrar, Estadísticas, Amigos, Carreras, Entrenador IA, avisos, inicio de sesión, privacidad…) — *2026-10-26: hecho el bloque Plan (resumen, detalle, sesiones, «No puedo», «Cambiar de día», disponibilidad, recorrido, estado de forma); preparados los textos de Fuerza (portada, rutina, entreno y editor), falta aplicarlos; luego Registrar y el resto*
 - [ ] Fase 3: lo generado: títulos y pasos de las sesiones del plan, respuestas de la IA, avisos de cada mañana, imágenes para compartir y pasos de los 1.036 ejercicios
+
+## 📝 Pedido por David (2026-10-26)
+
+- [ ] **Inicio**: pulsar una barra de la semana y ver los entrenos de ese día
+- [ ] **Foto de perfil**: quitar el «Quitar» de debajo; que salga al pulsar la foto (junto a cambiarla)
+- [ ] **Portfolio** (repo Portfolio): en la versión de ordenador, la tarjeta de Run-In-Out con sus colores nuevos (negro y lima, estilo Volt)
+- [ ] **Patreon**: una versión para que donen y se quiten los anuncios — *la app no tiene anuncios todavía: falta decidir si se ponen y la página de Patreon de David*
 
 ## 🔚 Para el final (lo dejó David 2026-10-25)
 
