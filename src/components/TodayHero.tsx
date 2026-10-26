@@ -7,7 +7,8 @@ import { dayMonth, translator, weekdayDate, type Locale } from "@/lib/i18n";
 import { WeekBars, type WeekBarDay } from "./WeekBars";
 
 // el nombre sin los km del final («Tirada larga 12 km»): los km ya van debajo, en grande
-const heroTitle = (s: PlannedSession) => (s.type === "strength" ? s.title : s.title.replace(/\s*·?\s*\d+([.,]\d+)?\s*km$/i, "")) || s.title;
+// «7×(3′+1.5′)» no se parte en dos líneas: unión invisible antes del «+»
+const heroTitle = (s: PlannedSession) => ((s.type === "strength" ? s.title : s.title.replace(/\s*·?\s*\d+([.,]\d+)?\s*km$/i, "")) || s.title).replace(/(['′])\+/g, "$1⁠+");
 // cuanto más largo el nombre, más pequeña la letra (que no ocupe media pantalla)
 const titleSize = (t: string) => (t.length <= 14 ? "text-6xl md:text-7xl" : t.length <= 22 ? "text-5xl md:text-6xl" : "text-4xl md:text-5xl");
 
@@ -60,7 +61,7 @@ export function TodayHero({ plan, matches, today, goal, locale }: { plan: Plan; 
       {main ? (
         <>
           <p className="text-sm font-bold tracking-[0.2em] text-accent uppercase">{done ? t("hoy.hechoHoy") : t("hoy.hoyToca")}</p>
-          <h2 className={`mt-1 font-display leading-[0.92] uppercase ${titleSize(heroTitle(main))}`}>{heroTitle(main)}</h2>
+          <h2 className={`mt-1 font-display leading-none tracking-[0.03em] uppercase ${titleSize(heroTitle(main))}`}>{heroTitle(main)}</h2>
           {main.type !== "strength" && main.distanceKm > 0 ? (
             <p className="mt-3 flex items-baseline gap-2">
               <span className="font-display text-[110px] leading-[0.85] text-accent tabular">{main.distanceKm.toLocaleString("es-ES")}</span>
@@ -118,7 +119,7 @@ export function TodayHero({ plan, matches, today, goal, locale }: { plan: Plan; 
       ) : (
         <>
           <p className="text-sm font-bold tracking-[0.2em] text-accent uppercase">{t("hoy.hoy")}</p>
-          <h2 className="mt-1 font-display text-6xl leading-[0.92] uppercase">{t("hoy.descanso")}</h2>
+          <h2 className="mt-1 font-display text-6xl leading-none tracking-[0.03em] uppercase">{t("hoy.descanso")}</h2>
           {next && (
             <p className="mt-3 text-ink-2">
               {next.date === addDays(today, 1) ? t("hoy.manana") : t("hoy.elDia", { dia: weekdayDate(next.date, locale) })}: <strong className="text-ink">{next.title}</strong>

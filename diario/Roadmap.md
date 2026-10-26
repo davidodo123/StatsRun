@@ -243,6 +243,7 @@ Español, inglés, catalán, portugués y francés, por fases.
 - [x] **Portfolio** (repo Portfolio): en la versión de ordenador, la tarjeta de Run-In-Out con sus colores nuevos (negro y lima, estilo Volt) — *ficha negra con acento lima, icono y captura nuevos (Portfolio 073f773)*
 - [x] **Entreno de fuerza**: al terminarlo (y al abrirlo) sale el dibujo de los músculos trabajados, no solo en la imagen para compartir
 - [x] **Barras de Inicio**: el día elegido en verde (y verde suave al pasar por encima); los demás pierden el color
+- [x] **Títulos grandes**: más espacio entre letras (Inicio y cabeceras) y «7×(3′+1.5′)» ya no se parte en dos líneas
 - [ ] **Patreon**: una versión para que donen y se quiten los anuncios — *la app no tiene anuncios todavía: falta decidir si se ponen y la página de Patreon de David*
 
 ## 🔚 Para el final (lo dejó David 2026-10-25)
