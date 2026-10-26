@@ -1008,3 +1008,14 @@ Fuentes: screensdesign.com, posthog.com/pricing, revenuecat.com/pricing, revenue
 - Dónde se guarda: cookie `rio_lang` (un año, en el dispositivo) y `db.lang` (en la cuenta, para los demás dispositivos). `viewLocale()` lee la cookie y, si no hay, la cuenta (caché privada, como el resto de vistas).
 - Fechas con `Intl` en el idioma (`weekdayDate`, `dayMonth`, `weekdayInitials`); en español salen igual que antes.
 - Limitación: el menú que se ve un instante antes de cargar (el prerenderizado) va en español.
+
+## Entrar también con correo y contraseña
+*2026-10-26*
+
+- David quiere que se pueda entrar con Google **o** con correo y contraseña, crear cuenta y recuperar la contraseña. Cambia lo de [[#Login solo con Google]].
+- Pantallas: `/login` (Google arriba, correo y contraseña debajo, «¿Has olvidado la contraseña?»), `/login/crear`, `/login/olvide` y `/login/nueva` (el enlace del correo). Con el ojo para ver la contraseña. En los cinco idiomas; sin sesión, el idioma sale de la cookie o del navegador.
+- Contraseñas con scrypt (como las cuentas antiguas). Mínimo 8 caracteres. Freno: 5 fallos en 15 min bloquean ese correo un rato; 3 correos de recuperación por hora.
+- **Correos por Gmail** (elegido por David frente a Resend, que necesita dominio propio): cuenta de Gmail con «contraseña de aplicación», variables `GMAIL_USER` y `GMAIL_APP_PASSWORD` en Vercel. En local, sin ellas, el enlace sale en la consola del servidor.
+- El enlace de recuperación va firmado, caduca en 1 hora y deja de valer en cuanto se cambia la contraseña (lleva una marca de la contraseña de entonces). La respuesta es la misma haya cuenta o no (no desvela qué correos están dados de alta). En producción el enlace usa la dirección fija de Vercel, no la cabecera Host.
+- No se comprueba el correo al crear la cuenta. Por eso: (1) solo cuentan para administrador los correos comprobados (entró con Google o usó el enlace); (2) si alguien entra con Google con el mismo correo que una cuenta de contraseña, se juntan, y si ese correo no estaba comprobado se borra la contraseña (pudo crearla otro con tu correo).
+- **Primer perfil por pasos** (solo la primera vez; «Editar perfil» sigue con todo a la vista): ¿Qué entrenas? → Datos físicos → Experiencia (solo si corre) → Disponibilidad, con barra de progreso, Atrás / Siguiente y «Empezar». No deja pasar sin edad, peso y altura. El nombre viene ya puesto con el de la cuenta. El formulario del perfil queda traducido.

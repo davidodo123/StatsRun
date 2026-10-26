@@ -16,6 +16,8 @@ tags: [config]
 |---|---|
 | `GOOGLE_CLIENT_ID` | Login con Google |
 | `GOOGLE_CLIENT_SECRET` | Login con Google |
+| `GMAIL_USER` | Cuenta de Gmail que manda los correos de «¿Has olvidado la contraseña?» |
+| `GMAIL_APP_PASSWORD` | Contraseña de aplicación de esa cuenta (no la contraseña normal) |
 | `AUTH_SECRET` | Firmar la cookie de sesión |
 | `KV_REST_API_URL` / `KV_REST_API_TOKEN` | Base de datos Upstash Redis |
 | `OPENROUTER_API_KEY` / `OPENROUTER_MODEL` | Entrenador IA |

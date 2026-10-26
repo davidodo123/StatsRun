@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import type { NextRequest } from "next/server";
-import { createGoogleUser, findUserByGoogle, hasUnlinkedAccounts, type GoogleIdentity } from "@/lib/auth";
+import { createGoogleUser, findUserByGoogle, hasUnlinkedAccounts, linkGoogleByEmail, type GoogleIdentity } from "@/lib/auth";
 import { googleIdentity } from "@/lib/google";
 import { GOOGLE_PENDING_COOKIE, sealValue, startSession } from "@/lib/session";
 import { APP_CHALLENGE_COOKIE, appLoginCode, backToApp, isChallenge, type AppLoginResult } from "@/lib/appLogin";
@@ -27,7 +27,8 @@ export async function GET(req: NextRequest) {
   }
 
   let result: AppLoginResult;
-  const user = await findUserByGoogle(g.sub);
+  // ya tenía cuenta con Google, o con correo y contraseña de ese mismo correo
+  const user = (await findUserByGoogle(g.sub)) ?? (await linkGoogleByEmail(g));
   if (user) result = { kind: "session", uid: user.id, to: "/" };
   // primera vez con Google: si hay cuentas antiguas, ofrecer enlazar la suya para no perder sus datos
   else if (await hasUnlinkedAccounts()) result = { kind: "pending", g };

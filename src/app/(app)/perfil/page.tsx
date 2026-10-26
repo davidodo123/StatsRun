@@ -32,7 +32,7 @@ import { AiMemory } from "@/components/AiMemory";
 import { TuLinks } from "@/components/Nav";
 import { LanguageSelect } from "@/components/LanguageSelect";
 import { getT } from "@/lib/i18n/server";
-import type { Key, Locale, T } from "@/lib/i18n";
+import { translator, type Key, type Locale, type T } from "@/lib/i18n";
 import { viewIsAdmin } from "@/lib/admin";
 
 export const metadata: Metadata = { title: "Perfil" };
@@ -116,7 +116,7 @@ async function Content({ searchParams }: { searchParams: PageProps<"/perfil">["s
       {tab === "actividades" && <Actividades db={db} sport={typeof sp.deporte === "string" ? sp.deporte : "todos"} page={Number(sp.pagina) || 1} />}
       {tab === "logros" && <Logros list={achievements(db.activities, matches)} />}
       {tab === "salud" && <Salud db={db} />}
-      {tab === "editar" && <Editar db={db} today={today} initialFocus={foco} locale={locale} />}
+      {tab === "editar" && <Editar db={db} today={today} initialFocus={foco} locale={locale} name={me?.name} />}
     </div>
   );
 }
@@ -881,15 +881,28 @@ function ShortcutStep({ n, title, img, w = 600, h = 600, children }: { n: number
 
 // ---------------- Editar ----------------
 
-function Editar({ db, today, initialFocus, locale }: { db: Db; today: string; initialFocus?: Focus; locale: Locale }) {
+function Editar({ db, today, initialFocus, locale, name }: { db: Db; today: string; initialFocus?: Focus; locale: Locale; name?: string }) {
   const { profile } = db;
+  const t = translator(locale);
+  // la primera vez (cuenta recién creada): por pasos
+  if (!profile)
+    return (
+      <div className="mx-auto max-w-xl space-y-5">
+        <div>
+          <h2 className="font-display text-4xl leading-none tracking-[0.03em] uppercase">{t("prf.bienvenida")}</h2>
+          <p className="mt-2 text-sm text-ink-2">{t("prf.bienvenidaSub")}</p>
+        </div>
+        <ProfileForm initialFocus={initialFocus} locale={locale} defaultName={name} steps />
+        <LanguageSelect locale={locale} />
+      </div>
+    );
   const avg = profileAverages(db.activities, today);
   const outdated = profile && avg && (Math.abs(avg.weeklyKm - profile.weeklyKm) >= 3 || Math.abs(avg.longestRunKm - profile.longestRunKm) >= 2);
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
       <div className="space-y-4 lg:col-span-2">
         <LanguageSelect locale={locale} />
-        <ProfileForm key={`${profile?.weeklyKm}-${profile?.longestRunKm}-${profile?.focus}`} profile={profile} initialFocus={initialFocus} />
+        <ProfileForm key={`${profile?.weeklyKm}-${profile?.longestRunKm}-${profile?.focus}`} profile={profile} initialFocus={initialFocus} locale={locale} />
       </div>
       {profile && (
         <div className="space-y-4">

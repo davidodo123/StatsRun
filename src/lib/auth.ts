@@ -12,9 +12,10 @@ export interface User {
   id: string;
   username: string; // en minúsculas, único
   name: string;
-  // cuentas antiguas (usuario y contraseña); se usan una sola vez para enlazarlas con Google
+  // contraseña: la de las cuentas de correo y contraseña (y la de las cuentas antiguas, sin email, hasta enlazarlas con Google)
   passHash?: string;
   salt?: string;
+  emailVerified?: boolean; // el correo es suyo: entró con Google o usó el enlace que le mandamos
   googleSub?: string; // id estable de la cuenta de Google
   email?: string;
   picture?: string; // foto de Google
@@ -83,9 +84,101 @@ export async function findUserByGoogle(sub: string): Promise<PublicUser | undefi
   return u && toPublic(u);
 }
 
-/** ¿Quedan cuentas antiguas sin enlazar? Solo entonces se ofrece enlazar al entrar con Google por primera vez. */
+/** ¿Quedan cuentas antiguas (usuario y contraseña, sin correo) sin enlazar? Solo entonces se ofrece enlazar al entrar con Google por primera vez. */
 export async function hasUnlinkedAccounts(): Promise<boolean> {
-  return (await readUsers()).users.some((u) => !u.googleSub && u.passHash);
+  return (await readUsers()).users.some((u) => !u.googleSub && u.passHash && !u.email);
+}
+
+const normalizeEmail = (e: string) => e.trim().toLowerCase();
+export const MIN_PASSWORD = 8;
+
+/**
+ * Primera vez con Google y ya hay una cuenta de correo y contraseña con ese mismo correo: se juntan.
+ * Si ese correo no estaba comprobado, la contraseña se borra (pudo crearla otro con tu correo); se puede poner otra con «¿Has olvidado la contraseña?».
+ */
+export async function linkGoogleByEmail(g: GoogleIdentity): Promise<PublicUser | undefined> {
+  let linked: User | undefined;
+  await updateUsers((doc) => {
+    linked = doc.users.find((u) => !u.googleSub && u.email && normalizeEmail(u.email) === normalizeEmail(g.email));
+    if (!linked) return;
+    linked.googleSub = g.sub;
+    linked.picture ??= g.picture;
+    if (!linked.emailVerified) {
+      delete linked.passHash;
+      delete linked.salt;
+    }
+    linked.emailVerified = true;
+  });
+  return linked && toPublic(linked);
+}
+
+/** Cuenta nueva con correo y contraseña. */
+export async function createPasswordUser(nameRaw: string, emailRaw: string, password: string): Promise<{ user?: PublicUser; error?: "email" | "password" | "existe" }> {
+  const email = normalizeEmail(emailRaw);
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 120) return { error: "email" };
+  if (password.length < MIN_PASSWORD || password.length > 200) return { error: "password" };
+  const salt = randomBytes(16).toString("hex");
+  const passHash = await hash(password, salt);
+  let created: User | undefined;
+  let exists = false;
+  await updateUsers((doc) => {
+    exists = doc.users.some((u) => u.email && normalizeEmail(u.email) === email);
+    if (exists) return;
+    created = {
+      id: randomUUID(),
+      username: usernameFor(email, new Set(doc.users.map((u) => u.username))),
+      name: nameRaw.trim().slice(0, 40) || email.split("@")[0],
+      email,
+      passHash,
+      salt,
+      createdAt: new Date().toISOString(),
+      friendCode: newFriendCode(new Set(doc.users.map((u) => u.friendCode))),
+      friends: [],
+    };
+    doc.users.push(created);
+  });
+  if (exists || !created) return { error: "existe" };
+  return { user: toPublic(created) };
+}
+
+/** Entrar con correo y contraseña. */
+export async function loginWithPassword(emailRaw: string, password: string): Promise<PublicUser | undefined> {
+  const email = normalizeEmail(emailRaw);
+  const user = (await readUsers()).users.find((u) => u.email && normalizeEmail(u.email) === email);
+  // calcular el hash aunque no exista, para no revelar qué correos hay por el tiempo de respuesta
+  const got = Buffer.from(await hash(password, user?.salt ?? "0".repeat(32)), "hex");
+  const expected = Buffer.from(user?.passHash ?? "", "hex");
+  if (!user || expected.length !== got.length || !timingSafeEqual(expected, got)) return undefined;
+  return toPublic(user);
+}
+
+/**
+ * Para el enlace de «¿Has olvidado la contraseña?»: a quién escribir y una marca de la contraseña actual,
+ * para que el enlace deje de valer en cuanto se cambia (también vale para poner contraseña a una cuenta de Google).
+ */
+export async function resetTarget(emailRaw: string): Promise<{ uid: string; name: string; email: string; mark: string } | undefined> {
+  const email = normalizeEmail(emailRaw);
+  const u = (await readUsers()).users.find((x) => x.email && normalizeEmail(x.email) === email);
+  return u && { uid: u.id, name: u.name, email: u.email!, mark: (u.passHash ?? "sin").slice(0, 16) };
+}
+
+/** Pone la contraseña nueva si la marca sigue siendo la de la contraseña de cuando se pidió el enlace. */
+export async function setNewPassword(uid: string, mark: string, password: string): Promise<{ user?: PublicUser; error?: "password" | "caducado" }> {
+  if (password.length < MIN_PASSWORD || password.length > 200) return { error: "password" };
+  const salt = randomBytes(16).toString("hex");
+  const passHash = await hash(password, salt);
+  let done: User | undefined;
+  await updateUsers((doc) => {
+    done = undefined;
+    const u = doc.users.find((x) => x.id === uid);
+    if (!u || (u.passHash ?? "sin").slice(0, 16) !== mark) return;
+    u.passHash = passHash;
+    u.salt = salt;
+    // ha abierto el enlace de su correo: el correo es suyo
+    u.emailVerified = true;
+    done = u;
+  });
+  return done ? { user: toPublic(done) } : { error: "caducado" };
 }
 
 // nombre de usuario libre a partir del email (david.s@gmail.com → david.s, david.s2…)
@@ -171,7 +264,9 @@ async function emailIn(id: string, ...vars: (string | undefined)[]): Promise<boo
     .map((e) => e.trim().toLowerCase())
     .filter(Boolean);
   if (!list.length) return false;
-  const email = (await readUsers()).users.find((x) => x.id === id)?.email?.toLowerCase();
+  const u = (await readUsers()).users.find((x) => x.id === id);
+  // solo correos comprobados: si no, cualquiera podría crear una cuenta con el correo de un administrador
+  const email = u && (u.googleSub || u.emailVerified) ? u.email?.toLowerCase() : undefined;
   return Boolean(email && list.includes(email));
 }
 
