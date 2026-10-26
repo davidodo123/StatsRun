@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
-import { Card, Loading, PageHeader, Status } from "@/components/ui";
+import { Card, ChipLink, Loading, PageHeader, Status } from "@/components/ui";
 import { FriendCodeForm } from "@/components/FriendCodeForm";
 import { ActivityItem } from "@/components/ActivityItem";
 import { searchUsers, type PublicUser, type SearchResult } from "@/lib/auth";
@@ -125,7 +125,7 @@ async function Content({ searchParams }: { searchParams: PageProps<"/amigos">["s
                 <div className="flex flex-wrap items-baseline gap-x-2">
                   <span className="font-semibold">{f.name}</span>
                   <span className="text-sm text-muted">@{f.username}</span>
-                  <span className="ml-auto text-sm font-semibold text-accent">Ver stats →</span>
+                  <ChipLink className="ml-auto">Ver stats</ChipLink>
                 </div>
                 <p className="mt-1 text-sm text-ink-2">
                   {s.goal ? (

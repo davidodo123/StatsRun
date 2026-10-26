@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { getAnalysis, viewTodayMadrid } from "@/lib/analysis";
-import { Card, Empty, Loading, PageHeader, Stat, StatGroup } from "@/components/ui";
+import { Card, ChipLink, Empty, Loading, PageHeader, Stat, StatGroup } from "@/components/ui";
 import { FitnessChart, FormChart, WeeklyKmChart } from "@/components/charts";
 import { SessionCard } from "@/components/SessionCard";
 import { UndoSkip } from "@/components/UndoSkip";
@@ -142,9 +142,7 @@ async function Dashboard() {
             title={tr("inicio.pasosCalorias")}
             subtitle={health ? tr("inicio.hoySalud") : undefined}
             action={
-              <Link href="/perfil?tab=salud" className="text-xs font-semibold text-accent">
-                {health ? tr("inicio.verMas") : tr("inicio.conectar")}
-              </Link>
+              <ChipLink href="/perfil?tab=salud">{health ? tr("inicio.verMas") : tr("inicio.conectar")}</ChipLink>
             }
           >
             {health ? (
@@ -172,9 +170,7 @@ async function Dashboard() {
             title={tr("inicio.proximos7")}
             action={
               plan && (
-                <Link href="/plan/actual" className="text-xs font-semibold text-accent">
-                  {tr("inicio.verPlan")}
-                </Link>
+                <ChipLink href="/plan/actual">{tr("inicio.verPlan")}</ChipLink>
               )
             }
           >

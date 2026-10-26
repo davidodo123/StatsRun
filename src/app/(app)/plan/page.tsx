@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
-import { Loading, PageHeader, Pill } from "@/components/ui";
+import { ChipLink, Loading, PageHeader, Pill } from "@/components/ui";
 import { getDb } from "@/lib/db";
 import { planCompliance } from "@/lib/engine/planner";
 import { diffDays, mondayOf } from "@/lib/dates";
@@ -101,7 +101,7 @@ function ActivePlan({ plan, db, today, t, locale }: { plan: Plan; db: Awaited<Re
             {plan.goal.targetTimeSec ? ` · ${t("plan.objetivoTiempo", { tiempo: fmtDuration(plan.goal.targetTimeSec) })}` : ""}
           </span>
         </div>
-        <span className="shrink-0 text-sm font-semibold text-accent transition group-hover:translate-x-0.5">{t("plan.verPlan")}</span>
+        <ChipLink>{t("plan.verPlan")}</ChipLink>
       </div>
 
       <div className="mt-5">

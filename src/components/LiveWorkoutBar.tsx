@@ -1,5 +1,6 @@
 "use client";
 
+import { ChipLink } from "./ui";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -54,7 +55,7 @@ export function LiveWorkoutBar() {
           <span className="tabular block font-semibold text-accent">{clock(elapsed)}</span>
           <span className="block text-xs text-muted">{sets} {sets === 1 ? "serie" : "series"}</span>
         </span>
-        <span className="shrink-0 text-sm font-semibold text-accent">Seguir →</span>
+        <ChipLink>Seguir</ChipLink>
       </Link>
     </div>
   );

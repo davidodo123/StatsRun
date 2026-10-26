@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { BackLink } from "@/components/BackLink";
 import { Suspense } from "react";
 import { getAnalysis } from "@/lib/analysis";
-import { Card, Empty, FoldCard, Loading, MoreMenu, Notice, PageHeader, Stat, StatGroup } from "@/components/ui";
+import { Card, ChipLink, Empty, FoldCard, Loading, MoreMenu, Notice, PageHeader, Stat, StatGroup } from "@/components/ui";
 import { SessionCard } from "@/components/SessionCard";
 import { AiCoachButton } from "@/components/AiCoachButton";
 import { StrengthCoachCard } from "@/components/StrengthCoachCard";
@@ -250,9 +249,7 @@ async function Content({ searchParams }: { searchParams: PageProps<"/plan/actual
                     : t("plan.teQuedan", { reajustes: aiLeft(db, "adapt", today), maxReajustes: AI_LIMITS.adapt, mensajes: aiLeft(db, "chat", today), maxMensajes: AI_LIMITS.chat })}
                 </p>
                 <AiCoachButton locale={locale} />
-                <Link href="/entrenador" className="block text-xs font-semibold text-accent">
-                  {t("plan.pideCambio")}
-                </Link>
+                <ChipLink href="/entrenador">{t("plan.pideCambio")}</ChipLink>
               </div>
             ) : (
               <p className="text-sm text-ink-2">{t("plan.sinIA", { clave: "OPENROUTER_API_KEY" })}</p>

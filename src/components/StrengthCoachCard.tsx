@@ -1,5 +1,6 @@
 "use client";
 
+import { Icon } from "./icons";
 import Link from "next/link";
 import { useActionState } from "react";
 import { generateStrengthRoutines, type StrengthCoachForm } from "@/app/strength-actions";
@@ -40,7 +41,7 @@ export function StrengthCoachCard({
             <li key={r.id}>
               <Link href={`/fuerza/rutinas/${r.id}`} className="flex items-center justify-between px-3 py-2 hover:bg-surface-2">
                 <span className="truncate font-medium">{r.name}</span>
-                <span className="text-accent">→</span>
+                <Icon name="chevron" className="h-4 w-4 text-accent" />
               </Link>
             </li>
           ))}

@@ -7,7 +7,7 @@ import { ActivityForm } from "@/components/ActivityForm";
 import { coachConfig } from "@/lib/coach";
 import { ImportPanel } from "@/components/ImportPanel";
 import { SESSION_KIND } from "@/components/SessionCard";
-import { Card, Loading, Notice, PageHeader, Status } from "@/components/ui";
+import { Card, ChipLink, Loading, Notice, PageHeader, Status } from "@/components/ui";
 import { fmtDuration, fmtPace } from "@/lib/format";
 import { WEEKDAYS, diffDays, shortDate, weekday } from "@/lib/dates";
 import type { PlannedSession } from "@/lib/types";
@@ -189,9 +189,7 @@ async function Content({ searchParams }: { searchParams: PageProps<"/registrar">
           title="Últimos entrenos"
           action={
             db.activities.length > 2 && (
-              <Link href="/perfil?tab=actividades" className="text-xs font-semibold text-accent">
-                Ver todos →
-              </Link>
+              <ChipLink href="/perfil?tab=actividades">Ver todos</ChipLink>
             )
           }
         >

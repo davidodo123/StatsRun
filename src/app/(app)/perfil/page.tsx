@@ -12,7 +12,7 @@ import { DeleteAccountForm } from "@/components/DeleteAccountForm";
 import { SessionCard } from "@/components/SessionCard";
 import { UndoSkip } from "@/components/UndoSkip";
 import { SimpleBars, TrendLine } from "@/components/charts";
-import { Card, Empty, Loading, Pill, Stat } from "@/components/ui";
+import { Card, ChipLink, Empty, Loading, Pill, Stat } from "@/components/ui";
 import { bmi, bmiLabel, hrMaxOf, hrRestOf, hrZones } from "@/lib/engine/physiology";
 import { achievements, bestTimes, periodAverages, profileAverages, strengthSummary, type Achievement, type PeriodAvg } from "@/lib/engine/profile";
 import type { SessionMatch } from "@/lib/engine/planner";
@@ -192,9 +192,7 @@ function Resumen({ db, stats, matches, today }: { db: Db; stats: Stats; matches?
         <Card
           title="Sesiones recientes"
           action={
-            <Link href="/perfil?tab=actividades" className="text-xs font-semibold text-accent">
-              Ver todas →
-            </Link>
+            <ChipLink href="/perfil?tab=actividades">Ver todas</ChipLink>
           }
         >
           {recent.length ? <ActivityList acts={recent} /> : <p className="text-sm text-ink-2">Aún no hay sesiones.</p>}
@@ -206,9 +204,7 @@ function Resumen({ db, stats, matches, today }: { db: Db; stats: Stats; matches?
           title="Logros"
           subtitle={`${unlocked.length} de ${logros.length} conseguidos`}
           action={
-            <Link href="/perfil?tab=logros" className="text-xs font-semibold text-accent">
-              Ver todos →
-            </Link>
+            <ChipLink href="/perfil?tab=logros">Ver todos</ChipLink>
           }
         >
           {unlocked.length ? (
@@ -263,9 +259,7 @@ function Preparacion({ db, matches, today }: { db: Db; matches?: Map<string, Ses
       title="Tu preparación"
       subtitle={`${plan.goal.name} · ${shortDate(plan.goal.date)}${plan.goal.targetTimeSec ? ` · objetivo ${fmtDuration(plan.goal.targetTimeSec)}` : ""}`}
       action={
-        <Link href="/plan/actual" className="text-xs font-semibold text-accent">
-          Ver plan →
-        </Link>
+        <ChipLink href="/plan/actual">Ver plan</ChipLink>
       }
     >
       <div className="grid grid-cols-3 gap-2 text-center text-sm">
@@ -318,9 +312,9 @@ function Running({ db, stats, today }: { db: Db; stats: Stats; today: string }) 
         <Card title="Últimas carreras" className="lg:col-span-2">
           {runsList.length ? <ActivityList acts={runsList.slice(0, 10)} /> : <p className="text-sm text-ink-2">Aún no hay carreras.</p>}
           {runsList.length > 10 && (
-            <Link href="/perfil?tab=actividades&deporte=run" className="mt-2 inline-block text-xs font-semibold text-accent">
-              Ver las {runsList.length} carreras →
-            </Link>
+            <ChipLink href="/perfil?tab=actividades&deporte=run" className="mt-3">
+              Ver las {runsList.length} carreras
+            </ChipLink>
           )}
         </Card>
       </div>
@@ -452,7 +446,7 @@ function Fuerza({ db, today }: { db: Db; today: string }) {
           )}
           <p className="mt-3 text-xs text-muted">La fuerza reduce lesiones y mejora la economía de carrera (ver el estudio de entrenamiento).</p>
           <Link href="/fuerza" className="btn btn-ghost mt-3 w-full">
-            Ejercicios y material →
+            Ejercicios y material <Icon name="chevron" />
           </Link>
         </Card>
       </div>
@@ -509,9 +503,7 @@ function Actividades({ db, sport, page }: { db: Db; sport: string; page: number 
             Página {current} de {pages}
           </span>
           {current < pages ? (
-            <Link href={href(sport, current + 1)} className="font-semibold text-accent">
-              Más antiguas →
-            </Link>
+            <ChipLink href={href(sport, current + 1)}>Más antiguas</ChipLink>
           ) : (
             <span />
           )}

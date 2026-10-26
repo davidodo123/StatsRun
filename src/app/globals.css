@@ -229,6 +229,27 @@ input.input::-webkit-date-and-time-value {
   background: var(--surface-2);
   filter: none;
 }
+/* Enlaces secundarios («Ver plan», «Ver más»…): chip con borde fino y flecha */
+.chip-link {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 0.2rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  padding: 0.3rem 0.55rem 0.3rem 0.8rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--accent);
+  white-space: nowrap;
+  transition: border-color 0.15s, background 0.15s;
+}
+.chip-link:hover,
+.group:hover .chip-link {
+  border-color: var(--accent);
+  background: var(--surface-2);
+}
 }
 
 /* Fotos de ejercicio: la primera se funde sobre la segunda, como un gif de la posición inicial y final */

@@ -20,6 +20,7 @@ export const ICON_PATHS = {
   trend: "M3 17l6-6 4 4 8-8M15 7h6v6",
   globe: `${c(12, 12, 9)}M3 12h18M12 3a14 14 0 010 18M12 3a14 14 0 000 18`,
   check: "M5 12.5l4.5 4.5L19 7",
+  chevron: "M9.5 6l6 6-6 6",
   checkCircle: `${c(12, 12, 9)}M8 12.5l3 3 5-6`,
   medal: `${c(12, 15, 6)}M7 3l3 6M17 3l-3 6M10 3h4`,
   shoe: "M3 17h18v-2l-6-2-3-5H8l-1 3H4l-1 6zM3 20h18",

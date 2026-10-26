@@ -1,5 +1,6 @@
 "use client";
 
+import { ChipLink } from "./ui";
 import Link from "next/link";
 import { useState } from "react";
 import { translator, weekdayDate, weekdayInitials, intlLocale, type Locale } from "@/lib/i18n";
@@ -77,9 +78,9 @@ export function WeekBars({ days, today, locale }: { days: WeekBarDay[]; today: s
           ) : (
             <p className="mt-1 text-ink-2">{t("hoy.descanso")}</p>
           )}
-          <Link href="/plan/actual" className="mt-2 block text-xs font-semibold text-accent">
-            {t("hoy.verEnPlan")} →
-          </Link>
+          <ChipLink href="/plan/actual" className="mt-3">
+            {t("hoy.verEnPlan")}
+          </ChipLink>
         </div>
       )}
     </>

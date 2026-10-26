@@ -1,5 +1,23 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { Icon } from "./icons";
+
+/** Enlace secundario en chip con flecha («Ver plan ›»). Sin href es solo el aspecto, para ir dentro de otro enlace. */
+export function ChipLink({ href, children, className = "" }: { href?: string; children: ReactNode; className?: string }) {
+  const inner = (
+    <>
+      {children}
+      <Icon name="chevron" className="h-3.5 w-3.5" />
+    </>
+  );
+  return href ? (
+    <Link href={href} className={`chip-link ${className}`}>
+      {inner}
+    </Link>
+  ) : (
+    <span className={`chip-link ${className}`}>{inner}</span>
+  );
+}
 
 export function PageHeader({ title, subtitle, action }: { title: string; subtitle?: ReactNode; action?: ReactNode }) {
   return (

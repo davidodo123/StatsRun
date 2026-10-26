@@ -1,5 +1,6 @@
 "use client";
 
+import { Icon } from "./icons";
 import Link from "next/link";
 import { useActionState, useState } from "react";
 import { saveActivity, type FormState } from "@/app/actions";
@@ -357,7 +358,7 @@ function StrengthDone({
         </select>
       </label>
       <Link href={`/fuerza/entreno?${params}`} className="btn w-full">
-        Apuntar las series →
+        Apuntar las series <Icon name="chevron" />
       </Link>
       <p className="text-xs text-ink-2">Se abre con sus ejercicios: marca lo que hiciste y guárdalo con esta fecha. O guarda abajo solo la duración y el esfuerzo.</p>
     </div>
