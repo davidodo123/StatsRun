@@ -34,7 +34,7 @@ export async function watchGps(onPoint: (p: GpsPoint) => void, onError: (e: GpsE
     const started = BackgroundGeolocation.start(
       {
         backgroundTitle: "Grabando carrera",
-        backgroundMessage: "Run-In-Out sigue grabando con la pantalla apagada. Vuelve a la app para pausar o terminar.",
+        backgroundMessage: "Zancavolt sigue grabando con la pantalla apagada. Vuelve a la app para pausar o terminar.",
         requestPermissions: true,
         stale: false,
         distanceFilter: 0,

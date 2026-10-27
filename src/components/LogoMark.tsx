@@ -1,4 +1,4 @@
-/** Logo de Run-In-Out: montañas de dos picos en negro sobre lima (estilo Volt), el mismo dibujo que el icono de la app (public/icon.svg). */
+/** Logo de Zancavolt: montañas de dos picos en negro sobre lima (estilo Volt), el mismo dibujo que el icono de la app (public/icon.svg). */
 export function LogoMark({ className = "h-8 w-8" }: { className?: string }) {
   return (
     <svg viewBox="0 0 64 64" className={`shrink-0 ${className}`} aria-hidden>

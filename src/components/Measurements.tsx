@@ -62,7 +62,7 @@ export function Measurements({ list, today, locale }: { list: BodyMeasurement[];
       <div className="space-y-4">
         <Card title={t("ex.evolucion")}>
           {m && points.length >= 2 ? (
-            <TrendLine data={points as unknown as Record<string, unknown>[]} dataKey={m.id} name={`${t(m.label)} (${m.unit})`} xKey="date" format="dec1" height={180} />
+            <TrendLine data={points as unknown as Record<string, unknown>[]} dataKey={m.id} name={`${t(m.label)} (${m.unit})`} xKey="date" format="dec1" height={180} locale={locale} />
           ) : (
             <p className="grid h-32 place-items-center text-center text-sm text-muted">{t("med.dos")}</p>
           )}

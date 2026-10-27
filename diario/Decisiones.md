@@ -1019,3 +1019,17 @@ Fuentes: screensdesign.com, posthog.com/pricing, revenuecat.com/pricing, revenue
 - El enlace de recuperación va firmado, caduca en 1 hora y deja de valer en cuanto se cambia la contraseña (lleva una marca de la contraseña de entonces). La respuesta es la misma haya cuenta o no (no desvela qué correos están dados de alta). En producción el enlace usa la dirección fija de Vercel, no la cabecera Host.
 - No se comprueba el correo al crear la cuenta. Por eso: (1) solo cuentan para administrador los correos comprobados (entró con Google o usó el enlace); (2) si alguien entra con Google con el mismo correo que una cuenta de contraseña, se juntan, y si ese correo no estaba comprobado se borra la contraseña (pudo crearla otro con tu correo).
 - **Primer perfil por pasos** (solo la primera vez; «Editar perfil» sigue con todo a la vista): ¿Qué entrenas? → Datos físicos → Experiencia (solo si corre) → Disponibilidad, con barra de progreso, Atrás / Siguiente y «Empezar». No deja pasar sin edad, peso y altura. *2026-10-27*: el idioma es el primer paso (antes salía debajo de todos). El nombre viene ya puesto con el de la cuenta. El formulario del perfil queda traducido.
+
+## La app se llama Zancavolt
+*2026-10-27*
+
+- David cambia el nombre de la app a **Zancavolt** (antes Run-In-Out). Solo lo que se ve: logo de texto («Zanca» blanco + «volt» lima), títulos, nombre de la app instalada (PWA y Android), imágenes y vídeo para compartir, remitente del correo y textos.
+- No cambian: la dirección (run-in-out.vercel.app), los correos, el repo, el paquete de Android (`app.runinout`), las cookies (`rio_…`) ni el nombre del atajo «Salud Run-In-Out» (es el que tiene instalado la gente).
+- En Android el nombre nuevo sale con el próximo APK; en el iPhone, al volver a añadir la app a la pantalla de inicio.
+
+## Textos del plan en otros idiomas
+*2026-10-27*
+
+- El plan se sigue guardando en español; al pintarlo se traduce con `planText()` (`lib/i18n/planText.ts`): textos fijos por tabla y los que llevan números o ritmos por patrones. Lo que no está en la tabla sale en español.
+- De momento solo inglés (para el vídeo); catalán, portugués y francés, en la fase 3.
+- Nombres de ejercicios: en inglés, el original del catálogo (`nameEn`); el resto de idiomas, en español hasta la fase 3.

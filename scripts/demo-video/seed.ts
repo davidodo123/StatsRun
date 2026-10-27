@@ -12,6 +12,11 @@ import { trainingPaces } from "../../src/lib/engine/physiology";
 import { addDays, weekday } from "../../src/lib/dates";
 import { encodePolyline, type LatLon } from "../../src/lib/route";
 import type { Activity, Db, DailyHealth, PlannedSession, Profile, WorkoutExercise } from "../../src/lib/types";
+import { planText } from "../../src/lib/i18n/planText";
+
+// DEMO_LANG=en: nombres de entrenos, carrera y rutinas en inglés (para el vídeo en inglés)
+const EN = process.env.DEMO_LANG === "en";
+const L = (es: string, en: string) => (EN ? en : es);
 
 const DATA = path.join(process.cwd(), "data");
 const USERS = path.join(DATA, "users.json");
@@ -193,7 +198,7 @@ function routine(id: string, name: string, kind: "pierna" | "superior" | "comple
     id: `${PREFIX}${id}`,
     name,
     kind,
-    folder: "Gimnasio",
+    folder: L("Gimnasio", "Gym"),
     exercises: list.map(([exerciseId, kg, reps]) => ({ exerciseId, bw: kg === undefined || undefined, restSec: 90, sets: [{ kg, reps }, { kg, reps }, { kg, reps }] })),
     createdAt: at,
     updatedAt: at,
@@ -222,7 +227,7 @@ const lucia: Profile = {
   strengthStyle: "general",
   focus: "ambos",
 };
-const goal = { name: "Media Maratón de Reyes", distanceKm: 21.0975, date: addDays(today, 70), targetTimeSec: 1 * 3600 + 47 * 60 };
+const goal = { name: L("Media Maratón de Reyes", "Spring Half Marathon"), distanceKm: 21.0975, date: addDays(today, 70), targetTimeSec: 1 * 3600 + 47 * 60 };
 const plan = generatePlan({ profile: lucia, goal, currentVdot: 41, currentWeeklyKm: 30, longestRecentKm: 14, today: planStart });
 plan.createdAt = `${planStart}T09:00:00.000Z`;
 
@@ -234,28 +239,33 @@ for (let i = 84; i >= 1; i--) {
   const wd = weekday(date);
   if (rnd() < 0.1) continue;
   const prog = 1 - i / 84;
-  if (wd === 1) acts.push(run(`${PREFIX}h${i}`, date, "Rodaje con cambios", r1(6 + prog * 2), p0.easy.fast - 5, 150));
-  else if (wd === 3) acts.push(run(`${PREFIX}h${i}`, date, "Rodaje suave", r1(6 + rnd() * 2), p0.easy.slow - 10, HR.easy));
-  else if (wd === 6) acts.push(run(`${PREFIX}h${i}`, date, "Tirada larga", r1(10 + prog * 4 + rnd()), p0.easy.slow - 5, HR.long));
-  else if (wd === 4 && rnd() < 0.5) acts.push(strength(`${PREFIX}h${i}`, date, "Fuerza: tren inferior", "pierna", 58));
+  if (wd === 1) acts.push(run(`${PREFIX}h${i}`, date, L("Rodaje con cambios", "Run with pickups"), r1(6 + prog * 2), p0.easy.fast - 5, 150));
+  else if (wd === 3) acts.push(run(`${PREFIX}h${i}`, date, L("Rodaje suave", "Easy run"), r1(6 + rnd() * 2), p0.easy.slow - 10, HR.easy));
+  else if (wd === 6) acts.push(run(`${PREFIX}h${i}`, date, L("Tirada larga", "Long run"), r1(10 + prog * 4 + rnd()), p0.easy.slow - 5, HR.long));
+  else if (wd === 4 && rnd() < 0.5) acts.push(strength(`${PREFIX}h${i}`, date, L("Fuerza: tren inferior", "Strength: lower body"), "pierna", 58));
 }
-acts.push(run(`${PREFIX}10k`, addDays(planStart, -20), "10K Ruzafa", 10, (49 * 60 + 12) / 10, HR.race, { prCount: 2 }));
+acts.push(run(`${PREFIX}10k`, addDays(planStart, -20), L("10K Ruzafa", "Ruzafa 10K"), 10, (49 * 60 + 12) / 10, HR.race, { prCount: 2 }));
 
 // lo hecho del plan: casi todo, con ritmos dentro del rango y alguna sesión saltada (punto rojo del calendario)
-const titles: Record<string, string> = { easy: "Rodaje suave", recovery: "Rodaje regenerativo", long: "Tirada larga", tempo: "Umbral", intervals: "Series", race: "Carrera" };
+const titles: Record<string, string> = EN
+  ? { easy: "Easy run", recovery: "Recovery run", long: "Long run", tempo: "Threshold run", intervals: "Intervals", race: "Race" }
+  : { easy: "Rodaje suave", recovery: "Rodaje regenerativo", long: "Tirada larga", tempo: "Umbral", intervals: "Series", race: "Carrera" };
 let n = 0;
 for (const s of plan.weeks.flatMap((w) => w.sessions) as PlannedSession[]) {
   if (s.date >= today) continue;
   n++;
   if (n === 9 || n === 23) continue; // dos sesiones sin hacer
   if (s.type === "strength") {
-    acts.push(strength(`${PREFIX}p${n}`, s.date, s.title || "Fuerza", s.strengthKind === "superior" ? "superior" : "pierna", 58));
+    acts.push(strength(`${PREFIX}p${n}`, s.date, planText(s.title, EN ? "en" : "es") || L("Fuerza", "Strength"), s.strengthKind === "superior" ? "superior" : "pierna", 58));
     continue;
   }
-  const pace = s.pace ? (s.pace.fast + s.pace.slow) / 2 + (rnd() - 0.2) * 8 : 330;
+  // ritmo medio de toda la sesión (calentamiento y vuelta a la calma incluidos), no el de las series
+  const pace = (s.durationMin * 60) / s.distanceKm + (rnd() - 0.3) * 6;
   const km = r1(s.distanceKm * (0.97 + rnd() * 0.07));
-  acts.push(run(`${PREFIX}p${n}`, s.date, titles[s.type] ?? s.title, km, pace, HR[s.type] ?? 145, { sessionId: s.id, rpe: s.type === "easy" ? 4 : 7, feel: "bien" }));
+  acts.push(run(`${PREFIX}p${n}`, s.date, titles[s.type] ?? planText(s.title, EN ? "en" : "es"), km, pace, HR[s.type] ?? 145, { sessionId: s.id, rpe: s.type === "easy" ? 4 : 7, feel: "bien" }));
 }
+// un 5K popular hace 9 días, más rápido que el 10K de septiembre: se ve el progreso (VDOT ~43)
+acts.push(run(`${PREFIX}5k`, addDays(today, -9), L("5K popular del Turia", "Turia 5K"), 5, (22 * 60 + 35) / 5, HR.race, { prCount: 1 }));
 acts.sort((a, b) => a.startLocal.localeCompare(b.startLocal));
 
 const luciaDb: Db = {
@@ -265,23 +275,23 @@ const luciaDb: Db = {
   activities: acts,
   health: health(42),
   lastSync: new Date().toISOString(),
-  lang: "es",
-  places: [{ id: "gym", name: "Gimnasio", equipment: ["corporal", "mancuernas", "barra", "kettlebell", "bandas", "banco", "dominadas", "cajon", "jaula", "maquinas", "poleas", "balon", "fitball", "rodillo"] }],
+  lang: EN ? "en" : "es",
+  places: [{ id: "gym", name: L("Gimnasio", "Gym"), equipment: ["corporal", "mancuernas", "barra", "kettlebell", "bandas", "banco", "dominadas", "cajon", "jaula", "maquinas", "poleas", "balon", "fitball", "rodillo"] }],
   activePlaceId: "gym",
   routines: [
-    routine("r1", "Pierna para corredores", "pierna", [
+    routine("r1", L("Pierna para corredores", "Legs for runners"), "pierna", [
       ["Barbell_Squat", 45, 8],
       ["Romanian_Deadlift", 40, 10],
       ["Barbell_Hip_Thrust", 60, 10],
       ["Standing_Calf_Raises", 40, 15],
     ]),
-    routine("r2", "Tren superior y core", "superior", [
+    routine("r2", L("Tren superior y core", "Upper body and core"), "superior", [
       ["Pushups", undefined, 12],
       ["Bent_Over_Barbell_Row", 30, 10],
       ["Dumbbell_Bench_Press", 12, 10],
       ["Plank", undefined, 45],
     ]),
-    routine("r3", "Cuerpo entero exprés", "completo", [
+    routine("r3", L("Cuerpo entero exprés", "Express full body"), "completo", [
       ["Dumbbell_Lunges", 10, 10],
       ["Pullups", undefined, 6],
       ["Side_Bridge", undefined, 30],
@@ -308,15 +318,15 @@ function friendDb(f: (typeof friends)[number], k: number): Db {
     const date = addDays(today, -i);
     const wd = weekday(date);
     if ((wd + k) % 7 === 2 || rnd() < 0.25) continue;
-    if (wd === 6) list.push(run(`${PREFIX}${f.slug}-${i}`, date, "Tirada larga", r1(f.km / 3 + rnd() * 3), p.easy.slow - 5, HR.long));
-    else if (wd === (k % 2 ? 1 : 2)) list.push(run(`${PREFIX}${f.slug}-${i}`, date, "Series 6×800", r1(8 + rnd() * 2), p.interval.slow + 25, HR.intervals));
-    else if (wd === 4 && k % 2) list.push(strength(`${PREFIX}${f.slug}-${i}`, date, "Fuerza en el gimnasio", k % 4 ? "superior" : "pierna", 70));
-    else list.push(run(`${PREFIX}${f.slug}-${i}`, date, "Rodaje", r1(f.km / 6 + rnd() * 3), p.easy.slow - 10, HR.easy));
+    if (wd === 6) list.push(run(`${PREFIX}${f.slug}-${i}`, date, L("Tirada larga", "Long run"), r1(f.km / 3 + rnd() * 3), p.easy.slow - 5, HR.long));
+    else if (wd === (k % 2 ? 1 : 3)) list.push(run(`${PREFIX}${f.slug}-${i}`, date, L("Series 6×800", "Intervals 6×800"), r1(8 + rnd() * 2), p.interval.slow + 25, HR.intervals));
+    else if (wd === 4 && k % 2) list.push(strength(`${PREFIX}${f.slug}-${i}`, date, L("Fuerza en el gimnasio", "Gym strength"), k % 4 ? "superior" : "pierna", 70));
+    else list.push(run(`${PREFIX}${f.slug}-${i}`, date, L("Rodaje", "Easy run"), r1(f.km / 6 + rnd() * 3), p.easy.slow - 10, HR.easy));
   }
   return {
     profile: { ...lucia, name: f.name, sex: f.sex, age: 28 + k * 3, weightKg: f.sex === "male" ? 72 : 57, heightCm: f.sex === "male" ? 178 : 164, weeklyKm: f.km },
     activities: list,
-    lang: "es",
+    lang: EN ? "en" : "es",
   };
 }
 

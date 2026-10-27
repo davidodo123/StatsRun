@@ -327,7 +327,7 @@ export function RunRecorder() {
       {stats.gapSec >= 60 && (
         <p className="rounded-xl border border-warning/40 bg-warning/10 p-3 text-sm text-ink-2">
           {fmtDuration(stats.gapSec)} sin GPS: esos tramos van en línea recta, así que la distancia se queda corta.
-          {!native && " En el iPhone no se graba con la pantalla bloqueada ni con otra app abierta: deja Run-In-Out en pantalla mientras corres."}
+          {!native && " En el iPhone no se graba con la pantalla bloqueada ni con otra app abierta: deja Zancavolt en pantalla mientras corres."}
         </p>
       )}
       <p className="text-center text-xs text-muted">

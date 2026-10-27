@@ -39,7 +39,7 @@ export function RoutineChart({ points, today, locale }: { points: RoutinePoint[]
       </div>
       <div className="mt-2 rounded-2xl border border-line bg-surface p-3">
         {data.length ? (
-          <SimpleBars data={data as unknown as Record<string, unknown>[]} xKey="date" yKey={metric} name={t(m.label)} unit={m.unit} xFormat="day" height={180} />
+          <SimpleBars data={data as unknown as Record<string, unknown>[]} xKey="date" yKey={metric} name={t(m.label)} unit={m.unit} xFormat="day" height={180} locale={locale} />
         ) : (
           <div className="grid h-40 place-items-center text-center text-sm text-muted">
             <span>

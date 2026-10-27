@@ -5,10 +5,14 @@ import { addDays, diffDays, mondayOf } from "@/lib/dates";
 import { fmtKm, fmtPace } from "@/lib/format";
 import { dayMonth, translator, weekdayDate, type Locale } from "@/lib/i18n";
 import { WeekBars, type WeekBarDay } from "./WeekBars";
+import { planText } from "@/lib/i18n/planText";
 
 // el nombre sin los km del final («Tirada larga 12 km»): los km ya van debajo, en grande
 // «7×(3′+1.5′)» no se parte en dos líneas: unión invisible antes del «+»
-const heroTitle = (s: PlannedSession) => ((s.type === "strength" ? s.title : s.title.replace(/\s*·?\s*\d+([.,]\d+)?\s*km$/i, "")) || s.title).replace(/(['′])\+/g, "$1⁠+");
+const heroTitle = (s: PlannedSession, locale: Locale) => {
+  const title = planText(s.title, locale);
+  return ((s.type === "strength" ? title : title.replace(/\s*·?\s*\d+([.,]\d+)?\s*km$/i, "")) || title).replace(/(['′])\+/g, "$1⁠+");
+};
 // cuanto más largo el nombre, más pequeña la letra (que no ocupe media pantalla)
 const titleSize = (t: string) => (t.length <= 14 ? "text-6xl md:text-7xl" : t.length <= 22 ? "text-5xl md:text-6xl" : "text-4xl md:text-5xl");
 
@@ -44,7 +48,7 @@ export function TodayHero({ plan, matches, today, goal, locale }: { plan: Plan; 
       // lo que se ve al tocar la barra de ese día
       sessions: ofDay.map((s) => ({
         id: s.id,
-        title: s.title,
+        title: planText(s.title, locale),
         km: s.distanceKm,
         min: s.durationMin,
         strength: s.type === "strength",
@@ -61,7 +65,7 @@ export function TodayHero({ plan, matches, today, goal, locale }: { plan: Plan; 
       {main ? (
         <>
           <p className="text-sm font-bold tracking-[0.2em] text-accent uppercase">{done ? t("hoy.hechoHoy") : t("hoy.hoyToca")}</p>
-          <h2 className={`mt-1 font-display leading-none tracking-[0.03em] uppercase ${titleSize(heroTitle(main))}`}>{heroTitle(main)}</h2>
+          <h2 className={`mt-1 font-display leading-none tracking-[0.03em] uppercase ${titleSize(heroTitle(main, locale))}`}>{heroTitle(main, locale)}</h2>
           {main.type !== "strength" && main.distanceKm > 0 ? (
             <p className="mt-3 flex items-baseline gap-2">
               <span className="font-display text-[110px] leading-[0.85] text-accent tabular">{main.distanceKm.toLocaleString("es-ES")}</span>
@@ -95,13 +99,13 @@ export function TodayHero({ plan, matches, today, goal, locale }: { plan: Plan; 
           </dl>
           {extra.length > 0 && (
             <div className="mt-3 space-y-2">
-              <p className="text-sm text-ink-2">{t("hoy.yAdemas", { sesiones: extra.map((s) => s.title).join(", ") })}</p>
+              <p className="text-sm text-ink-2">{t("hoy.yAdemas", { sesiones: extra.map((s) => planText(s.title, locale)).join(", ") })}</p>
               {/* la rutina de fuerza de hoy también se empieza desde aquí (el botón grande es para la carrera) */}
               {extra
                 .filter((s) => s.type === "strength" && matches?.get(s.id)?.status !== "done")
                 .map((s) => (
                   <Link key={s.id} href={startHref(s)} className="btn btn-ghost w-full py-3 text-sm tracking-wider uppercase">
-                    {t(s.routineId ? "hoy.empezarRutina" : "hoy.empezarFuerza", { nombre: s.title })}
+                    {t(s.routineId ? "hoy.empezarRutina" : "hoy.empezarFuerza", { nombre: planText(s.title, locale) })}
                   </Link>
                 ))}
             </div>

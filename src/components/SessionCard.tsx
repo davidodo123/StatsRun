@@ -9,6 +9,7 @@ import { MoveSessionButton } from "./MoveSessionButton";
 import { MOVE_DAYS } from "@/lib/engine/planner";
 import { addDays } from "@/lib/dates";
 import { Icon } from "./icons";
+import { planText } from "@/lib/i18n/planText";
 
 type Kind = "suave" | "calidad" | "larga" | "fuerza" | "carrera";
 
@@ -84,7 +85,7 @@ export function SessionCard({
           {s.aiAdjusted && <span className="text-accent">· {t("sesion.ajustadaIA")}</span>}
           {s.movedFrom && <span>· {t("sesion.cambiada", { dia: shortWeekdayDate(s.movedFrom, locale) })}</span>}
         </div>
-        <h3 className="mt-0.5 font-semibold leading-snug">{s.title}</h3>
+        <h3 className="mt-0.5 font-semibold leading-snug">{planText(s.title, locale)}</h3>
         <p className="text-xs text-ink-2 tabular">
           {s.distanceKm > 0 && `${s.distanceKm.toLocaleString(intlLocale(locale))} km · `}~{s.durationMin} min
           {s.pace && s.type !== "strength" && ` · ${fmtPaceRange(s.pace)}`}
@@ -98,12 +99,12 @@ export function SessionCard({
               </span>
               <span className="hidden group-open/steps:inline">{t("sesion.ocultarPasos")}</span>
             </summary>
-            {s.description && <p className="mt-2 text-sm text-ink-2">{s.description}</p>}
+            {s.description && <p className="mt-2 text-sm text-ink-2">{planText(s.description, locale)}</p>}
             <ul className="mt-2 space-y-1 text-sm">
               {s.steps.map((step, i) => (
                 <li key={i} className="flex gap-2">
                   <span className="text-muted">{i + 1}.</span>
-                  <span>{step}</span>
+                  <span>{planText(step, locale)}</span>
                 </li>
               ))}
             </ul>

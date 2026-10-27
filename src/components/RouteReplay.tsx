@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { decodePolyline, project, routeView } from "../lib/route";
 import { tileUrl } from "./RouteMap";
 import { Icon } from "./icons";
+import { translator, type Locale } from "../lib/i18n";
 
 const TILE = 256;
 
@@ -18,7 +19,8 @@ const fmtTime = (sec: number) => {
  * Repetición animada del recorrido (estilo «flyover» de Strava, en 2D): la cámara sigue al corredor con más zoom,
  * la línea se va dibujando y se cuentan los km y el tiempo. `children` es el mapa estático que se ve antes y después.
  */
-export function RouteReplay({ route, distanceKm, movingSec, children }: { route: string; distanceKm: number; movingSec: number; children: ReactNode }) {
+export function RouteReplay({ route, distanceKm, movingSec, children, locale = "es" }: { route: string; distanceKm: number; movingSec: number; children: ReactNode; locale?: Locale }) {
+  const t = translator(locale);
   const W = 640;
   const H = 320;
   const [playing, setPlaying] = useState(false);
@@ -71,7 +73,7 @@ export function RouteReplay({ route, distanceKm, movingSec, children }: { route:
         {children}
         <button type="button" onClick={play} className="btn absolute bottom-2 left-2 px-3 py-1.5 text-xs shadow-lg">
           <Icon name="play" className="mr-1 h-3 w-3 align-[-1px]" />
-          Reproducir recorrido
+          {t("rr.reproducir")}
         </button>
       </div>
     );
@@ -96,7 +98,7 @@ export function RouteReplay({ route, distanceKm, movingSec, children }: { route:
 
   return (
     <div className="relative">
-      <svg viewBox={`0 0 ${W} ${H}`} className="block h-auto w-full rounded-xl bg-surface-2" role="img" aria-label="Repetición del recorrido">
+      <svg viewBox={`0 0 ${W} ${H}`} className="block h-auto w-full rounded-xl bg-surface-2" role="img" aria-label={t("rr.aria")}>
         {tiles.map((t) => (
           <image key={t.key} href={t.href} x={t.x} y={t.y} width={TILE} height={TILE} preserveAspectRatio="none" />
         ))}

@@ -11,7 +11,7 @@ const reply = (body: { ok: boolean; message?: string; error?: string }, status =
 export async function POST(req: Request) {
   const token = req.headers.get("authorization")?.replace(/^Bearer\s+/i, "").trim() ?? "";
   const uid = token ? await userForHealthToken(token) : undefined;
-  if (!uid) return reply({ ok: false, error: "Clave no válida. Crea una nueva en Run-In-Out → Perfil → Pasos y calorías." }, 401);
+  if (!uid) return reply({ ok: false, error: "Clave no válida. Crea una nueva en Zancavolt → Perfil → Pasos y calorías." }, 401);
   if (Number(req.headers.get("content-length") ?? 0) > 200_000) return reply({ ok: false, error: "Demasiados datos." }, 413);
 
   let body: unknown;

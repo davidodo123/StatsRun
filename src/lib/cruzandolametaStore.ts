@@ -14,7 +14,7 @@ export interface CmCache {
 
 const MAX_AGE_H = 12;
 const MAX_PAGES = 8;
-const UA = "Run-In-Out/1.0 (+https://run-in-out.vercel.app; calendario de carreras)";
+const UA = "Zancavolt/1.0 (+https://run-in-out.vercel.app; calendario de carreras)";
 
 async function fetchText(url: string): Promise<string> {
   const res = await fetch(url, { headers: { "User-Agent": UA }, signal: AbortSignal.timeout(15_000), cache: "no-store" });

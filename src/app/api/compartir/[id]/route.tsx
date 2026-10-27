@@ -36,7 +36,7 @@ function sticker(c: ShareCard) {
         </div>
         <div style={{ display: "flex", alignItems: "center", marginTop: 26, fontSize: 30, letterSpacing: 3, textShadow: SHADOW }}>
           {LOGO}
-          RUN-IN-OUT
+          ZANCAVOLT
         </div>
       </div>
     ),
@@ -63,7 +63,7 @@ export async function GET(req: Request, { params }: RouteContext<"/api/compartir
       <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", background: "#000000", color: "#ffffff", padding: "110px 80px 90px" }}>
         <div style={{ display: "flex", alignItems: "center", fontSize: 34, color: "#a6a6a6", letterSpacing: 2 }}>
           {LOGO}
-          RUN-IN-OUT
+          ZANCAVOLT
         </div>
         <div style={{ marginTop: 70, fontSize: 36, color: "#a6a6a6" }}>{date}</div>
         <div style={{ marginTop: 14, fontSize: 84, lineHeight: 1.05, letterSpacing: -2, display: "flex" }}>{c.title}</div>

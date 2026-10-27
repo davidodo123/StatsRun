@@ -18,7 +18,7 @@ function AuthShell({ title, subtitle, children, footer }: { title: string; subti
       <div className="mb-6 flex items-center gap-2 text-lg font-bold tracking-tight">
         <LogoMark />
         <span>
-          Run-In-<span className="text-accent">Out</span>
+          Zanca<span className="text-accent">volt</span>
         </span>
       </div>
       <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
@@ -273,7 +273,7 @@ export function LinkPanel({ email }: { email: string }) {
         {state.error && <p className="text-sm font-medium text-critical">✕ {state.error}</p>}
       </form>
       <div className="mt-5 border-t border-line pt-5">
-        <p className="mb-3 text-sm text-ink-2">¿Es tu primera vez en Run-In-Out?</p>
+        <p className="mb-3 text-sm text-ink-2">¿Es tu primera vez en Zancavolt?</p>
         <form action={createAccount}>
           <SubmitButton ghost pendingText="Creando…">
             Crear cuenta nueva

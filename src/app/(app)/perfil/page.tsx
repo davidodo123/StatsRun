@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { planText } from "@/lib/i18n/planText";
 import Image from "next/image";
 import Link from "next/link";
 import { Suspense, type ReactNode } from "react";
@@ -18,7 +19,7 @@ import { achievements, bestTimes, periodAverages, profileAverages, strengthSumma
 import type { SessionMatch } from "@/lib/engine/planner";
 import { fmtDuration, fmtKm, fmtNum, fmtPace } from "@/lib/format";
 import { diffDays, mondayOf, shortDate } from "@/lib/dates";
-import { focusOf, type Activity, type Db, type Focus, type Phase } from "@/lib/types";
+import { focusOf, type Activity, type Db, type Focus } from "@/lib/types";
 import { workoutVolume } from "@/lib/strength/workouts";
 import type { Stats } from "@/lib/engine/stats";
 import { ActivityItem } from "@/components/ActivityItem";
@@ -32,7 +33,7 @@ import { AiMemory } from "@/components/AiMemory";
 import { TuLinks } from "@/components/Nav";
 import { LanguageSelect } from "@/components/LanguageSelect";
 import { getT } from "@/lib/i18n/server";
-import { translator, type Key, type Locale, type T } from "@/lib/i18n";
+import { dayMonth, translator, type Key, type Locale, type T } from "@/lib/i18n";
 import { viewIsAdmin } from "@/lib/admin";
 
 export const metadata: Metadata = { title: "Perfil" };
@@ -50,7 +51,6 @@ const TABS = [
 type Tab = (typeof TABS)[number]["id"];
 
 const LEVEL: Record<string, Key> = { nuevo: "perfil.nivel.nuevo", principiante: "perfil.nivel.principiante", intermedio: "perfil.nivel.intermedio", avanzado: "perfil.nivel.avanzado" };
-const PHASE_LABEL: Record<Phase, string> = { base: "Base", construccion: "Construcción", especifico: "Específico", taper: "Afinado" };
 const PAGE_SIZE = 25;
 
 export default function PerfilPage({ searchParams }: PageProps<"/perfil">) {
@@ -182,52 +182,61 @@ function ProfileHeader({ db, stats, tab, picture, tr, children }: { db: Db; stat
 
 // ---------------- Resumen ----------------
 
+/** Nombre de un logro en el idioma, a partir de su id («streak-7», «plan-25»…). */
+function logroTitle(a: Achievement, t: T): string {
+  const [kind, n] = [a.id.slice(0, a.id.indexOf("-")), a.id.slice(a.id.indexOf("-") + 1)];
+  if (kind === "total" || kind === "week" || kind === "streak" || kind === "plan") return n === "perfect-week" ? t("lg.plan-perfect-week") : t(`lg.${kind}` as Key, { n });
+  if (kind === "pace") {
+    const [d, sec] = n.split("-");
+    return t("lg.pace", { d, m: Number(sec) / 60 });
+  }
+  if (kind === "strength") return n === "1" ? t("lg.strength1") : t("lg.strength", { n });
+  return t(`lg.${a.id}` as Key);
+}
+
 function Resumen({ db, stats, matches, today, locale }: { db: Db; stats: Stats; matches?: Map<string, SessionMatch>; today: string; locale: Locale }) {
+  const t = translator(locale);
   const recent = [...db.activities].sort((a, b) => b.startLocal.localeCompare(a.startLocal)).slice(0, 5);
   const logros = achievements(db.activities, matches);
   const unlocked = logros.filter((a) => a.unlocked).sort((a, b) => (b.date ?? "").localeCompare(a.date ?? ""));
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
       <div className="space-y-4 lg:col-span-2">
-        <Preparacion db={db} matches={matches} today={today} />
-        <ProfileCalendar days={calendarDays(db, matches, today)} today={today} locale={locale} />
+        <Preparacion db={db} matches={matches} today={today} locale={locale} />
+        <ProfileCalendar days={calendarDays(db, matches, today, locale)} today={today} locale={locale} />
         <Card
-          title="Sesiones recientes"
-          action={
-            <ChipLink href="/perfil?tab=actividades">Ver todas</ChipLink>
-          }
+          title={t("pr.recientes")}
+          action={<ChipLink href="/perfil?tab=actividades">{t("pr.verTodas")}</ChipLink>}
         >
-          {recent.length ? <ActivityList acts={recent} /> : <p className="text-sm text-ink-2">Aún no hay sesiones.</p>}
+          {recent.length ? <ActivityList acts={recent} locale={locale} /> : <p className="text-sm text-ink-2">{t("pr.sinSesiones")}</p>}
         </Card>
       </div>
       <div className="space-y-4">
-        <BestTimesCard acts={db.activities} />
+        <BestTimesCard acts={db.activities} locale={locale} />
         <Card
-          title="Logros"
-          subtitle={`${unlocked.length} de ${logros.length} conseguidos`}
-          action={
-            <ChipLink href="/perfil?tab=logros">Ver todos</ChipLink>
-          }
+          title={t("perfil.logros")}
+          subtitle={t("pr.conseguidos", { n: unlocked.length, total: logros.length })}
+          action={<ChipLink href="/perfil?tab=logros">{t("pr.verTodos")}</ChipLink>}
         >
           {unlocked.length ? (
             <ul className="grid grid-cols-3 gap-2">
               {unlocked.slice(0, 6).map((a) => (
                 <li key={a.id} className="rounded-xl bg-surface-2 p-2 text-center" title={a.detail}>
                   <Icon name={a.icon} className="mx-auto mb-1 block h-7 w-7 text-accent" />
-                  <span className="block text-[11px] font-medium leading-tight">{a.title}</span>
+                  <span className="block text-[11px] font-medium leading-tight">{logroTitle(a, t)}</span>
                 </li>
               ))}
             </ul>
           ) : (
-            <p className="text-sm text-ink-2">Registra tu primera carrera para estrenar la vitrina.</p>
+            <p className="text-sm text-ink-2">{t("pr.vitrina")}</p>
           )}
         </Card>
-        <Card title="Forma actual">
+        <Card title={t("pr.forma")}>
           <ul className="divide-y divide-line text-sm">
             <Row label="VDOT" value={stats.vdot.vdot.toFixed(1)} />
-            <Row label="Media 6 semanas" value={`${fmtKm(stats.totals.avgWeeklyKm6)} km/sem`} />
-            <Row label="Racha actual" value={`${stats.totals.streakDays} días`} />
-            <Row label="Constancia (12 sem)" value={`${Math.round(stats.totals.consistency)} %`} />
+            <Row label={t("st.media6")} value={t("pr.kmSem", { n: fmtKm(stats.totals.avgWeeklyKm6) })} />
+            <Row label={t("st.racha")} value={t("st.diasN", { n: stats.totals.streakDays })} />
+            <Row label={t("pr.constancia12")} value={`${Math.round(stats.totals.consistency)} %`} />
           </ul>
         </Card>
       </div>
@@ -236,7 +245,7 @@ function Resumen({ db, stats, matches, today, locale }: { db: Db; stats: Stats; 
 }
 
 /** Lo de cada día para el calendario: entrenos hechos y sesiones del plan (por hacer o que no se hicieron). */
-function calendarDays(db: Db, matches: Map<string, SessionMatch> | undefined, today: string): Record<string, CalendarDay> {
+function calendarDays(db: Db, matches: Map<string, SessionMatch> | undefined, today: string, locale: Locale): Record<string, CalendarDay> {
   const days: Record<string, CalendarDay> = {};
   const at = (d: string) => (days[d] ??= { acts: [], plan: [] });
   for (const a of db.activities) at(a.date).acts.push({ id: a.id, name: a.name, sport: a.sport, km: Math.round(a.distanceM / 10) / 100, min: Math.round(a.movingSec / 60) });
@@ -244,18 +253,19 @@ function calendarDays(db: Db, matches: Map<string, SessionMatch> | undefined, to
     const status = matches?.get(s.id)?.status;
     // las hechas ya salen como entreno; las pasadas sin hacer, como «no hecho»
     if (status === "done" || status === "partial") continue;
-    at(s.date).plan.push({ id: s.id, title: s.title, km: s.distanceKm, min: s.durationMin, strength: s.type === "strength", pending: s.date >= today });
+    at(s.date).plan.push({ id: s.id, title: planText(s.title, locale), km: s.distanceKm, min: s.durationMin, strength: s.type === "strength", pending: s.date >= today });
   }
   return days;
 }
 
-function Preparacion({ db, matches, today }: { db: Db; matches?: Map<string, SessionMatch>; today: string }) {
+function Preparacion({ db, matches, today, locale }: { db: Db; matches?: Map<string, SessionMatch>; today: string; locale: Locale }) {
+  const t = translator(locale);
   const plan = db.plan;
   if (!plan)
     return (
-      <Card title="Tu preparación">
-        <Empty title="Sin plan activo" href="/carreras" cta="Elegir carrera">
-          Elige una carrera y fecha y te preparamos el plan.
+      <Card title={t("pr.prep")}>
+        <Empty title={t("inicio.sinPlan")} href="/carreras" cta={t("inicio.elegirCarrera")}>
+          {t("pr.sinPlanTexto")}
         </Empty>
       </Card>
     );
@@ -272,36 +282,39 @@ function Preparacion({ db, matches, today }: { db: Db; matches?: Map<string, Ses
   const progress = plan.weeks.length ? Math.min(1, Math.max(0, (idx + 1) / plan.weeks.length)) : 0;
   return (
     <Card
-      title="Tu preparación"
-      subtitle={`${plan.goal.name} · ${shortDate(plan.goal.date)}${plan.goal.targetTimeSec ? ` · objetivo ${fmtDuration(plan.goal.targetTimeSec)}` : ""}`}
-      action={
-        <ChipLink href="/plan/actual">Ver plan</ChipLink>
-      }
+      title={t("pr.prep")}
+      subtitle={`${plan.goal.name} · ${dayMonth(plan.goal.date, locale)}${plan.goal.targetTimeSec ? ` · ${t("car.objetivo", { t: fmtDuration(plan.goal.targetTimeSec) })}` : ""}`}
+      action={<ChipLink href="/plan/actual">{t("inicio.verPlan")}</ChipLink>}
     >
       <div className="grid grid-cols-3 gap-2 text-center text-sm">
         <div className="rounded-xl bg-surface-2 p-2">
-          <p className="text-[11px] text-muted">Faltan</p>
-          <p className="font-bold tabular">{daysLeft >= 0 ? `${daysLeft} días` : "Hecha"}</p>
+          <p className="text-[11px] text-muted">{t("pr.faltan")}</p>
+          <p className="font-bold tabular">{daysLeft >= 0 ? t("st.diasN", { n: daysLeft }) : t("pr.hecha")}</p>
         </div>
         <div className="rounded-xl bg-surface-2 p-2">
-          <p className="text-[11px] text-muted">Semana</p>
-          <p className="font-bold tabular">{week ? `${idx + 1} de ${plan.weeks.length}` : "–"}</p>
-          {week && <p className="text-[11px] text-ink-2">{PHASE_LABEL[week.phase]}{week.recovery ? " · descarga" : ""}</p>}
+          <p className="text-[11px] text-muted">{t("am.semana")}</p>
+          <p className="font-bold tabular">{week ? t("pr.semanaDe", { n: idx + 1, total: plan.weeks.length }) : "–"}</p>
+          {week && (
+            <p className="text-[11px] text-ink-2">
+              {t(`plan.fase.${week.phase}`)}
+              {week.recovery ? ` · ${t("plan.descarga")}` : ""}
+            </p>
+          )}
         </div>
         <div className="rounded-xl bg-surface-2 p-2">
-          <p className="text-[11px] text-muted">Cumplidas</p>
+          <p className="text-[11px] text-muted">{t("pr.cumplidas")}</p>
           <p className="font-bold tabular">{past.length ? `${done}/${past.length}` : "–"}</p>
         </div>
       </div>
-      <div className="mt-3 h-2 overflow-hidden rounded-full bg-surface-2" role="progressbar" aria-valuenow={Math.round(progress * 100)} aria-valuemin={0} aria-valuemax={100} aria-label="Avance del plan">
+      <div className="mt-3 h-2 overflow-hidden rounded-full bg-surface-2" role="progressbar" aria-valuenow={Math.round(progress * 100)} aria-valuemin={0} aria-valuemax={100} aria-label={t("pr.avance")}>
         <div className="h-full rounded-full bg-accent" style={{ width: `${progress * 100}%` }} />
       </div>
-      {week && <p className="mt-2 text-xs text-ink-2">{week.focus}</p>}
+      {week && <p className="mt-2 text-xs text-ink-2">{planText(week.focus, locale)}</p>}
       {next.length > 0 && (
         <div className="mt-3 space-y-2">
-          <UndoSkip db={db} today={today} className="" />
+          <UndoSkip db={db} today={today} className="" locale={locale} />
           {next.map((s) => (
-            <SessionCard key={s.id} s={s} match={matches?.get(s.id)} compact today={today} />
+            <SessionCard key={s.id} s={s} match={matches?.get(s.id)} compact today={today} locale={locale} />
           ))}
         </div>
       )}
@@ -399,19 +412,20 @@ function ImprovementTable({ rows }: { rows: PeriodAvg[] }) {
   );
 }
 
-function BestTimesCard({ acts }: { acts: Activity[] }) {
+function BestTimesCard({ acts, locale = "es" }: { acts: Activity[]; locale?: Locale }) {
+  const t = translator(locale);
   const list = bestTimes(acts);
   return (
-    <Card title="Mejores tiempos" subtitle="Con el ritmo medio de cada carrera">
+    <Card title={t("pr.mejores")} subtitle={t("pr.mejoresSub")}>
       {list.length ? (
         <ul className="divide-y divide-line text-sm">
           {list.map((b) => (
             <li key={b.label} className="flex items-center justify-between gap-2 py-2">
               <span className="min-w-0">
-                <span className="block font-medium">{b.label}</span>
+                <span className="block font-medium">{t(`pr.d.${b.label}` as Key)}</span>
                 <span className="block truncate text-xs text-muted">
-                  {b.activity.name} · {shortDate(b.activity.date)}
-                  {!b.exact && ` · estimado de ${fmtKm(b.activity.distanceM / 1000)} km`}
+                  {b.activity.name} · {dayMonth(b.activity.date, locale)}
+                  {!b.exact && t("pr.estimado", { km: fmtKm(b.activity.distanceM / 1000) })}
                 </span>
               </span>
               <span className="text-right">
@@ -422,7 +436,7 @@ function BestTimesCard({ acts }: { acts: Activity[] }) {
           ))}
         </ul>
       ) : (
-        <p className="text-sm text-ink-2">Corre al menos 5 km para tener tu primera marca.</p>
+        <p className="text-sm text-ink-2">{t("pr.corre5")}</p>
       )}
     </Card>
   );
@@ -970,7 +984,7 @@ function Row({ label, value, note }: { label: string; value: string; note?: stri
   );
 }
 
-async function ActivityList({ acts }: { acts: Activity[] }) {
+async function ActivityList({ acts, locale = "es" }: { acts: Activity[]; locale?: Locale }) {
   // nombres para «con quién»; la lectura de usuarios se memoriza por petición
   const uid = await requireViewerId();
   const names = new Map((await viewFriends(uid)).map((f) => [f.id, f.name]));
@@ -986,9 +1000,10 @@ async function ActivityList({ acts }: { acts: Activity[] }) {
           names={names}
           ownerId={uid}
           tags={tags.get(a.id)}
+          locale={locale}
           action={
             <Link href={`/registrar?editar=${encodeURIComponent(a.id)}`} className="shrink-0 text-xs font-semibold text-accent">
-              Editar
+              {translator(locale)("ex.editar")}
             </Link>
           }
         />

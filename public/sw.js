@@ -1,4 +1,4 @@
-// Service worker de Run-In-Out.
+// Service worker de Zancavolt.
 // - Páginas: siempre de la red (los datos son personales y cambian); sin conexión, una pantalla propia.
 // - Estáticos de Next (_next/static, con hash en el nombre) e iconos: de la caché primero, para abrir rápido.
 // No se guarda en caché ninguna página con datos del usuario.
@@ -61,7 +61,7 @@ self.addEventListener("fetch", (event) => {
 
 // Aviso de cada mañana (Web Push): { title, body, url }
 self.addEventListener("push", (event) => {
-  let msg = { title: "Run-In-Out", body: "", url: "/plan" };
+  let msg = { title: "Zancavolt", body: "", url: "/plan" };
   try {
     msg = { ...msg, ...event.data.json() };
   } catch {}

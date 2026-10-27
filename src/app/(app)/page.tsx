@@ -11,7 +11,7 @@ import { fmtDuration, fmtKm, fmtNum } from "@/lib/format";
 import { healthSummary } from "@/lib/health";
 import { addDays, diffDays, mondayOf } from "@/lib/dates";
 import { getT } from "@/lib/i18n/server";
-import { dayMonth, weekdayDate } from "@/lib/i18n";
+import { dayMonth, weekdayDate, type Key } from "@/lib/i18n";
 import { TodayHero } from "@/components/TodayHero";
 import { loadDemo } from "@/app/actions";
 import { StrengthHome } from "@/components/StrengthHome";
@@ -33,7 +33,7 @@ async function Dashboard() {
   if (!db.profile || !stats)
     return (
       <div className="mx-auto max-w-2xl py-10 text-center">
-        <p className="text-sm font-semibold uppercase tracking-widest text-accent">Run-In-Out</p>
+        <p className="text-sm font-semibold uppercase tracking-widest text-accent">Zancavolt</p>
         <h1 className="mt-2 text-3xl font-bold tracking-tight md:text-4xl">{tr("inicio.bienvenida")}</h1>
         <p className="mt-3 text-ink-2">{tr("inicio.bienvenidaTexto")}</p>
         <div className="mt-6 flex flex-wrap justify-center gap-3">
@@ -55,8 +55,10 @@ async function Dashboard() {
 
   const { profile, plan, goal } = db;
   const t = stats.today;
-  const acwrS = acwrStatus(stats.acwr);
-  const tsbS = tsbStatus(t.tsb);
+  // los estados que da el motor, en el idioma
+  const st = (s: { label: string; tone: "good" | "warn" | "bad" | "neutral" }) => ({ ...s, label: tr(`est.${s.label}` as Key) });
+  const acwrS = st(acwrStatus(stats.acwr));
+  const tsbS = st(tsbStatus(t.tsb));
 
   const upcoming = plan?.weeks.flatMap((w) => w.sessions).filter((s) => s.date >= today && s.date <= addDays(today, 6)) ?? [];
   const plannedByWeek = new Map(plan?.weeks.map((w) => [w.start, w.targetKm]) ?? []);
@@ -110,7 +112,7 @@ async function Dashboard() {
       <UndoSkip db={db} today={today} />
 
       <StatGroup className="md:grid-cols-3 lg:grid-cols-6">
-        <Stat label="VDOT" value={stats.vdot.vdot.toFixed(1)} sub={vo2maxLabel(stats.vdot.vdot, profile.sex, profile.age)} hint={stats.vdot.source} />
+        <Stat label="VDOT" value={stats.vdot.vdot.toFixed(1)} sub={tr(`est.${vo2maxLabel(stats.vdot.vdot, profile.sex, profile.age)}` as Key)} hint={stats.vdot.source} />
         <Stat label={tr("inicio.forma")} value={t.ctl.toFixed(0)} sub={tr("inicio.dias42")} />
         <Stat label={tr("inicio.fatiga")} value={t.atl.toFixed(0)} sub={tr("inicio.dias7")} />
         <Stat label={tr("inicio.frescura")} value={t.tsb.toFixed(0)} status={tsbS} />
@@ -128,12 +130,12 @@ async function Dashboard() {
       <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
         <div className="space-y-4 lg:col-span-2">
           <Card title={tr("inicio.volumen")} subtitle={plan ? tr("inicio.realPlan") : undefined}>
-            <WeeklyKmChart data={weekly} height={190} />
+            <WeeklyKmChart data={weekly} height={190} locale={locale} />
           </Card>
           <Card title={tr("inicio.formaFatiga")} subtitle={tr("inicio.ultimos120")}>
-            <FitnessChart data={fitness} height={200} />
+            <FitnessChart data={fitness} height={200} locale={locale} />
             <p className="mb-1 mt-4 text-xs font-medium text-muted">{tr("inicio.frescura")}</p>
-            <FormChart data={fitness} height={120} />
+            <FormChart data={fitness} height={120} locale={locale} />
           </Card>
         </div>
 
@@ -195,7 +197,7 @@ async function Dashboard() {
             <ul className="divide-y divide-line text-sm">
               {stats.predictions.map((p) => (
                 <li key={p.label} className="flex items-center justify-between py-2">
-                  <span className="text-ink-2">{p.label}</span>
+                  <span className="text-ink-2">{tr(`pr.d.${p.label}` as Key)}</span>
                   <span className="text-right">
                     <span className="font-semibold tabular">{fmtDuration(p.timeSec)}</span>
                     {p.shape < 0.97 && <span className="block text-[11px] text-muted">{tr("inicio.conMasVolumen", { tiempo: fmtDuration(p.pureSec) })}</span>}

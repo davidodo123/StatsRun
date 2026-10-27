@@ -235,7 +235,7 @@ export async function linkGoogleAccount(usernameRaw: string, password: string, g
   await updateUsers((doc) => {
     error = undefined; // la escritura puede reintentarse
     if (doc.users.some((u) => u.googleSub === g.sub)) {
-      error = "Tu cuenta de Google ya tiene una cuenta en Run-In-Out.";
+      error = "Tu cuenta de Google ya tiene una cuenta en Zancavolt.";
       return;
     }
     linked = doc.users.find((u) => u.id === user.id);

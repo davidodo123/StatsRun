@@ -34,9 +34,9 @@ export function redeemAppLogin(code: string | null, verifier: string | null): Ap
 export function backToApp(code: string): Response {
   const url = `${APP_SCHEME}://auth?code=${encodeURIComponent(code)}`;
   const html = `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Volviendo a Run-In-Out</title><style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#0d0d0d;color:#f3f3f2;font-family:system-ui,sans-serif;text-align:center;padding:24px}
+<title>Volviendo a Zancavolt</title><style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#0d0d0d;color:#f3f3f2;font-family:system-ui,sans-serif;text-align:center;padding:24px}
 a{display:inline-block;margin-top:16px;border-radius:10px;padding:12px 20px;background:#d4ff3a;color:#000;font-weight:700;text-decoration:none}</style></head>
-<body><div><p>Sesión iniciada. Volviendo a la app…</p><a href="${url}">Abrir Run-In-Out</a></div>
+<body><div><p>Sesión iniciada. Volviendo a la app…</p><a href="${url}">Abrir Zancavolt</a></div>
 <script>location.href=${JSON.stringify(url)}</script></body></html>`;
   return new Response(html, { headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" } });
 }

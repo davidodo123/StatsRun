@@ -1,3 +1,4 @@
+import { translator, type Locale } from "@/lib/i18n";
 import type { Muscle } from "@/lib/strength/labels";
 import { BACK, BODY_H, BODY_W, FRONT, MIRROR, type BodyShape } from "@/lib/strength/bodyShapes";
 
@@ -25,11 +26,12 @@ function Figure({ shapes, label, sets, full }: { shapes: BodyShape[]; label: str
 }
 
 /** Delante y detrás; color pleno a partir de `full` series. */
-export function MuscleMap({ sets, full = 10 }: { sets: Partial<Record<Muscle, number>>; full?: number }) {
+export function MuscleMap({ sets, full = 10, locale = "es" }: { sets: Partial<Record<Muscle, number>>; full?: number; locale?: Locale }) {
+  const t = translator(locale);
   return (
     <div className="flex gap-2">
-      <Figure shapes={FRONT} label="Delante" sets={sets} full={full} />
-      <Figure shapes={BACK} label="Detrás" sets={sets} full={full} />
+      <Figure shapes={FRONT} label={t("mm.delante")} sets={sets} full={full} />
+      <Figure shapes={BACK} label={t("mm.detras")} sets={sets} full={full} />
     </div>
   );
 }

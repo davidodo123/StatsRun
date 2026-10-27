@@ -1,6 +1,8 @@
 @AGENTS.md
 
-# Run-In-Out (repo `StatsRun`)
+# Zancavolt (antes Run-In-Out; repo `StatsRun`)
+
+Dentro de la app se llama **Zancavolt** (desde 2026-10-27). La dirección (run-in-out.vercel.app), los correos y los identificadores internos (`app.runinout`, cookies `rio_…`) siguen igual.
 
 App de entrenamiento de running y fuerza con IA, para David y sus amigos. Producción: https://run-in-out.vercel.app (Vercel despliega solo con cada push a `main`).
 

@@ -12,5 +12,5 @@ export async function sendMail(to: string, subject: string, text: string, html: 
     throw new Error("Falta GMAIL_USER o GMAIL_APP_PASSWORD.");
   }
   const transport = nodemailer.createTransport({ service: "gmail", auth: { user: process.env.GMAIL_USER, pass: process.env.GMAIL_APP_PASSWORD } });
-  await transport.sendMail({ from: { name: "Run-In-Out", address: process.env.GMAIL_USER! }, to, subject, text, html });
+  await transport.sendMail({ from: { name: "Zancavolt", address: process.env.GMAIL_USER! }, to, subject, text, html });
 }

@@ -43,7 +43,7 @@ export async function recordRouteVideo(v: ShareVideo): Promise<File> {
     ctx.textAlign = "left";
     ctx.fillStyle = "#a6a6a6";
     ctx.font = `600 24px ${font}`;
-    ctx.fillText("RUN-IN-OUT", 60, 110);
+    ctx.fillText("ZANCAVOLT", 60, 110);
     ctx.fillStyle = "#ffffff";
     ctx.font = `700 48px ${font}`;
     ctx.fillText(v.title.length > 26 ? `${v.title.slice(0, 25)}…` : v.title, 60, 180);

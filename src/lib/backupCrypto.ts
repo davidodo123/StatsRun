@@ -13,7 +13,7 @@ export function encryptBackup(plain: Buffer, secret: string): Buffer {
 }
 
 export function decryptBackup(file: Buffer, secret: string): Buffer {
-  if (!file.subarray(0, 5).equals(MAGIC)) throw new Error("No es una copia de Run-In-Out.");
+  if (!file.subarray(0, 5).equals(MAGIC)) throw new Error("No es una copia de Zancavolt.");
   const iv = file.subarray(5, 17);
   const tag = file.subarray(17, 33);
   const d = createDecipheriv("aes-256-gcm", keyOf(secret), iv);

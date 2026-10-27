@@ -58,7 +58,7 @@ function Logo({ compact }: { compact?: boolean }) {
       <LogoMark className={compact ? "h-7 w-7" : "h-8 w-8"} />
       {/* un solo bloque: el contenedor flex separaría «Run-In-» de «Out» */}
       <span>
-        Run-In-<span className="text-accent">Out</span>
+        Zanca<span className="text-accent">volt</span>
       </span>
     </>
   );

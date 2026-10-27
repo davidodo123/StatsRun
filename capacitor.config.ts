@@ -4,7 +4,7 @@ import type { CapacitorConfig } from "@capacitor/cli";
 // La página de capacitor-web solo se ve si no hay conexión al abrirla.
 const config: CapacitorConfig = {
   appId: "app.runinout",
-  appName: "Run-In-Out",
+  appName: "Zancavolt",
   webDir: "capacitor-web",
   server: {
     url: "https://run-in-out.vercel.app",

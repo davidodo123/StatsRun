@@ -3,23 +3,25 @@
 import { useRef, useState } from "react";
 import { refreshViews } from "@/app/actions";
 import type { ImportResponse } from "@/app/api/import/route";
+import { translator, type Locale } from "@/lib/i18n";
 
 type State = { phase: "idle" } | { phase: "busy"; text: string } | { phase: "done"; res: ImportResponse } | { phase: "error"; text: string };
 
 const ACCEPT = ".zip,.csv,.fit,.gpx,.tcx,.gz";
 
 /** Extrae activities.csv del zip de Strava en el navegador (el zip puede pesar cientos de MB). */
-async function csvFromZip(file: File): Promise<string> {
+async function csvFromZip(file: File, noCsv: string): Promise<string> {
   const { unzipSync, strFromU8 } = await import("fflate");
   const data = new Uint8Array(await file.arrayBuffer());
   // versión síncrona: la asíncrona usa Web Workers que no cargan dentro del bundle
   const files = unzipSync(data, { filter: (f) => /(^|\/)activities\.csv$/i.test(f.name) });
   const key = Object.keys(files)[0];
-  if (!key) throw new Error("El zip no contiene activities.csv. ¿Es la exportación de Strava?");
+  if (!key) throw new Error(noCsv);
   return strFromU8(files[key]);
 }
 
-export function ImportPanel() {
+export function ImportPanel({ locale = "es" }: { locale?: Locale }) {
+  const t = translator(locale);
   const [state, setState] = useState<State>({ phase: "idle" });
   const [drag, setDrag] = useState(false);
   const input = useRef<HTMLInputElement>(null);
@@ -31,12 +33,12 @@ export function ImportPanel() {
       const fd = new FormData();
       for (const f of files) {
         if (/\.zip$/i.test(f.name)) {
-          setState({ phase: "busy", text: `Leyendo ${f.name}…` });
-          fd.append("csv", await csvFromZip(f));
+          setState({ phase: "busy", text: t("imp.leyendo", { nombre: f.name }) });
+          fd.append("csv", await csvFromZip(f, t("imp.sinCsv")));
         } else if (/\.csv$/i.test(f.name)) fd.append("csv", await f.text());
         else fd.append("files", f);
       }
-      setState({ phase: "busy", text: `Importando ${files.length} archivo${files.length > 1 ? "s" : ""}…` });
+      setState({ phase: "busy", text: files.length > 1 ? t("imp.importandoN", { n: files.length }) : t("imp.importando1") });
       const res = await fetch("/api/import", { method: "POST", body: fd });
       if (!res.ok) throw new Error(`Error ${res.status}`);
       setState({ phase: "done", res: await res.json() });
@@ -71,9 +73,9 @@ export function ImportPanel() {
         <svg viewBox="0 0 24 24" className="h-8 w-8 text-accent" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
           <path d="M12 16V4m0 0l-4 4m4-4l4 4M4 16v3a1 1 0 001 1h14a1 1 0 001-1v-3" />
         </svg>
-        <span className="font-semibold">{state.phase === "busy" ? state.text : "Arrastra aquí tus archivos o haz clic"}</span>
+        <span className="font-semibold">{state.phase === "busy" ? state.text : t("imp.arrastra")}</span>
         <span className="text-xs text-ink-2">
-          Exportación de Strava (<strong>.zip</strong> o <strong>activities.csv</strong>) · actividades sueltas <strong>.fit .gpx .tcx</strong> (también .gz)
+          {t("imp.formatos")}
         </span>
       </button>
       <input ref={input} type="file" multiple accept={ACCEPT} className="hidden" onChange={(e) => handle(e.target.files)} />
@@ -81,7 +83,8 @@ export function ImportPanel() {
       {state.phase === "done" && (
         <div className="mt-3 text-sm">
           <p className="font-medium text-good-ink">
-            ✓ {state.res.added} {state.res.added === 1 ? "actividad nueva" : "actividades nuevas"}{state.res.skipped ? ` · ${state.res.skipped} ya existían` : ""}
+            ✓ {state.res.added === 1 ? t("imp.nueva1") : t("imp.nuevasN", { n: state.res.added })}
+            {state.res.skipped ? t("imp.yaExistian", { n: state.res.skipped }) : ""}
           </p>
           {state.res.errors.length > 0 && (
             <ul className="mt-1 list-inside list-disc text-xs text-ink-2">

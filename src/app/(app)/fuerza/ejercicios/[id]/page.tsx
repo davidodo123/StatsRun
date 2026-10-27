@@ -11,7 +11,7 @@ import { ExerciseChart } from "@/components/ExerciseChart";
 import { Icon } from "@/components/icons";
 import { viewToday } from "@/lib/analysis";
 import { fmtNum } from "@/lib/format";
-import { CATALOG, activePlace, findExercise } from "@/lib/strength/catalog";
+import { CATALOG, activePlace, exerciseName, findExercise } from "@/lib/strength/catalog";
 import { exerciseHistory, fmtLoad, strengthRecords, type ExercisePoint } from "@/lib/strength/workouts";
 import { canDo } from "@/lib/strength/labels";
 import { getT } from "@/lib/i18n/server";
@@ -45,13 +45,13 @@ async function Content({ params }: { params: PageProps<"/fuerza/ejercicios/[id]"
     <>
       <BackLink href="/fuerza/ejercicios" label={t("comun.volver")} />
       <PageHeader
-        title={x.name}
+        title={exerciseName(x, locale)}
         subtitle={
           <>
             {t(`categoria.${x.cat}` as Key)}
             {!x.custom && ` · ${t("ex.nivel", { nivel: t(`ex.nivel.${x.level}` as Key) })}`}
             {x.mech && ` · ${x.mech === "compuesto" ? t("ex.multi") : t("ex.aislamiento")}`}
-            {x.nameEn && <span className="text-muted"> · {x.nameEn}</span>}
+            {x.nameEn && locale !== "en" && <span className="text-muted"> · {x.nameEn}</span>}
           </>
         }
         action={

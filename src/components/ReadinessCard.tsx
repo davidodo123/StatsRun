@@ -40,7 +40,7 @@ export function ReadinessCard({ r, t = translator("es") }: { r: Readiness; t?: T
   return (
     <Card title={t("forma.titulo")}>
       <div className="space-y-3 text-sm">
-        <Status tone={TONE[r.verdict]}>{r.headline}</Status>
+        <Status tone={TONE[r.verdict]}>{t(`est.v.${r.verdict}` as Key)}</Status>
 
         <div>
           <p className="mb-1 text-xs text-muted">{t("forma.faseSelye")}</p>

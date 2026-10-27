@@ -14,6 +14,9 @@ export function allExercises(db: Pick<Db, "customExercises">): Exercise[] {
   return custom.length ? [...custom, ...CATALOG].sort((a, b) => a.name.localeCompare(b.name, "es")) : CATALOG;
 }
 
+/** Nombre del ejercicio en el idioma: en inglés, el original del catálogo (nameEn); en el resto, el español (fase 3: traducir los demás). */
+export const exerciseName = (x: Pick<Exercise, "name" | "nameEn">, locale: string) => (locale === "en" && x.nameEn ? x.nameEn : x.name);
+
 export function findExercise(db: Pick<Db, "customExercises">, id: string): Exercise | undefined {
   const custom = db.customExercises?.find((c) => c.id === id);
   return custom ? fromCustom(custom) : BY_ID.get(id);

@@ -9,10 +9,10 @@ const body = Inter({ subsets: ["latin"], variable: "--font-body", display: "swap
 const heading = Anton({ subsets: ["latin"], weight: "400", variable: "--font-heading", display: "swap" });
 
 export const metadata: Metadata = {
-  title: { default: "Run-In-Out", template: "%s · Run-In-Out" },
+  title: { default: "Zancavolt", template: "%s · Zancavolt" },
   description: "Planes de entrenamiento adaptados a ti y a tu carrera, con estadísticas avanzadas y Strava.",
-  applicationName: "Run-In-Out",
-  appleWebApp: { capable: true, title: "Run-In-Out", statusBarStyle: "black-translucent" },
+  applicationName: "Zancavolt",
+  appleWebApp: { capable: true, title: "Zancavolt", statusBarStyle: "black-translucent" },
   icons: { apple: "/apple-touch-icon.png" },
 };
 
@@ -38,7 +38,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             <rect x="7" y="2" width="10" height="20" rx="2" />
             <path d="M11 18h2" />
           </svg>
-          <p>Gira el móvil: Run-In-Out se usa en vertical.</p>
+          <p>Gira el móvil: Zancavolt se usa en vertical.</p>
         </div>
       </body>
     </html>

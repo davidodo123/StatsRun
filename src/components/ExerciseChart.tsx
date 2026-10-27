@@ -48,9 +48,9 @@ export function ExerciseChart({ points, today, locale }: { points: ExercisePoint
         {data.length < 2 ? (
           <p className="grid h-40 place-items-center text-center text-sm text-muted">{t("ech.dos")}</p>
         ) : m.line ? (
-          <TrendLine data={data} dataKey={m.id} name={t(m.label)} xKey="date" format={m.id === "maxReps" ? "int" : "dec1"} height={180} />
+          <TrendLine data={data} dataKey={m.id} name={t(m.label)} xKey="date" format={m.id === "maxReps" ? "int" : "dec1"} height={180} locale={locale} />
         ) : (
-          <SimpleBars data={data} xKey="date" yKey={m.id} name={t(m.label)} unit={m.unit} xFormat="day" height={180} />
+          <SimpleBars data={data} xKey="date" yKey={m.id} name={t(m.label)} unit={m.unit} xFormat="day" height={180} locale={locale} />
         )}
       </div>
       <div className="mt-3 flex flex-wrap gap-2">

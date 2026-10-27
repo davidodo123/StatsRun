@@ -27,7 +27,7 @@ if (!secret) {
 
 // mismo formato que src/lib/backupCrypto.ts: "RIOB1" + iv (12) + etiqueta (16) + datos (AES-256-GCM)
 const raw = readFileSync(file);
-if (raw.subarray(0, 5).toString() !== "RIOB1") throw new Error("No es una copia de Run-In-Out.");
+if (raw.subarray(0, 5).toString() !== "RIOB1") throw new Error("No es una copia de Zancavolt.");
 const d = createDecipheriv("aes-256-gcm", createHash("sha256").update(secret).digest(), raw.subarray(5, 17));
 d.setAuthTag(raw.subarray(17, 33));
 let plain;

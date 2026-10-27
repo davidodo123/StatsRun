@@ -3,7 +3,7 @@ import Link from "next/link";
 import { PageHeader } from "@/components/ui";
 import { deleteRoutine, duplicateRoutine } from "@/app/strength-actions";
 import { getDb } from "@/lib/db";
-import { activePlace, findExercise } from "@/lib/strength/catalog";
+import { activePlace, findExercise, exerciseName } from "@/lib/strength/catalog";
 import { muscleSets, workoutSets, workoutVolume } from "@/lib/strength/workouts";
 import { MUSCLES } from "@/lib/strength/labels";
 import { MuscleMap } from "./MuscleMap";
@@ -52,7 +52,7 @@ export async function StrengthHome({ title, subtitle }: { title?: string; subtit
           </div>
         </details>
       </div>
-      <p className="mt-1 line-clamp-2 text-sm text-ink-2">{r.exercises.map((e) => findExercise(db, e.exerciseId)?.name ?? "¿?").join(", ")}</p>
+      <p className="mt-1 line-clamp-2 text-sm text-ink-2">{r.exercises.map((e) => { const x = findExercise(db, e.exerciseId); return x ? exerciseName(x, locale) : "¿?"; }).join(", ")}</p>
       <Link href={`/fuerza/entreno?rutina=${r.id}`} className="btn mt-3 w-full">
         {t("fh.empezarRutina")}
       </Link>
@@ -135,7 +135,7 @@ export async function StrengthHome({ title, subtitle }: { title?: string; subtit
         <>
           <p className="mt-6 text-sm text-muted">{t("fh.seriesMusculo")}</p>
           <section className="mt-2 grid grid-cols-1 gap-4 rounded-2xl border border-line bg-surface p-4 md:grid-cols-2">
-            <MuscleMap sets={sets} />
+            <MuscleMap sets={sets} locale={locale} />
             <div>
               {worked.length ? (
                 <ul className="space-y-1.5">

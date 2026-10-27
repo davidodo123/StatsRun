@@ -4,10 +4,11 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { isRunning, type CmRace } from "@/lib/cruzandolameta";
 import { fmtKm } from "@/lib/format";
-import { WEEKDAYS, shortDate, weekday } from "@/lib/dates";
+import { shortWeekdayDate, translator, type Locale } from "@/lib/i18n";
 
 /** Próximas carreras de Cruzando la Meta, con filtro por provincia y por si son a pie. */
-export function CmRaceList({ races }: { races: CmRace[] }) {
+export function CmRaceList({ races, locale = "es" }: { races: CmRace[]; locale?: Locale }) {
+  const t = translator(locale);
   const [province, setProvince] = useState("");
   const [all, setAll] = useState(false);
   const [shown, setShown] = useState(12);
@@ -16,8 +17,8 @@ export function CmRaceList({ races }: { races: CmRace[] }) {
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center gap-2">
-        <select className="select-chip text-sm" value={province} onChange={(e) => (setProvince(e.target.value), setShown(12))} aria-label="Provincia">
-          <option value="">Todas las provincias</option>
+        <select className="select-chip text-sm" value={province} onChange={(e) => (setProvince(e.target.value), setShown(12))} aria-label={t("car.provincia")}>
+          <option value="">{t("car.todasProv")}</option>
           {provinces.map((p) => (
             <option key={p} value={p}>
               {p}
@@ -26,7 +27,7 @@ export function CmRaceList({ races }: { races: CmRace[] }) {
         </select>
         <label className="inline-flex items-center gap-2 text-sm text-ink-2">
           <input type="checkbox" checked={all} onChange={(e) => setAll(e.target.checked)} className="accent-[var(--accent)]" />
-          Ver también bici, natación, triatlón e infantiles
+          {t("car.verOtras")}
         </label>
       </div>
       {list.length ? (
@@ -40,7 +41,7 @@ export function CmRaceList({ races }: { races: CmRace[] }) {
                 )}
                 <span className="min-w-0 flex-1">
                   <span className="block text-xs font-semibold uppercase tracking-wide text-accent">
-                    {WEEKDAYS[weekday(r.date)].slice(0, 3)} {shortDate(r.date)}
+                    {shortWeekdayDate(r.date, locale)}
                     {r.time ? ` · ${r.time}` : ""}
                   </span>
                   <strong className="mt-0.5 line-clamp-2 block text-sm leading-snug">{r.name}</strong>
@@ -55,11 +56,11 @@ export function CmRaceList({ races }: { races: CmRace[] }) {
           ))}
         </ul>
       ) : (
-        <p className="text-sm text-ink-2">No hay carreras con ese filtro.</p>
+        <p className="text-sm text-ink-2">{t("car.sinFiltro")}</p>
       )}
       {list.length > shown && (
         <button type="button" className="btn btn-ghost w-full" onClick={() => setShown((n) => n + 12)}>
-          Ver más ({list.length - shown})
+          {t("car.verMas", { n: list.length - shown })}
         </button>
       )}
     </div>

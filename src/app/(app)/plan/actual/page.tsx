@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { planText } from "@/lib/i18n/planText";
 import { BackLink } from "@/components/BackLink";
 import { Suspense } from "react";
 import { getAnalysis } from "@/lib/analysis";
@@ -138,7 +139,7 @@ async function Content({ searchParams }: { searchParams: PageProps<"/plan/actual
 
       {/* Línea temporal de fases */}
       <Card className="mt-4" title={t("plan.periodizacion")}>
-        <div className="flex gap-0.5" role="img" aria-label={t("plan.semanasPorFase")}>
+        <div className="flex gap-1" role="img" aria-label={t("plan.semanasPorFase")}>
           {plan.weeks.map((w) => (
             <a
               key={w.index}
@@ -148,10 +149,12 @@ async function Content({ searchParams }: { searchParams: PageProps<"/plan/actual
             >
               <span className="flex h-20 w-full items-end">
                 <span
-                  className={`w-full rounded-t ${PHASE_BG[w.phase]} ${w.recovery ? "opacity-50" : ""} ${w.start === thisWeek ? "ring-2 ring-accent" : ""}`}
+                  className={`w-full rounded-t ${PHASE_BG[w.phase]} ${w.recovery ? "opacity-50" : ""}`}
                   style={{ height: `${Math.max(8, (w.targetKm / Math.max(...plan.weeks.map((x) => x.targetKm))) * 100)}%` }}
                 />
               </span>
+              {/* la semana en curso, con un punto debajo (un borde se juntaba con las barras de al lado del mismo color) */}
+              <span className={`h-1.5 w-1.5 rounded-full ${w.start === thisWeek ? "bg-ink" : "bg-transparent"}`} />
               <span className="hidden text-[10px] text-muted sm:block">{w.index + 1}</span>
             </a>
           ))}
@@ -196,7 +199,7 @@ async function Content({ searchParams }: { searchParams: PageProps<"/plan/actual
                   <span className="text-muted transition group-open:rotate-90">›</span>
                 </summary>
                 <div className="space-y-2 border-t border-line p-4">
-                  <p className="text-sm text-ink-2">{w.focus}</p>
+                  <p className="text-sm text-ink-2">{planText(w.focus, locale)}</p>
                   {/* los días marcados como «no puedo» de esta semana: así se ve por qué falta una sesión */}
                   {(db.unavailableDates ?? [])
                     .filter((d) => d >= w.start && d <= addDays(w.start, 6))

@@ -6,37 +6,51 @@ import { SimpleBars, TrendLine, WeeklyKmChart } from "@/components/charts";
 import { activityLoad } from "@/lib/engine/load";
 import { activityKcal } from "@/lib/engine/stats";
 import { fmtDuration, fmtKm, fmtNum, fmtPace } from "@/lib/format";
-import { WEEKDAYS, monthLabel, shortDate } from "@/lib/dates";
+import { getT } from "@/lib/i18n/server";
+import { dayMonth, intlLocale, type Key } from "@/lib/i18n";
 
 export const metadata: Metadata = { title: "Estadísticas" };
 
 export default function StatsPage() {
   return (
-    <>
-      <PageHeader title="Estadísticas" />
-      <Suspense fallback={<Loading />}>
-        <Content />
-      </Suspense>
-    </>
+    <Suspense fallback={<Loading />}>
+      <Content />
+    </Suspense>
   );
 }
 
-const SPORT: Record<string, string> = { run: "Correr", ride: "Bici", swim: "Natación", walk: "Caminar", strength: "Fuerza", other: "Otros" };
-
 async function Content() {
-  const { db, stats } = await getAnalysis();
-  if (!db.profile || !stats) return <Empty title="Crea tu perfil para ver estadísticas" href="/perfil" cta="Crear perfil" />;
+  const [{ db, stats }, { t, locale }] = await Promise.all([getAnalysis(), getT()]);
+  const header = <PageHeader title={t("nav.estadisticas")} />;
+  if (!db.profile || !stats)
+    return (
+      <>
+        {header}
+        <Empty title={t("st.sinPerfil")} href="/perfil" cta={t("st.crearPerfil")} />
+      </>
+    );
   if (!db.activities.length)
     return (
-      <Empty title="Aún no hay actividades" href="/registrar" cta="Registrar entreno">
-        Registra tus entrenos a mano (o carga los datos demo desde «Importar / demo»).
-      </Empty>
+      <>
+        {header}
+        <Empty title={t("st.sinActs")} href="/registrar" cta={t("st.registrar")}>
+          {t("st.sinActsTexto")}
+        </Empty>
+      </>
     );
+  const intl = intlLocale(locale);
+  const shortDate = (d: string) => dayMonth(d, locale);
+  // «octubre de 2026» → «Octubre de 2026»
+  const monthLabel = (m: string) => {
+    const s = new Date(`${m}-01T00:00:00Z`).toLocaleDateString(intl, { month: "long", year: "numeric", timeZone: "UTC" });
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  };
+  const weekdayShort = (i: number) => new Date(Date.UTC(2024, 0, 1 + i)).toLocaleDateString(intl, { weekday: "short", timeZone: "UTC" }).replace(".", "");
 
   const { totals: T } = stats;
   const weeks = stats.weeks.map((w) => ({ week: w.week, km: w.runKm }));
   const zoneTotal = stats.zoneTime.reduce((s, z) => s + z.minutes, 0);
-  const zones = stats.zoneTime.map((z) => ({ name: `Z${z.zone} ${z.name}`, pct: zoneTotal ? (z.minutes / zoneTotal) * 100 : 0 }));
+  const zones = stats.zoneTime.map((z) => ({ name: `Z${z.zone} ${t(`zone.${z.zone}` as Key)}`, pct: zoneTotal ? (z.minutes / zoneTotal) * 100 : 0 }));
   const easyPct = zoneTotal ? ((stats.zoneTime[0].minutes + stats.zoneTime[1].minutes) / zoneTotal) * 100 : 0;
   const recent = [...db.activities].reverse().slice(0, 40);
   const vdotByMonth = stats.vdotTrend.map((v) => ({ month: v.month, vdot: v.vdot }));
@@ -44,83 +58,84 @@ async function Content() {
 
   return (
     <div className="space-y-4">
+      {header}
       <StatGroup className="md:grid-cols-4 lg:grid-cols-6">
-        <Stat label="Km este año" value={fmtNum(T.yearKm)} unit="km" sub={`${T.yearRuns} carreras`} />
-        <Stat label="Km este mes" value={fmtKm(T.monthKm)} unit="km" />
-        <Stat label="Km totales" value={fmtNum(T.allKm)} unit="km" sub={`${T.allRuns} carreras`} />
-        <Stat label="Horas totales" value={fmtNum(T.allHours)} unit="h" sub="Todos los deportes" />
-        <Stat label="Desnivel acumulado" value={fmtNum(T.elevation)} unit="m" />
-        <Stat label="Calorías (aprox.)" value={fmtNum(T.kcal / 1000, 1)} unit="mil kcal" />
-        <Stat label="Racha actual" value={T.streakDays} unit="días" sub={`Récord: ${T.longestStreak} días`} />
-        <Stat label="Constancia" value={`${Math.round(T.consistency)} %`} sub="Semanas activas (12)" />
-        <Stat label="Monotonía" value={stats.monotony.toFixed(2)} sub={stats.monotony > 2 ? "Alta: varía más la carga" : "Buena variedad de carga"} hint="Foster: media diaria / desviación de la carga de 7 días" />
-        <Stat label="Strain semanal" value={fmtNum(stats.strain)} sub="Carga × monotonía" />
-        <Stat label="Tiempo suave (Z1-Z2)" value={`${Math.round(easyPct)} %`} sub="Objetivo ~80 % (8 sem)" />
-        <Stat label="Media 6 semanas" value={fmtKm(T.avgWeeklyKm6)} unit="km/sem" />
+        <Stat label={t("st.kmAno")} value={fmtNum(T.yearKm)} unit="km" sub={t("st.carreras", { n: T.yearRuns })} />
+        <Stat label={t("st.kmMes")} value={fmtKm(T.monthKm)} unit="km" />
+        <Stat label={t("st.kmTotales")} value={fmtNum(T.allKm)} unit="km" sub={t("st.carreras", { n: T.allRuns })} />
+        <Stat label={t("st.horas")} value={fmtNum(T.allHours)} unit="h" sub={t("st.todosDeportes")} />
+        <Stat label={t("st.desnivel")} value={fmtNum(T.elevation)} unit="m" />
+        <Stat label={t("st.kcal")} value={fmtNum(T.kcal / 1000, 1)} unit={t("st.milKcal")} />
+        <Stat label={t("st.racha")} value={T.streakDays} unit={t("st.dias")} sub={t("st.recordDias", { n: T.longestStreak })} />
+        <Stat label={t("st.constancia")} value={`${Math.round(T.consistency)} %`} sub={t("st.semanasActivas")} />
+        <Stat label={t("st.monotonia")} value={stats.monotony.toFixed(2)} sub={stats.monotony > 2 ? t("st.monoAlta") : t("st.monoBuena")} hint={t("st.monoHint")} />
+        <Stat label={t("st.strain")} value={fmtNum(stats.strain)} sub={t("st.strainSub")} />
+        <Stat label={t("st.suave")} value={`${Math.round(easyPct)} %`} sub={t("st.suaveSub")} />
+        <Stat label={t("st.media6")} value={fmtKm(T.avgWeeklyKm6)} unit={t("st.kmSem")} />
       </StatGroup>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <Card title="Kilómetros por semana" subtitle="Últimas 26 semanas">
-          <WeeklyKmChart data={weeks} />
+        <Card title={t("st.kmSemana")} subtitle={t("st.ult26")}>
+          <WeeklyKmChart data={weeks} locale={locale} />
         </Card>
-        <FoldCard title="Kilómetros por mes" subtitle="Últimos 12 meses">
-          <SimpleBars data={monthsKm} xKey="month" yKey="km" name="Km" unit="km" xFormat="month" height={220} />
+        <FoldCard title={t("st.kmMesCard")} subtitle={t("st.ult12")}>
+          <SimpleBars data={monthsKm} xKey="month" yKey="km" name="Km" unit="km" xFormat="month" height={220} locale={locale} />
         </FoldCard>
-        <Card title="Ritmo medio semanal" subtitle="Más arriba = más rápido">
-          <TrendLine data={stats.paceTrend} dataKey="pace" name="Ritmo" format="pace" invert />
+        <Card title={t("st.ritmoSem")} subtitle={t("st.ritmoSub")}>
+          <TrendLine data={stats.paceTrend} dataKey="pace" name={t("st.ritmo")} format="pace" invert locale={locale} />
         </Card>
-        <FoldCard title="Frecuencia cardiaca media" subtitle="Si baja al mismo ritmo, mejoras">
-          <TrendLine data={stats.paceTrend} dataKey="hr" name="FC media" color="s2" format="int" />
+        <FoldCard title={t("st.fcMedia")} subtitle={t("st.fcSub")}>
+          <TrendLine data={stats.paceTrend} dataKey="hr" name={t("act.fc")} color="s2" format="int" locale={locale} />
         </FoldCard>
-        <FoldCard title="Efficiency Factor" subtitle="Velocidad ÷ FC: más alto, más eficiente">
-          <TrendLine data={stats.paceTrend} dataKey="ef" name="EF" color="s3" format="dec2" />
+        <FoldCard title={t("st.ef")} subtitle={t("st.efSub")}>
+          <TrendLine data={stats.paceTrend} dataKey="ef" name="EF" color="s3" format="dec2" locale={locale} />
         </FoldCard>
-        <FoldCard title="Cadencia media" subtitle="170-185 ppm suele ser eficiente">
-          <TrendLine data={stats.paceTrend} dataKey="cadence" name="Cadencia" format="int" />
+        <FoldCard title={t("st.cadMedia")} subtitle={t("st.cadSub")}>
+          <TrendLine data={stats.paceTrend} dataKey="cadence" name={t("act.cadencia")} format="int" locale={locale} />
         </FoldCard>
-        <Card title="Evolución del VDOT" subtitle="Mejor esfuerzo de cada mes">
-          {vdotByMonth.length ? <TrendLine data={vdotByMonth} dataKey="vdot" name="VDOT" format="dec1" xKey="month" xFormat="month" /> : <p className="text-sm text-ink-2">Sin datos suficientes.</p>}
+        <Card title={t("st.vdot")} subtitle={t("st.vdotSub")}>
+          {vdotByMonth.length ? <TrendLine data={vdotByMonth} dataKey="vdot" name="VDOT" format="dec1" xKey="month" xFormat="month" locale={locale} /> : <p className="text-sm text-ink-2">{t("st.sinDatos")}</p>}
         </Card>
-        <FoldCard title="Distribución de intensidad" subtitle="% del tiempo por zona de FC (8 semanas)">
-          <SimpleBars data={zones} xKey="name" yKey="pct" name="Tiempo" unit="%" horizontal ordinal xFormat="none" height={220} />
+        <FoldCard title={t("st.intensidad")} subtitle={t("st.intensidadSub")}>
+          <SimpleBars data={zones} xKey="name" yKey="pct" name={t("st.tiempo")} unit="%" horizontal ordinal xFormat="none" height={220} />
         </FoldCard>
-        <FoldCard title="¿Qué días corres más?" subtitle="Km por día (12 semanas)">
-          <SimpleBars data={stats.weekdayKm.map((d) => ({ day: WEEKDAYS[d.day].slice(0, 3), km: d.km }))} xKey="day" yKey="km" name="Km" unit="km" xFormat="none" />
+        <FoldCard title={t("st.queDias")} subtitle={t("st.queDiasSub")}>
+          <SimpleBars data={stats.weekdayKm.map((d) => ({ day: weekdayShort(d.day), km: d.km }))} xKey="day" yKey="km" name="Km" unit="km" xFormat="none" />
         </FoldCard>
-        <FoldCard title="Deportes" subtitle="Horas por deporte (90 días)">
-          <SimpleBars data={stats.sportSplit.map((s) => ({ sport: s.sport, hours: s.hours }))} xKey="sport" yKey="hours" name="Horas" unit="h" horizontal xFormat="none" height={Math.max(120, stats.sportSplit.length * 40)} />
+        <FoldCard title={t("st.deportes")} subtitle={t("st.deportesSub")}>
+          <SimpleBars data={stats.sportSplit.map((s) => ({ sport: t(`sport.${s.sport}` as Key), hours: s.hours }))} xKey="sport" yKey="hours" name={t("st.horasName")} unit="h" horizontal xFormat="none" height={Math.max(120, stats.sportSplit.length * 40)} />
         </FoldCard>
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <Card title="Récords" subtitle="Estimados por el ritmo medio">
+        <Card title={t("st.records")} subtitle={t("st.recordsSub")}>
           <ul className="divide-y divide-line text-sm">
             {stats.records.map((r) => (
               <li key={r.label} className="flex items-center justify-between gap-2 py-2">
                 <span>
-                  <span className="block text-ink-2">{r.label}</span>
+                  <span className="block text-ink-2">{t(`st.rec.${r.id}`)}</span>
                   {r.sub && <span className="block text-xs text-muted">{r.sub}</span>}
                 </span>
                 <span className="text-right font-semibold tabular">
-                  {r.value}
+                  {r.id === "streak" ? t("st.diasN", { n: T.longestStreak }) : r.value}
                   {r.date && <span className="block text-[11px] font-normal text-muted">{shortDate(r.date)}</span>}
                 </span>
               </li>
             ))}
           </ul>
         </Card>
-        <FoldCard title="Resumen mensual" className="lg:col-span-2">
+        <FoldCard title={t("st.resumenMensual")} className="lg:col-span-2">
           {/* en el móvil caben mes, km, carreras y ritmo; el resto, desde tableta */}
           <div>
             <table className="w-full text-sm tabular">
               <thead className="text-left text-xs text-muted">
                 <tr>
-                  <th className="pb-2 font-medium">Mes</th>
+                  <th className="pb-2 font-medium">{t("st.mes")}</th>
                   <th className="pb-2 text-right font-medium">Km</th>
-                  <th className="pb-2 text-right font-medium">Carreras</th>
-                  <th className="pb-2 text-right font-medium">Ritmo</th>
-                  <th className="hidden pb-2 text-right font-medium sm:table-cell">Horas</th>
-                  <th className="hidden pb-2 text-right font-medium sm:table-cell">Desnivel</th>
+                  <th className="pb-2 text-right font-medium">{t("st.carrerasCol")}</th>
+                  <th className="pb-2 text-right font-medium">{t("st.ritmo")}</th>
+                  <th className="hidden pb-2 text-right font-medium sm:table-cell">{t("st.horasCol")}</th>
+                  <th className="hidden pb-2 text-right font-medium sm:table-cell">{t("st.desnivelCol")}</th>
                   <th className="hidden pb-2 text-right font-medium sm:table-cell">kcal</th>
                 </tr>
               </thead>
@@ -142,20 +157,20 @@ async function Content() {
         </FoldCard>
       </div>
 
-      <FoldCard title="Últimas actividades" subtitle="Carga: 100 ≈ 1 h a umbral">
+      <FoldCard title={t("st.ultimas")} subtitle={t("st.cargaSub")}>
         {/* en el móvil: fecha, actividad, distancia y ritmo; tiempo y FC desde tableta; lo demás en el ordenador */}
         <div>
           <table className="w-full text-sm tabular">
             <thead className="text-left text-xs text-muted">
               <tr>
-                <th className="pb-2 font-medium">Fecha</th>
-                <th className="pb-2 font-medium">Actividad</th>
-                <th className="pb-2 text-right font-medium">Distancia</th>
-                <th className="hidden pb-2 text-right font-medium sm:table-cell">Tiempo</th>
-                <th className="pb-2 text-right font-medium">Ritmo</th>
-                <th className="hidden pb-2 text-right font-medium sm:table-cell">FC</th>
-                <th className="hidden pb-2 text-right font-medium lg:table-cell">Desnivel</th>
-                <th className="hidden pb-2 text-right font-medium lg:table-cell">Carga</th>
+                <th className="pb-2 font-medium">{t("st.fecha")}</th>
+                <th className="pb-2 font-medium">{t("st.actividad")}</th>
+                <th className="pb-2 text-right font-medium">{t("act.distancia")}</th>
+                <th className="hidden pb-2 text-right font-medium sm:table-cell">{t("st.tiempoCol")}</th>
+                <th className="pb-2 text-right font-medium">{t("st.ritmo")}</th>
+                <th className="hidden pb-2 text-right font-medium sm:table-cell">{t("st.fcCol")}</th>
+                <th className="hidden pb-2 text-right font-medium lg:table-cell">{t("st.desnivelCol")}</th>
+                <th className="hidden pb-2 text-right font-medium lg:table-cell">{t("st.carga")}</th>
                 <th className="hidden pb-2 text-right font-medium lg:table-cell">kcal</th>
               </tr>
             </thead>
@@ -171,7 +186,7 @@ async function Content() {
                     ) : (
                       a.name
                     )}
-                    <span className="ml-2 text-xs text-muted">{SPORT[a.sport]}</span>
+                    <span className="ml-2 text-xs text-muted">{t(`sport.${a.sport}`)}</span>
                   </td>
                   <td className="py-1.5 text-right">{a.distanceM ? `${fmtKm(a.distanceM / 1000, 2)} km` : "–"}</td>
                   <td className="hidden py-1.5 text-right sm:table-cell">{fmtDuration(a.movingSec)}</td>

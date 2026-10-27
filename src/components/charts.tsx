@@ -2,6 +2,7 @@
 // Gráficas en SVG propio (antes Recharts, que pesaba ~400 KB en el móvil). Reglas: un solo eje Y por gráfica,
 // marcas finas, rejilla tenue, tooltip en todas (al pasar el dedo o el ratón), color por identidad de serie.
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { dayMonth, intlLocale, translator, type Locale } from "@/lib/i18n";
 
 // estilo deportivo: el dato de cada gráfica en naranja; si hay una segunda serie, en gris
 const S1 = "var(--accent)";
@@ -42,10 +43,15 @@ function Legend({ items, line }: { items: { label: string; color: string }[]; li
 }
 
 const fmtPace = (s?: number) => (s && isFinite(s) ? `${Math.floor(s / 60)}:${String(Math.round(s % 60)).padStart(2, "0")}` : "–");
-const MONTHS = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
-const dayLabel = (d: string) => `${Number(d.slice(8, 10))} ${MONTHS[Number(d.slice(5, 7)) - 1]}`;
-const monthLabel = (m: string) => `${MONTHS[Number(m.slice(5, 7)) - 1]} ${m.slice(2, 4)}`;
-const dec = (v: number, d: number) => v.toLocaleString("es-ES", { minimumFractionDigits: d, maximumFractionDigits: d });
+// fechas («25 oct», «oct 26») y decimales en el idioma de cada uno
+const fmtFor = (locale: Locale) => {
+  const intl = intlLocale(locale);
+  return {
+    dayLabel: (d: string) => dayMonth(d, locale),
+    monthLabel: (m: string) => new Date(`${m.slice(0, 7)}-01T00:00:00Z`).toLocaleDateString(intl, { month: "short", year: "2-digit", timeZone: "UTC" }).replace(".", ""),
+    dec: (v: number, d: number) => v.toLocaleString(intl, { minimumFractionDigits: d, maximumFractionDigits: d }),
+  };
+};
 const kShort = (v: number) => (Math.abs(v) >= 1000 ? `${(v / 1000).toLocaleString("es-ES", { maximumFractionDigits: 1 })}k` : String(Math.round(v * 100) / 100));
 
 /** Marcas «redondas» del eje (1, 2, 5 × 10ⁿ). */
@@ -232,11 +238,13 @@ function Chart({
 }
 
 // ---------- Volumen semanal ----------
-export function WeeklyKmChart({ data, height = 220 }: { data: { week: string; km: number; planned?: number }[]; height?: number }) {
+export function WeeklyKmChart({ data, height = 220, locale = "es" }: { data: { week: string; km: number; planned?: number }[]; height?: number; locale?: Locale }) {
+  const { dayLabel } = fmtFor(locale);
+  const t = translator(locale);
   const hasPlan = data.some((d) => d.planned);
   const series: Series[] = [
-    ...(hasPlan ? [{ kind: "bar" as const, name: "Planificado", values: data.map((d) => d.planned), color: "var(--axis)" }] : []),
-    { kind: "bar", name: "Real", values: data.map((d) => d.km), color: S1 },
+    ...(hasPlan ? [{ kind: "bar" as const, name: t("ch.planificado"), values: data.map((d) => d.planned), color: "var(--axis)" }] : []),
+    { kind: "bar", name: t("ch.real"), values: data.map((d) => d.km), color: S1 },
   ];
   return (
     <>
@@ -245,7 +253,7 @@ export function WeeklyKmChart({ data, height = 220 }: { data: { week: string; km
         labels={data.map((d) => d.week)}
         series={series}
         xFmt={dayLabel}
-        tip={(i) => <TipBox title={`Semana del ${dayLabel(data[i].week)}`} rows={series.map((s) => ({ color: String(s.color), label: s.name, value: `${(s.values[i] ?? 0).toFixed(1)} km` }))} />}
+        tip={(i) => <TipBox title={t("ch.semanaDel", { d: dayLabel(data[i].week) })} rows={series.map((s) => ({ color: String(s.color), label: s.name, value: `${(s.values[i] ?? 0).toFixed(1)} km` }))} />}
       />
       {hasPlan && <Legend items={series.map((s) => ({ label: s.name, color: String(s.color) }))} />}
     </>
@@ -253,10 +261,12 @@ export function WeeklyKmChart({ data, height = 220 }: { data: { week: string; km
 }
 
 // ---------- Forma / fatiga ----------
-export function FitnessChart({ data, height = 240 }: { data: { date: string; ctl: number; atl: number }[]; height?: number }) {
+export function FitnessChart({ data, height = 240, locale = "es" }: { data: { date: string; ctl: number; atl: number }[]; height?: number; locale?: Locale }) {
+  const { dayLabel } = fmtFor(locale);
+  const t = translator(locale);
   const series: Series[] = [
-    { kind: "line", name: "Forma (CTL 42 d)", values: data.map((d) => d.ctl), color: S1 },
-    { kind: "line", name: "Fatiga (ATL 7 d)", values: data.map((d) => d.atl), color: "var(--muted)" },
+    { kind: "line", name: t("ch.forma"), values: data.map((d) => d.ctl), color: S1 },
+    { kind: "line", name: t("ch.fatiga"), values: data.map((d) => d.atl), color: "var(--muted)" },
   ];
   return (
     <>
@@ -272,18 +282,20 @@ export function FitnessChart({ data, height = 240 }: { data: { date: string; ctl
   );
 }
 
-export function FormChart({ data, height = 160 }: { data: { date: string; tsb: number }[]; height?: number }) {
+export function FormChart({ data, height = 160, locale = "es" }: { data: { date: string; tsb: number }[]; height?: number; locale?: Locale }) {
+  const { dayLabel } = fmtFor(locale);
+  const t = translator(locale);
   return (
     <Chart
       height={height}
       labels={data.map((d) => d.date)}
-      series={[{ kind: "bar", name: "Frescura", values: data.map((d) => d.tsb), color: (i) => (data[i].tsb >= 0 ? S1 : "var(--muted)") }]}
+      series={[{ kind: "bar", name: t("ch.frescura"), values: data.map((d) => d.tsb), color: (i) => (data[i].tsb >= 0 ? S1 : "var(--muted)") }]}
       xFmt={dayLabel}
       band={[-30, -10]}
       zeroLine
       rounded={false}
       gap={0.1}
-      tip={(i) => <TipBox title={dayLabel(data[i].date)} rows={[{ label: "Frescura (TSB)", value: data[i].tsb.toFixed(0) }]} />}
+      tip={(i) => <TipBox title={dayLabel(data[i].date)} rows={[{ label: t("ch.frescuraTsb"), value: data[i].tsb.toFixed(0) }]} />}
     />
   );
 }
@@ -299,6 +311,7 @@ export function TrendLine({
   height = 200,
   xKey = "week",
   xFormat = "day",
+  locale = "es",
 }: {
   data: Record<string, unknown>[];
   dataKey: string;
@@ -309,7 +322,9 @@ export function TrendLine({
   height?: number;
   xKey?: string;
   xFormat?: "day" | "month";
+  locale?: Locale;
 }) {
+  const { dayLabel, monthLabel, dec } = fmtFor(locale);
   const f = (v: number) => (format === "pace" ? fmtPace(v) : format === "dec2" ? dec(v, 2) : format === "dec1" ? dec(v, 1) : Math.round(v).toString());
   const stroke = { s1: S1, s2: S2, s3: "var(--series-3)" }[color];
   const xf = xFormat === "month" ? monthLabel : dayLabel;
@@ -339,6 +354,7 @@ export function SimpleBars({
   xFormat,
   horizontal,
   ordinal,
+  locale = "es",
 }: {
   data: Record<string, unknown>[];
   xKey: string;
@@ -349,7 +365,9 @@ export function SimpleBars({
   xFormat?: "month" | "day" | "none";
   horizontal?: boolean;
   ordinal?: boolean; // zonas: rampa ordinal azul
+  locale?: Locale;
 }) {
+  const { dayLabel, monthLabel } = fmtFor(locale);
   const xf = xFormat === "month" ? monthLabel : xFormat === "day" ? dayLabel : (v: string) => v;
   const ramp = ["var(--seq-1)", "var(--seq-2)", "var(--seq-3)", "var(--seq-4)", "var(--seq-5)"];
   const color = (i: number) => (ordinal ? ramp[Math.min(i, ramp.length - 1)] : S1);

@@ -2,7 +2,7 @@
 // Playwright no es dependencia del proyecto: se instala aparte y se indica su carpeta en PW_DIR.
 //
 //   npx next start -p 3005
-//   DEMO_PASS=... PW_DIR=<carpeta con node_modules/playwright> node scripts/demo-video/capture.mjs <carpeta de salida>
+//   DEMO_LANG=en (opcional, en inglés) DEMO_PASS=... PW_DIR=<carpeta con node_modules/playwright> node scripts/demo-video/capture.mjs <carpeta de salida>
 import { createRequire } from "node:module";
 import { mkdirSync, readFileSync, renameSync, rmSync } from "node:fs";
 import path from "node:path";
@@ -18,7 +18,7 @@ const VIEW = { width: 430, height: 932 };
 
 // entrenos para las fichas: la última tirada larga con mapa y el último entreno de fuerza
 const db = JSON.parse(readFileSync("data/db_demo-video-lucia.json", "utf8"));
-const runs = db.activities.filter((a) => a.sport === "run" && a.route && a.name === "Tirada larga");
+const runs = db.activities.filter((a) => a.sport === "run" && a.route && a.distanceM >= 10000 && a.sessionId?.endsWith("-long"));
 const longRun = runs[runs.length - 1];
 const lifts = db.activities.filter((a) => a.workout);
 const lift = lifts[lifts.length - 1];
@@ -31,7 +31,7 @@ const QUIET = `
 `;
 
 const browser = await chromium.launch({ channel: "chrome" });
-const base = { viewport: VIEW, deviceScaleFactor: 2, isMobile: true, hasTouch: true, colorScheme: "dark", locale: "es-ES" };
+const base = { viewport: VIEW, deviceScaleFactor: 2, isMobile: true, hasTouch: true, colorScheme: "dark", locale: process.env.DEMO_LANG === "en" ? "en-GB" : "es-ES" };
 
 // sesión iniciada una vez; cada pantalla reutiliza las cookies
 const login = await browser.newContext(base);
@@ -40,7 +40,7 @@ const lp = await login.newPage();
 await lp.goto(`${BASE}/login`, { waitUntil: "networkidle" });
 await lp.fill('input[name="email"]', EMAIL);
 await lp.fill('input[name="password"]', PASS);
-await Promise.all([lp.waitForURL((u) => !u.pathname.startsWith("/login")), lp.click('button:has-text("Entrar")')]);
+await Promise.all([lp.waitForURL((u) => !u.pathname.startsWith("/login")), lp.locator("form button.btn").first().click()]);
 const state = await login.storageState();
 await login.close();
 

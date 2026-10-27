@@ -94,6 +94,7 @@ export interface MonthStat {
 }
 
 export interface Record_ {
+  id: "best5" | "best10" | "bestHalf" | "bestMarathon" | "longest" | "climb" | "bestWeek" | "streak";
   label: string;
   value: string;
   sub?: string;
@@ -276,7 +277,7 @@ export function computeStats(acts: Activity[], profile: Profile, today: string):
   const sportAcc = new Map<string, { hours: number; count: number }>();
   for (const a of sorted) {
     if (diffDays(today, a.date) > 90) continue;
-    const k = SPORT_LABEL[a.sport];
+    const k = a.sport; // el id: cada pantalla lo pone en su idioma
     const s = sportAcc.get(k) ?? { hours: 0, count: 0 };
     s.hours += a.movingSec / 3600;
     s.count++;
@@ -321,12 +322,13 @@ export function computeStats(acts: Activity[], profile: Profile, today: string):
 
   // Récords: mejor ritmo en actividades de al menos X km (aprox. a partir de resúmenes)
   const records: Record_[] = [];
-  const bestOver = (minKm: number, label: string) => {
+  const bestOver = (id: Record_["id"], minKm: number, label: string) => {
     const c = allRuns.filter((a) => a.distanceM >= minKm * 1000);
     if (!c.length) return;
     const best = c.reduce((b, a) => (a.movingSec / a.distanceM < b.movingSec / b.distanceM ? a : b));
     const est = (best.movingSec / best.distanceM) * minKm * 1000;
     records.push({
+      id,
       label,
       value: fmtDuration(est),
       sub: `${best.name} · ${(best.distanceM / 1000).toFixed(1)} km`,
@@ -334,19 +336,19 @@ export function computeStats(acts: Activity[], profile: Profile, today: string):
       date: best.date,
     });
   };
-  bestOver(5, "Mejor 5K (ritmo medio)");
-  bestOver(10, "Mejor 10K (ritmo medio)");
-  bestOver(21.0975, "Mejor media (ritmo medio)");
-  bestOver(42.195, "Mejor maratón");
+  bestOver("best5", 5, "Mejor 5K (ritmo medio)");
+  bestOver("best10", 10, "Mejor 10K (ritmo medio)");
+  bestOver("bestHalf", 21.0975, "Mejor media (ritmo medio)");
+  bestOver("bestMarathon", 42.195, "Mejor maratón");
   if (allRuns.length) {
     const longest = allRuns.reduce((b, a) => (a.distanceM > b.distanceM ? a : b));
-    records.push({ label: "Carrera más larga", value: `${(longest.distanceM / 1000).toFixed(1)} km`, sub: longest.name, activityId: longest.id, date: longest.date });
+    records.push({ id: "longest", label: "Carrera más larga", value: `${(longest.distanceM / 1000).toFixed(1)} km`, sub: longest.name, activityId: longest.id, date: longest.date });
     const climb = allRuns.reduce((b, a) => (a.elevationGainM > b.elevationGainM ? a : b));
-    records.push({ label: "Más desnivel", value: `${Math.round(climb.elevationGainM)} m`, sub: climb.name, activityId: climb.id, date: climb.date });
+    records.push({ id: "climb", label: "Más desnivel", value: `${Math.round(climb.elevationGainM)} m`, sub: climb.name, activityId: climb.id, date: climb.date });
   }
   const bestWeek = weeks.reduce((b, w) => (w.runKm > b.runKm ? w : b), weeks[0]);
-  if (bestWeek?.runKm) records.push({ label: "Semana con más km (26 sem)", value: `${bestWeek.runKm.toFixed(1)} km`, date: bestWeek.week });
-  records.push({ label: "Racha más larga", value: `${longestStreak} días` });
+  if (bestWeek?.runKm) records.push({ id: "bestWeek", label: "Semana con más km (26 sem)", value: `${bestWeek.runKm.toFixed(1)} km`, date: bestWeek.week });
+  records.push({ id: "streak", label: "Racha más larga", value: `${longestStreak} días` });
 
   const predictions = [
     { label: "5K", km: 5 },
