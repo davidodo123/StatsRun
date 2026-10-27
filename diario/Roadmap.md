@@ -247,7 +247,7 @@ Español, inglés, catalán, portugués y francés, por fases.
 - [x] **Enlaces con flecha** («Ver plan», «Ver más», «Seguir»…): chip con borde fino y flecha dibujada; en los botones grandes, la flecha dibujada en vez de «→»
 - [x] **Calendario en el perfil** (Resumen): mes con flechas; verde lo hecho, contorno lo que queda del plan; al pulsar un día se ven sus sesiones (y las del plan que no se hicieron, con un puntito rojo en el día)
 - [x] **Inicio de sesión nuevo** (lo pidió David 2026-10-26): entrar con Google o con correo y contraseña, crear cuenta y «¿Has olvidado la contraseña?» (correo con enlace, por Gmail) — *hecho 2026-10-26; correos funcionando en producción 2026-10-27 (Gmail runinout.app)* → [[Decisiones#Entrar también con correo y contraseña]]
-- [x] **Primer perfil por pasos**: al crear la cuenta, el formulario va por secciones con «Siguiente» (¿Qué entrenas? → Datos físicos → Experiencia → Disponibilidad); «Editar perfil» sigue igual
+- [x] **Primer perfil por pasos**: al crear la cuenta, el formulario va por secciones con «Siguiente» (Idioma → ¿Qué entrenas? → Datos físicos → Experiencia → Disponibilidad; el idioma pasó a ser el primer paso 2026-10-27); «Editar perfil» sigue igual
 - [ ] **Patreon**: una versión para que donen y se quiten los anuncios — *la app no tiene anuncios todavía: falta decidir si se ponen y la página de Patreon de David*
 
 ## 🔚 Para el final (lo dejó David 2026-10-25)

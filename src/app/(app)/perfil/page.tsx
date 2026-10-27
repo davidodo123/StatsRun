@@ -892,8 +892,7 @@ function Editar({ db, today, initialFocus, locale, name }: { db: Db; today: stri
           <h2 className="font-display text-4xl leading-none tracking-[0.03em] uppercase">{t("prf.bienvenida")}</h2>
           <p className="mt-2 text-sm text-ink-2">{t("prf.bienvenidaSub")}</p>
         </div>
-        <ProfileForm initialFocus={initialFocus} locale={locale} defaultName={name} steps />
-        <LanguageSelect locale={locale} />
+        <ProfileForm initialFocus={initialFocus} locale={locale} defaultName={name} steps language={<LanguageSelect locale={locale} />} />
       </div>
     );
   const avg = profileAverages(db.activities, today);

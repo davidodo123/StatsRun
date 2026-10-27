@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useRef, useState } from "react";
+import { useActionState, useRef, useState, type ReactNode } from "react";
 import { saveProfile, type FormState } from "@/app/actions";
 import { focusOf, type Focus, type Profile } from "@/lib/types";
 import { availableDaysOf } from "@/lib/engine/planner";
@@ -30,7 +30,21 @@ const weekdayName = (i: number, locale: Locale) => {
  * Perfil. Con `steps` (la primera vez, al crear la cuenta) va por pasos con «Siguiente»;
  * si no, todo a la vista para cambiar una cosa rápido (Editar perfil).
  */
-export function ProfileForm({ profile, initialFocus, locale, steps = false, defaultName }: { profile?: Profile; initialFocus?: Focus; locale: Locale; steps?: boolean; defaultName?: string }) {
+export function ProfileForm({
+  profile,
+  initialFocus,
+  locale,
+  steps = false,
+  defaultName,
+  language,
+}: {
+  profile?: Profile;
+  initialFocus?: Focus;
+  locale: Locale;
+  steps?: boolean;
+  defaultName?: string;
+  language?: ReactNode; // el selector de idioma, como primer paso
+}) {
   const t = translator(locale);
   const [state, action, pending] = useActionState<FormState, FormData>(saveProfile, {});
   const [focus, setFocus] = useState<Focus>(initialFocus ?? focusOf(profile));
@@ -40,7 +54,7 @@ export function ProfileForm({ profile, initialFocus, locale, steps = false, defa
   const p = profile;
   const avail = availableDaysOf(p ?? { daysPerWeek: 4, longRunDay: 6 });
   // los pasos que tocan (sin experiencia de carrera si solo hace fuerza)
-  const sections = runner ? ["foco", "datos", "experiencia", "disponibilidad"] : ["foco", "datos", "disponibilidad"];
+  const sections = [...(language ? ["idioma"] : []), "foco", "datos", ...(runner ? ["experiencia"] : []), "disponibilidad"];
   const last = step >= sections.length - 1;
   // en modo pasos solo se ve uno; los demás siguen en el formulario (ocultos) para guardarse todos juntos
   const box = (id: string) => `rounded-2xl border border-line bg-surface p-4 md:p-5 ${steps && sections[step] !== id ? "hidden" : ""}`;
@@ -65,6 +79,8 @@ export function ProfileForm({ profile, initialFocus, locale, steps = false, defa
           </div>
         </div>
       )}
+
+      {language && <div className={steps && sections[step] !== "idioma" ? "hidden" : ""}>{language}</div>}
 
       <fieldset data-step="foco" className={box("foco")}>
         <legend className="px-1 text-sm font-semibold">{t("prf.queEntrenas")}</legend>
