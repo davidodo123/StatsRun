@@ -26,15 +26,20 @@ function point(lat: number, lon: number, acc: number, alt: number | null | undef
  * Empieza a escuchar el GPS. Con `background` (y solo si se puede), en segundo plano con notificación.
  * Devuelve cómo pararlo.
  */
-export async function watchGps(onPoint: (p: GpsPoint) => void, onError: (e: GpsError) => void, background: boolean): Promise<Watch> {
+export async function watchGps(
+  onPoint: (p: GpsPoint) => void,
+  onError: (e: GpsError) => void,
+  background: boolean,
+  notice = { title: "Grabando carrera", text: "Zancavolt sigue grabando con la pantalla apagada. Vuelve a la app para pausar o terminar." },
+): Promise<Watch> {
   if (background && canRecordInBackground()) {
     const { BackgroundGeolocation } = await import("@capgo/background-geolocation");
     let stopped = false;
     // sin permiso, el error llega aquí (y no en el callback)
     const started = BackgroundGeolocation.start(
       {
-        backgroundTitle: "Grabando carrera",
-        backgroundMessage: "Zancavolt sigue grabando con la pantalla apagada. Vuelve a la app para pausar o terminar.",
+        backgroundTitle: notice.title,
+        backgroundMessage: notice.text,
         requestPermissions: true,
         stale: false,
         distanceFilter: 0,

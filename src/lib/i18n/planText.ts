@@ -55,6 +55,7 @@ const EXACT: Record<string, Tr> = {
   "Cadena posterior y saltos": { en: "Posterior chain and jumps" },
   "Tren superior y core": { en: "Upper body and core" },
   "Fuerza general (cuerpo entero)": { en: "General strength (full body)" },
+  "Fuerza general": { en: "General strength" }, // planes hechos antes del nombre largo
   "Fuerza pesada de pierna": { en: "Heavy leg strength" },
   "Cadena posterior + pliometría": { en: "Posterior chain + plyometrics" },
   "Fuerza + pliometría (cuerpo entero)": { en: "Strength + plyometrics (full body)" },

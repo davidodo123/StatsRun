@@ -8,19 +8,8 @@ import type { Activity, Feel, PlannedSession } from "@/lib/types";
 import { fmtDuration, fmtPace, maskTime, parsePace, parseTime } from "@/lib/format";
 import { keepForm } from "./keepForm";
 import { PhotoField } from "./ActivityPhoto";
+import { intlLocale, translator, type Key, type Locale, type T } from "@/lib/i18n";
 
-const RPE: Record<number, string> = {
-  1: "Muy muy suave",
-  2: "Muy suave",
-  3: "Suave, conversación fácil",
-  4: "Cómodo",
-  5: "Moderado",
-  6: "Algo duro",
-  7: "Duro, frases cortas",
-  8: "Muy duro",
-  9: "Casi al máximo",
-  10: "Máximo esfuerzo",
-};
 
 export interface ActivityFormInitial {
   id?: string;
@@ -45,16 +34,11 @@ export interface ActivityFormInitial {
   photo?: string; // dirección de la foto que ya tiene
 }
 
-const FEELS: { value: Feel; label: string }[] = [
-  { value: "muy_facil", label: "Muy fácil" },
-  { value: "facil", label: "Fácil" },
-  { value: "bien", label: "Bien" },
-  { value: "duro", label: "Duro" },
-  { value: "muy_duro", label: "Muy duro" },
-];
+const FEELS: Feel[] = ["muy_facil", "facil", "bien", "duro", "muy_duro"];
 
 export function ActivityForm({
   initial,
+  locale = "es",
   session,
   today,
   friends = [],
@@ -62,12 +46,14 @@ export function ActivityForm({
   planStrength = [],
 }: {
   initial: ActivityFormInitial;
+  locale?: Locale;
   session?: PlannedSession;
   today: string;
   friends?: { id: string; name: string; username: string }[];
   routines?: { id: string; name: string }[]; // para apuntar las series de una rutina ya hecha
   planStrength?: { id: string; date: string; title: string }[]; // sesiones de fuerza del plan hasta hoy
 }) {
+  const t = translator(locale);
   const [state, action, pending] = useActionState<FormState, FormData>(saveActivity, {});
   const [sport, setSport] = useState(initial.sport);
   const [dist, setDist] = useState(initial.distanceKm?.toString() ?? "");
@@ -95,8 +81,8 @@ export function ActivityForm({
 
       {session && (
         <div className="rounded-xl border border-line bg-surface-2 p-3 text-sm">
-          <p className="text-xs font-medium uppercase tracking-wide text-muted">Sesión planificada</p>
-          <p className="font-semibold">{session.title}</p>
+          <p className="text-xs font-medium uppercase tracking-wide text-muted">{t("af.sesionPlan")}</p>
+          <p className="font-semibold">{initial.name}</p>
           <p className="text-ink-2">
             {session.distanceKm > 0 && `${session.distanceKm} km · `}~{session.durationMin} min
           </p>
@@ -105,41 +91,41 @@ export function ActivityForm({
 
       <div className="grid grid-cols-2 gap-3 sm:gap-4">
         <label className="field">
-          Deporte
+          {t("af.deporte")}
           <select className="input" name="sport" value={sport} onChange={(e) => setSport(e.target.value as Activity["sport"])}>
-            <option value="run">Correr</option>
-            <option value="strength">Fuerza / gimnasio</option>
-            <option value="ride">Bici</option>
-            <option value="swim">Natación</option>
-            <option value="walk">Caminar / senderismo</option>
-            <option value="other">Otro</option>
+            <option value="run">{t("sport.run")}</option>
+            <option value="strength">{t("af.opt.strength")}</option>
+            <option value="ride">{t("sport.ride")}</option>
+            <option value="swim">{t("sport.swim")}</option>
+            <option value="walk">{t("af.opt.walk")}</option>
+            <option value="other">{t("sport.other")}</option>
           </select>
         </label>
         <label className="field">
-          Nombre de la sesión
-          <input className="input" name="name" autoComplete="off" defaultValue={initial.name} placeholder="Ej.: Carrera de mañana" />
+          {t("af.nombre")}
+          <input className="input" name="name" autoComplete="off" defaultValue={initial.name} placeholder={t("af.nombrePh")} />
         </label>
         <label className="field">
-          Fecha
+          {t("med.fecha")}
           <input className="input" type="date" name="date" max={today} value={date} onChange={(e) => setDate(e.target.value)} required />
         </label>
         <label className="field">
-          Hora de inicio
+          {t("af.hora")}
           <input className="input" type="time" name="time" value={time} onChange={(e) => setTime(e.target.value)} />
         </label>
       </div>
 
-      {sport === "strength" && !initial.id && <StrengthDone date={date} time={time} done={done} setDone={setDone} routines={routines} planStrength={planStrength} sessionId={initial.sessionId} />}
+      {sport === "strength" && !initial.id && <StrengthDone date={date} time={time} done={done} setDone={setDone} routines={routines} planStrength={planStrength} sessionId={initial.sessionId} t={t} />}
 
       <div className={`grid grid-cols-2 gap-3 sm:gap-4 ${hasDistance ? "sm:grid-cols-3" : ""}`}>
         {hasDistance && (
           <label className="field">
-            Distancia (km)
+            {t("car.distancia")}
             <input className="input" name="distanceKm" inputMode="decimal" value={dist} onChange={(e) => setDist(e.target.value)} placeholder="10,5" />
           </label>
         )}
         <label className="field">
-          {hasDistance ? "Tiempo en movimiento" : "Duración"}
+          {hasDistance ? t("act.tiempoMov") : t("wl.duracion")}
           <input
             className="input"
             name="duration"
@@ -147,13 +133,13 @@ export function ActivityForm({
             inputMode="numeric"
             value={dur}
             onChange={(e) => setDur(maskTime(e.target.value))}
-            placeholder={derivedSec ? fmtDuration(derivedSec) : "h:mm:ss o mm:ss"}
+            placeholder={derivedSec ? fmtDuration(derivedSec) : t("af.tiempoPh")}
             required={!hasDistance || !derivedSec}
           />
         </label>
         {hasDistance && (
           <label className="field">
-            Ritmo medio (/km)
+            {t("af.ritmo")}
             <input
               className="input"
               name="pace"
@@ -171,11 +157,16 @@ export function ActivityForm({
         <p className="text-sm text-ink-2 tabular">
           {pace && (km > 0 || typedPace) ? (
             <>
-              Ritmo medio: <strong className="text-ink">{fmtPace(pace)} /km</strong> · {(3600 / pace).toLocaleString("es-ES", { maximumFractionDigits: 1 })} km/h
-              {derivedSec && <> · Tiempo: <strong className="text-ink">{fmtDuration(derivedSec)}</strong></>}
+              {t("af.ritmoMedio")} <strong className="text-ink">{fmtPace(pace)} /km</strong> · {(3600 / pace).toLocaleString(intlLocale(locale), { maximumFractionDigits: 1 })} km/h
+              {derivedSec && (
+                <>
+                  {" "}
+                  · {t("af.tiempo")} <strong className="text-ink">{fmtDuration(derivedSec)}</strong>
+                </>
+              )}
             </>
           ) : (
-            "Copia de Strava la distancia y el tiempo en movimiento (o el ritmo medio): el que falte se calcula."
+            t("af.copia")
           )}
         </p>
       )}
@@ -183,16 +174,16 @@ export function ActivityForm({
       {hasDistance && (
         <div className={`grid grid-cols-2 gap-3 sm:gap-4 ${hasSteps ? "sm:grid-cols-3" : ""}`}>
           <label className="field">
-            Desnivel positivo (m)
+            {t("af.desnivel")}
             <input className="input" type="number" min={0} name="elevationGainM" defaultValue={initial.elevationGainM ?? ""} placeholder="0" />
           </label>
           <label className="field">
-            Altitud máx. (m)
+            {t("af.altMax")}
             <input className="input" type="number" name="maxAltitudeM" defaultValue={initial.maxAltitudeM ?? ""} />
           </label>
           {hasSteps && (
             <label className="field">
-              Pasos
+              {t("act.pasos")}
               <input className="input" type="number" min={0} name="steps" defaultValue={initial.steps ?? ""} />
             </label>
           )}
@@ -201,25 +192,25 @@ export function ActivityForm({
 
       <div>
         <label className="field" htmlFor="rpe">
-          Esfuerzo percibido: <strong className="text-ink">{rpe} — {RPE[rpe]}</strong>
+          {t("af.esfuerzo")} <strong className="text-ink">{rpe} — {t(`af.rpe.${rpe}` as Key)}</strong>
         </label>
         <input id="rpe" type="range" name="rpe" min={1} max={10} value={rpe} onChange={(e) => setRpe(Number(e.target.value))} className="mt-2 w-full accent-[var(--accent)]" />
         <div className="flex justify-between text-[11px] text-muted">
-          <span>1 Muy suave</span>
-          <span>5 Moderado</span>
-          <span>10 Máximo</span>
+          <span>{t("af.escala1")}</span>
+          <span>{t("af.escala5")}</span>
+          <span>{t("af.escala10")}</span>
         </div>
-        <p className="mt-1 text-xs text-muted">Si no llevas pulsómetro, con esto calculamos la carga del entreno.</p>
+        <p className="mt-1 text-xs text-muted">{t("af.sinPulso")}</p>
       </div>
 
       <fieldset className="rounded-xl border border-line bg-surface-2 p-4">
-        <legend className="px-1 text-sm font-semibold">¿Cómo te has sentido?</legend>
+        <legend className="px-1 text-sm font-semibold">{t("af.comoTeSentiste")}</legend>
         <div className="flex flex-wrap gap-2">
           {FEELS.map((f) => (
-            <label key={f.value} className="cursor-pointer">
-              <input type="radio" name="feel" value={f.value} defaultChecked={initial.feel === f.value} className="peer sr-only" />
+            <label key={f} className="cursor-pointer">
+              <input type="radio" name="feel" value={f} defaultChecked={initial.feel === f} className="peer sr-only" />
               <span className="block rounded-full border border-line bg-surface px-3 py-1.5 text-sm peer-checked:border-accent peer-checked:bg-accent peer-checked:text-accent-ink peer-focus-visible:ring-2 peer-focus-visible:ring-accent">
-                {f.label}
+                {t(`feel.${f}`)}
               </span>
             </label>
           ))}
@@ -229,30 +220,30 @@ export function ActivityForm({
           name="feelings"
           defaultValue={initial.feelings}
           maxLength={1000}
-          placeholder="Ej.: Las series se me hicieron fáciles, podría haber ido más rápido. / Me costó mucho, piernas cargadas desde el kilómetro 6. / Molestia en el gemelo derecho."
+          placeholder={t("af.sentirPh")}
         />
         <p className="mt-1 text-xs text-muted">
-          La IA lo lee al guardar y ajusta tus próximos entrenos: si se te hace fácil, sube la exigencia; si se te hace duro o tienes molestias, la baja.
+          {t("af.iaLee")}
         </p>
       </fieldset>
 
       <div>
         <button type="button" onClick={() => setMore(!more)} className="text-sm font-semibold text-accent">
-          {more ? "− Ocultar" : "+ Añadir"} datos del reloj (FC, cadencia)
+          {more ? t("af.ocultarReloj") : t("af.mostrarReloj")}
         </button>
         {more && (
           <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
             <label className="field">
-              FC media
+              {t("act.fc")}
               <input className="input" type="number" name="avgHr" defaultValue={initial.avgHr ?? ""} />
             </label>
             <label className="field">
-              FC máxima
+              {t("af.fcMax")}
               <input className="input" type="number" name="maxHr" defaultValue={initial.maxHr ?? ""} />
             </label>
             {sport === "run" && (
               <label className="field">
-                Cadencia (ppm)
+                {t("af.cadencia")}
                 <input className="input" type="number" name="avgCadence" defaultValue={initial.avgCadence ?? ""} />
               </label>
             )}
@@ -261,24 +252,24 @@ export function ActivityForm({
       </div>
 
       <label className="field">
-        Otras notas
-        <textarea className="input min-h-16" name="notes" defaultValue={initial.notes} placeholder="Clima, zapatillas, recorrido…" />
+        {t("af.notas")}
+        <textarea className="input min-h-16" name="notes" defaultValue={initial.notes} placeholder={t("af.notasPh")} />
       </label>
 
-      <PhotoField initial={initial.photo} />
+      <PhotoField initial={initial.photo} locale={locale} />
 
-      {friends.length > 0 && <WithFriends friends={friends} initial={initial.with ?? []} />}
+      {friends.length > 0 && <WithFriends friends={friends} initial={initial.with ?? []} t={t} />}
 
       <div className="flex flex-wrap items-center gap-3">
         <button className="btn shrink-0" disabled={pending}>
-          {pending ? "Guardando…" : initial.id ? "Guardar cambios" : "Registrar entreno"}
+          {pending ? t("wl.guardando") : initial.id ? t("ef.guardarCambios") : t("reg.titulo")}
         </button>
         {state.error && <p className="text-sm font-medium text-critical">✕ {state.error}</p>}
         {state.message && (
           <p className="text-sm font-medium text-good-ink">
             ✓ {state.message}{" "}
             <Link href="/plan/actual" className="underline">
-              Ver plan
+              {t("inicio.verPlan")}
             </Link>
           </p>
         )}
@@ -288,15 +279,15 @@ export function ActivityForm({
 }
 
 /** «¿Con quién has entrenado?»: amigos marcados (con filtro si son muchos). La sesión les aparecerá para añadirla a sus entrenos. */
-function WithFriends({ friends, initial }: { friends: { id: string; name: string; username: string }[]; initial: string[] }) {
+function WithFriends({ friends, initial, t }: { friends: { id: string; name: string; username: string }[]; initial: string[]; t: T }) {
   const [q, setQ] = useState("");
   const [picked, setPicked] = useState<string[]>(initial);
   const norm = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
   const shown = friends.filter((f) => picked.includes(f.id) || !q || norm(`${f.name} ${f.username}`).includes(norm(q)));
   return (
     <fieldset className="space-y-2">
-      <legend className="field">¿Con quién has entrenado?</legend>
-      {friends.length > 6 && <input className="input" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar amigo…" aria-label="Buscar amigo" />}
+      <legend className="field">{t("af.conQuien")}</legend>
+      {friends.length > 6 && <input className="input" value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("af.buscarAmigo")} aria-label={t("af.buscarAmigo")} />}
       <div className="flex flex-wrap gap-1.5">
         {shown.map((f) => (
           <label key={f.id} className="cursor-pointer rounded-full border border-line px-3 py-1 text-xs font-medium has-[:checked]:border-accent has-[:checked]:bg-surface-2">
@@ -313,7 +304,7 @@ function WithFriends({ friends, initial }: { friends: { id: string; name: string
           </label>
         ))}
       </div>
-      <p className="text-xs text-muted">Les aparecerá en Amigos para que la añadan a sus entrenos con un clic.</p>
+      <p className="text-xs text-muted">{t("af.conQuienAyuda")}</p>
     </fieldset>
   );
 }
@@ -327,6 +318,7 @@ function StrengthDone({
   routines,
   planStrength,
   sessionId,
+  t,
 }: {
   date: string;
   time: string;
@@ -335,6 +327,7 @@ function StrengthDone({
   routines: { id: string; name: string }[];
   planStrength: { id: string; date: string; title: string }[];
   sessionId?: string;
+  t: T;
 }) {
   const day = planStrength.find((p) => p.id === sessionId) ?? planStrength.find((p) => p.date === date);
   // sin elegir: lo del plan de ese día, si no la primera rutina, si no un entreno libre
@@ -346,21 +339,21 @@ function StrengthDone({
   return (
     <div className="space-y-3 rounded-xl border border-accent/40 bg-accent/10 p-3 text-sm">
       <label className="field">
-        ¿Qué hiciste?
+        {t("af.queHiciste")}
         <select className="input" value={pick} onChange={(e) => setDone(e.target.value)}>
-          {day && <option value={`s:${day.id}`}>Planning: {day.title}</option>}
+          {day && <option value={`s:${day.id}`}>{t("af.planning", { titulo: day.title })}</option>}
           {routines.map((r) => (
             <option key={r.id} value={`r:${r.id}`}>
               {r.name}
             </option>
           ))}
-          <option value="libre">Entreno libre (añades los ejercicios)</option>
+          <option value="libre">{t("af.libre")}</option>
         </select>
       </label>
       <Link href={`/fuerza/entreno?${params}`} className="btn w-full">
-        Apuntar las series <Icon name="chevron" />
+        {t("af.apuntar")} <Icon name="chevron" />
       </Link>
-      <p className="text-xs text-ink-2">Se abre con sus ejercicios: marca lo que hiciste y guárdalo con esta fecha. O guarda abajo solo la duración y el esfuerzo.</p>
+      <p className="text-xs text-ink-2">{t("af.apuntarAyuda")}</p>
     </div>
   );
 }

@@ -14,5 +14,7 @@ import { importar } from "./importar";
 import { carreras } from "./carreras";
 import { perfilResumen } from "./perfilResumen";
 import { estados } from "./estados";
+import { registrar } from "./registrar";
+import { herramientas } from "./herramientas";
 
-export const AREAS = [sesion, plan, planExtras, etiquetas, entreno, calendario, fuerzaMas, acceso, actividad, estadisticas, amigos, importar, carreras, perfilResumen, estados] as const;
+export const AREAS = [sesion, plan, planExtras, etiquetas, entreno, calendario, fuerzaMas, acceso, actividad, estadisticas, amigos, importar, carreras, perfilResumen, estados, registrar, herramientas] as const;

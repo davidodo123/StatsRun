@@ -5,17 +5,21 @@ import { Card } from "./ui";
 import { PlateCalc } from "./PlateCalc";
 import { hrZones, raceTimeFromVdot, riegel, trainingPaces, vdotFromRace, flatEquivalentKm, heatFactor } from "@/lib/engine/physiology";
 import { fmtDuration, fmtPace, fmtPaceRange, parseTime } from "@/lib/format";
+import { translator, type Key, type Locale } from "@/lib/i18n";
 
 const DISTANCES = [
-  { km: 1.609, l: "Milla" },
+  { km: 1.609, l: "calc.milla" },
   { km: 5, l: "5K" },
   { km: 10, l: "10K" },
   { km: 15, l: "15K" },
-  { km: 21.0975, l: "Media" },
-  { km: 42.195, l: "Maratón" },
+  { km: 21.0975, l: "calc.media" },
+  { km: 42.195, l: "calc.maraton" },
 ];
 
-export function Calculators() {
+export function Calculators({ locale = "es" }: { locale?: Locale }) {
+  const t = translator(locale);
+  // «Milla», «Media», «Maratón» van traducidas; «5K», «10K», «15K» igual en todos
+  const dl = (l: string) => (l.startsWith("calc.") ? t(l as Key) : l);
   const [dist, setDist] = useState("10");
   const [time, setTime] = useState("45:00");
   const [age, setAge] = useState("35");
@@ -36,20 +40,20 @@ export function Calculators() {
 
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-      <Card title="VDOT y ritmos" subtitle="Introduce una marca reciente (Jack Daniels)">
+      <Card title={t("calc.vdot")} subtitle={t("calc.vdotSub")}>
         <div className="grid grid-cols-2 gap-3">
           <label className="field">
-            Distancia
+            {t("calc.distancia")}
             <select className="input" value={dist} onChange={(e) => setDist(e.target.value)}>
               {DISTANCES.map((d) => (
                 <option key={d.l} value={d.km}>
-                  {d.l}
+                  {dl(d.l)}
                 </option>
               ))}
             </select>
           </label>
           <label className="field">
-            Tiempo
+            {t("calc.tiempo")}
             <input className="input" value={time} onChange={(e) => setTime(e.target.value)} placeholder="h:mm:ss" />
           </label>
         </div>
@@ -62,11 +66,11 @@ export function Calculators() {
               <tbody className="divide-y divide-line">
                 {(
                   [
-                    ["E · Suave", p.easy],
-                    ["M · Maratón", p.marathon],
-                    ["T · Umbral", p.threshold],
-                    ["I · Intervalos", p.interval],
-                    ["R · Repeticiones", p.repetition],
+                    [t("calc.E"), p.easy],
+                    [t("calc.M"), p.marathon],
+                    [t("calc.T"), p.threshold],
+                    [t("calc.I"), p.interval],
+                    [t("calc.R"), p.repetition],
                   ] as const
                 ).map(([l, r]) => (
                   <tr key={l}>
@@ -78,53 +82,53 @@ export function Calculators() {
             </table>
           </>
         ) : (
-          <p className="mt-4 text-sm text-critical">Formato de tiempo no válido.</p>
+          <p className="mt-4 text-sm text-critical">{t("calc.tiempoMal")}</p>
         )}
       </Card>
 
-      <Card title="Predicción de marcas" subtitle="Con el mismo VDOT y con la fórmula de Riegel">
+      <Card title={t("calc.pred")} subtitle={t("calc.predSub")}>
         {vdot && sec ? (
           <table className="w-full text-sm tabular">
             <thead className="text-left text-xs text-muted">
               <tr>
-                <th className="pb-2 font-medium">Distancia</th>
+                <th className="pb-2 font-medium">{t("calc.distancia")}</th>
                 <th className="pb-2 text-right font-medium">VDOT</th>
                 <th className="pb-2 text-right font-medium">Riegel</th>
-                <th className="pb-2 text-right font-medium">Ritmo</th>
+                <th className="pb-2 text-right font-medium">{t("calc.ritmo")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-line">
               {DISTANCES.map((d) => {
-                const t = raceTimeFromVdot(vdot, d.km);
+                const time = raceTimeFromVdot(vdot, d.km);
                 return (
                   <tr key={d.l}>
-                    <td className="py-1.5">{d.l}</td>
-                    <td className="py-1.5 text-right font-semibold">{fmtDuration(t)}</td>
+                    <td className="py-1.5">{dl(d.l)}</td>
+                    <td className="py-1.5 text-right font-semibold">{fmtDuration(time)}</td>
                     <td className="py-1.5 text-right">{fmtDuration(riegel(km, sec, d.km))}</td>
-                    <td className="py-1.5 text-right text-ink-2">{fmtPace(t / d.km)}</td>
+                    <td className="py-1.5 text-right text-ink-2">{fmtPace(time / d.km)}</td>
                   </tr>
                 );
               })}
             </tbody>
           </table>
         ) : (
-          <p className="text-sm text-ink-2">Introduce una marca válida.</p>
+          <p className="text-sm text-ink-2">{t("calc.marcaValida")}</p>
         )}
-        <p className="mt-3 text-xs text-muted">Las predicciones largas asumen que has hecho el volumen de entrenamiento adecuado para la distancia.</p>
+        <p className="mt-3 text-xs text-muted">{t("calc.predNota")}</p>
       </Card>
 
-      <Card title="Zonas de frecuencia cardiaca" subtitle="Método Karvonen (FC de reserva)">
+      <Card title={t("calc.zonas")} subtitle={t("calc.zonasSub")}>
         <div className="grid grid-cols-3 gap-3">
           <label className="field">
-            Edad
+            {t("calc.edad")}
             <input className="input" type="number" value={age} onChange={(e) => setAge(e.target.value)} />
           </label>
           <label className="field">
-            FC reposo
+            {t("calc.fcReposo")}
             <input className="input" type="number" value={rest} onChange={(e) => setRest(e.target.value)} />
           </label>
           <label className="field">
-            FC máx
+            {t("calc.fcMax")}
             <input className="input" type="number" value={max} onChange={(e) => setMax(e.target.value)} placeholder={String(hrMax)} />
           </label>
         </div>
@@ -133,7 +137,7 @@ export function Calculators() {
             {zones.map((z) => (
               <tr key={z.zone}>
                 <td className="py-1.5 font-semibold">Z{z.zone}</td>
-                <td className="py-1.5">{z.name}</td>
+                <td className="py-1.5">{t(`zone.${z.zone}` as Key)}</td>
                 <td className="py-1.5 text-right">
                   {z.min}–{z.max} ppm
                 </td>
@@ -143,42 +147,42 @@ export function Calculators() {
         </table>
       </Card>
 
-      <Card title="Ritmo, velocidad y efecto del recorrido">
+      <Card title={t("calc.recorrido")}>
         <div className="grid grid-cols-3 gap-3">
           <label className="field">
-            Ritmo (min/km)
+            {t("calc.ritmoMinKm")}
             <input className="input" value={pace} onChange={(e) => setPace(e.target.value)} />
           </label>
           <label className="field">
-            Desnivel + (m)
+            {t("calc.desnivel")}
             <input className="input" type="number" value={gain} onChange={(e) => setGain(e.target.value)} />
           </label>
           <label className="field">
-            Temperatura (°C)
+            {t("calc.temp")}
             <input className="input" type="number" value={temp} onChange={(e) => setTemp(e.target.value)} />
           </label>
         </div>
         {paceSec && speed ? (
           <ul className="mt-3 space-y-1 text-sm tabular">
             <li>
-              Velocidad: <strong>{speed.toFixed(2)} km/h</strong> · {fmtPace(paceSec * 1.60934)} /milla
+              {t("calc.velocidad")} <strong>{speed.toFixed(2)} km/h</strong> · {fmtPace(paceSec * 1.60934)} {t("calc.milla2")}
             </li>
             {DISTANCES.slice(1).map((d) => {
               const f = (flatEquivalentKm(d.km, Number(gain) * (d.km / 42.195)) / d.km) * heatFactor(Number(temp), d.km);
               return (
                 <li key={d.l} className="text-ink-2">
-                  {d.l}: <strong className="text-ink">{fmtDuration(paceSec * d.km)}</strong> en llano · {fmtDuration(paceSec * d.km * f)} con desnivel y calor
+                  {dl(d.l)}: <strong className="text-ink">{fmtDuration(paceSec * d.km)}</strong> {t("calc.llano")} · {fmtDuration(paceSec * d.km * f)} {t("calc.conDesnivel")}
                 </li>
               );
             })}
           </ul>
         ) : (
-          <p className="mt-3 text-sm text-critical">Ritmo no válido.</p>
+          <p className="mt-3 text-sm text-critical">{t("calc.ritmoMal")}</p>
         )}
-        <p className="mt-3 text-xs text-muted">El desnivel indicado se refiere a un maratón y se escala para cada distancia.</p>
+        <p className="mt-3 text-xs text-muted">{t("calc.desnivelNota")}</p>
       </Card>
 
-      <PlateCalc />
+      <PlateCalc locale={locale} />
     </div>
   );
 }

@@ -7,6 +7,7 @@ import { project } from "@/lib/route";
 import { fmtDuration, fmtKm, fmtPace } from "@/lib/format";
 import { Icon } from "./icons";
 import { canRecordInBackground, openLocationSettings, showRunData, watchGps, type GpsError } from "./gpsSource";
+import { translator, type Locale, type T } from "@/lib/i18n";
 
 type Sport = "run" | "walk" | "ride";
 interface Rec {
@@ -40,17 +41,12 @@ const localIso = (ms: number) => {
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
 };
 const SPORT_ICON = { run: "run", walk: "walk", ride: "bike" } as const;
-const SPORT_TITLE = { run: "Corriendo", walk: "Caminando", ride: "En bici" } as const;
 // al volver a la app con una grabación en marcha: si el último punto es de hace menos de esto, sigue grabando
 const RESUME_MS = 15 * 60_000;
-const SPORTS: [Sport, string][] = [
-  ["run", "Correr"],
-  ["walk", "Caminar"],
-  ["ride", "Bici"],
-];
+const SPORTS: Sport[] = ["run", "walk", "ride"];
 
 /** Dibujo del recorrido sin mapa debajo (cabe en cualquier pantalla y no gasta datos). */
-function Trace({ points }: { points: GpsPoint[] }) {
+function Trace({ points, t }: { points: GpsPoint[]; t: T }) {
   if (points.length < 2) return null;
   const px = points.map((p) => project([p.lat, p.lon], 17));
   const xs = px.map((p) => p[0]);
@@ -62,7 +58,7 @@ function Trace({ points }: { points: GpsPoint[] }) {
   const pts = px.map(([x, y]) => `${(10 + (x - x0) * k + (280 - w * k) / 2).toFixed(1)},${(10 + (y - y0) * k + (160 - h * k) / 2).toFixed(1)}`);
   const [ex, ey] = pts.at(-1)!.split(",");
   return (
-    <svg viewBox="0 0 300 180" className="h-40 w-full" role="img" aria-label="Recorrido grabado">
+    <svg viewBox="0 0 300 180" className="h-40 w-full" role="img" aria-label={t("gps.trazado")}>
       <polyline points={pts.join(" ")} fill="none" stroke="var(--accent)" strokeWidth={4} strokeLinecap="round" strokeLinejoin="round" />
       <circle cx={ex} cy={ey} r={6} fill="var(--accent)" stroke="var(--surface)" strokeWidth={2} />
     </svg>
@@ -70,7 +66,8 @@ function Trace({ points }: { points: GpsPoint[] }) {
 }
 
 /** Grabar una carrera con el GPS del móvil: cronómetro, distancia, ritmo y recorrido; al terminar se guarda como un entreno. */
-export function RunRecorder() {
+export function RunRecorder({ locale = "es" }: { locale?: Locale }) {
+  const t = translator(locale);
   const [rec, setRec] = useState<Rec>();
   const [ready, setReady] = useState(false);
   const [fix, setFix] = useState<{ acc: number; at: number }>();
@@ -126,11 +123,12 @@ export function RunRecorder() {
         return { ...cur, resume: false, points: [...cur.points, point] };
       });
     };
-    watchGps(onPoint, setGeoError, background).then((w) => (off ? w.stop() : (watch = w)));
+    watchGps(onPoint, setGeoError, background, { title: t("gps.notifTitulo"), text: t("gps.notifTexto") }).then((w) => (off ? w.stop() : (watch = w)));
     return () => {
       off = true;
       watch?.stop();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- el idioma no cambia mientras se graba
   }, [background]);
 
   // pantalla encendida mientras graba: en el iPhone (y sin el GPS nativo), con la pantalla bloqueada no llega la ubicación
@@ -156,13 +154,13 @@ export function RunRecorder() {
   const lastNotif = useRef(0);
   useEffect(() => {
     if (!background || !rec) return;
-    const t = Date.now();
-    if (t - lastNotif.current < 3000 && rec.points.length > 1) return;
-    lastNotif.current = t;
+    const at = Date.now();
+    if (at - lastNotif.current < 3000 && rec.points.length > 1) return;
+    lastNotif.current = at;
     const km = stats.distanceM / 1000;
     const pace = km >= 0.05 ? `${fmtPace(stats.movingSec / km)} /km` : "–";
-    showRunData(SPORT_TITLE[rec.sport], `${fmtKm(km, 2)} km · ritmo medio ${pace}`, rec.startedAt + rec.pausedMs);
-  }, [background, rec, stats]);
+    showRunData(t(`gps.${rec.sport}`), t("gps.notif", { km: fmtKm(km, 2), ritmo: pace }), rec.startedAt + rec.pausedMs);
+  }, [background, rec, stats, t]);
 
   if (!ready) return <div className="h-64 animate-pulse rounded-2xl bg-surface" />;
 
@@ -170,12 +168,12 @@ export function RunRecorder() {
   const geoText =
     geoError === "permiso"
       ? native
-        ? "No hay permiso de ubicación. Dale «Permitir» (y el de notificaciones, para grabar con la pantalla apagada)."
-        : "No hay permiso de ubicación. En el iPhone: Ajustes → Privacidad → Localización → Safari (o la app) → «Mientras se usa». En Android: permisos de la app → Ubicación."
+        ? t("gps.permisoApp")
+        : t("gps.permisoWeb")
       : geoError
-        ? "No llega la señal del GPS. Sal a cielo abierto y espera unos segundos."
+        ? t("gps.senal")
         : undefined;
-  const signalText = geoError ? "Sin GPS" : signal === undefined ? "Buscando señal…" : signal <= 15 ? `GPS bueno · ±${signal} m` : signal <= 35 ? `GPS regular · ±${signal} m` : `GPS flojo · ±${signal} m`;
+  const signalText = geoError ? t("gps.sinGps") : signal === undefined ? t("gps.buscando") : t(signal <= 15 ? "gps.bueno" : signal <= 35 ? "gps.regular" : "gps.flojo", { m: signal });
   const signalTone = geoError || signal === undefined ? "bg-muted" : signal <= 15 ? "bg-good" : signal <= 35 ? "bg-warning" : "bg-critical";
 
   const begin = (sport: Sport) => {
@@ -185,7 +183,7 @@ export function RunRecorder() {
   const togglePause = () =>
     setRec((cur) => cur && (cur.pausedAt ? { ...cur, pausedMs: cur.pausedMs + Date.now() - cur.pausedAt, pausedAt: undefined, resume: true } : { ...cur, pausedAt: Date.now() }));
   const discard = () => {
-    if (!confirm("¿Descartar la grabación? Se perderá el recorrido.")) return;
+    if (!confirm(t("gps.descartarConfirm"))) return;
     setFinishing(false);
     setRec(undefined);
   };
@@ -230,23 +228,23 @@ export function RunRecorder() {
             {geoText}
             {geoError === "permiso" && native && (
               <button type="button" className="ml-1 font-semibold text-accent underline" onClick={() => openLocationSettings()}>
-                Abrir ajustes
+                {t("gps.abrirAjustes")}
               </button>
             )}
           </p>
         )}
         <p className="text-sm text-ink-2">
           {native
-            ? "Puedes bloquear el móvil o cambiar de app: sigue grabando (verás la notificación «Grabando carrera»). Para pausar o terminar, vuelve a la app."
-            : "Deja la app abierta: la pantalla se queda encendida sola. Si la bloqueas o cambias de app, deja de grabar."}
+            ? t("gps.app")
+            : t("gps.web")}
         </p>
         {/* ninguno va marcado: el que toques empieza a grabar */}
-        <p className="text-sm font-semibold">¿Qué vas a hacer? Toca para empezar</p>
+        <p className="text-sm font-semibold">{t("gps.queVas")}</p>
         <div className="grid grid-cols-3 gap-2">
-          {SPORTS.map(([s, label]) => (
+          {SPORTS.map((s) => (
             <button key={s} type="button" className="btn btn-ghost flex-col gap-1 py-4 text-base" onClick={() => begin(s)}>
               <Icon name={SPORT_ICON[s]} className="h-6 w-6" />
-              {label}
+              {t(`sport.${s}`)}
             </button>
           ))}
         </div>
@@ -261,31 +259,31 @@ export function RunRecorder() {
   return (
     <div className="space-y-4 pb-20">
       <div className="flex items-center justify-between gap-2">
-        <button type="button" className="text-sm text-critical" onClick={discard}>
-          Descartar
+        <button type="button" className="shrink-0 rounded-full border border-line px-4 py-1.5 text-sm font-semibold text-ink-2 transition hover:border-critical hover:text-critical active:border-critical active:text-critical" onClick={discard}>
+          {t("wl.descartar")}
         </button>
         {Signal}
         <button type="button" className="btn px-4 py-1.5" onClick={() => (setRec((cur) => cur && (cur.pausedAt ? cur : { ...cur, pausedAt: Date.now() })), setFinishing(true))}>
-          Terminar
+          {t("wl.terminar")}
         </button>
       </div>
 
       <section className={`rounded-3xl border p-5 text-center ${paused ? "border-line bg-surface" : "border-accent bg-accent/10"}`}>
-        <p className="text-sm font-semibold text-ink-2">{paused ? "En pausa" : "Grabando"}</p>
+        <p className="text-sm font-semibold text-ink-2">{paused ? t("wl.enPausa") : t("gps.grabando")}</p>
         <p className="tabular my-1 text-6xl font-bold tracking-tight">{fmtDuration(active)}</p>
         <div className="mt-3 grid grid-cols-3 gap-2">
           <div>
-            <p className="text-[11px] text-muted">Distancia</p>
+            <p className="text-[11px] text-muted">{t("act.distancia")}</p>
             <p className="tabular text-2xl font-bold">{fmtKm(km, 2)}</p>
             <p className="text-[11px] text-muted">km</p>
           </div>
           <div>
-            <p className="text-[11px] text-muted">Ritmo actual</p>
+            <p className="text-[11px] text-muted">{t("gps.ritmoActual")}</p>
             <p className="tabular text-2xl font-bold">{stats.paceNow && !paused ? fmtPace(stats.paceNow) : "–"}</p>
             <p className="text-[11px] text-muted">/km</p>
           </div>
           <div>
-            <p className="text-[11px] text-muted">Ritmo medio</p>
+            <p className="text-[11px] text-muted">{t("act.ritmo")}</p>
             <p className="tabular text-2xl font-bold">{avgPace ? fmtPace(avgPace) : "–"}</p>
             <p className="text-[11px] text-muted">/km</p>
           </div>
@@ -294,14 +292,14 @@ export function RunRecorder() {
 
       <button type="button" onClick={togglePause} className={`btn w-full py-3 text-base ${paused ? "" : "btn-ghost"}`} aria-pressed={paused}>
         <Icon name={paused ? "play" : "pause"} className="mr-1 h-4 w-4 align-[-2px]" />
-        {paused ? "Reanudar" : "Pausa"}
+        {paused ? t("wl.reanudar") : t("wl.pausa")}
       </button>
       {geoText && (
           <p className="rounded-xl border border-critical/40 bg-critical/10 p-3 text-sm">
             {geoText}
             {geoError === "permiso" && native && (
               <button type="button" className="ml-1 font-semibold text-accent underline" onClick={() => openLocationSettings()}>
-                Abrir ajustes
+                {t("gps.abrirAjustes")}
               </button>
             )}
           </p>
@@ -309,16 +307,16 @@ export function RunRecorder() {
 
       {rec.points.length > 1 && (
         <div className="rounded-2xl border border-line bg-surface p-2">
-          <Trace points={rec.points} />
+          <Trace points={rec.points} t={t} />
         </div>
       )}
       {stats.splits.length > 0 && (
         <div className="rounded-2xl border border-line bg-surface p-3">
-          <p className="mb-1 text-xs font-semibold text-muted">Parciales</p>
+          <p className="mb-1 text-xs font-semibold text-muted">{t("gps.parciales")}</p>
           <ol className="grid grid-cols-3 gap-x-3 gap-y-1 text-sm tabular sm:grid-cols-5">
             {stats.splits.map((s, i) => (
               <li key={i}>
-                <span className="text-muted">km {i + 1}</span> {fmtPace(s)}
+                <span className="text-muted">{t("gps.km", { n: i + 1 })}</span> {fmtPace(s)}
               </li>
             ))}
           </ol>
@@ -326,18 +324,19 @@ export function RunRecorder() {
       )}
       {stats.gapSec >= 60 && (
         <p className="rounded-xl border border-warning/40 bg-warning/10 p-3 text-sm text-ink-2">
-          {fmtDuration(stats.gapSec)} sin GPS: esos tramos van en línea recta, así que la distancia se queda corta.
-          {!native && " En el iPhone no se graba con la pantalla bloqueada ni con otra app abierta: deja Zancavolt en pantalla mientras corres."}
+          {t("gps.hueco", { t: fmtDuration(stats.gapSec) })}
+          {!native && ` ${t("gps.huecoIphone")}`}
         </p>
       )}
       <p className="text-center text-xs text-muted">
-        {stats.elevationGainM > 0 && `Desnivel +${stats.elevationGainM} m · `}En movimiento {fmtDuration(stats.movingSec)} (se para solo cuando te paras)
+        {stats.elevationGainM > 0 && t("gps.desnivel", { m: stats.elevationGainM })}
+        {t("gps.enMovimiento", { t: fmtDuration(stats.movingSec) })}
       </p>
 
       {finishing && (
-        <div className="fixed inset-0 z-50 grid place-items-end bg-black/50 md:place-items-center" role="dialog" aria-modal aria-label="Guardar carrera">
+        <div className="fixed inset-0 z-50 grid place-items-end bg-black/50 md:place-items-center" role="dialog" aria-modal aria-label={t("gps.guardarAria")}>
           <form action={finish} className="max-h-[90dvh] w-full space-y-3 overflow-y-auto rounded-t-2xl bg-surface p-4 pb-[max(1rem,env(safe-area-inset-bottom))] md:max-w-md md:rounded-2xl">
-            <strong className="block text-lg">Guardar</strong>
+            <strong className="block text-lg">{t("re.guardar")}</strong>
             <p className="text-sm text-ink-2">
               {fmtKm(km, 2)} km · {fmtDuration(stats.movingSec)}
               {avgPace && ` · ${fmtPace(avgPace)} /km`}
@@ -345,19 +344,19 @@ export function RunRecorder() {
             </p>
             <div className="grid grid-cols-2 gap-2">
               <label className="field">
-                Deporte
+                {t("af.deporte")}
                 <select className="input" name="sport" defaultValue={rec.sport}>
-                  {SPORTS.map(([s, label]) => (
+                  {SPORTS.map((s) => (
                     <option key={s} value={s}>
-                      {label}
+                      {t(`sport.${s}`)}
                     </option>
                   ))}
                 </select>
               </label>
               <label className="field">
-                Esfuerzo (RPE)
+                {t("gps.rpe")}
                 <select className="input" name="rpe" defaultValue="">
-                  <option value="">Sin indicar</option>
+                  <option value="">{t("wl.sinIndicar")}</option>
                   {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
                     <option key={n} value={n}>
                       {n}
@@ -367,35 +366,35 @@ export function RunRecorder() {
               </label>
             </div>
             <label className="field">
-              Nombre
-              <input className="input" name="name" placeholder="Rodaje suave" maxLength={80} />
+              {t("wl.nombre")}
+              <input className="input" name="name" placeholder={t("gps.nombrePh")} maxLength={80} />
             </label>
             <label className="field">
-              ¿Cómo te ha ido?
+              {t("gps.comoTeHaIdo")}
               <select className="input" name="feel" defaultValue="">
-                <option value="">Sin indicar</option>
-                <option value="muy_facil">Muy fácil</option>
-                <option value="facil">Fácil</option>
-                <option value="bien">Bien</option>
-                <option value="duro">Duro</option>
-                <option value="muy_duro">Muy duro</option>
+                <option value="">{t("wl.sinIndicar")}</option>
+                {(["muy_facil", "facil", "bien", "duro", "muy_duro"] as const).map((f) => (
+                  <option key={f} value={f}>
+                    {t(`feel.${f}`)}
+                  </option>
+                ))}
               </select>
             </label>
             <label className="field">
-              ¿Cómo te has sentido? (opcional)
-              <textarea className="input min-h-16" name="feelings" maxLength={1000} placeholder="Piernas, molestias, energía…" />
+              {t("wl.comoTeSentiste")}
+              <textarea className="input min-h-16" name="feelings" maxLength={1000} placeholder={t("gps.sentirPh")} />
             </label>
             {error && <p className="text-sm font-medium text-critical">✕ {error}</p>}
             <div className="flex gap-2">
               <button type="button" className="btn btn-ghost flex-1" onClick={() => setFinishing(false)}>
-                Seguir
+                {t("wl.seguir")}
               </button>
               <button className="btn flex-1" disabled={pending}>
-                {pending ? "Guardando…" : "Guardar"}
+                {pending ? t("wl.guardando") : t("re.guardar")}
               </button>
             </div>
             <button type="button" className="w-full text-xs text-muted underline" onClick={discard}>
-              Descartar la grabación
+              {t("gps.descartarGrab")}
             </button>
           </form>
         </div>

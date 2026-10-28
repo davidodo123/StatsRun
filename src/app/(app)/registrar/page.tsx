@@ -9,7 +9,11 @@ import { ImportPanel } from "@/components/ImportPanel";
 import { SESSION_KIND } from "@/components/SessionCard";
 import { Card, ChipLink, Loading, Notice, PageHeader, Status } from "@/components/ui";
 import { fmtDuration, fmtPace } from "@/lib/format";
-import { WEEKDAYS, diffDays, shortDate, weekday } from "@/lib/dates";
+import { diffDays } from "@/lib/dates";
+import { getT } from "@/lib/i18n/server";
+import { dayMonth, weekdayDate } from "@/lib/i18n";
+import { planText } from "@/lib/i18n/planText";
+import type { Locale } from "@/lib/i18n";
 import type { PlannedSession } from "@/lib/types";
 import { DeleteActivityButton } from "@/components/DeleteActivityButton";
 import { viewFriends } from "@/lib/authView";
@@ -22,33 +26,21 @@ import { Icon } from "@/components/icons";
 
 export const metadata: Metadata = { title: "Registrar entreno" };
 
-const SPORT: Record<string, string> = { run: "Correr", ride: "Bici", swim: "Natación", walk: "Caminar", strength: "Fuerza", other: "Otro" };
 const DEFAULT_RPE = { suave: 3, larga: 5, calidad: 7, fuerza: 6, carrera: 9 } as const;
 
 export default function RegistrarPage({ searchParams }: PageProps<"/registrar">) {
   return (
-    <>
-      <PageHeader
-        title="Registrar entreno"
-        subtitle="Copia los datos de Strava o graba con el GPS."
-        action={
-          <Link href="/registrar/gps" className="btn">
-            <Icon name="pin" className="mr-1 h-4 w-4 align-[-2px]" /> Grabar con GPS
-          </Link>
-        }
-      />
-      <Suspense fallback={<Loading />}>
-        <Content searchParams={searchParams} />
-      </Suspense>
-    </>
+    <Suspense fallback={<Loading />}>
+      <Content searchParams={searchParams} />
+    </Suspense>
   );
 }
 
-function fromSession(s: PlannedSession, today: string): ActivityFormInitial {
+function fromSession(s: PlannedSession, today: string, locale: Locale): ActivityFormInitial {
   return {
     sessionId: s.id,
     sport: s.type === "strength" ? "strength" : "run",
-    name: s.title,
+    name: planText(s.title, locale),
     date: s.date <= today ? s.date : today,
     time: "07:00",
     distanceKm: s.distanceKm || undefined,
@@ -58,7 +50,7 @@ function fromSession(s: PlannedSession, today: string): ActivityFormInitial {
 }
 
 async function Content({ searchParams }: { searchParams: PageProps<"/registrar">["searchParams"] }) {
-  const sp = await searchParams;
+  const [sp, { t, locale }] = await Promise.all([searchParams, getT()]);
   const uid = await requireViewerId();
   const [{ db, today, matches }, friends] = await Promise.all([getAnalysis(), viewFriends(uid)]);
   const sessions = db.plan?.weeks.flatMap((w) => w.sessions) ?? [];
@@ -92,7 +84,7 @@ async function Content({ searchParams }: { searchParams: PageProps<"/registrar">
       with: editing.with,
       photo: activityPhotoUrl(uid, editing),
     };
-  else if (session) initial = fromSession(session, today);
+  else if (session) initial = fromSession(session, today, locale);
   else initial = { sport: "run", name: "", date: today, time: "07:00", rpe: 4 };
 
   // sesiones de los últimos 10 días aún sin completar
@@ -108,52 +100,63 @@ async function Content({ searchParams }: { searchParams: PageProps<"/registrar">
   const savedTags = savedId && db.activities.some((a) => a.id === savedId) ? (tagsForDb(db, estimateVdot(db.activities, db.profile, today).vdot).get(savedId) ?? []) : [];
 
   return (
+    <>
+    <PageHeader
+      title={t("reg.titulo")}
+      subtitle={t("reg.sub")}
+      action={
+        <Link href="/registrar/gps" className="btn">
+          <Icon name="pin" className="mr-1 h-4 w-4 align-[-2px]" /> {t("reg.gps")}
+        </Link>
+      }
+    />
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
       {sp.guardado && (
         <div className="lg:col-span-3">
           <Notice tone="good">
-            Entreno registrado. Ya cuenta en tu forma, fatiga y estadísticas.
+            {t("reg.guardado")}
             {savedTags.length > 0 && (
               <span className="mt-1 block">
-                <strong className="text-ink">{savedTags.some((t) => t.kind === "record") ? "¡Nuevo récord! " : "¡Bien hecho! "}</strong>
-                <TagChips tags={savedTags} />
+                <strong className="text-ink">{savedTags.some((x) => x.kind === "record") ? t("reg.record") : t("reg.bien")}</strong>{" "}
+                <TagChips tags={savedTags} locale={locale} />
               </span>
             )}
-            {coachConfig().configured && db.plan && " La IA está leyendo tus sensaciones y ajustando tus próximos entrenos: lo verás en el plan en un minuto."}
+            {coachConfig().configured && db.plan && ` ${t("reg.ia")}`}
           </Notice>
         </div>
       )}
-      <Card className="lg:col-span-2" title={editing ? "Editar entreno" : session ? "Registrar sesión del plan" : "Nuevo entreno"}>
+      <Card className="lg:col-span-2" title={editing ? t("reg.editar") : session ? t("reg.sesionPlan") : t("reg.nuevo")}>
         <ActivityForm
           key={editing?.id ?? session?.id ?? `nuevo-${savedId ?? ""}`}
           initial={initial}
+          locale={locale}
           session={session}
           today={today}
           friends={friends.map((f) => ({ id: f.id, name: f.name, username: f.username }))}
           routines={(db.routines ?? []).map((r) => ({ id: r.id, name: r.name }))}
-          planStrength={sessions.filter((s) => s.type === "strength" && s.date <= today).map((s) => ({ id: s.id, date: s.date, title: s.title }))}
+          planStrength={sessions.filter((s) => s.type === "strength" && s.date <= today).map((s) => ({ id: s.id, date: s.date, title: planText(s.title, locale) }))}
         />
         {editing && (
           <div className="mt-4 border-t border-line pt-4">
-            <DeleteActivityButton id={editing.id} />
+            <DeleteActivityButton id={editing.id} locale={locale} />
           </div>
         )}
       </Card>
 
       <div className="space-y-4">
         {pending.length > 0 && (
-          <Card title="Pendientes de registrar" subtitle="Sesiones del plan de los últimos días">
+          <Card title={t("reg.pendientes")} subtitle={t("reg.pendientesSub")}>
             <ul className="space-y-2">
               {pending.map((s) => (
                 <li key={s.id}>
                   <Link href={`/registrar?sesion=${encodeURIComponent(s.id)}`} className="block rounded-xl border border-line p-3 hover:border-accent">
                     <span className="block text-[11px] font-medium uppercase tracking-wide text-muted">
-                      {WEEKDAYS[weekday(s.date)]} {shortDate(s.date)}
+                      {weekdayDate(s.date, locale)}
                     </span>
-                    <span className="block text-sm font-semibold">{s.title}</span>
+                    <span className="block text-sm font-semibold">{planText(s.title, locale)}</span>
                     <span className="mt-1 block">
                       <Status tone={matches?.get(s.id)?.status === "partial" ? "warn" : "neutral"}>
-                        {matches?.get(s.id)?.status === "partial" ? "Parcial" : "Registrar"}
+                        {matches?.get(s.id)?.status === "partial" ? t("sesion.parcial") : t("sesion.registrar")}
                       </Status>
                     </span>
                   </Link>
@@ -163,35 +166,23 @@ async function Content({ searchParams }: { searchParams: PageProps<"/registrar">
           </Card>
         )}
 
-        <Card title="Importar archivo del reloj" subtitle="Datos exactos: distancia, pulso, cadencia y desnivel">
-          <ImportPanel />
+        <Card title={t("reg.importar")} subtitle={t("reg.importarSub")}>
+          <ImportPanel locale={locale} />
           <details className="mt-3 text-xs text-ink-2">
-            <summary className="cursor-pointer font-semibold text-accent">Cómo sacar el archivo gratis</summary>
+            <summary className="cursor-pointer font-semibold text-accent">{t("reg.comoSacar")}</summary>
             <ul className="mt-2 space-y-1.5">
-              <li>
-                • <strong>Strava (web)</strong>: abre la actividad → menú «⋯» → <em>Exportar GPX</em> o <em>Exportar original</em> (.fit).
-              </li>
-              <li>
-                • <strong>Strava, todo el historial</strong>: Ajustes → Mi cuenta → <em>Descargar o eliminar tu cuenta</em> → «Solicitar archivo». Llega un .zip por email: súbelo tal cual.
-              </li>
-              <li>
-                • <strong>Garmin Connect</strong>: actividad → engranaje → <em>Exportar original</em> (.fit) o <em>Exportar a GPX/TCX</em>.
-              </li>
-              <li>
-                • <strong>Coros, Polar, Suunto, Huawei</strong>: en la app web de cada marca, «Exportar» la actividad en .fit, .tcx o .gpx.
-              </li>
-              <li>• Al importar, la IA reajusta tus próximos entrenos automáticamente.</li>
+              <li>• {t("reg.ex1")}</li>
+              <li>• {t("reg.ex2")}</li>
+              <li>• {t("reg.ex3")}</li>
+              <li>• {t("reg.ex4")}</li>
+              <li>• {t("reg.ex5")}</li>
             </ul>
           </details>
         </Card>
 
         <Card
-          title="Últimos entrenos"
-          action={
-            db.activities.length > 2 && (
-              <ChipLink href="/perfil?tab=actividades">Ver todos</ChipLink>
-            )
-          }
+          title={t("fh.ultimos")}
+          action={db.activities.length > 2 && <ChipLink href="/perfil?tab=actividades">{t("pr.verTodos")}</ChipLink>}
         >
           {recent.length ? (
             <ul className="divide-y divide-line text-sm">
@@ -200,23 +191,24 @@ async function Content({ searchParams }: { searchParams: PageProps<"/registrar">
                   <span className="min-w-0">
                     <span className="block truncate font-medium">{a.name}</span>
                     <span className="block text-xs text-muted tabular">
-                      {shortDate(a.date)} · {SPORT[a.sport]}
+                      {dayMonth(a.date, locale)} · {t(`sport.${a.sport}`)}
                       {a.distanceM > 0 && ` · ${(a.distanceM / 1000).toFixed(1)} km`} · {fmtDuration(a.movingSec)}
                       {a.sport === "run" && a.distanceM > 0 && ` · ${fmtPace(a.movingSec / (a.distanceM / 1000))}/km`}
                       {a.rpe && ` · RPE ${a.rpe}`}
                     </span>
                   </span>
                   <Link href={`/registrar?editar=${encodeURIComponent(a.id)}`} className="shrink-0 text-xs font-semibold text-accent">
-                    Editar
+                    {t("ex.editar")}
                   </Link>
                 </li>
               ))}
             </ul>
           ) : (
-            <p className="text-sm text-ink-2">Aún no has registrado nada.</p>
+            <p className="text-sm text-ink-2">{t("reg.nada")}</p>
           )}
         </Card>
       </div>
     </div>
+    </>
   );
 }
