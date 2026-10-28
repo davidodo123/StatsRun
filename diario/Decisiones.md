@@ -1033,3 +1033,9 @@ Fuentes: screensdesign.com, posthog.com/pricing, revenuecat.com/pricing, revenue
 - El plan se sigue guardando en español; al pintarlo se traduce con `planText()` (`lib/i18n/planText.ts`): textos fijos por tabla y los que llevan números o ritmos por patrones. Lo que no está en la tabla sale en español.
 - De momento solo inglés (para el vídeo); catalán, portugués y francés, en la fase 3.
 - Nombres de ejercicios: en inglés, el original del catálogo (`nameEn`); el resto de idiomas, en español hasta la fase 3.
+
+## «Hecho» en lima
+*2026-10-28*
+
+- El verde oscuro de «Hecho» se veía apagado junto al lima de la app. David eligió un **chip con borde y texto lima y un check** (`DoneChip` en `ui.tsx`, clase `.done-chip`), entre chip lima relleno, chip con borde o solo texto. Parcial y no realizado siguen como estaban.
+- Cabecera del entreno en curso: «Descartar» pasa de texto rojo suelto a botón con borde (rojo solo al pulsarlo), a juego con «Terminar»; la duración en grande y lima, volumen y series pequeños.

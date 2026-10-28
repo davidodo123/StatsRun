@@ -1,6 +1,6 @@
 "use client";
 
-import { ChipLink } from "./ui";
+import { ChipLink, DoneChip } from "./ui";
 import Link from "next/link";
 import { useState } from "react";
 import { translator, weekdayDate, weekdayInitials, intlLocale, type Locale } from "@/lib/i18n";
@@ -13,7 +13,7 @@ export interface WeekBarDay {
   sessions: { id: string; title: string; km: number; min: number; strength: boolean; status?: "done" | "partial" | "missed" | "today" | "upcoming"; routine: boolean }[];
 }
 
-const STATUS_CLS = { done: "text-good-ink", partial: "text-warning", missed: "text-critical", today: "text-accent", upcoming: "text-muted" } as const;
+const STATUS_CLS = { partial: "text-warning", missed: "text-critical", today: "text-accent", upcoming: "text-muted" } as const;
 
 /** Las barras de la semana de Inicio: al tocar un día se ven sus entrenos debajo (por defecto, hoy). */
 export function WeekBars({ days, today, locale }: { days: WeekBarDay[]; today: string; locale: Locale }) {
@@ -65,7 +65,7 @@ export function WeekBars({ days, today, locale }: { days: WeekBarDay[]; today: s
                     </span>
                   </span>
                   <span className="flex shrink-0 items-center gap-3 text-xs">
-                    {s.status && statusLabel[s.status] && <span className={STATUS_CLS[s.status]}>{statusLabel[s.status]}</span>}
+                    {s.status === "done" ? <DoneChip>{statusLabel.done}</DoneChip> : s.status && statusLabel[s.status] && <span className={STATUS_CLS[s.status]}>{statusLabel[s.status]}</span>}
                     {s.strength && s.status !== "done" && s.status !== "missed" && (
                       <Link href={`/fuerza/entreno?sesion=${encodeURIComponent(s.id)}`} className="font-semibold text-accent">
                         {t(s.routine ? "sesion.empezarRutina" : "sesion.empezarEntreno")}

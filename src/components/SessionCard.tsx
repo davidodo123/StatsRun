@@ -3,7 +3,7 @@ import type { PlannedSession, SessionType } from "@/lib/types";
 import type { SessionMatch } from "@/lib/engine/planner";
 import { fmtPaceRange } from "@/lib/format";
 import { DEFAULT_LOCALE, intlLocale, shortWeekdayDate, translator, weekdayDate, type Key, type Locale } from "@/lib/i18n";
-import { Status } from "./ui";
+import { DoneChip, Status } from "./ui";
 import { SkipDayButton } from "./SkipDayButton";
 import { MoveSessionButton } from "./MoveSessionButton";
 import { MOVE_DAYS } from "@/lib/engine/planner";
@@ -126,8 +126,9 @@ export function SessionCard({
             )}
             {canLog &&
               (linked ? (
-                <Link href={`/registrar?editar=${encodeURIComponent(linked.id)}`} className="text-xs font-semibold text-accent">
+                <Link href={`/registrar?editar=${encodeURIComponent(linked.id)}`} className="inline-flex items-center gap-0.5 text-xs font-semibold text-accent">
                   {t("sesion.editarRegistro")}
+                  <Icon name="chevron" className="h-3.5 w-3.5" />
                 </Link>
               ) : (
                 match.status !== "done" && (
@@ -139,7 +140,7 @@ export function SessionCard({
                   </Link>
                 )
               ))}
-            {st && <Status tone={st.tone}>{t(st.label)}</Status>}
+            {st && (match?.status === "done" ? <DoneChip>{t(st.label)}</DoneChip> : <Status tone={st.tone}>{t(st.label)}</Status>)}
             {/* solo hoy: un día que ya pasó no se puede mover */}
             {!readOnly && s.type !== "race" && match?.status === "today" && (
               <SkipDayButton date={s.date} confirmText={t("sesion.confirmarNoPuedo", { dia: dayLabel })} label={t("sesion.hoyNoPuedo")} title={t("sesion.iaReorganiza")} />

@@ -250,6 +250,7 @@ Español, inglés, catalán, portugués y francés, por fases.
 - [x] **Primer perfil por pasos**: al crear la cuenta, el formulario va por secciones con «Siguiente» (Idioma → ¿Qué entrenas? → Datos físicos → Experiencia → Disponibilidad; el idioma pasó a ser el primer paso 2026-10-27); «Editar perfil» sigue igual
 - [x] **Nombre de la app: Zancavolt** (lo pidió David 2026-10-27): dentro de la app (logo, títulos, PWA, Android, imágenes para compartir, correo); la dirección, los correos y los identificadores internos no cambian → [[Decisiones#La app se llama Zancavolt]]
 - [x] **Vídeo promocional en inglés**: capturas y vídeos en `centro-operaciones/video-run-in-out` (usuaria ficticia, ya borrada); arreglado de paso la periodización (las barras se juntaban) y el texto de privacidad de Importar (decía «se guarda en tu ordenador»)
+- [x] **«Hecho» y cabecera del entreno** (lo pidió David 2026-10-28): «Hecho» pasa de texto verde oscuro a chip con borde y texto lima y un check (plan, semana de Inicio, calendario); «Editar registro ›» con flecha; en el entreno, «Descartar» es un botón con borde y la duración va en grande y lima → [[Decisiones#«Hecho» en lima]]
 - [ ] **Patreon**: una versión para que donen y se quiten los anuncios — *la app no tiene anuncios todavía: falta decidir si se ponen y la página de Patreon de David*
 
 ## 🔚 Para el final (lo dejó David 2026-10-25)

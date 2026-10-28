@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { Icon, type IconName } from "./icons";
+import { DoneChip } from "./ui";
 import { intlLocale, translator, weekdayDate, weekdayInitials, type Locale } from "@/lib/i18n";
 
 export interface CalendarDay {
@@ -108,7 +109,7 @@ export function ProfileCalendar({ days, today, locale }: { days: Record<string, 
                       {a.min} min
                     </span>
                   </span>
-                  <span className="text-xs text-good-ink">{t("cal.hecho")}</span>
+                  <DoneChip>{t("cal.hecho")}</DoneChip>
                 </Link>
               </li>
             ))}

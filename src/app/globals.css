@@ -245,6 +245,20 @@ input.input::-webkit-date-and-time-value {
   white-space: nowrap;
   transition: border-color 0.15s, background 0.15s;
 }
+.done-chip {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 0.25rem;
+  border-radius: 999px;
+  border: 1px solid var(--accent);
+  padding: 0.15rem 0.6rem 0.15rem 0.45rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--accent);
+  white-space: nowrap;
+}
 .chip-link:hover,
 .group:hover .chip-link {
   border-color: var(--accent);

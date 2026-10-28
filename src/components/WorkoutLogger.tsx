@@ -233,7 +233,8 @@ export function WorkoutLogger({
     <div className="space-y-4 pb-20">
       <div className="vv-top sticky top-[calc(3.5rem+env(safe-area-inset-top))] z-30 md:top-0 -mx-4 border-b border-line bg-bg/95 px-4 py-2 backdrop-blur md:-mx-8 md:px-8">
         <div className="flex items-center justify-between gap-2">
-          <button type="button" className="text-sm text-critical" onClick={discard}>
+          {/* con borde, a juego con «Terminar»; rojo solo al pasar o pulsar */}
+          <button type="button" className="shrink-0 rounded-full border border-line px-4 py-1.5 text-sm font-semibold text-ink-2 transition hover:border-critical hover:text-critical active:border-critical active:text-critical" onClick={discard}>
             {t("wl.descartar")}
           </button>
           <strong className="truncate">{w.name}</strong>
@@ -485,11 +486,12 @@ export function WorkoutLogger({
   );
 }
 
+// la duración, en grande y lima; volumen y series, más pequeños
 function Metric({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
   return (
     <div>
-      <div className="text-[11px] text-muted">{label}</div>
-      <div className={`tabular font-semibold ${accent ? "text-accent" : ""}`}>{value}</div>
+      <div className={`tabular ${accent ? "font-display text-3xl leading-none text-accent" : "font-semibold"}`}>{value}</div>
+      <div className="mt-0.5 text-[10px] font-semibold tracking-wider text-muted uppercase">{label}</div>
     </div>
   );
 }

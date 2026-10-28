@@ -2,6 +2,16 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { Icon } from "./icons";
 
+/** «Hecho» en una sesión: chip con borde y texto lima y un check (el verde quedaba apagado junto al lima de la app). */
+export function DoneChip({ children }: { children: ReactNode }) {
+  return (
+    <span className="done-chip">
+      <Icon name="check" className="h-3.5 w-3.5" />
+      {children}
+    </span>
+  );
+}
+
 /** Enlace secundario en chip con flecha («Ver plan ›»). Sin href es solo el aspecto, para ir dentro de otro enlace. */
 export function ChipLink({ href, children, className = "" }: { href?: string; children: ReactNode; className?: string }) {
   const inner = (
