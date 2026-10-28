@@ -19,5 +19,6 @@ import { herramientas } from "./herramientas";
 import { entrenadorIA } from "./entrenadorIA";
 import { perfilTabs } from "./perfilTabs";
 import { perfilSalud } from "./perfilSalud";
+import { avisos } from "./avisos";
 
-export const AREAS = [sesion, plan, planExtras, etiquetas, entreno, calendario, fuerzaMas, acceso, actividad, estadisticas, amigos, importar, carreras, perfilResumen, estados, registrar, herramientas, entrenadorIA, perfilTabs, perfilSalud] as const;
+export const AREAS = [sesion, plan, planExtras, etiquetas, entreno, calendario, fuerzaMas, acceso, actividad, estadisticas, amigos, importar, carreras, perfilResumen, estados, registrar, herramientas, entrenadorIA, perfilTabs, perfilSalud, avisos] as const;

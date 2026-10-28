@@ -3,6 +3,7 @@
 import Link from "next/link";
 import posthog from "posthog-js";
 import { useEffect, useState } from "react";
+import { translator, type Locale } from "@/lib/i18n";
 import { CONSENT_KEY } from "./analyticsConsent";
 
 const enabled = Boolean(process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN);
@@ -33,7 +34,8 @@ function setChoice(yes: boolean, uid?: string) {
 }
 
 /** Pregunta una vez si se pueden mandar métricas de uso y une los datos al usuario (por su id, sin nombre ni correo). */
-export function Analytics({ uid }: { uid: string }) {
+export function Analytics({ uid, locale = "es" }: { uid: string; locale?: Locale }) {
+  const t = translator(locale);
   const [ask, setAsk] = useState(false);
   useEffect(() => {
     if (!enabled) return;
@@ -54,21 +56,21 @@ export function Analytics({ uid }: { uid: string }) {
     <div
       className="fixed inset-x-3 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-40 rounded-2xl border border-line bg-surface p-4 shadow-xl md:bottom-6 md:left-auto md:right-6 md:max-w-sm"
       role="dialog"
-      aria-label="Métricas de uso"
+      aria-label={t("an.aria")}
     >
-      <p className="font-semibold">¿Nos ayudas a mejorar la app?</p>
+      <p className="font-semibold">{t("an.titulo")}</p>
       <p className="mt-1 text-sm text-ink-2">
-        Mandaríamos qué pantallas usas y los errores que salgan. Nunca tus entrenos ni tus datos de salud.{" "}
+        {t("an.texto")}{" "}
         <Link href="/privacidad" className="text-accent">
-          Más
+          {t("an.mas")}
         </Link>
       </p>
       <div className="mt-3 flex gap-2">
         <button type="button" className="btn flex-1" onClick={() => decide(true)}>
-          Sí, vale
+          {t("an.si")}
         </button>
         <button type="button" className="btn btn-ghost flex-1" onClick={() => decide(false)}>
-          No
+          {t("an.no")}
         </button>
       </div>
     </div>
@@ -76,7 +78,8 @@ export function Analytics({ uid }: { uid: string }) {
 }
 
 /** En /privacidad: cambiar la elección. */
-export function AnalyticsToggle() {
+export function AnalyticsToggle({ locale = "es" }: { locale?: Locale }) {
+  const t = translator(locale);
   const [choice, setState] = useState<Choice>();
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- la elección vive en el navegador
@@ -90,9 +93,9 @@ export function AnalyticsToggle() {
   };
   return (
     <p className="flex flex-wrap items-center gap-3">
-      <span>Métricas de uso en este dispositivo: {choice === "si" ? "activadas" : "desactivadas"}.</span>
+      <span>{t("an.estado", { estado: choice === "si" ? t("an.activadas") : t("an.desactivadas") })}</span>
       <button type="button" className="btn btn-ghost px-3 py-1 text-sm" onClick={toggle}>
-        {choice === "si" ? "Desactivar" : "Activar"}
+        {choice === "si" ? t("an.desactivar") : t("an.activar")}
       </button>
     </p>
   );

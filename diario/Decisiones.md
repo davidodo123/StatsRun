@@ -1039,3 +1039,12 @@ Fuentes: screensdesign.com, posthog.com/pricing, revenuecat.com/pricing, revenue
 
 - El verde oscuro de «Hecho» se veía apagado junto al lima de la app. David eligió un **chip con borde y texto lima y un check** (`DoneChip` en `ui.tsx`, clase `.done-chip`), entre chip lima relleno, chip con borde o solo texto. Parcial y no realizado siguen como estaban.
 - Cabecera del entreno en curso: «Descartar» pasa de texto rojo suelto a botón con borde (rojo solo al pulsarlo), a juego con «Terminar»; la duración en grande y lima, volumen y series pequeños.
+
+## Fase 2 de idiomas terminada
+*2026-10-28*
+
+- Todas las pantallas en español, inglés, catalán, portugués y francés. Los textos van por zonas en `src/lib/i18n/areas/`; la política de privacidad, por larga, en `src/app/privacidad/texts.ts`.
+- Las pantallas sin sesión (entrar, crear cuenta, privacidad) cogen el idioma de la cookie o, si no hay, del navegador.
+- La IA del chat contesta en el idioma de la app (las instrucciones siguen en español y se le pide la respuesta en el idioma del atleta). La notificación de cada mañana sale en el idioma de la cuenta.
+- La política de privacidad se puso al día: cuenta con correo y contraseña (guardada cifrada), el correo de «contraseña olvidada» por Gmail y la cookie del idioma.
+- Se dejan en español a propósito: la guía avanzada del atajo del iPhone (usa los nombres de las acciones de Atajos en español) y los mensajes de error que devuelve el servidor.

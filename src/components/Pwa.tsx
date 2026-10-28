@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useSyncExternalStore } from "react";
+import { translator, type Locale } from "@/lib/i18n";
 import { Icon } from "./icons";
 
 /** Registra el service worker (solo en producción: en desarrollo la caché serviría código viejo). */
@@ -38,7 +39,8 @@ function installEnv(): "hide" | "ios" | "other" {
 }
 const noSubscribe = () => () => undefined;
 
-export function InstallBanner() {
+export function InstallBanner({ locale = "es" }: { locale?: Locale }) {
+  const t = translator(locale);
   // en el servidor no se sabe el navegador: no se pinta nada hasta el cliente
   const env = useSyncExternalStore(noSubscribe, installEnv, () => "hide" as const);
   const ios = env === "ios";
@@ -80,25 +82,26 @@ export function InstallBanner() {
   };
 
   return (
-    <div className="mb-4 flex items-start gap-3 rounded-2xl border border-line bg-surface p-3 text-sm" role="region" aria-label="Instalar la app">
+    <div className="mb-4 flex items-start gap-3 rounded-2xl border border-line bg-surface p-3 text-sm" role="region" aria-label={t("inst.aria")}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src="/icon-192.png" alt="" className="h-10 w-10 shrink-0 rounded-xl" />
       <div className="min-w-0 flex-1">
-        <p className="font-semibold">Instala Zancavolt en tu móvil</p>
+        <p className="font-semibold">{t("inst.titulo")}</p>
         {ios ? (
           <p className="text-xs text-ink-2">
-            En Safari pulsa <strong>Compartir</strong> <Icon name="share" className="h-3.5 w-3.5 align-[-2px]" /> y luego <strong>«Añadir a pantalla de inicio»</strong>.
+            <Icon name="share" className="mr-1 h-3.5 w-3.5 align-[-2px]" />
+            {t("inst.ios")}
           </p>
         ) : (
-          <p className="text-xs text-ink-2">Ábrela como una app, a pantalla completa y desde tu pantalla de inicio.</p>
+          <p className="text-xs text-ink-2">{t("inst.otro")}</p>
         )}
       </div>
       {!ios && prompt && (
         <button type="button" onClick={install} className="btn shrink-0 px-3 py-1.5 text-xs">
-          Instalar
+          {t("inst.instalar")}
         </button>
       )}
-      <button type="button" onClick={dismiss} className="shrink-0 px-1 text-lg leading-none text-muted" aria-label="Cerrar aviso de instalación">
+      <button type="button" onClick={dismiss} className="shrink-0 px-1 text-lg leading-none text-muted" aria-label={t("inst.cerrar")}>
         ×
       </button>
     </div>

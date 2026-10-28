@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { savePushSubscription } from "@/app/push-actions";
 import { isAndroidApp } from "./healthConnect";
+import { translator, type Locale } from "@/lib/i18n";
 import { Icon } from "./icons";
 
 const SNOOZE = "rio-avisos-luego"; // «Ahora no»: hasta cuándo no se vuelve a preguntar
@@ -41,7 +42,8 @@ async function subscribe(publicKey: string) {
  * Aviso de cada mañana: con la app instalada en la pantalla de inicio, pregunta una vez si se quiere (el iPhone solo deja
  * pedir el permiso al tocar algo). Con el permiso ya dado, se activa solo. Para quitarlos, desde los ajustes del móvil.
  */
-export function PushPrompt({ publicKey }: { publicKey?: string }) {
+export function PushPrompt({ publicKey, locale = "es" }: { publicKey?: string; locale?: Locale }) {
+  const t = translator(locale);
   const [ask, setAsk] = useState(false);
   const [busy, setBusy] = useState(false);
 
@@ -78,20 +80,20 @@ export function PushPrompt({ publicKey }: { publicKey?: string }) {
   };
 
   return (
-    <div className="hide-on-kb fixed inset-x-0 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-40 px-3 pb-2 md:bottom-4 md:left-56 md:px-8" role="dialog" aria-label="Avisos">
+    <div className="hide-on-kb fixed inset-x-0 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-40 px-3 pb-2 md:bottom-4 md:left-56 md:px-8" role="dialog" aria-label={t("pp.aria")}>
       <div className="mx-auto flex max-w-xl items-start gap-3 rounded-2xl border border-accent/40 bg-surface p-3 shadow-xl">
         <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-accent text-accent-ink">
           <Icon name="bell" className="h-4 w-4" />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="font-semibold">¿Te aviso cada mañana de lo que te toca?</p>
-          <p className="text-xs text-ink-2">Una notificación con el entreno del día. Se quita cuando quieras desde los ajustes del móvil.</p>
+          <p className="font-semibold">{t("pp.titulo")}</p>
+          <p className="text-xs text-ink-2">{t("pp.texto")}</p>
           <div className="mt-2 flex gap-2">
             <button type="button" className="btn px-4 py-1.5" onClick={enable} disabled={busy}>
-              {busy ? "Activando…" : "Activar"}
+              {busy ? t("pp.activando") : t("pp.activar")}
             </button>
             <button type="button" className="btn btn-ghost px-4 py-1.5" onClick={later} disabled={busy}>
-              Ahora no
+              {t("pp.ahoraNo")}
             </button>
           </div>
         </div>
