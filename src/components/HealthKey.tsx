@@ -2,9 +2,11 @@
 
 import { useActionState, useState } from "react";
 import { newHealthKey, type HealthKeyState } from "@/app/actions";
+import { translator, type Locale } from "@/lib/i18n";
 
 /** Crear o cambiar la clave del atajo de Salud. La clave solo se ve justo después de crearla. */
-export function HealthKey({ hasKey, endpoint }: { hasKey: boolean; endpoint: string }) {
+export function HealthKey({ hasKey, endpoint, locale = "es" }: { hasKey: boolean; endpoint: string; locale?: Locale }) {
+  const t = translator(locale);
   const [state, action, pending] = useActionState<HealthKeyState, FormData>(newHealthKey, {});
   const [copied, setCopied] = useState<string>();
   const copy = (label: string, text: string) =>
@@ -16,23 +18,23 @@ export function HealthKey({ hasKey, endpoint }: { hasKey: boolean; endpoint: str
     <div className="space-y-3 text-sm">
       {state.token ? (
         <div className="space-y-2 rounded-xl border border-accent p-3">
-          <p className="font-semibold">Tu clave (cópiala ahora: no se volverá a ver)</p>
+          <p className="font-semibold">{t("hk.tuClave")}</p>
           <code className="block break-all rounded-lg bg-surface-2 p-2 text-xs">{state.token}</code>
           <div className="flex flex-wrap gap-2">
             <button type="button" className="btn text-sm" onClick={() => copy("clave", state.token!)}>
-              {copied === "clave" ? "✓ Copiada" : "Copiar mi clave"}
+              {copied === "clave" ? t("hk.copiada") : t("hk.copiarClave")}
             </button>
             <button type="button" className="btn btn-ghost text-sm" onClick={() => copy("url", endpoint)}>
-              {copied === "url" ? "✓ Copiada" : "Copiar la URL"}
+              {copied === "url" ? t("hk.copiada") : t("hk.copiarUrl")}
             </button>
           </div>
         </div>
       ) : (
         <form action={action}>
           <button className="btn" disabled={pending}>
-            {pending ? "Creando…" : hasKey ? "Cambiar la clave" : "Crear mi clave"}
+            {pending ? t("hk.creando") : hasKey ? t("hk.cambiar") : t("hk.crear")}
           </button>
-          {hasKey && <p className="mt-1 text-xs text-muted">Al cambiarla, la del atajo actual deja de funcionar y tendrás que pegar la nueva.</p>}
+          {hasKey && <p className="mt-1 text-xs text-muted">{t("hk.aviso")}</p>}
         </form>
       )}
     </div>

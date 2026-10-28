@@ -108,6 +108,6 @@ export const en: Record<keyof typeof es, string> = {
 
   "idioma.titulo": "Language",
   "idioma.texto": "The app's language on this device and in your account.",
-  "idioma.aviso": "For now the menu, Home and your profile are translated; the other screens will follow soon.",
+  "idioma.aviso": "A few things may still appear in Spanish: some exercise names, the steps of some plan sessions and part of what the AI writes.",
   "idioma.guardado": "Language changed.",
 };

@@ -112,6 +112,6 @@ export const es = {
   // idioma
   "idioma.titulo": "Idioma",
   "idioma.texto": "El idioma de la app en este dispositivo y en tu cuenta.",
-  "idioma.aviso": "De momento se traducen el menú, Inicio y tu perfil; el resto de pantallas llegará pronto.",
+  "idioma.aviso": "Algunas cosas aún pueden salir en español: los nombres de ejercicios, los pasos de las sesiones del plan y parte de lo que escribe la IA.",
   "idioma.guardado": "Idioma cambiado.",
 };

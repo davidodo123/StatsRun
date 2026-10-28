@@ -108,6 +108,6 @@ export const ca: Record<keyof typeof es, string> = {
 
   "idioma.titulo": "Idioma",
   "idioma.texto": "L'idioma de l'app en aquest dispositiu i al teu compte.",
-  "idioma.aviso": "De moment es tradueixen el menú, l'Inici i el teu perfil; la resta de pantalles arribarà aviat.",
+  "idioma.aviso": "Algunes coses encara poden sortir en castellà: els noms dels exercicis, els passos de les sessions del pla i part del que escriu la IA.",
   "idioma.guardado": "Idioma canviat.",
 };

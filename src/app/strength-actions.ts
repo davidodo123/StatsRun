@@ -397,16 +397,19 @@ export async function sendStrengthChat(_: FormState, fd: FormData): Promise<Form
     ejerciciosDisponibles: "id | nombre\n" + chatExerciseList(equipment),
     mensaje: message,
   });
+  // en el idioma de la app: las instrucciones van en español, la respuesta en el suyo
+  const langName = { en: "inglés", ca: "catalán", pt: "portugués de Portugal", fr: "francés" }[db.lang ?? ""];
+  const system = langName ? `${CHAT_SYSTEM}\n\nIMPORTANTE: el atleta usa la app en ${langName}. Escribe todo lo que lee (el texto de la respuesta y los nombres de rutinas y entrenos) en ${langName}.` : CHAT_SYSTEM;
   let reply: ReturnType<typeof chatReplyFromAi>;
   try {
     await updateDb((d) => countAiUse(d, "chat", today));
     let raw: AiChatReply;
     try {
-      raw = await chatJson<AiChatReply>(CHAT_SYSTEM, request, 0.4, strengthModel(), 3000);
+      raw = await chatJson<AiChatReply>(system, request, 0.4, strengthModel(), 3000);
     } catch (e) {
       // sin saldo para el modelo bueno: se intenta con el barato
       if ((e as Error).message !== "NO_CREDITS" || strengthModel() === coachConfig().model) throw e;
-      raw = await chatJson<AiChatReply>(CHAT_SYSTEM, request, 0.4, coachConfig().model, 3000);
+      raw = await chatJson<AiChatReply>(system, request, 0.4, coachConfig().model, 3000);
     }
     reply = chatReplyFromAi(raw, equipment, now, db, todayLocal(), message);
     if (!reply.text) throw new Error("respuesta vacía");

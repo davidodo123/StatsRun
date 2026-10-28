@@ -6,23 +6,15 @@ import { applyChatPlan, clearStrengthChat, saveChatActivity, saveChatRoutines, s
 import type { FormState } from "@/app/actions";
 import { fmtLoad, supersetLetters } from "@/lib/strength/workouts";
 import { fmtDuration, fmtKm, fmtPace } from "@/lib/format";
-import { WEEKDAYS, shortDate, weekday } from "@/lib/dates";
+import { dayMonth, intlLocale, shortWeekdayDate, translator, type Locale, type T } from "@/lib/i18n";
 import type { Routine, StrengthChatMessage } from "@/lib/types";
 import { Icon } from "./icons";
 import { AiRating } from "./AiRating";
 
-const SUGGESTIONS = [
-  "Hoy he corrido 8 km en 45 minutos, me ha costado bastante",
-  "Hazme una rutina de 3 días para ganar músculo en el gimnasio",
-  "Esta semana solo puedo entrenar 3 días",
-  "¿Cómo progreso en sentadilla si me he estancado?",
-];
-
-const SPORT: Record<string, string> = { run: "Carrera", walk: "Caminata", ride: "Bici", swim: "Natación", strength: "Fuerza", other: "Entrenamiento" };
-const FEEL: Record<string, string> = { muy_facil: "Muy fácil", facil: "Fácil", bien: "Bien", duro: "Duro", muy_duro: "Muy duro" };
+const SUGGESTIONS = ["chat.sug1", "chat.sug2", "chat.sug3", "chat.sug4"] as const;
 
 /** El entreno que contó, listo para guardar. */
-function ActivityProposal({ m }: { m: StrengthChatMessage }) {
+function ActivityProposal({ m, t, locale }: { m: StrengthChatMessage; t: T; locale: Locale }) {
   const a = m.activity!;
   const pace = a.sport === "run" && a.distanceKm ? a.durationSec / a.distanceKm : undefined;
   const facts = [
@@ -32,13 +24,13 @@ function ActivityProposal({ m }: { m: StrengthChatMessage }) {
     a.elevationGainM && `+${a.elevationGainM} m`,
     a.avgHr && `${a.avgHr} ppm`,
     a.rpe && `RPE ${a.rpe}`,
-    a.feel && FEEL[a.feel],
+    a.feel && t(`feel.${a.feel}`),
   ].filter(Boolean);
   return (
     <div className="mt-3 space-y-2">
       <div className="rounded-xl border border-line bg-surface p-3">
         <p className="text-xs text-muted">
-          {SPORT[a.sport]} · {shortDate(a.date)}
+          {t(`sport.${a.sport}`)} · {dayMonth(a.date, locale)}
           {a.time && ` · ${a.time}`}
         </p>
         <strong className="text-sm">{a.name}</strong>
@@ -56,15 +48,15 @@ function ActivityProposal({ m }: { m: StrengthChatMessage }) {
       </div>
       {m.activityId ? (
         <p className="flex items-center gap-1 text-xs font-semibold text-good-ink">
-          <Icon name="check" className="h-3.5 w-3.5" /> Guardado.{" "}
+          <Icon name="check" className="h-3.5 w-3.5" /> {t("chat.guardado")}{" "}
           <Link href={`/actividad/${encodeURIComponent(m.activityId)}`} className="text-accent underline">
-            Ver el entreno
+            {t("chat.verEntreno")}
           </Link>
         </p>
       ) : (
         <form action={saveChatActivity}>
           <input type="hidden" name="at" value={m.at} />
-          <button className="btn w-full py-2 text-sm">Guardar entreno</button>
+          <button className="btn w-full py-2 text-sm">{t("chat.guardarEntreno")}</button>
         </form>
       )}
     </div>
@@ -72,14 +64,14 @@ function ActivityProposal({ m }: { m: StrengthChatMessage }) {
 }
 
 /** El cambio del plan que pidió: se aplica con un toque (la IA reajusta los próximos 14 días). */
-function PlanProposal({ m }: { m: StrengthChatMessage }) {
+function PlanProposal({ m, t, locale }: { m: StrengthChatMessage; t: T; locale: Locale }) {
   const [state, apply, pending] = useActionState<FormState, FormData>(applyChatPlan, {});
   const done = m.planResult ?? state.message;
   return (
     <div className="mt-3 space-y-2">
       <div className="rounded-xl border border-line bg-surface p-3 text-xs text-ink-2">
-        <strong className="block text-sm text-ink">Cambio en el plan</strong>
-        {m.planDays?.length ? <p>Sin entrenar: {m.planDays.map((d) => `${WEEKDAYS[weekday(d)].slice(0, 3).toLowerCase()} ${shortDate(d)}`).join(", ")}. Las sesiones se mueven a tus días libres.</p> : null}
+        <strong className="block text-sm text-ink">{t("chat.cambioPlan")}</strong>
+        {m.planDays?.length ? <p>{t("chat.sinEntrenar", { dias: m.planDays.map((d) => shortWeekdayDate(d, locale)).join(", ") })}</p> : null}
         {m.planRequest && <p>{m.planRequest}</p>}
       </div>
       {done ? (
@@ -87,14 +79,14 @@ function PlanProposal({ m }: { m: StrengthChatMessage }) {
           <Icon name="check" className="mr-1 h-3.5 w-3.5 align-[-2px]" />
           {done}{" "}
           <Link href="/plan/actual" className="text-accent underline">
-            Ver el plan
+            {t("chat.verPlan")}
           </Link>
         </p>
       ) : (
         <form action={apply}>
           <input type="hidden" name="at" value={m.at} />
           <button className="btn w-full py-2 text-sm" disabled={pending}>
-            {pending ? "Ajustando el plan… (hasta un minuto)" : "Aplicar al plan"}
+            {pending ? t("chat.ajustando") : t("chat.aplicar")}
           </button>
           {state.error && <p className="mt-1 text-xs font-medium text-critical">✕ {state.error}</p>}
         </form>
@@ -110,7 +102,7 @@ const speechApi = () => {
 };
 
 /** Botón de micrófono: dicta en español y añade lo dicho al mensaje. Solo sale si el navegador sabe hacerlo. */
-function MicButton({ onText }: { onText: (t: string) => void }) {
+function MicButton({ onText, t, locale }: { onText: (said: string) => void; t: T; locale: Locale }) {
   const [supported, setSupported] = useState(false);
   const [listening, setListening] = useState(false);
   const rec = useRef<Recognition | undefined>(undefined);
@@ -122,7 +114,7 @@ function MicButton({ onText }: { onText: (t: string) => void }) {
     const Api = speechApi();
     if (!Api) return;
     const r = new Api();
-    r.lang = "es-ES";
+    r.lang = intlLocale(locale);
     r.interimResults = false;
     r.continuous = true;
     r.onresult = (e) => {
@@ -148,9 +140,9 @@ function MicButton({ onText }: { onText: (t: string) => void }) {
       type="button"
       onClick={toggle}
       className={`grid h-11 w-11 shrink-0 place-items-center rounded-xl ${listening ? "animate-pulse bg-critical text-white" : "bg-surface-2 text-ink-2"}`}
-      aria-label={listening ? "Dejar de escuchar" : "Hablar"}
+      aria-label={listening ? t("chat.dejarEscuchar") : t("chat.hablar")}
       aria-pressed={listening}
-      title={listening ? "Toca para terminar" : "Cuéntaselo hablando"}
+      title={listening ? t("chat.tocaTerminar") : t("chat.hablando")}
     >
       <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
         <path d="M12 3a3 3 0 00-3 3v6a3 3 0 006 0V6a3 3 0 00-3-3zM5 11a7 7 0 0014 0M12 18v3" />
@@ -159,7 +151,7 @@ function MicButton({ onText }: { onText: (t: string) => void }) {
   );
 }
 
-function Proposal({ m, names }: { m: StrengthChatMessage; names: Record<string, string> }) {
+function Proposal({ m, names, t }: { m: StrengthChatMessage; names: Record<string, string>; t: T }) {
   return (
     <div className="mt-3 space-y-2">
       {m.routines!.map((r: Routine, i) => {
@@ -181,15 +173,15 @@ function Proposal({ m, names }: { m: StrengthChatMessage; names: Record<string, 
       })}
       {m.saved ? (
         <p className="flex items-center gap-1 text-xs font-semibold text-good-ink">
-          <Icon name="check" className="h-3.5 w-3.5" /> Guardadas en la carpeta «Entrenador IA».{" "}
+          <Icon name="check" className="h-3.5 w-3.5" /> {t("chat.rutinasGuardadas")}{" "}
           <Link href="/fuerza" className="text-accent underline">
-            Ver mis rutinas
+            {t("chat.verRutinas")}
           </Link>
         </p>
       ) : (
         <form action={saveChatRoutines}>
           <input type="hidden" name="at" value={m.at} />
-          <button className="btn w-full py-2 text-sm">Guardar {m.routines!.length === 1 ? "la rutina" : `las ${m.routines!.length} rutinas`}</button>
+          <button className="btn w-full py-2 text-sm">{m.routines!.length === 1 ? t("chat.guardarRutina") : t("chat.guardarRutinas", { n: m.routines!.length })}</button>
         </form>
       )}
     </div>
@@ -197,7 +189,8 @@ function Proposal({ m, names }: { m: StrengthChatMessage; names: Record<string, 
 }
 
 /** Chat con el entrenador IA: dudas de running y fuerza, rutinas, entrenos que le cuentas y cambios del plan, cada uno con su botón. */
-export function StrengthChat({ messages, names, ratings = {} }: { messages: StrengthChatMessage[]; names: Record<string, string>; ratings?: Record<string, 1 | -1> }) {
+export function StrengthChat({ messages, names, ratings = {}, locale = "es" }: { messages: StrengthChatMessage[]; names: Record<string, string>; ratings?: Record<string, 1 | -1>; locale?: Locale }) {
+  const t = translator(locale);
   const [state, send, pending] = useActionState<FormState, FormData>(sendStrengthChat, {});
   const [draft, setDraft] = useState("");
   const [sent, setSent] = useState("");
@@ -209,12 +202,12 @@ export function StrengthChat({ messages, names, ratings = {} }: { messages: Stre
       {!messages.length && !pending && (
         <div className="rounded-2xl border border-line bg-surface p-4">
           <p className="text-sm text-ink-2">
-            Cuéntale lo que has entrenado, pídele una rutina o un cambio del plan, o pregúntale lo que quieras.
+            {t("chat.intro")}
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
             {SUGGESTIONS.map((s) => (
-              <button key={s} type="button" onClick={() => setDraft(s)} className="rounded-full border border-line px-3 py-1.5 text-left text-xs hover:border-accent">
-                {s}
+              <button key={s} type="button" onClick={() => setDraft(t(s))} className="rounded-full border border-line px-3 py-1.5 text-left text-xs hover:border-accent">
+                {t(s)}
               </button>
             ))}
           </div>
@@ -225,12 +218,12 @@ export function StrengthChat({ messages, names, ratings = {} }: { messages: Stre
         <div key={m.at + m.role} className={m.role === "user" ? "flex justify-end" : ""}>
           <div className={`max-w-[92%] rounded-2xl px-4 py-3 text-sm ${m.role === "user" ? "bg-accent text-accent-ink" : "border border-line bg-surface-2"}`}>
             <p className="whitespace-pre-line">{m.text}</p>
-            {m.role === "assistant" && m.routines?.length ? <Proposal m={m} names={names} /> : null}
-            {m.role === "assistant" && m.activity ? <ActivityProposal m={m} /> : null}
-            {m.role === "assistant" && (m.planRequest || m.planDays?.length) ? <PlanProposal m={m} /> : null}
+            {m.role === "assistant" && m.routines?.length ? <Proposal m={m} names={names} t={t} /> : null}
+            {m.role === "assistant" && m.activity ? <ActivityProposal m={m} t={t} locale={locale} /> : null}
+            {m.role === "assistant" && (m.planRequest || m.planDays?.length) ? <PlanProposal m={m} t={t} locale={locale} /> : null}
             {m.role === "assistant" && (
               <div className="mt-3 border-t border-line pt-2">
-                <AiRating area="chat" refId={m.at} rating={ratings[m.at]} />
+                <AiRating area="chat" refId={m.at} rating={ratings[m.at]} locale={locale} />
               </div>
             )}
           </div>
@@ -242,7 +235,7 @@ export function StrengthChat({ messages, names, ratings = {} }: { messages: Stre
             <p className="max-w-[92%] whitespace-pre-line rounded-2xl bg-accent px-4 py-3 text-sm text-accent-ink">{sent}</p>
           </div>
           <p className="flex items-center gap-2 text-sm text-muted">
-            <span className="h-2 w-2 animate-pulse rounded-full bg-accent" /> Pensando… (puede tardar hasta un minuto si prepara rutinas)
+            <span className="h-2 w-2 animate-pulse rounded-full bg-accent" /> {t("chat.pensando")}
           </p>
         </>
       )}
@@ -261,21 +254,21 @@ export function StrengthChat({ messages, names, ratings = {} }: { messages: Stre
           name="message"
           className="input max-h-40 min-h-11 flex-1 resize-none border-0 bg-transparent"
           rows={2}
-          placeholder="Escribe o cuéntaselo hablando…"
+          placeholder={t("chat.placeholder")}
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           maxLength={1500}
           required
-          aria-label="Mensaje"
+          aria-label={t("chat.mensaje")}
         />
-        <MicButton onText={(t) => setDraft((d) => (d.trim() ? `${d.trim()} ${t}` : t))} />
+        <MicButton t={t} locale={locale} onText={(said) => setDraft((d) => (d.trim() ? `${d.trim()} ${said}` : said))} />
         <button className="btn px-4" disabled={pending || draft.trim().length < 2}>
-          Enviar
+          {t("comun.enviar")}
         </button>
       </form>
       {messages.length > 0 && (
-        <form action={clearStrengthChat} onSubmit={(e) => !confirm("¿Borrar la conversación? Las rutinas que guardaste se quedan.") && e.preventDefault()} className="text-center">
-          <button className="text-xs text-muted underline">Empezar una conversación nueva</button>
+        <form action={clearStrengthChat} onSubmit={(e) => !confirm(t("chat.borrarConfirm")) && e.preventDefault()} className="text-center">
+          <button className="text-xs text-muted underline">{t("chat.nueva")}</button>
         </form>
       )}
     </div>

@@ -18,7 +18,7 @@ import { bmi, bmiLabel, hrMaxOf, hrRestOf, hrZones } from "@/lib/engine/physiolo
 import { achievements, bestTimes, periodAverages, profileAverages, strengthSummary, type Achievement, type PeriodAvg } from "@/lib/engine/profile";
 import type { SessionMatch } from "@/lib/engine/planner";
 import { fmtDuration, fmtKm, fmtNum, fmtPace } from "@/lib/format";
-import { diffDays, mondayOf, shortDate } from "@/lib/dates";
+import { diffDays, mondayOf } from "@/lib/dates";
 import { focusOf, type Activity, type Db, type Focus } from "@/lib/types";
 import { workoutVolume } from "@/lib/strength/workouts";
 import type { Stats } from "@/lib/engine/stats";
@@ -33,7 +33,7 @@ import { AiMemory } from "@/components/AiMemory";
 import { TuLinks } from "@/components/Nav";
 import { LanguageSelect } from "@/components/LanguageSelect";
 import { getT } from "@/lib/i18n/server";
-import { dayMonth, translator, type Key, type Locale, type T } from "@/lib/i18n";
+import { dayMonth, intlLocale, translator, type Key, type Locale, type T } from "@/lib/i18n";
 import { viewIsAdmin } from "@/lib/admin";
 
 export const metadata: Metadata = { title: "Perfil" };
@@ -111,11 +111,11 @@ async function Content({ searchParams }: { searchParams: PageProps<"/perfil">["s
       {db.profile && stats && tab === first && <TuLinks focus={focus} admin={await viewIsAdmin(me?.id ?? "")} locale={locale} />}
 
       {tab === "resumen" && <Resumen db={db} stats={stats!} matches={matches} today={today} locale={locale} />}
-      {tab === "running" && <Running db={db} stats={stats!} today={today} />}
-      {tab === "fuerza" && <Fuerza db={db} today={today} />}
-      {tab === "actividades" && <Actividades db={db} sport={typeof sp.deporte === "string" ? sp.deporte : "todos"} page={Number(sp.pagina) || 1} />}
-      {tab === "logros" && <Logros list={achievements(db.activities, matches)} />}
-      {tab === "salud" && <Salud db={db} />}
+      {tab === "running" && <Running db={db} stats={stats!} today={today} locale={locale} />}
+      {tab === "fuerza" && <Fuerza db={db} today={today} locale={locale} />}
+      {tab === "actividades" && <Actividades db={db} sport={typeof sp.deporte === "string" ? sp.deporte : "todos"} page={Number(sp.pagina) || 1} locale={locale} />}
+      {tab === "logros" && <Logros list={achievements(db.activities, matches)} locale={locale} />}
+      {tab === "salud" && <Salud db={db} locale={locale} />}
       {tab === "editar" && <Editar db={db} today={today} initialFocus={foco} locale={locale} name={me?.name} />}
     </div>
   );
@@ -182,6 +182,17 @@ function ProfileHeader({ db, stats, tab, picture, tr, children }: { db: Db; stat
 
 // ---------------- Resumen ----------------
 
+/** Descripción de un logro en el idioma. */
+function logroDetail(a: Achievement, t: T): string {
+  const i = a.id.indexOf("-");
+  const [kind, n] = [a.id.slice(0, i), a.id.slice(i + 1)];
+  if (kind === "dist") return t("lg.d.dist", { km: Number(n) < 21 ? n : Number(n).toFixed(1) });
+  if (kind === "pace" || kind === "strength") return t(`lg.d.${kind}`);
+  if (a.id === "plan-perfect-week") return t("lg.d.plan-perfect-week");
+  if (kind === "total" || kind === "week" || kind === "streak" || kind === "plan") return t(`lg.d.${kind}` as Key, { n });
+  return t(`lg.d.${a.id}` as Key);
+}
+
 /** Nombre de un logro en el idioma, a partir de su id («streak-7», «plan-25»…). */
 function logroTitle(a: Achievement, t: T): string {
   const [kind, n] = [a.id.slice(0, a.id.indexOf("-")), a.id.slice(a.id.indexOf("-") + 1)];
@@ -221,7 +232,7 @@ function Resumen({ db, stats, matches, today, locale }: { db: Db; stats: Stats; 
           {unlocked.length ? (
             <ul className="grid grid-cols-3 gap-2">
               {unlocked.slice(0, 6).map((a) => (
-                <li key={a.id} className="rounded-xl bg-surface-2 p-2 text-center" title={a.detail}>
+                <li key={a.id} className="rounded-xl bg-surface-2 p-2 text-center" title={logroDetail(a, t)}>
                   <Icon name={a.icon} className="mx-auto mb-1 block h-7 w-7 text-accent" />
                   <span className="block text-[11px] font-medium leading-tight">{logroTitle(a, t)}</span>
                 </li>
@@ -324,25 +335,26 @@ function Preparacion({ db, matches, today, locale }: { db: Db; matches?: Map<str
 
 // ---------------- Running ----------------
 
-function Running({ db, stats, today }: { db: Db; stats: Stats; today: string }) {
+function Running({ db, stats, today, locale }: { db: Db; stats: Stats; today: string; locale: Locale }) {
+  const t = translator(locale);
   const T = stats.totals;
   const runsList = db.activities.filter((a) => a.sport === "run").sort((a, b) => b.startLocal.localeCompare(a.startLocal));
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <Stat label="Km este año" value={fmtNum(T.yearKm)} unit="km" sub={`${T.yearRuns} carreras`} />
-        <Stat label="Km este mes" value={fmtKm(T.monthKm)} unit="km" />
-        <Stat label="Media 6 semanas" value={fmtKm(T.avgWeeklyKm6)} unit="km/sem" />
-        <Stat label="Desnivel total" value={fmtNum(T.elevation)} unit="m" />
+        <Stat label={t("st.kmAno")} value={fmtNum(T.yearKm)} unit="km" sub={t("st.carreras", { n: T.yearRuns })} />
+        <Stat label={t("st.kmMes")} value={fmtKm(T.monthKm)} unit="km" />
+        <Stat label={t("st.media6")} value={fmtKm(T.avgWeeklyKm6)} unit={t("st.kmSem")} />
+        <Stat label={t("pt.desnivelTotal")} value={fmtNum(T.elevation)} unit="m" />
       </div>
-      <ImprovementTable rows={periodAverages(db.activities, today)} />
+      <ImprovementTable rows={periodAverages(db.activities, today)} t={t} />
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <BestTimesCard acts={db.activities} />
-        <Card title="Últimas carreras" className="lg:col-span-2">
-          {runsList.length ? <ActivityList acts={runsList.slice(0, 10)} /> : <p className="text-sm text-ink-2">Aún no hay carreras.</p>}
+        <BestTimesCard acts={db.activities} locale={locale} />
+        <Card title={t("pt.ultimasCarreras")} className="lg:col-span-2">
+          {runsList.length ? <ActivityList acts={runsList.slice(0, 10)} locale={locale} /> : <p className="text-sm text-ink-2">{t("pt.sinCarreras")}</p>}
           {runsList.length > 10 && (
             <ChipLink href="/perfil?tab=actividades&deporte=run" className="mt-3">
-              Ver las {runsList.length} carreras
+              {t("pt.verCarreras", { n: runsList.length })}
             </ChipLink>
           )}
         </Card>
@@ -352,32 +364,32 @@ function Running({ db, stats, today }: { db: Db; stats: Stats; today: string }) 
 }
 
 /** Tabla de mejora: medias de 3 bloques de 4 semanas y cambio del último respecto al anterior. */
-function ImprovementTable({ rows }: { rows: PeriodAvg[] }) {
+function ImprovementTable({ rows, t }: { rows: PeriodAvg[]; t: T }) {
   const [now, prev] = rows;
-  type Metric = { label: string; get: (r: PeriodAvg) => number | undefined; fmt: (v: number) => string; better: "up" | "down" };
+  type Metric = { label: Key; get: (r: PeriodAvg) => number | undefined; fmt: (v: number) => string; better: "up" | "down" };
   const METRICS: Metric[] = [
-    { label: "Km por semana", get: (r) => r.kmPerWeek, fmt: (v) => fmtKm(v), better: "up" },
-    { label: "Carreras por semana", get: (r) => r.runsPerWeek, fmt: (v) => fmtKm(v), better: "up" },
-    { label: "Ritmo medio (/km)", get: (r) => r.avgPace, fmt: fmtPace, better: "down" },
-    { label: "FC media", get: (r) => r.avgHr, fmt: (v) => String(Math.round(v)), better: "down" },
-    { label: "Eficiencia (EF)", get: (r) => r.ef, fmt: (v) => v.toFixed(2), better: "up" },
-    { label: "Cadencia (ppm)", get: (r) => r.cadence, fmt: (v) => String(Math.round(v)), better: "up" },
-    { label: "Tirada más larga", get: (r) => r.longestKm || undefined, fmt: (v) => `${fmtKm(v)} km`, better: "up" },
-    { label: "Fuerza por semana", get: (r) => r.strengthPerWeek, fmt: (v) => fmtKm(v), better: "up" },
+    { label: "pt.m.km", get: (r) => r.kmPerWeek, fmt: (v) => fmtKm(v), better: "up" },
+    { label: "pt.m.carreras", get: (r) => r.runsPerWeek, fmt: (v) => fmtKm(v), better: "up" },
+    { label: "pt.m.ritmo", get: (r) => r.avgPace, fmt: fmtPace, better: "down" },
+    { label: "pt.m.fc", get: (r) => r.avgHr, fmt: (v) => String(Math.round(v)), better: "down" },
+    { label: "pt.m.ef", get: (r) => r.ef, fmt: (v) => v.toFixed(2), better: "up" },
+    { label: "pt.m.cadencia", get: (r) => r.cadence, fmt: (v) => String(Math.round(v)), better: "up" },
+    { label: "pt.m.tirada", get: (r) => r.longestKm || undefined, fmt: (v) => `${fmtKm(v)} km`, better: "up" },
+    { label: "pt.m.fuerza", get: (r) => r.strengthPerWeek, fmt: (v) => fmtKm(v), better: "up" },
   ];
   return (
-    <Card title="Tabla de mejora" subtitle="Medias por bloques de 4 semanas. La flecha compara el último bloque con el anterior.">
+    <Card title={t("pt.mejora")} subtitle={t("pt.mejoraSub")}>
       <div>
         <table className="w-full text-sm tabular">
           <thead className="text-left text-xs text-muted">
             <tr>
-              <th className="pb-2 font-medium">Métrica</th>
+              <th className="pb-2 font-medium">{t("pt.metrica")}</th>
               {rows.map((r, i) => (
                 <th key={r.label} className={`pb-2 pl-2 text-right font-medium ${i === 2 ? "hidden sm:table-cell" : ""}`}>
-                  {r.label}
+                  {t(`pt.b.${r.label}` as Key)}
                 </th>
               ))}
-              <th className="pb-2 text-right font-medium">Cambio</th>
+              <th className="pb-2 text-right font-medium">{t("pt.cambio")}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-line">
@@ -388,7 +400,7 @@ function ImprovementTable({ rows }: { rows: PeriodAvg[] }) {
               const good = delta !== undefined && Math.abs(delta) >= 1 ? (m.better === "up" ? delta > 0 : delta < 0) : undefined;
               return (
                 <tr key={m.label}>
-                  <td className="py-1.5">{m.label}</td>
+                  <td className="py-1.5">{t(m.label)}</td>
                   {rows.map((r, i) => {
                     const v = m.get(r);
                     return (
@@ -407,7 +419,7 @@ function ImprovementTable({ rows }: { rows: PeriodAvg[] }) {
           </tbody>
         </table>
       </div>
-      <p className="mt-2 text-xs text-muted">▲ verde = mejora (por ejemplo, ritmo más rápido o menos pulsaciones). ▼ rojo = empeora.</p>
+      <p className="mt-2 text-xs text-muted">{t("pt.mejoraNota")}</p>
     </Card>
   );
 }
@@ -444,7 +456,8 @@ function BestTimesCard({ acts, locale = "es" }: { acts: Activity[]; locale?: Loc
 
 // ---------------- Fuerza ----------------
 
-function Fuerza({ db, today }: { db: Db; today: string }) {
+function Fuerza({ db, today, locale }: { db: Db; today: string; locale: Locale }) {
+  const t = translator(locale);
   const s = strengthSummary(db.activities, today);
   const target = db.profile?.strengthPerWeek ?? 0;
   const list = db.activities.filter((a) => a.sport === "strength").sort((a, b) => b.startLocal.localeCompare(a.startLocal));
@@ -455,33 +468,33 @@ function Fuerza({ db, today }: { db: Db; today: string }) {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <Stat label="Sesiones totales" value={s.total} sub={`${fmtNum(s.totalMin / 60, 1)} h en total`} />
-        <Stat label="Últimas 4 semanas" value={s.last28} sub={`${s.min28} min`} />
-        <Stat label="Media semanal" value={fmtKm(s.perWeek28)} sub={target ? `Objetivo del plan: ${target}/sem` : "Recomendado: 2/sem"} />
-        <Stat label="Última sesión" value={s.last ? shortDate(s.last.date) : "–"} sub={s.last ? `Hace ${diffDays(today, s.last.date)} días` : undefined} />
+        <Stat label={t("pt.sesionesTotales")} value={s.total} sub={t("pt.hTotal", { h: fmtNum(s.totalMin / 60, 1) })} />
+        <Stat label={t("pt.ult4")} value={s.last28} sub={t("pt.min", { n: s.min28 })} />
+        <Stat label={t("pt.mediaSemanal")} value={fmtKm(s.perWeek28)} sub={target ? t("pt.objetivo", { n: target }) : t("pt.recomendado")} />
+        <Stat label={t("pt.ultimaSesion")} value={s.last ? dayMonth(s.last.date, locale) : "–"} sub={s.last ? t("pt.haceDias", { n: diffDays(today, s.last.date) }) : undefined} />
       </div>
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <Card title="Sesiones por semana" subtitle="Últimas 12 semanas" className="lg:col-span-2">
-          <SimpleBars data={s.weeks.map((w) => ({ week: w.week, n: w.count }))} xKey="week" yKey="n" name="Sesiones" unit="" xFormat="day" height={200} />
+        <Card title={t("pt.porSemana")} subtitle={t("pt.ult12")} className="lg:col-span-2">
+          <SimpleBars data={s.weeks.map((w) => ({ week: w.week, n: w.count }))} xKey="week" yKey="n" name={t("pt.sesiones")} unit="" xFormat="day" height={200} locale={locale} />
         </Card>
-        <Card title="Próximas en el plan">
+        <Card title={t("pt.proximas")}>
           {upcoming?.length ? (
             <div className="space-y-2">
               {upcoming.map((x) => (
-                <SessionCard key={x.id} s={x} compact />
+                <SessionCard key={x.id} s={x} compact locale={locale} />
               ))}
             </div>
           ) : (
-            <p className="text-sm text-ink-2">{db.plan ? "No hay sesiones de fuerza próximas." : "Sin plan activo."}</p>
+            <p className="text-sm text-ink-2">{db.plan ? t("pt.sinProximas") : t("pt.sinPlan")}</p>
           )}
-          <p className="mt-3 text-xs text-muted">La fuerza reduce lesiones y mejora la economía de carrera (ver el estudio de entrenamiento).</p>
+          <p className="mt-3 text-xs text-muted">{t("pt.fuerzaNota")}</p>
           <Link href="/fuerza" className="btn btn-ghost mt-3 w-full">
-            Ejercicios y material <Icon name="chevron" />
+            {t("pt.ejMaterial")} <Icon name="chevron" />
           </Link>
         </Card>
       </div>
-      <Card title="Historial de fuerza">
-        {list.length ? <ActivityList acts={list.slice(0, 20)} /> : <p className="text-sm text-ink-2">Aún no has registrado sesiones de fuerza.</p>}
+      <Card title={t("pt.historialFuerza")}>
+        {list.length ? <ActivityList acts={list.slice(0, 20)} locale={locale} /> : <p className="text-sm text-ink-2">{t("pt.sinFuerza")}</p>}
       </Card>
     </div>
   );
@@ -489,14 +502,15 @@ function Fuerza({ db, today }: { db: Db; today: string }) {
 
 // ---------------- Actividades ----------------
 
-const SPORT_FILTERS = [
-  { id: "todos", label: "Todas" },
-  { id: "run", label: "Correr" },
-  { id: "strength", label: "Fuerza" },
-  { id: "otros", label: "Otros" },
+const SPORT_FILTERS: { id: string; label: Key }[] = [
+  { id: "todos", label: "pt.f.todos" },
+  { id: "run", label: "sport.run" },
+  { id: "strength", label: "sport.strength" },
+  { id: "otros", label: "pt.f.otros" },
 ];
 
-function Actividades({ db, sport, page }: { db: Db; sport: string; page: number }) {
+function Actividades({ db, sport, page, locale }: { db: Db; sport: string; page: number; locale: Locale }) {
+  const t = translator(locale);
   const filtered = db.activities
     .filter((a) => (sport === "run" ? a.sport === "run" : sport === "strength" ? a.sport === "strength" : sport === "otros" ? a.sport !== "run" && a.sport !== "strength" : true))
     .sort((a, b) => b.startLocal.localeCompare(a.startLocal));
@@ -506,7 +520,7 @@ function Actividades({ db, sport, page }: { db: Db; sport: string; page: number 
   const km = filtered.reduce((s, a) => s + a.distanceM, 0) / 1000;
   const sec = filtered.reduce((s, a) => s + a.movingSec, 0);
   return (
-    <Card title="Todas tus sesiones" subtitle={`${filtered.length} sesiones · ${fmtNum(km)} km · ${fmtNum(sec / 3600)} h`}>
+    <Card title={t("pt.todas")} subtitle={t("pt.todasSub", { n: filtered.length, km: fmtNum(km), h: fmtNum(sec / 3600) })}>
       <div className="mb-3 flex flex-wrap gap-1.5">
         {SPORT_FILTERS.map((f) => (
           <Link
@@ -515,25 +529,25 @@ function Actividades({ db, sport, page }: { db: Db; sport: string; page: number 
             aria-current={f.id === sport ? "true" : undefined}
             className={`rounded-full border px-3 py-1 text-xs font-medium ${f.id === sport ? "border-accent bg-surface-2 text-ink" : "border-line text-ink-2 hover:border-accent"}`}
           >
-            {f.label}
+            {t(f.label)}
           </Link>
         ))}
       </div>
-      {filtered.length ? <ActivityList acts={filtered.slice((current - 1) * PAGE_SIZE, current * PAGE_SIZE)} /> : <p className="text-sm text-ink-2">No hay sesiones con este filtro.</p>}
+      {filtered.length ? <ActivityList acts={filtered.slice((current - 1) * PAGE_SIZE, current * PAGE_SIZE)} locale={locale} /> : <p className="text-sm text-ink-2">{t("pt.sinFiltro")}</p>}
       {pages > 1 && (
         <div className="mt-3 flex items-center justify-between text-sm">
           {current > 1 ? (
             <Link href={href(sport, current - 1)} className="font-semibold text-accent">
-              ← Más recientes
+              {t("pt.recientes")}
             </Link>
           ) : (
             <span />
           )}
           <span className="text-xs text-muted">
-            Página {current} de {pages}
+            {t("pt.pagina", { n: current, total: pages })}
           </span>
           {current < pages ? (
-            <ChipLink href={href(sport, current + 1)}>Más antiguas</ChipLink>
+            <ChipLink href={href(sport, current + 1)}>{t("pt.antiguas")}</ChipLink>
           ) : (
             <span />
           )}
@@ -545,18 +559,19 @@ function Actividades({ db, sport, page }: { db: Db; sport: string; page: number 
 
 // ---------------- Logros ----------------
 
-function Logros({ list }: { list: Achievement[] }) {
+function Logros({ list, locale }: { list: Achievement[]; locale: Locale }) {
+  const t = translator(locale);
   const groups = [...new Set(list.map((a) => a.group))];
   const unlocked = list.filter((a) => a.unlocked).length;
   return (
     <div className="space-y-4">
-      <Card title="Vitrina de logros" subtitle={`${unlocked} de ${list.length} conseguidos`}>
-        <div className="h-2 overflow-hidden rounded-full bg-surface-2" role="progressbar" aria-valuenow={unlocked} aria-valuemin={0} aria-valuemax={list.length} aria-label="Logros conseguidos">
+      <Card title={t("pt.vitrina")} subtitle={t("pr.conseguidos", { n: unlocked, total: list.length })}>
+        <div className="h-2 overflow-hidden rounded-full bg-surface-2" role="progressbar" aria-valuenow={unlocked} aria-valuemin={0} aria-valuemax={list.length} aria-label={t("pt.logrosAria")}>
           <div className="h-full rounded-full bg-accent" style={{ width: `${(unlocked / Math.max(1, list.length)) * 100}%` }} />
         </div>
       </Card>
       {groups.map((g) => (
-        <Card key={g} title={g}>
+        <Card key={g} title={t(`lg.g.${g}` as Key)}>
           <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {list
               .filter((a) => a.group === g)
@@ -565,15 +580,15 @@ function Logros({ list }: { list: Achievement[] }) {
                   <Icon name={a.icon} className={`h-7 w-7 ${a.unlocked ? "text-accent" : "text-muted opacity-40"}`} />
                   <span className="min-w-0 flex-1">
                     <span className="flex items-center gap-1.5 text-sm font-semibold">
-                      {a.title}
+                      {logroTitle(a, t)}
                       {a.unlocked && <Pill className="bg-accent text-accent-ink">✓</Pill>}
                     </span>
-                    <span className="block text-xs text-ink-2">{a.detail}</span>
+                    <span className="block text-xs text-ink-2">{logroDetail(a, t)}</span>
                     {a.unlocked ? (
-                      a.date && <span className="mt-1 block text-[11px] text-muted">Conseguido el {shortDate(a.date)}</span>
+                      a.date && <span className="mt-1 block text-[11px] text-muted">{t("pt.conseguido", { fecha: dayMonth(a.date, locale) })}</span>
                     ) : (
                       a.progress > 0 && (
-                        <span className="mt-1.5 block h-1.5 overflow-hidden rounded-full bg-surface-2" aria-label={`Progreso ${Math.round(a.progress * 100)} %`}>
+                        <span className="mt-1.5 block h-1.5 overflow-hidden rounded-full bg-surface-2" aria-label={t("pt.progreso", { n: Math.round(a.progress * 100) })}>
                           <span className="block h-full rounded-full bg-muted" style={{ width: `${a.progress * 100}%` }} />
                         </span>
                       )
@@ -590,7 +605,9 @@ function Logros({ list }: { list: Achievement[] }) {
 
 // ---------------- Pasos y calorías ----------------
 
-async function Salud({ db }: { db: Db }) {
+async function Salud({ db, locale }: { db: Db; locale: Locale }) {
+  const t = translator(locale);
+  const intl = intlLocale(locale);
   const today = await viewTodayMadrid();
   const h = healthSummary(db.health, today);
   const endpoint = `${(process.env.APP_URL ?? "https://run-in-out.vercel.app").replace(/\/$/, "")}/api/salud`;
@@ -598,136 +615,130 @@ async function Salud({ db }: { db: Db }) {
   const sentAt = (db.health ?? []).reduce((m, d) => (d.updatedAt > m ? d.updatedAt : m), "");
   const sentDay = sentAt ? todayMadrid(new Date(sentAt)) : undefined;
   const sentAgo = sentDay ? diffDays(today, sentDay) : undefined;
-  const sentHour = sentAt ? new Date(sentAt).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Madrid" }) : undefined;
+  const sentHour = sentAt ? new Date(sentAt).toLocaleTimeString(intl, { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Madrid" }) : undefined;
   const rec = recoverySignals(db.health, today);
-  const n1 = (v?: number) => (v === undefined ? "–" : v.toLocaleString("es-ES", { maximumFractionDigits: 1 }));
+  const n1 = (v?: number) => (v === undefined ? "–" : v.toLocaleString(intl, { maximumFractionDigits: 1 }));
   return (
     <div className="space-y-4">
       {h ? (
         <>
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-            <Stat label="Pasos hoy" value={h.today?.steps !== undefined ? fmtNum(h.today.steps) : "–"} sub={h.avgSteps7 !== undefined ? `Media 7 días: ${fmtNum(h.avgSteps7)}` : undefined} />
+            <Stat label={t("sal.pasosHoy")} value={h.today?.steps !== undefined ? fmtNum(h.today.steps) : "–"} sub={h.avgSteps7 !== undefined ? t("sal.media7", { v: fmtNum(h.avgSteps7) }) : undefined} />
             <Stat
-              label="Calorías activas hoy"
+              label={t("sal.actHoy")}
               value={h.today?.activeKcal !== undefined ? fmtNum(h.today.activeKcal) : "–"}
               unit="kcal"
-              sub={h.avgActiveKcal7 !== undefined ? `Media 7 días: ${fmtNum(h.avgActiveKcal7)} kcal` : undefined}
+              sub={h.avgActiveKcal7 !== undefined ? t("sal.media7kcal", { v: fmtNum(h.avgActiveKcal7) }) : undefined}
             />
             <Stat
-              label="Calorías totales hoy"
+              label={t("sal.totHoy")}
               value={h.today?.activeKcal !== undefined && h.today.restingKcal !== undefined ? fmtNum(h.today.activeKcal + h.today.restingKcal) : "–"}
               unit="kcal"
-              sub="Activas + en reposo"
+              sub={t("sal.actReposo")}
             />
             <Stat
-              label="Último envío"
-              value={sentAgo === undefined ? "–" : sentAgo === 0 ? "Hoy" : sentAgo === 1 ? "Ayer" : shortDate(sentDay!)}
-              sub={sentHour && `a las ${sentHour}`}
-              status={sentAgo !== undefined && sentAgo >= 2 ? { tone: "bad", label: `Hace ${sentAgo} días: revisa las automatizaciones` } : undefined}
+              label={t("sal.ultimo")}
+              value={sentAgo === undefined ? "–" : sentAgo === 0 ? t("sal.hoy") : sentAgo === 1 ? t("sal.ayer") : dayMonth(sentDay!, locale)}
+              sub={sentHour && t("sal.aLas", { h: sentHour })}
+              status={sentAgo !== undefined && sentAgo >= 2 ? { tone: "bad", label: t("sal.revisa", { n: sentAgo }) } : undefined}
             />
           </div>
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-            <Card title="Pasos" subtitle="Últimos 30 días">
-              <SimpleBars data={h.last30} xKey="date" yKey="steps" name="Pasos" unit="" xFormat="day" />
+            <Card title={t("sal.pasos")} subtitle={t("sal.ult30")}>
+              <SimpleBars data={h.last30} xKey="date" yKey="steps" name={t("sal.pasos")} unit="" xFormat="day" locale={locale} />
             </Card>
-            <Card title="Calorías activas" subtitle="Últimos 30 días">
-              <SimpleBars data={h.last30} xKey="date" yKey="kcal" name="Calorías activas" unit="kcal" xFormat="day" />
+            <Card title={t("sal.calAct")} subtitle={t("sal.ult30")}>
+              <SimpleBars data={h.last30} xKey="date" yKey="kcal" name={t("sal.calAct")} unit="kcal" xFormat="day" locale={locale} />
             </Card>
           </div>
-          <HealthMonths db={db} today={today} />
+          <HealthMonths db={db} today={today} t={t} locale={locale} />
           {h.hasRecovery && (
             <>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                 <Stat
-                  label="Sueño (3 noches)"
+                  label={t("sal.sueno3")}
                   value={n1(rec.sleepAvg3)}
                   unit="h"
-                  status={rec.sleepAvg3 === undefined ? undefined : rec.shortSleep ? { tone: "warn", label: "Poco: menos de 6,5 h" } : { tone: "good", label: "Bien" }}
+                  status={rec.sleepAvg3 === undefined ? undefined : rec.shortSleep ? { tone: "warn", label: t("sal.poco") } : { tone: "good", label: t("sal.bien") }}
                 />
                 <Stat
-                  label="Pulso en reposo (3 días)"
+                  label={t("sal.pulso3")}
                   value={n1(rec.restingHrAvg3)}
                   unit="ppm"
-                  sub={rec.restingHrBase !== undefined ? `Lo normal para ti: ${n1(rec.restingHrBase)}` : "Hacen falta 2 semanas de datos para tu línea base"}
-                  status={rec.restingHrBase === undefined ? undefined : rec.highRestingHr ? { tone: "warn", label: "Alto: posible fatiga" } : { tone: "good", label: "Normal" }}
+                  sub={rec.restingHrBase !== undefined ? t("sal.normalTi", { v: n1(rec.restingHrBase) }) : t("sal.faltan2")}
+                  status={rec.restingHrBase === undefined ? undefined : rec.highRestingHr ? { tone: "warn", label: t("sal.alto") } : { tone: "good", label: t("sal.normal") }}
                 />
                 <Stat
-                  label="VFC (7 días)"
+                  label={t("sal.vfc7")}
                   value={n1(rec.hrvAvg7)}
                   unit="ms"
-                  sub={rec.hrvLow !== undefined ? `Tu rango normal: más de ${n1(rec.hrvLow)}` : "Hacen falta 2 semanas de datos para tu línea base"}
-                  status={rec.hrvLow === undefined ? undefined : rec.lowHrv ? { tone: "warn", label: "Baja: posible fatiga" } : { tone: "good", label: "Normal" }}
+                  sub={rec.hrvLow !== undefined ? t("sal.rango", { v: n1(rec.hrvLow) }) : t("sal.faltan2")}
+                  status={rec.hrvLow === undefined ? undefined : rec.lowHrv ? { tone: "warn", label: t("sal.baja") } : { tone: "good", label: t("sal.normal") }}
                 />
               </div>
               <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-                <Card title="Sueño" subtitle="Horas por noche, 30 días">
-                  <TrendLine data={h.last30} dataKey="sleep" name="Sueño (h)" xKey="date" format="dec1" height={160} />
+                <Card title={t("sal.sueno")} subtitle={t("sal.suenoSub")}>
+                  <TrendLine data={h.last30} dataKey="sleep" name={t("sal.suenoH")} xKey="date" format="dec1" height={160} locale={locale} />
                 </Card>
-                <Card title="Pulso en reposo" subtitle="ppm, 30 días">
-                  <TrendLine data={h.last30} dataKey="rhr" name="Pulso en reposo" xKey="date" color="s2" format="int" height={160} />
+                <Card title={t("sal.pulso")} subtitle={t("sal.pulsoSub")}>
+                  <TrendLine data={h.last30} dataKey="rhr" name={t("sal.pulso")} xKey="date" color="s2" format="int" height={160} locale={locale} />
                 </Card>
-                <Card title="VFC" subtitle="ms, 30 días (más alta = más recuperado)">
-                  <TrendLine data={h.last30} dataKey="hrv" name="VFC" xKey="date" color="s3" format="int" height={160} />
+                <Card title={t("sal.vfc")} subtitle={t("sal.vfcSub")}>
+                  <TrendLine data={h.last30} dataKey="hrv" name={t("sal.vfc")} xKey="date" color="s3" format="int" height={160} locale={locale} />
                 </Card>
               </div>
               <p className="text-xs text-muted">
-                El entrenador IA los tiene en cuenta: con poco sueño, el pulso en reposo alto o la VFC baja frente a tu línea base de 30 días, no sube la carga.
+                {t("sal.iaNota")}
               </p>
             </>
           )}
         </>
       ) : (
-        <Empty title="Aún no hay datos de Salud">
-          <span className="not-android">Crea tu clave y el atajo de abajo: cada día llegarán tus pasos y tus calorías del iPhone (o del Apple Watch).</span>
-          <span className="only-android">Conecta Health Connect aquí debajo: llegarán solos tus pasos, calorías, sueño y pulso.</span>
+        <Empty title={t("sal.sinDatos")}>
+          <span className="not-android">{t("sal.sinDatosIos")}</span>
+          <span className="only-android">{t("sal.sinDatosAndroid")}</span>
         </Empty>
       )}
 
-      <HealthConnectCard lastSync={db.healthConnectAt} />
+      <HealthConnectCard lastSync={db.healthConnectAt} locale={locale} />
       <div className="not-android">
-      <Card title="Conectar con Salud del iPhone" subtitle="Con un atajo de la app Atajos: lo instalas con un toque y pegas tu clave.">
+      <Card title={t("sal.iphone")} subtitle={t("sal.iphoneSub")}>
         <div className="space-y-4 text-sm">
           <div>
-            <p className="mb-2 font-semibold">1. Tu clave personal</p>
-            <HealthKey hasKey={!!db.healthTokenHash} endpoint={endpoint} />
+            <p className="mb-2 font-semibold">{t("sal.paso1")}</p>
+            <HealthKey hasKey={!!db.healthTokenHash} endpoint={endpoint} locale={locale} />
             {db.healthTokenHash && (
               <form action={revokeHealthKey} className="mt-2">
-                <button className="text-xs text-muted underline hover:text-critical">Desactivar la clave</button>
+                <button className="text-xs text-muted underline hover:text-critical">{t("sal.desactivar")}</button>
               </form>
             )}
           </div>
           <div>
-            <p className="mb-2 font-semibold">2. Instala el atajo</p>
+            <p className="mb-2 font-semibold">{t("sal.paso2")}</p>
             <ol className="space-y-5">
-              <ShortcutStep n={1} title="Añádelo a tu iPhone">
+              <ShortcutStep n={1} title={t("sal.s1")} t={t}>
                 <a href={SHORTCUT_URL} target="_blank" rel="noreferrer" className="btn my-1 inline-flex">
-                  Instalar el atajo
+                  {t("sal.instalar")}
                 </a>
                 <br />
-                Se abre la app Atajos: pulsa <strong className="text-ink">Añadir atajo</strong>. Se llama «Salud Run-In-Out».
+                {t("sal.s1t")}
               </ShortcutStep>
-              <ShortcutStep n={2} title="Pega tu clave">
-                En Atajos, toca los <strong className="text-ink">tres puntos</strong> del atajo. En <em>Obtener contenido de URL</em> toca la{" "}
-                <strong className="text-ink">flecha ›</strong> → <em>Cabeceras</em> → <em>Authorization</em>: borra el texto de ejemplo («PEGA… TU CLAVE») y pega la clave que copiaste en el
-                paso 1. Pulsa <em>OK</em>.
+              <ShortcutStep n={2} title={t("sal.s2")} t={t}>
+                {t("sal.s2t")}
               </ShortcutStep>
-              <ShortcutStep n={3} title="Pruébalo">
-                Pulsa <Icon name="play" className="h-3 w-3 align-[-1px]" />. La primera vez pide permiso para leer Salud: <em>Permitir todo</em>. Luego vuelve aquí: arriba
-                tienen que salir tus pasos de la última semana.
+              <ShortcutStep n={3} title={t("sal.s3")} t={t}>
+                {t("sal.s3t")}
               </ShortcutStep>
             </ol>
           </div>
           <div>
-            <p className="mb-1 font-semibold">3. Que se ejecute solo</p>
+            <p className="mb-1 font-semibold">{t("sal.paso3")}</p>
             <ol className="space-y-5">
-              <ShortcutStep n={4} img="7-automatizacion" w={600} h={362} title="Cada noche a las 23:50">
-                En Atajos → <em>Automatización</em> → <em>+</em> → <em>Hora del día</em>: 23:50, todos los días → <em>Ejecutar inmediatamente</em> (sin «Notificar al
-                ejecutar») → elige tu atajo.
+              <ShortcutStep n={4} img="7-automatizacion" w={600} h={362} title={t("sal.s4")} t={t}>
+                {t("sal.s4t")}
               </ShortcutStep>
-              <ShortcutStep n={5} title="Y por la mañana, al quitar el cargador">
-                Otra automatización: <em>Cargador</em> → <em>Se desconecta</em> → <em>Ejecutar inmediatamente</em> → el mismo atajo. iOS no deja leer Salud con el iPhone
-                bloqueado, así que la de la noche a veces falla; la de la mañana (cuando lo coges) lo recupera. Como cada envío lleva 7 días, no se pierde ninguno aunque
-                fallen varias seguidas. No hace falta pulsarlo nunca a mano.
+              <ShortcutStep n={5} title={t("sal.s5")} t={t}>
+                {t("sal.s5t")}
               </ShortcutStep>
             </ol>
           </div>
@@ -738,23 +749,23 @@ async function Salud({ db }: { db: Db }) {
               se coloca al final: el orden importa.
             </p>
             <ol className="space-y-5">
-              <ShortcutStep n={1} title="Pasos de los últimos 7 días">
+              <ShortcutStep t={t} n={1} title="Pasos de los últimos 7 días">
                 Busca <em>muestras</em> y añade <strong className="text-ink">Buscar muestras de salud</strong> (puede llamarse «Buscar muestras médicas»). Tipo{" "}
                 <em>Pasos</em>, filtro <em>Fecha de inicio · está en los últimos 7 días</em>, <strong className="text-ink">Agrupar por: Día</strong> y unidad <em>contar</em>.
                 Así cada envío lleva la semana entera: si un día el atajo no se ejecuta, el siguiente lo recupera.
               </ShortcutStep>
-              <ShortcutStep n={2} title="Sus fechas y sus valores">
+              <ShortcutStep t={t} n={2} title="Sus fechas y sus valores">
                 Añade <strong className="text-ink">Obtener detalles de muestras de salud</strong> → <em>Fecha de inicio</em> y luego <strong className="text-ink">Definir variable</strong>{" "}
                 <code>FechasPasos</code>. Otra vez <strong className="text-ink">Obtener detalles de muestras de salud</strong> (de las mismas muestras: toca el valor y elige el
                 resultado del paso 1) → <em>Valor</em> y <strong className="text-ink">Definir variable</strong> <code>Pasos</code>.
               </ShortcutStep>
-              <ShortcutStep n={3} title="Lo mismo con las calorías">
+              <ShortcutStep t={t} n={3} title="Lo mismo con las calorías">
                 Repite los pasos 1 y 2 con el tipo <em>Energía en actividad</em> (unidad <em>kcal</em>) y las variables <code>FechasKcal</code> y <code>Activas</code>.
               </ShortcutStep>
-              <ShortcutStep n={4} img="4-buscar-url" w={600} h={831} title="La acción que envía">
+              <ShortcutStep t={t} n={4} img="4-buscar-url" w={600} h={831} title="La acción que envía">
                 Busca <em>contenido</em> y elige <strong className="text-ink">Obtener contenido de URL</strong> (icono verde con flecha). No sirven «URL» ni «Abrir URL».
               </ShortcutStep>
-              <ShortcutStep n={5} title="Configura el envío">
+              <ShortcutStep t={t} n={5} title="Configura el envío">
                 <ul className="list-disc space-y-1 pl-5">
                   <li>
                     URL: <code className="break-all">{endpoint}</code>
@@ -773,7 +784,7 @@ async function Salud({ db }: { db: Db }) {
                   </li>
                 </ul>
               </ShortcutStep>
-              <ShortcutStep n={6} img="6-resultado" w={600} h={393} title="Pruébalo">
+              <ShortcutStep t={t} n={6} img="6-resultado" w={600} h={393} title="Pruébalo">
                 Añade <strong className="text-ink">Mostrar resultado</strong> y pulsa <Icon name="play" className="h-3 w-3 align-[-1px]" />. La primera vez pide permiso para leer Salud: <em>Permitir</em>. Tiene que salir{" "}
                 <code>&quot;ok&quot; : true</code> y «7 días guardados (del … al …)». Si da un error con una fecha o con las listas, mándame la captura. Si salen 0 pasos de
                 día, revisa Ajustes → Salud → Acceso a datos → Atajos.
@@ -787,20 +798,20 @@ async function Salud({ db }: { db: Db }) {
               «Obtener contenido de URL», igual que las de pasos.
             </p>
             <ol className="space-y-4">
-              <ShortcutStep n={6} title="VFC → «VFC»">
+              <ShortcutStep t={t} n={6} title="VFC → «VFC»">
                 <strong className="text-ink">Buscar muestras de salud</strong>, tipo <em>Variabilidad de la frecuencia cardiaca</em>, filtro <em>Fecha de inicio · es hoy</em>.
                 Luego <strong className="text-ink">Calcular estadísticas</strong> con <em>Media</em> y <strong className="text-ink">Definir variable</strong> <code>VFC</code>.
               </ShortcutStep>
-              <ShortcutStep n={7} title="Pulso en reposo → «PulsoReposo»">
+              <ShortcutStep t={t} n={7} title="Pulso en reposo → «PulsoReposo»">
                 Igual, con el tipo <em>Frecuencia cardiaca en reposo</em>, <em>Media</em> y la variable <code>PulsoReposo</code>.
               </ShortcutStep>
-              <ShortcutStep n={8} title="Sueño → «Sueno»">
+              <ShortcutStep t={t} n={8} title="Sueño → «Sueno»">
                 <strong className="text-ink">Buscar muestras de salud</strong>, tipo <em>Análisis del sueño</em>, filtro <em>Fecha de inicio · está en los últimos 1 días</em> y{" "}
                 <em>Valor · no es · En la cama</em> (si no aparece ese filtro, déjalo sin él). Luego <strong className="text-ink">Obtener detalles de muestras de salud</strong> →{" "}
                 <em>Duración</em>, <strong className="text-ink">Calcular estadísticas</strong> con <em>Suma</em> y la variable <code>Sueno</code>. Vale en horas, minutos o
                 segundos: la app lo entiende.
               </ShortcutStep>
-              <ShortcutStep n={9} title="Añádelos al envío">
+              <ShortcutStep t={t} n={9} title="Añádelos al envío">
                 En el cuerpo JSON de «Obtener contenido de URL», tres campos más de tipo <em>Número</em>: <code>vfc</code>, <code>pulsoReposo</code> y <code>sueno</code>, con sus
                 variables. Al ejecutarlo, la respuesta debe seguir diciendo <code>&quot;ok&quot; : true</code>. Si un día no hay dato (sin reloj puesto), no pasa nada.
               </ShortcutStep>
@@ -816,11 +827,12 @@ async function Salud({ db }: { db: Db }) {
 // atajo compartido por David (sin clave): cada uno pega la suya al instalarlo
 const SHORTCUT_URL = "https://www.icloud.com/shortcuts/2e5697f64f774ff8b679520f08cc319c";
 
-const MONTH_NAMES = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
-const monthName = (ym: string) => MONTH_NAMES[Number(ym.slice(5, 7)) - 1];
+// «octubre» / «October»… en el idioma
+const monthNameIn = (ym: string, locale: Locale) => new Date(`${ym.slice(0, 7)}-01T00:00:00Z`).toLocaleDateString(intlLocale(locale), { month: "long", timeZone: "UTC" });
 
 /** Pasos y calorías por meses: el mes en curso frente al anterior, la evolución y la tabla. */
-function HealthMonths({ db, today }: { db: Db; today: string }) {
+function HealthMonths({ db, today, t, locale }: { db: Db; today: string; t: T; locale: Locale }) {
+  const monthName = (ym: string) => monthNameIn(ym, locale);
   const months = monthlyHealth(db.health);
   if (!months.length) return null;
   const cur = months.find((m) => m.month === today.slice(0, 7)) ?? months[months.length - 1];
@@ -828,32 +840,32 @@ function HealthMonths({ db, today }: { db: Db; today: string }) {
   const pct = (a?: number, b?: number) => (a !== undefined && b ? Math.round(((a - b) / b) * 100) : undefined);
   const delta = pct(cur.avgSteps, prev?.avgSteps);
   return (
-    <Card title={`Este mes: ${monthName(cur.month)}`} subtitle={prev ? `Comparado con ${monthName(prev.month)}` : "Tu primer mes con datos"}>
+    <Card title={t("sal.mes", { mes: monthName(cur.month) })} subtitle={prev ? t("sal.comparado", { mes: monthName(prev.month) }) : t("sal.primerMes")}>
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <Stat
-          label="Media diaria"
+          label={t("sal.mediaDiaria")}
           value={cur.avgSteps !== undefined ? fmtNum(cur.avgSteps) : "–"}
-          unit="pasos"
-          sub={delta !== undefined ? `${delta > 0 ? "+" : ""}${delta} % que en ${monthName(prev!.month)}` : `${cur.days} días con datos`}
+          unit={t("sal.pasosU")}
+          sub={delta !== undefined ? t("sal.vsMes", { d: `${delta > 0 ? "+" : ""}${delta}`, mes: monthName(prev!.month) }) : t("sal.diasDatos", { n: cur.days })}
         />
-        <Stat label="Pasos del mes" value={fmtNum(cur.steps)} sub={`${cur.days} días con datos`} />
-        <Stat label="Días de 10.000+" value={cur.days10k} sub={prev ? `${prev.days10k} en ${monthName(prev.month)}` : undefined} />
-        <Stat label="Mejor día" value={cur.bestDay ? fmtNum(cur.bestDay.steps) : "–"} unit={cur.bestDay ? "pasos" : undefined} sub={cur.bestDay ? shortDate(cur.bestDay.date) : undefined} />
+        <Stat label={t("sal.pasosMes")} value={fmtNum(cur.steps)} sub={t("sal.diasDatos", { n: cur.days })} />
+        <Stat label={t("sal.dias10k")} value={cur.days10k} sub={prev ? t("sal.enMes", { n: prev.days10k, mes: monthName(prev.month) }) : undefined} />
+        <Stat label={t("sal.mejorDia")} value={cur.bestDay ? fmtNum(cur.bestDay.steps) : "–"} unit={cur.bestDay ? t("sal.pasosU") : undefined} sub={cur.bestDay ? dayMonth(cur.bestDay.date, locale) : undefined} />
       </div>
       {months.length > 1 && (
         <div className="mt-4">
-          <p className="mb-1 text-xs font-medium text-muted">Media de pasos por día, mes a mes</p>
-          <SimpleBars data={months.map((m) => ({ month: `${m.month}-01`, steps: m.avgSteps ?? 0 }))} xKey="month" yKey="steps" name="Media de pasos" unit="" xFormat="month" height={180} />
+          <p className="mb-1 text-xs font-medium text-muted">{t("sal.mediaMes")}</p>
+          <SimpleBars data={months.map((m) => ({ month: `${m.month}-01`, steps: m.avgSteps ?? 0 }))} xKey="month" yKey="steps" name={t("sal.mediaPasos")} unit="" xFormat="month" height={180} locale={locale} />
         </div>
       )}
       <table className="mt-4 w-full text-sm tabular">
         <thead className="text-left text-xs text-muted">
           <tr>
-            <th className="pb-2 font-medium">Mes</th>
-            <th className="pb-2 text-right font-medium">Media/día</th>
+            <th className="pb-2 font-medium">{t("sal.mesCol")}</th>
+            <th className="pb-2 text-right font-medium">{t("sal.mediaDia")}</th>
             <th className="pb-2 text-right font-medium">10.000+</th>
-            <th className="hidden pb-2 text-right font-medium sm:table-cell">Total</th>
-            <th className="pb-2 text-right font-medium">kcal/día</th>
+            <th className="hidden pb-2 text-right font-medium sm:table-cell">{t("sal.total")}</th>
+            <th className="pb-2 text-right font-medium">{t("sal.kcalDia")}</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-line">
@@ -870,7 +882,7 @@ function HealthMonths({ db, today }: { db: Db; today: string }) {
       </table>
       {months.length < 3 && (
         <p className="mt-3 text-xs text-muted">
-          Para ver los meses anteriores, cambia una vez en el atajo los dos «últimos 7 días» por <strong>365</strong>, ejecútalo y vuelve a dejarlo en 7.
+          {t("sal.anteriores")}
         </p>
       )}
     </Card>
@@ -878,7 +890,7 @@ function HealthMonths({ db, today }: { db: Db; today: string }) {
 }
 
 /** Paso de la guía del atajo con su captura del iPhone (public/atajo, la clave personal va tapada). */
-function ShortcutStep({ n, title, img, w = 600, h = 600, children }: { n: number; title: string; img?: string; w?: number; h?: number; children: ReactNode }) {
+function ShortcutStep({ n, title, img, w = 600, h = 600, children, t }: { n: number; title: string; img?: string; w?: number; h?: number; children: ReactNode; t: T }) {
   return (
     <li className={`grid grid-cols-1 gap-3 ${img ? "sm:grid-cols-[1fr_220px]" : ""}`}>
       <div className="text-ink-2">
@@ -888,7 +900,7 @@ function ShortcutStep({ n, title, img, w = 600, h = 600, children }: { n: number
         </p>
         {children}
       </div>
-      {img && <Image src={`/atajo/${img}.webp`} width={w} height={h} alt={`Captura del paso ${n}: ${title}`} unoptimized className="h-auto w-full max-w-[260px] rounded-xl border border-line sm:max-w-none" />}
+      {img && <Image src={`/atajo/${img}.webp`} width={w} height={h} alt={t("sal.captura", { n, titulo: title })} unoptimized className="h-auto w-full max-w-[260px] rounded-xl border border-line sm:max-w-none" />}
     </li>
   );
 }
@@ -919,42 +931,42 @@ function Editar({ db, today, initialFocus, locale, name }: { db: Db; today: stri
       </div>
       {profile && (
         <div className="space-y-4">
-          <Card title="Lo que la IA sabe de ti" subtitle="Lo tienen en cuenta el chat, tus rutinas y el ajuste del plan">
-            <AiMemory list={db.aiPreferences ?? []} />
+          <Card title={t("mem.titulo")} subtitle={t("ed.memSub")}>
+            <AiMemory list={db.aiPreferences ?? []} locale={locale} />
           </Card>
           {avg && (
-            <Card title="Tus promedios reales" subtitle="Últimas 6 semanas, calculados con tus entrenos">
+            <Card title={t("ed.promedios")} subtitle={t("ed.promediosSub")}>
               <ul className="divide-y divide-line text-sm">
-                <Row label="Km por semana" value={`${avg.weeklyKm} km`} note={`En el perfil: ${profile.weeklyKm}`} />
-                <Row label="Tirada más larga" value={`${fmtKm(avg.longestRunKm)} km`} note={`En el perfil: ${profile.longestRunKm}`} />
-                <Row label="Días corriendo / sem" value={fmtKm(avg.runDaysPerWeek)} />
-                <Row label="Fuerza / sem" value={fmtKm(avg.strengthPerWeek)} />
+                <Row label={t("ed.kmSem")} value={`${avg.weeklyKm} km`} note={t("ed.enPerfil", { v: profile.weeklyKm })} />
+                <Row label={t("ed.tirada")} value={`${fmtKm(avg.longestRunKm)} km`} note={t("ed.enPerfil", { v: profile.longestRunKm })} />
+                <Row label={t("ed.diasCorriendo")} value={fmtKm(avg.runDaysPerWeek)} />
+                <Row label={t("ed.fuerzaSem")} value={fmtKm(avg.strengthPerWeek)} />
               </ul>
               {outdated ? (
                 <form action={syncProfileAverages} className="mt-3">
-                  <button className="btn w-full">Actualizar el perfil con estos datos</button>
+                  <button className="btn w-full">{t("ed.actualizar")}</button>
                 </form>
               ) : (
-                <p className="mt-3 text-xs text-good-ink">✓ Tu perfil está al día con tus entrenos.</p>
+                <p className="mt-3 text-xs text-good-ink">{t("ed.alDia")}</p>
               )}
             </Card>
           )}
           <div className="grid grid-cols-2 gap-3">
-            <Stat label="IMC" value={bmi(profile.weightKg, profile.heightCm).toFixed(1)} sub={bmiLabel(bmi(profile.weightKg, profile.heightCm))} />
-            <Stat label="FC máx" value={hrMaxOf(profile)} unit="ppm" sub={profile.hrMax ? "Medida" : "Estimada (Tanaka)"} />
+            <Stat label={t("ed.imc")} value={bmi(profile.weightKg, profile.heightCm).toFixed(1)} sub={t(`imc.${bmiLabel(bmi(profile.weightKg, profile.heightCm))}` as Key)} />
+            <Stat label={t("calc.fcMax")} value={hrMaxOf(profile)} unit="ppm" sub={profile.hrMax ? t("ed.medida") : t("ed.estimada")} />
           </div>
-          <Card title="Borrar mi cuenta" subtitle={<Link href="/privacidad" className="underline">Política de privacidad</Link>}>
-            <DeleteAccountForm />
+          <Card title={t("ed.borrarCuenta")} subtitle={<Link href="/privacidad" className="underline">{t("ed.politica")}</Link>}>
+            <DeleteAccountForm locale={locale} />
           </Card>
-          <Card title="Tus zonas de frecuencia cardiaca" subtitle={`Karvonen · FC reposo ${hrRestOf(profile)} ppm`}>
+          <Card title={t("ed.zonas")} subtitle={t("ed.zonasSub", { n: hrRestOf(profile) })}>
             <table className="w-full text-sm tabular">
               <tbody className="divide-y divide-line">
                 {hrZones(hrMaxOf(profile), hrRestOf(profile)).map((z) => (
                   <tr key={z.zone}>
                     <td className="py-2 pr-2 font-semibold">Z{z.zone}</td>
                     <td className="py-2 pr-2">
-                      {z.name}
-                      <span className="block text-xs text-muted">{z.purpose}</span>
+                      {t(`zone.${z.zone}` as Key)}
+                      <span className="block text-xs text-muted">{t(`zone.p.${z.zone}` as Key)}</span>
                     </td>
                     <td className="whitespace-nowrap py-2 text-right">
                       {z.min}–{z.max}
