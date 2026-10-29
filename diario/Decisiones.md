@@ -1057,3 +1057,11 @@ Fuentes: screensdesign.com, posthog.com/pricing, revenuecat.com/pricing, revenue
 - Fuerza de esta semana: como mucho `fuerza por semana − máx(fuerza planificada ya pasada, entrenos de fuerza hechos esta semana)`, mejor en los mismos días que ya tenía.
 - Alternativa descartada: no rehacer la semana en curso. Se perdería el ajuste a los datos nuevos hasta el lunes.
 - Lo que ya se borró antes del arreglo no vuelve solo.
+
+## Mapa al grabar con GPS
+*2026-10-29*
+
+- El mapa no faltaba por Android: la pantalla de grabar nunca lo tuvo (solo la línea, para no gastar datos).
+- Ahora usa el mismo `RouteMap` de la ficha de la actividad (teselas de OpenStreetMap, con atribución). Antes de empezar y con un solo punto, centrado en la última posición del GPS (zoom 16).
+- Comprobado que OpenStreetMap sirve bien las teselas con el Referer de la web y con la cabecera de la WebView de Android (`X-Requested-With`). Si algún día las bloquean, la salida es otro proveedor con clave (MapTiler, Stadia) o MapLibre.
+- Alternativa descartada por ahora: un mapa interactivo (Leaflet/MapLibre) que se pueda mover y ampliar. Pesa más y no hace falta para ver por dónde vas.

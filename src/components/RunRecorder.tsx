@@ -3,7 +3,8 @@
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { saveRecordedRun } from "@/app/actions";
 import { acceptPoint, trackStats, type GpsPoint } from "@/lib/gpsTrack";
-import { project } from "@/lib/route";
+import { encodePolyline } from "@/lib/route";
+import { RouteMap } from "./RouteMap";
 import { fmtDuration, fmtKm, fmtPace } from "@/lib/format";
 import { Icon } from "./icons";
 import { canRecordInBackground, openLocationSettings, showRunData, watchGps, type GpsError } from "./gpsSource";
@@ -45,24 +46,15 @@ const SPORT_ICON = { run: "run", walk: "walk", ride: "bike" } as const;
 const RESUME_MS = 15 * 60_000;
 const SPORTS: Sport[] = ["run", "walk", "ride"];
 
-/** Dibujo del recorrido sin mapa debajo (cabe en cualquier pantalla y no gasta datos). */
-function Trace({ points, t }: { points: GpsPoint[]; t: T }) {
-  if (points.length < 2) return null;
-  const px = points.map((p) => project([p.lat, p.lon], 17));
-  const xs = px.map((p) => p[0]);
-  const ys = px.map((p) => p[1]);
-  const [x0, y0] = [Math.min(...xs), Math.min(...ys)];
-  const w = Math.max(1, Math.max(...xs) - x0);
-  const h = Math.max(1, Math.max(...ys) - y0);
-  const k = Math.min(280 / w, 160 / h);
-  const pts = px.map(([x, y]) => `${(10 + (x - x0) * k + (280 - w * k) / 2).toFixed(1)},${(10 + (y - y0) * k + (160 - h * k) / 2).toFixed(1)}`);
-  const [ex, ey] = pts.at(-1)!.split(",");
-  return (
-    <svg viewBox="0 0 300 180" className="h-40 w-full" role="img" aria-label={t("gps.trazado")}>
-      <polyline points={pts.join(" ")} fill="none" stroke="var(--accent)" strokeWidth={4} strokeLinecap="round" strokeLinejoin="round" />
-      <circle cx={ex} cy={ey} r={6} fill="var(--accent)" stroke="var(--surface)" strokeWidth={2} />
-    </svg>
-  );
+/** Mapa de OpenStreetMap con el recorrido encima; sin recorrido todavía, centrado en donde estás. */
+function LiveMap({ points, here, t }: { points: GpsPoint[]; here?: [number, number]; t: T }) {
+  const route = useMemo(() => {
+    const ll = points.map((p): [number, number] => [p.lat, p.lon]);
+    if (ll.length < 2 && here) ll.push(here);
+    return ll.length ? encodePolyline(ll.length === 1 ? [ll[0], ll[0]] : ll) : "";
+  }, [points, here]);
+  if (!route) return null;
+  return <RouteMap route={route} width={600} height={340} label={t("gps.trazado")} />;
 }
 
 /** Grabar una carrera con el GPS del móvil: cronómetro, distancia, ritmo y recorrido; al terminar se guarda como un entreno. */
@@ -70,7 +62,7 @@ export function RunRecorder({ locale = "es" }: { locale?: Locale }) {
   const t = translator(locale);
   const [rec, setRec] = useState<Rec>();
   const [ready, setReady] = useState(false);
-  const [fix, setFix] = useState<{ acc: number; at: number }>();
+  const [fix, setFix] = useState<{ acc: number; at: number; here: [number, number] }>();
   const [geoError, setGeoError] = useState<GpsError>();
   // app de Android con el complemento: graba con la pantalla apagada
   const [native, setNative] = useState(false);
@@ -114,7 +106,7 @@ export function RunRecorder({ locale = "es" }: { locale?: Locale }) {
     let watch: { stop: () => void } | undefined;
     let off = false;
     const onPoint = (p: GpsPoint) => {
-      setFix({ acc: p.acc ?? 0, at: Date.now() });
+      setFix({ acc: p.acc ?? 0, at: Date.now(), here: [p.lat, p.lon] });
       setGeoError(undefined);
       setRec((cur) => {
         if (!cur || cur.pausedAt) return cur;
@@ -238,6 +230,7 @@ export function RunRecorder({ locale = "es" }: { locale?: Locale }) {
             ? t("gps.app")
             : t("gps.web")}
         </p>
+        {fix && <LiveMap points={[]} here={fix.here} t={t} />}
         {/* ninguno va marcado: el que toques empieza a grabar */}
         <p className="text-sm font-semibold">{t("gps.queVas")}</p>
         <div className="grid grid-cols-3 gap-2">
@@ -305,11 +298,7 @@ export function RunRecorder({ locale = "es" }: { locale?: Locale }) {
           </p>
         )}
 
-      {rec.points.length > 1 && (
-        <div className="rounded-2xl border border-line bg-surface p-2">
-          <Trace points={rec.points} t={t} />
-        </div>
-      )}
+      {(rec.points.length > 0 || fix) && <LiveMap points={rec.points} here={fix?.here} t={t} />}
       {stats.splits.length > 0 && (
         <div className="rounded-2xl border border-line bg-surface p-3">
           <p className="mb-1 text-xs font-semibold text-muted">{t("gps.parciales")}</p>
