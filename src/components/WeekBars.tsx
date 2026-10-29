@@ -14,6 +14,7 @@ export interface WeekBarDay {
 }
 
 const STATUS_CLS = { partial: "text-warning", missed: "text-critical", today: "text-accent", upcoming: "text-muted" } as const;
+const startable = (s: WeekBarDay["sessions"][number]) => s.strength && s.status !== "done" && s.status !== "missed";
 
 /** Las barras de la semana de Inicio: al tocar un día se ven sus entrenos debajo (por defecto, hoy). */
 export function WeekBars({ days, today, locale }: { days: WeekBarDay[]; today: string; locale: Locale }) {
@@ -64,10 +65,11 @@ export function WeekBars({ days, today, locale }: { days: WeekBarDay[]; today: s
                       {s.km > 0 && `${s.km.toLocaleString(intlLocale(locale))} km · `}~{s.min} min
                     </span>
                   </span>
-                  <span className="flex shrink-0 items-center gap-3 text-xs">
-                    {s.status === "done" ? <DoneChip>{statusLabel.done}</DoneChip> : s.status && statusLabel[s.status] && <span className={STATUS_CLS[s.status]}>{statusLabel[s.status]}</span>}
-                    {s.strength && s.status !== "done" && s.status !== "missed" && (
-                      <Link href={`/fuerza/entreno?sesion=${encodeURIComponent(s.id)}`} className="font-semibold text-accent">
+                  <span className="flex shrink-0 items-center gap-3 self-center text-xs">
+                    {/* con botón de empezar, sin «Hoy» al lado: se juntaban y el día ya está arriba */}
+                    {s.status === "done" ? <DoneChip>{statusLabel.done}</DoneChip> : s.status && statusLabel[s.status] && !startable(s) && <span className={STATUS_CLS[s.status]}>{statusLabel[s.status]}</span>}
+                    {startable(s) && (
+                      <Link href={`/fuerza/entreno?sesion=${encodeURIComponent(s.id)}`} className="btn px-3 py-1.5 text-xs">
                         {t(s.routine ? "sesion.empezarRutina" : "sesion.empezarEntreno")}
                       </Link>
                     )}

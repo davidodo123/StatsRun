@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useTransition, useMemo } from "react";
+import { useCallback, useEffect, useRef, useState, useTransition, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { ExercisePicker } from "./ExercisePicker";
 import { ExerciseThumb } from "./ExerciseMedia";
@@ -133,6 +133,14 @@ export function WorkoutLogger({
   const [now, setNow] = useState(() => Date.now());
   const [picking, setPicking] = useState(false);
   const [finishing, setFinishing] = useState(false);
+  // alto de la cabecera fija, para dejarle su hueco (la cabecera aparece cuando ya se ha cargado el entreno)
+  const [headH, setHeadH] = useState(0);
+  const headRef = useCallback((el: HTMLDivElement | null) => {
+    if (!el) return;
+    const ro = new ResizeObserver(() => setHeadH(el.offsetHeight));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
   const [error, setError] = useState<string>();
   const [pending, start] = useTransition();
   // tras guardar, la página se vuelve a renderizar antes de irse: no hay que reabrir ni volver a guardar el entreno
@@ -231,7 +239,7 @@ export function WorkoutLogger({
 
   return (
     <div className="space-y-4 pb-20">
-      <div className="vv-top sticky top-[calc(3.5rem+env(safe-area-inset-top))] z-30 md:top-0 -mx-4 border-b border-line bg-bg/95 px-4 py-2 backdrop-blur md:-mx-8 md:px-8">
+      <div ref={headRef} className="vv-top fixed inset-x-0 top-[calc(3.5rem+1px+env(safe-area-inset-top))] z-30 border-b border-line bg-bg/95 px-4 py-2 backdrop-blur md:sticky md:inset-x-auto md:top-0 md:-mx-8 md:px-8">
         <div className="flex items-center justify-between gap-2">
           {/* con borde, a juego con «Terminar»; rojo solo al pasar o pulsar */}
           <button type="button" className="shrink-0 rounded-full border border-line px-4 py-1.5 text-sm font-semibold text-ink-2 transition hover:border-critical hover:text-critical active:border-critical active:text-critical" onClick={discard}>
@@ -270,6 +278,8 @@ export function WorkoutLogger({
           </div>
         )}
       </div>
+      {/* en el móvil la cabecera va fija bajo la barra de arriba, como ella (con sticky se iba al desplazar en el iPhone); este hueco ocupa su sitio (sube lo que ya deja libre la página bajo la barra) */}
+      <div aria-hidden className="-mt-4 md:hidden" style={{ height: headH }} />
 
       {resumed && (
         <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-line bg-surface p-3 text-sm">
