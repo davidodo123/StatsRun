@@ -6,7 +6,7 @@ import { after } from "next/server";
 import { updateDb, readDbNow as getDb } from "@/lib/db";
 import { VIEW_TAG, requireUserId } from "@/lib/session";
 import { generateDemoActivities } from "@/lib/demo";
-import { applyBlockedDates, applyTuneUpRaces, availableDaysOf, generateSeason, moveSession, planChanges } from "@/lib/engine/planner";
+import { applyBlockedDates, applyTuneUpRaces, availableDaysOf, generateSeason, keepPastWeeks, moveSession, planChanges } from "@/lib/engine/planner";
 import { computeStats } from "@/lib/engine/stats";
 import { profileAverages } from "@/lib/engine/profile";
 import { areFriends, getFriends } from "@/lib/auth";import { findRace } from "@/lib/races";
@@ -15,7 +15,7 @@ import { fmtNum, parsePace, parseTime } from "@/lib/format";
 import { createHealthToken, revokeHealthToken } from "@/lib/healthToken";
 import { mergeHealth, parseHealthPayload, todayMadrid } from "@/lib/health";
 import { applyStrengthRoutines, routinesForPlan } from "@/lib/strength/routinePlan";
-import { WEEKDAYS, addDays, diffDays, shortDate, todayLocal, weekday } from "@/lib/dates";
+import { WEEKDAYS, addDays, diffDays, mondayOf, shortDate, todayLocal, weekday } from "@/lib/dates";
 import type { Db, Feel, Focus, Goal, Level, Plan, Profile, Sex, TuneUpRace } from "@/lib/types";
 import { downloadCmCourse, findCmRace } from "@/lib/cruzandolametaStore";
 import { parseCourseFile } from "@/lib/importers/course";
@@ -243,10 +243,14 @@ async function rebuildPlan(db: Db): Promise<Plan | undefined> {
   applyStrengthRoutines(plan, routinesForPlan(db), today);
   plan.notes.push(`VDOT tomado de: ${stats.vdot.source}.`);
   if (hasRecentData) plan.notes.push(`Volumen de partida según tus actividades: ${stats.totals.avgWeeklyKm6.toFixed(0)} km/semana (media 6 semanas).`);
+  // lo ya pasado del plan anterior se queda como estaba
+  const weekStart = mondayOf(today);
+  const doneThisWeek = db.activities.filter((a) => a.sport === "strength" && a.date >= weekStart && a.date < today).length;
+  const merged = keepPastWeeks(db.plan, plan, today, { perWeek: db.profile.strengthPerWeek, doneThisWeek });
   await updateDb((d) => {
-    d.plan = plan;
+    d.plan = merged;
   });
-  return plan;
+  return merged;
 }
 
 export async function regeneratePlan(): Promise<FormState> {

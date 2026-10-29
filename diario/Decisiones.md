@@ -1048,3 +1048,12 @@ Fuentes: screensdesign.com, posthog.com/pricing, revenuecat.com/pricing, revenue
 - La IA del chat contesta en el idioma de la app (las instrucciones siguen en español y se le pide la respuesta en el idioma del atleta). La notificación de cada mañana sale en el idioma de la cuenta.
 - La política de privacidad se puso al día: cuenta con correo y contraseña (guardada cifrada), el correo de «contraseña olvidada» por Gmail y la cookie del idioma.
 - Se dejan en español a propósito: la guía avanzada del atajo del iPhone (usa los nombres de las acciones de Atajos en español) y los mensajes de error que devuelve el servidor.
+
+## Adaptar no toca lo ya pasado
+*2026-10-29*
+
+- El plan nuevo empieza hoy, así que antes se perdían las semanas pasadas y los días pasados de esta (salían como descanso) y toda la fuerza de la semana se metía en los días que quedaban.
+- Ahora `keepPastWeeks` (planner.ts) junta: del plan anterior, lo pasado; del nuevo, de hoy en adelante.
+- Fuerza de esta semana: como mucho `fuerza por semana − máx(fuerza planificada ya pasada, entrenos de fuerza hechos esta semana)`, mejor en los mismos días que ya tenía.
+- Alternativa descartada: no rehacer la semana en curso. Se perdería el ajuste a los datos nuevos hasta el lunes.
+- Lo que ya se borró antes del arreglo no vuelve solo.

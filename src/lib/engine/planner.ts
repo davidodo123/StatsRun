@@ -519,6 +519,34 @@ export const planTitle = (plan: Pick<Plan, "goal" | "objectives">) => (plan.obje
  * con la recuperación después de cada una y el siguiente tramo partiendo de la forma con que se acabó el anterior.
  * Con un solo objetivo es generatePlan tal cual. El plan resultante tiene como objetivo la última carrera.
  */
+/**
+ * Al rehacer el plan («Adaptar con mis datos», cambio de perfil o de fecha) el nuevo empieza hoy. Del anterior se conservan
+ * las semanas ya pasadas y los días ya pasados de esta, para que lo hecho no se pierda ni salga como descanso; y en esta
+ * semana no se mete más fuerza de la que quedaba (si ya hiciste tus rutinas, no te la pone junto a la tirada larga).
+ * Con `strength` (las sesiones de fuerza por semana del perfil y las ya hechas esta semana), lo que queda es la diferencia.
+ */
+export function keepPastWeeks(prev: Plan | undefined, next: Plan, today: string, strength?: { perWeek: number; doneThisWeek: number }): Plan {
+  const first = next.weeks[0];
+  if (!prev || !first) return next;
+  const before = prev.weeks.filter((w) => w.start < first.start);
+  const same = prev.weeks.find((w) => w.start === first.start);
+  let current = first;
+  if (same) {
+    const past = same.sessions.filter((s) => s.date < today);
+    // la fuerza que le quedaba a esta semana en el plan anterior: como mucho esa (mejor en los mismos días)
+    const leftDates = same.sessions.filter((s) => s.date >= today && s.type === "strength").map((s) => s.date);
+    const strength_ = first.sessions.filter((s) => s.type === "strength");
+    const pastStrength = past.filter((s) => s.type === "strength").length;
+    const allowed = strength ? Math.max(0, strength.perWeek - Math.max(pastStrength, strength.doneThisWeek)) : leftDates.length;
+    const keep = [...strength_.filter((s) => leftDates.includes(s.date)), ...strength_.filter((s) => !leftDates.includes(s.date))].slice(0, allowed);
+    const sessions = [...past, ...first.sessions.filter((s) => s.type !== "strength" || keep.includes(s))].sort(
+      (a, b) => a.date.localeCompare(b.date) || (a.type === "strength" ? 1 : -1),
+    );
+    current = { ...first, sessions, targetKm: Math.round(sessions.reduce((t, s) => t + s.distanceKm, 0)) };
+  }
+  return { ...next, createdAt: prev.createdAt, weeks: [...before, current, ...next.weeks.slice(1)].map((w, index) => ({ ...w, index })) };
+}
+
 export function generateSeason(input: PlanInput, extraGoals: Goal[] = []): Plan {
   const goals = [input.goal, ...extraGoals].filter((g) => g.date > input.today).sort((a, b) => a.date.localeCompare(b.date));
   if (goals.length <= 1) return generatePlan(goals.length ? { ...input, goal: goals[0] } : input);
