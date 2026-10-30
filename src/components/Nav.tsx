@@ -22,6 +22,7 @@ const ITEMS: Item[] = [
   { href: "/carreras", label: "nav.carreras", icon: "M5 21V4m0 0h11l-2 4 2 4H5" },
   { href: "/herramientas", label: "nav.calcular", long: "nav.calculadoras", icon: "M5 3h14v18H5zM8 7h8M8 11h2m3 0h3M8 15h2m3 0h3M8 18h2m3 0h3" },
   { href: "/sueno", label: "nav.sueno", icon: "M20 14.5A8 8 0 019.5 4a8 8 0 1010.5 10.5z" },
+  { href: "/premium", label: "nav.premium", icon: "M12 3l2.6 5.6 6.1.7-4.5 4.2 1.2 6L12 16.6l-5.4 2.9 1.2-6-4.5-4.2 6.1-.7L12 3z" },
   { href: "/perfil", label: "nav.perfil", icon: "M12 12a4 4 0 100-8 4 4 0 000 8zm-7 9a7 7 0 0114 0" },
   { href: "/ajustes", label: "nav.datos", long: "nav.importar", icon: "M12 15V3m0 0L8 7m4-4l4 4M4 15v4a1 1 0 001 1h14a1 1 0 001-1v-4" },
 ];
@@ -32,7 +33,7 @@ const STRENGTH_ITEMS: Item[] = [
   { href: "/entrenador", label: "nav.entrenador", icon: "M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3z" },
   { href: "/fuerza/entreno", label: "nav.entrenar", icon: "M12 5v14M5 12h14" },
   { href: "/fuerza/ejercicios", label: "nav.ejercicios", icon: "M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01" },
-  ...ITEMS.filter((i) => ["/amigos", "/perfil", "/herramientas", "/sueno", "/registrar", "/ajustes"].includes(i.href)),
+  ...ITEMS.filter((i) => ["/amigos", "/perfil", "/herramientas", "/sueno", "/registrar", "/ajustes", "/premium"].includes(i.href)),
 ];
 const itemsFor = (focus?: Focus) => (focus === "fuerza" ? STRENGTH_ITEMS : ITEMS);
 
@@ -49,7 +50,7 @@ function Icon({ d, className = "h-5 w-5" }: { d: string; className?: string }) {
 const MOBILE_BOTTOM = ["/", "/plan", "/registrar", "/fuerza", "/perfil"];
 const STRENGTH_BOTTOM = ["/", "/fuerza", "/fuerza/entreno", "/fuerza/ejercicios", "/perfil"];
 const CTA = ["/registrar", "/fuerza/entreno"]; // el botón lima de la barra de abajo
-const IN_TU = ["/perfil", "/estadisticas", "/carreras", "/sueno", "/herramientas", "/ajustes", "/registrar", "/admin"];
+const IN_TU = ["/perfil", "/estadisticas", "/carreras", "/sueno", "/herramientas", "/ajustes", "/premium", "/registrar", "/admin"];
 const icon = (href: string) => ITEMS.find((i) => i.href === href)!.icon;
 
 function Logo({ compact }: { compact?: boolean }) {

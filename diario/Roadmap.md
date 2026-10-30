@@ -203,7 +203,7 @@ Propuesta de Gratis / Premium en [[Suscripción]]. Primero decidir; después, co
 - [ ] Decidir Android: cobrar con Google Play Billing o solo desde la web
 - [ ] Requisitos para cobrar: alta para facturar, IVA (Stripe Tax u OSS), Vercel Pro, condiciones de uso y privacidad
 - [ ] **RevenueCat**: Web SDK (web/iPhone, con Stripe) y Google Play Billing (Android) con un único «premium»; webhook e `isPremium()` en el servidor
-- [ ] Pantalla «Premium» (qué incluye, precio, suscribirse, gestionar) con la de Runna de modelo, y avisos donde una función es de pago
+- [/] Pantalla «Premium» (qué incluye, precio, suscribirse, gestionar) con la de Runna de modelo, y avisos donde una función es de pago — *2026-10-30: `/premium` hecha (en «Tú»): anual 29,99 € (ahorra 37 %) o mensual 3,99 €, «Empieza tu mes gratis» desactivado («Muy pronto»), qué incluye (sin la IA) y tabla Gratis/Premium, en los 5 idiomas. Faltan suscribirse de verdad, gestionar y los avisos en cada función de pago*
 - [ ] Poner el límite en cada función Premium (IA, temporada, estadísticas avanzadas, sticker y vídeo…) y Premium gratis para los usuarios actuales
 
 ## 🧠 IA que aprende de ti (opción 2: sin entrenar el modelo) → [[Decisiones#IA que aprende de ti]]
