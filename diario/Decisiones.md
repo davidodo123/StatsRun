@@ -1072,3 +1072,14 @@ Fuentes: screensdesign.com, posthog.com/pricing, revenuecat.com/pricing, revenue
 - David aprueba la tabla Gratis/Premium de [[Suscripción]] **salvo lo de la IA** (ajuste de 14 días, entrenador sin límite, fuerza con IA, salud en el diagnóstico): se decide más adelante.
 - Precio: **3,99 €/mes o 29,99 €/año**. Prueba gratis: **1 mes** (antes se proponían 14 días).
 - Zancavolt se trata como **una app**, no como una web (aunque en el iPhone se instale desde el navegador).
+
+## Publicar en Google Play: lo base
+*2026-10-30*
+
+- David: primero acabar lo base para publicar en Google Play; Premium, IA, ideas de amigos y GPS en segundo plano irán en actualizaciones.
+- Lo que pide Google (comprobado 2026-10-30):
+  - Cuenta personal nueva: prueba cerrada con **12 personas durante 14 días seguidos** antes de pedir producción.
+  - **Health Connect**: formulario de apps de salud con el porqué de cada dato y política de privacidad enlazada (ya la hay y habla de Health Connect). La app solo lee 5 datos.
+  - **Servicio en primer plano de ubicación** (el GPS con la pantalla apagada): declaración en «Contenido de la app» con un vídeo de la función.
+  - **Borrar la cuenta**: dentro de la app (ya está) y con un enlace web.
+- Premium fuera de la app de Android en la primera versión: Google obliga a cobrar con Play Billing y no deja anunciar pagos por fuera.

@@ -9,7 +9,8 @@ import { LogoMark } from "./LogoMark";
 import { resetAnalytics } from "./Analytics";
 import { DEFAULT_LOCALE, translator, type Key, type Locale } from "@/lib/i18n";
 
-type Item = { href: string; label: Key; long?: Key; icon: string };
+// webOnly: no sale en la app de Android (Premium: Google Play obliga a cobrar con su sistema)
+type Item = { href: string; label: Key; long?: Key; icon: string; webOnly?: boolean };
 
 const ITEMS: Item[] = [
   { href: "/", label: "nav.inicio", icon: "M3 12l9-8 9 8M5 10v10h5v-6h4v6h5V10" },
@@ -22,7 +23,7 @@ const ITEMS: Item[] = [
   { href: "/carreras", label: "nav.carreras", icon: "M5 21V4m0 0h11l-2 4 2 4H5" },
   { href: "/herramientas", label: "nav.calcular", long: "nav.calculadoras", icon: "M5 3h14v18H5zM8 7h8M8 11h2m3 0h3M8 15h2m3 0h3M8 18h2m3 0h3" },
   { href: "/sueno", label: "nav.sueno", icon: "M20 14.5A8 8 0 019.5 4a8 8 0 1010.5 10.5z" },
-  { href: "/premium", label: "nav.premium", icon: "M12 3l2.6 5.6 6.1.7-4.5 4.2 1.2 6L12 16.6l-5.4 2.9 1.2-6-4.5-4.2 6.1-.7L12 3z" },
+  { href: "/premium", label: "nav.premium", webOnly: true, icon: "M12 3l2.6 5.6 6.1.7-4.5 4.2 1.2 6L12 16.6l-5.4 2.9 1.2-6-4.5-4.2 6.1-.7L12 3z" },
   { href: "/perfil", label: "nav.perfil", icon: "M12 12a4 4 0 100-8 4 4 0 000 8zm-7 9a7 7 0 0114 0" },
   { href: "/ajustes", label: "nav.datos", long: "nav.importar", icon: "M12 15V3m0 0L8 7m4-4l4 4M4 15v4a1 1 0 001 1h14a1 1 0 001-1v-4" },
 ];
@@ -76,7 +77,7 @@ export function TuLinks({ focus, admin, locale = DEFAULT_LOCALE }: { focus?: Foc
   return (
     <nav aria-label={t("nav.masSecciones")} className="grid grid-cols-3 gap-2 md:hidden">
       {rest.map((it) => (
-        <Link key={it.href} href={it.href} className="flex flex-col items-center gap-1.5 rounded-xl border border-line bg-surface px-1 py-3 text-xs font-medium text-ink-2">
+        <Link key={it.href} href={it.href} className={`flex flex-col items-center gap-1.5 rounded-xl border border-line bg-surface px-1 py-3 text-xs font-medium text-ink-2 ${it.webOnly ? "not-android" : ""}`}>
           <Icon d={it.icon} className="h-6 w-6 text-accent" />
           {t(it.long ?? it.label)}
         </Link>
@@ -203,7 +204,7 @@ export function NavView({ path, focus, admin, locale = DEFAULT_LOCALE }: { path?
           <Link
             key={it.href}
             href={it.href}
-            className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition ${
+            className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition ${it.webOnly ? "not-android" : ""} ${
               active(it.href) ? "bg-surface-2 text-ink" : "text-ink-2 hover:bg-surface-2"
             }`}
           >

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { connection } from "next/server";
 import { Suspense, type ReactNode } from "react";
 import { AnalyticsToggle } from "@/components/Analytics";
+import { translator } from "@/lib/i18n";
 import { loginLocale } from "@/lib/i18n/server";
 import { PRIVACY, type PrivacyTexts } from "./texts";
 
@@ -85,7 +86,10 @@ async function Content() {
         </p>
       </Section>
 
-      <p className="text-sm">
+      <p className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
+        <Link href="/borrar-cuenta" className="font-semibold text-accent">
+          {translator(locale)("bc.titulo")}
+        </Link>
         <Link href="/" className="font-semibold text-accent">
           {p.back}
         </Link>

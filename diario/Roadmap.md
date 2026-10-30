@@ -152,7 +152,22 @@ Base: [[Estudio entrenamiento#6. La Pirámide de Entrenamiento (Helms, Valdez, M
 - [x] 6.4 Android Studio en el PC de David; Capacitor 8 con la app actual dentro (`app.runinout`, carga run-in-out.vercel.app); APK de prueba funcionando en el emulador — *hecho 2026-10-12*
 - [x] 6.5 Entrar con Google desde la app (pestaña del sistema y vuelta a la app con código de un solo uso) — *hecho y probado en el emulador 2026-10-12*
 - [x] 6.6 Health Connect: pasos, calorías, pulso en reposo, VFC y sueño al abrir la app (sin atajos) — *hecho 2026-10-12: permisos y lectura probados en el emulador (sin datos); falta probarlo con datos reales en un Android*
-- [ ] 6.7 Prueba cerrada en Play (12 personas, 14 días, obligatorio en cuentas nuevas) y publicación — *en pausa: David prueba la app unos días antes (cuenta personal de Play Console, con DNI)*
+- [-] ~~6.7 Prueba cerrada en Play y publicación~~ — *pasa a la Fase 9 (2026-10-30)*
+
+## 🚀 Fase 9 · Publicar en Google Play (lo base) — *decidido 2026-10-30: primero lo necesario para estar en Play; lo demás, actualizaciones* → [[Decisiones#Publicar en Google Play: lo base]]
+
+**Lo hago yo (código y textos)**
+- [x] Página pública para borrar la cuenta sin la app (Play pide un enlace): qué se borra y cómo pedirlo — *hecho 2026-10-30: https://run-in-out.vercel.app/borrar-cuenta (5 idiomas; enlazada desde la política de privacidad)*
+- [x] En la app de Android, sin la pantalla Premium ni nada de pagar hasta tener Google Play Billing (Play no deja anunciar pagos fuera de Play) — *hecho 2026-10-30: «Premium» no sale en «Tú» ni en el menú dentro de la app de Android*
+- [x] En la app de Android, sin lo que es solo del iPhone (instalar en la pantalla de inicio, atajo de Salud) — *revisado 2026-10-30: ya estaba (guía del atajo oculta y Health Connect en su lugar; el aviso de instalar y el de notificaciones no salen en la app)*
+- [ ] Versión de publicación: `versionCode`/`versionName`, AAB firmado con la clave de subida (fuera del repo) y comprobado en el emulador
+- [ ] Ficha de la tienda en español e inglés: nombre, descripción corta (80) y larga (4.000), icono 512×512, imagen destacada 1024×500 y capturas del móvil
+- [ ] Textos para los formularios de Play Console: seguridad de los datos, Health Connect (por qué cada dato), servicio en primer plano de ubicación (GPS) y vídeo del GPS grabado en el emulador
+
+**Lo haces tú (Play Console)**
+- [ ] Rellenar los formularios con esos textos: seguridad de los datos, clasificación de contenido, público objetivo, anuncios (no), Health Connect y servicio en primer plano
+- [ ] Prueba cerrada: subir el AAB, invitar a 12 personas (correo de Google) y que sigan apuntadas 14 días seguidos
+- [ ] Pedir el acceso a producción y publicar
 
 ## ✨ Fase 7 · Ideas nuevas (2026-10-18) — *7.1-7.3 comprobadas por David 2026-10-19* → [[Decisiones#Ideas nuevas: orden y alcance]]
 1. [x] **EMOM** (Fuerza → EMOM): intervalo y rondas, ejercicios que se turnan, pitidos 3-2-1, pantalla encendida, marcar rondas sin completar; se guarda como entreno de fuerza — *hecho 2026-10-18, comprobado 2026-10-19* → [[Decisiones#EMOM]]
