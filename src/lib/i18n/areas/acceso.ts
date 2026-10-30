@@ -123,7 +123,7 @@ export const acceso = area({
   },
   en: {
     "auth.entrar": "Sign in",
-    "auth.entrarSub": "Your plan, your workouts and your friends'.",
+    "auth.entrarSub": "Your plan, your workouts and your friends' workouts too.",
     "auth.borrada": "✓ Your account and all your data have been deleted.",
     "auth.google": "Continue with Google",
     "auth.o": "or with your email",

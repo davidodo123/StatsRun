@@ -160,7 +160,7 @@ Base: [[Estudio entrenamiento#6. La Pirámide de Entrenamiento (Helms, Valdez, M
 - [x] Página pública para borrar la cuenta sin la app (Play pide un enlace): qué se borra y cómo pedirlo — *hecho 2026-10-30: https://run-in-out.vercel.app/borrar-cuenta (5 idiomas; enlazada desde la política de privacidad)*
 - [x] En la app de Android, sin la pantalla Premium ni nada de pagar hasta tener Google Play Billing (Play no deja anunciar pagos fuera de Play) — *hecho 2026-10-30: «Premium» no sale en «Tú» ni en el menú dentro de la app de Android*
 - [x] En la app de Android, sin lo que es solo del iPhone (instalar en la pantalla de inicio, atajo de Salud) — *revisado 2026-10-30: ya estaba (guía del atajo oculta y Health Connect en su lugar; el aviso de instalar y el de notificaciones no salen en la app)*
-- [ ] Versión de publicación: `versionCode`/`versionName`, AAB firmado con la clave de subida (fuera del repo) y comprobado en el emulador
+- [x] Versión de publicación: `versionCode`/`versionName`, AAB firmado con la clave de subida (fuera del repo) y comprobado en el emulador — *hecho 2026-10-30: versión 1.0 (código 1), `Zancavolt-1.0.aab` en el Escritorio, firmado con la clave de subida (CN=Run-In-Out); el APK de publicación abre bien en el emulador (Android 17)*
 - [ ] Ficha de la tienda en español e inglés: nombre, descripción corta (80) y larga (4.000), icono 512×512, imagen destacada 1024×500 y capturas del móvil
 - [ ] Textos para los formularios de Play Console: seguridad de los datos, Health Connect (por qué cada dato), servicio en primer plano de ubicación (GPS) y vídeo del GPS grabado en el emulador
 
