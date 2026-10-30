@@ -185,7 +185,6 @@ Base: [[Estudio entrenamiento#6. La Pirámide de Entrenamiento (Helms, Valdez, M
   - [/] Parte 3: icono de la app (web y Android, también la pantalla de arranque), imágenes, sticker y vídeo para compartir en lima — *hecho 2026-10-24; en el iPhone el icono nuevo solo sale quitando la app de la pantalla de inicio y volviéndola a añadir; en Android, con un APK nuevo*
   - [/] Parte 4: nueva distribución del menú del móvil (opción A de 4): abajo Inicio · Plan · ＋ · Fuerza · Tú; arriba Entrenador IA y Amigos; fuera «Más», lo que había va en «Tú» — *hecho 2026-10-24, pendiente de que David lo vea* → [[Decisiones#Distribución del menú: Inicio como pestaña]]
 - [x] **Notificación de lo que te toca hoy** (lo pidió David 2026-10-23): al abrir la app instalada pregunta «¿Te aviso cada mañana de lo que te toca?» (Activar / Ahora no, 2 semanas); con el permiso ya dado se activa solo; cada mañana (6:00 UTC) llega «Hoy: Tirada larga · 12 km» con el ritmo y al tocarla abre el plan. Se quita desde los ajustes del móvil — *hecho y comprobado por David en su iPhone 2026-10-23. En la app de Android aún no (la vista web no recibe push): `@capacitor/local-notifications`* → [[Decisiones#Avisos de cada mañana]]
-- [ ] **Datos de la carrera en la pantalla de bloqueo, como Strava** (lo pidió David 2026-10-23) — *Android hecho 2026-10-24: «Corriendo · 12:55 / 2,41 km · ritmo medio 5:13 /km», probado en el emulador; falta un APK nuevo y probarlo corriendo con el Android de David* → [[Decisiones#Datos de la carrera en la notificación (Android)]]. Lo que se vio antes: al grabar con el GPS, ver tiempo, ritmo medio y km con el móvil bloqueado. **Android**: la notificación «Grabando carrera» del complemento no se puede cambiar una vez puesta; habría que poner otra notificación fija que se actualice cada pocos segundos (`@capacitor/local-notifications`, misma id) o tocar el código nativo del complemento. **iPhone**: lo de Strava son «Actividades en directo», que solo puede hacer una app nativa (App Store); desde la web no se puede
 
 ## 🏗️ Infraestructura (escalar la app) → [[Infraestructura]]
 Para cuando crezca: base de datos, servidor, costes y administración. Se hace según haga falta, no todo ya.
@@ -200,7 +199,7 @@ Para cuando crezca: base de datos, servidor, costes y administración. Se hace s
 
 ## 💳 Suscripción → [[Suscripción]]
 Propuesta de Gratis / Premium en [[Suscripción]]. Primero decidir; después, construir.
-- [ ] Decidir qué es Premium, el precio y la prueba gratis (David)
+- [/] Decidir qué es Premium, el precio y la prueba gratis (David) — *2026-10-30: tabla aprobada salvo la IA (más adelante); 3,99 €/mes o 29,99 €/año; 1 mes de prueba* → [[Decisiones#Premium: qué entra y precio]]
 - [ ] Decidir Android: cobrar con Google Play Billing o solo desde la web
 - [ ] Requisitos para cobrar: alta para facturar, IVA (Stripe Tax u OSS), Vercel Pro, condiciones de uso y privacidad
 - [ ] **RevenueCat**: Web SDK (web/iPhone, con Stripe) y Google Play Billing (Android) con un único «premium»; webhook e `isPremium()` en el servidor
@@ -259,6 +258,7 @@ Español, inglés, catalán, portugués y francés, por fases.
 
 ## 🔚 Para el final (lo dejó David 2026-10-25)
 
+- [ ] **Datos de la carrera en la pantalla de bloqueo, como Strava** (lo pidió David 2026-10-23; aparcado con el resto de «Grabar con GPS» 2026-10-30) — *Android hecho 2026-10-24: «Corriendo · 12:55 / 2,41 km · ritmo medio 5:13 /km», probado en el emulador; falta un APK nuevo y probarlo corriendo con el Android de David* → [[Decisiones#Datos de la carrera en la notificación (Android)]]. Lo que se vio antes: al grabar con el GPS, ver tiempo, ritmo medio y km con el móvil bloqueado. **Android**: la notificación «Grabando carrera» del complemento no se puede cambiar una vez puesta; habría que poner otra notificación fija que se actualice cada pocos segundos (`@capacitor/local-notifications`, misma id) o tocar el código nativo del complemento. **iPhone**: lo de Strava son «Actividades en directo», que solo puede hacer una app nativa (App Store); desde la web no se puede
 - [ ] **Carreras del iPhone sin grabar con Run-In-Out**: que lleguen solas las de Strava, el reloj o la app Entrenamiento → [[Decisiones#Carreras del iPhone desde fuera]]
   - Opción A: volver a conectar Strava (el código sigue en `/api/strava`; falta el botón y las variables de Strava). Para David ya; para más gente, revisión de Strava
   - Opción B: una app que exporte Salud (p. ej. Health Auto Export, de pago) y mande cada entreno a Run-In-Out con la clave `rio_…`

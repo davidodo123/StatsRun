@@ -7,7 +7,8 @@ Bandeja de entrada. Apunta aquí lo que se te ocurra, sin ordenar ni pulir. Cuan
 
 ## Sin revisar
 
-- 
+- **Competir con un amigo en fuerza** (David, 2026-10-30): retos o clasificación entre amigos (series, volumen, récords de un ejercicio…)
+- **Comparar los muñecos de músculos con un amigo** (David, 2026-10-30): tu mapa de músculos de la semana al lado del suyo
 
 ## Pasadas al Roadmap
 

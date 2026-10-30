@@ -1065,3 +1065,10 @@ Fuentes: screensdesign.com, posthog.com/pricing, revenuecat.com/pricing, revenue
 - Ahora usa el mismo `RouteMap` de la ficha de la actividad (teselas de OpenStreetMap, con atribución). Antes de empezar y con un solo punto, centrado en la última posición del GPS (zoom 16).
 - Comprobado que OpenStreetMap sirve bien las teselas con el Referer de la web y con la cabecera de la WebView de Android (`X-Requested-With`). Si algún día las bloquean, la salida es otro proveedor con clave (MapTiler, Stadia) o MapLibre.
 - Alternativa descartada por ahora: un mapa interactivo (Leaflet/MapLibre) que se pueda mover y ampliar. Pesa más y no hace falta para ver por dónde vas.
+
+## Premium: qué entra y precio
+*2026-10-30*
+
+- David aprueba la tabla Gratis/Premium de [[Suscripción]] **salvo lo de la IA** (ajuste de 14 días, entrenador sin límite, fuerza con IA, salud en el diagnóstico): se decide más adelante.
+- Precio: **3,99 €/mes o 29,99 €/año**. Prueba gratis: **1 mes** (antes se proponían 14 días).
+- Zancavolt se trata como **una app**, no como una web (aunque en el iPhone se instale desde el navegador).
