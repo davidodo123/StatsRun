@@ -162,9 +162,11 @@ Base: [[Estudio entrenamiento#6. La Pirámide de Entrenamiento (Helms, Valdez, M
 - [x] En la app de Android, sin lo que es solo del iPhone (instalar en la pantalla de inicio, atajo de Salud) — *revisado 2026-10-30: ya estaba (guía del atajo oculta y Health Connect en su lugar; el aviso de instalar y el de notificaciones no salen en la app)*
 - [x] Versión de publicación: `versionCode`/`versionName`, AAB firmado con la clave de subida (fuera del repo) y comprobado en el emulador — *hecho 2026-10-30: versión 1.0 (código 1), `Zancavolt-1.0.aab` en el Escritorio, firmado con la clave de subida (CN=Run-In-Out); el APK de publicación abre bien en el emulador (Android 17)*
 - [x] Ficha de la tienda en español e inglés: nombre, descripción corta (80) y larga (4.000), icono 512×512, imagen destacada 1024×500 y capturas del móvil — *hecho 2026-10-30: textos en [[Google Play]]; imágenes, 7 capturas por idioma y el AAB en `Escritorio/Zancavolt-Play/`*
-- [ ] Textos para los formularios de Play Console: seguridad de los datos, Health Connect (por qué cada dato), servicio en primer plano de ubicación (GPS) y vídeo del GPS grabado en el emulador
+- [x] Textos para los formularios de Play Console: seguridad de los datos, Health Connect (por qué cada dato), servicio en primer plano de ubicación (GPS) y vídeo del GPS grabado en el emulador — *hecho 2026-10-30: todo en [[Google Play]] (también acceso a la app, clasificación, público y anuncios). El vídeo lo graba David en su móvil (el emulador no tiene GPS real ni cuenta)*
 
 **Lo haces tú (Play Console)**
+- [ ] Crear en la app una cuenta solo para los revisores de Google (correo y contraseña, con plan y algún entreno); sus datos, solo en Play Console
+- [ ] Grabar el vídeo del GPS en tu móvil (pasos en [[Google Play]]) y subirlo a YouTube como «oculto»
 - [ ] Rellenar los formularios con esos textos: seguridad de los datos, clasificación de contenido, público objetivo, anuncios (no), Health Connect y servicio en primer plano
 - [ ] Prueba cerrada: subir el AAB, invitar a 12 personas (correo de Google) y que sigan apuntadas 14 días seguidos
 - [ ] Pedir el acceso a producción y publicar

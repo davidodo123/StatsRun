@@ -10,8 +10,8 @@ App de entrenamiento para corredores: planes hacia una carrera, registro de entr
 
 ## Dónde estamos
 
-> [!info] Fase actual: **Fase 8 · Por hacer** (2026-10-24): rediseño con el estilo Volt
-> Fase 7 hecha salvo el GPS con la pantalla apagada. En la 8: catálogo de fuerza ampliado (1.036 ejercicios); faltan las skills, que el Plan cargue más rápido y compartir en otro formato. Ver [[Roadmap]].
+> [!info] Fase actual: **Fase 9 · Publicar en Google Play** (2026-10-30)
+> Lo base para estar en Play: hecho lo de la app (borrar la cuenta, Premium oculto en Android, AAB 1.0, ficha y textos de los formularios en [[Google Play]]). Falta lo de David en Play Console: cuenta para revisores, vídeo del GPS, formularios y la prueba cerrada de 14 días. Ver [[Roadmap]].
 
 ## Notas
 
