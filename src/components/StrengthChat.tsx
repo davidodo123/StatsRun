@@ -22,7 +22,7 @@ function ActivityProposal({ m, t, locale }: { m: StrengthChatMessage; t: T; loca
     fmtDuration(a.durationSec),
     pace && `${fmtPace(pace)} /km`,
     a.elevationGainM && `+${a.elevationGainM} m`,
-    a.avgHr && `${a.avgHr} ppm`,
+    a.avgHr && `${a.avgHr} ${t("u.pulso")}`,
     a.rpe && `RPE ${a.rpe}`,
     a.feel && t(`feel.${a.feel}`),
   ].filter(Boolean);

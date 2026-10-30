@@ -68,7 +68,7 @@ export function ActivityItem({
       {dayMonth(a.date, locale)} · {t(`sport.${a.sport}`)}
       {a.distanceM > 0 && ` · ${fmtKm(a.distanceM / 1000, 2)} km`} · {fmtDuration(a.movingSec)}
       {a.sport === "run" && a.distanceM > 0 && ` · ${fmtPace(a.movingSec / (a.distanceM / 1000))}/km`}
-      {a.avgHr && ` · ${Math.round(a.avgHr)} ppm`}
+      {a.avgHr && ` · ${Math.round(a.avgHr)} ${t("u.pulso")}`}
     </span>
   );
   // feed de amigos con foto: quién, qué hizo, el tiempo y la foto grande

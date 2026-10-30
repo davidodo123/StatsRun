@@ -664,7 +664,7 @@ async function Salud({ db, locale }: { db: Db; locale: Locale }) {
                 <Stat
                   label={t("sal.pulso3")}
                   value={n1(rec.restingHrAvg3)}
-                  unit="ppm"
+                  unit={t("u.pulso")}
                   sub={rec.restingHrBase !== undefined ? t("sal.normalTi", { v: n1(rec.restingHrBase) }) : t("sal.faltan2")}
                   status={rec.restingHrBase === undefined ? undefined : rec.highRestingHr ? { tone: "warn", label: t("sal.alto") } : { tone: "good", label: t("sal.normal") }}
                 />
@@ -953,7 +953,7 @@ function Editar({ db, today, initialFocus, locale, name }: { db: Db; today: stri
           )}
           <div className="grid grid-cols-2 gap-3">
             <Stat label={t("ed.imc")} value={bmi(profile.weightKg, profile.heightCm).toFixed(1)} sub={t(`imc.${bmiLabel(bmi(profile.weightKg, profile.heightCm))}` as Key)} />
-            <Stat label={t("calc.fcMax")} value={hrMaxOf(profile)} unit="ppm" sub={profile.hrMax ? t("ed.medida") : t("ed.estimada")} />
+            <Stat label={t("calc.fcMax")} value={hrMaxOf(profile)} unit={t("u.pulso")} sub={profile.hrMax ? t("ed.medida") : t("ed.estimada")} />
           </div>
           <Card title={t("ed.borrarCuenta")} subtitle={<Link href="/privacidad" className="underline">{t("ed.politica")}</Link>}>
             <DeleteAccountForm locale={locale} />

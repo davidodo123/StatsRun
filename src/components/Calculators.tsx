@@ -139,7 +139,7 @@ export function Calculators({ locale = "es" }: { locale?: Locale }) {
                 <td className="py-1.5 font-semibold">Z{z.zone}</td>
                 <td className="py-1.5">{t(`zone.${z.zone}` as Key)}</td>
                 <td className="py-1.5 text-right">
-                  {z.min}–{z.max} ppm
+                  {z.min}–{z.max} {t("u.pulso")}
                 </td>
               </tr>
             ))}

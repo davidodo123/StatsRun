@@ -161,7 +161,7 @@ Base: [[Estudio entrenamiento#6. La Pirámide de Entrenamiento (Helms, Valdez, M
 - [x] En la app de Android, sin la pantalla Premium ni nada de pagar hasta tener Google Play Billing (Play no deja anunciar pagos fuera de Play) — *hecho 2026-10-30: «Premium» no sale en «Tú» ni en el menú dentro de la app de Android*
 - [x] En la app de Android, sin lo que es solo del iPhone (instalar en la pantalla de inicio, atajo de Salud) — *revisado 2026-10-30: ya estaba (guía del atajo oculta y Health Connect en su lugar; el aviso de instalar y el de notificaciones no salen en la app)*
 - [x] Versión de publicación: `versionCode`/`versionName`, AAB firmado con la clave de subida (fuera del repo) y comprobado en el emulador — *hecho 2026-10-30: versión 1.0 (código 1), `Zancavolt-1.0.aab` en el Escritorio, firmado con la clave de subida (CN=Run-In-Out); el APK de publicación abre bien en el emulador (Android 17)*
-- [ ] Ficha de la tienda en español e inglés: nombre, descripción corta (80) y larga (4.000), icono 512×512, imagen destacada 1024×500 y capturas del móvil
+- [x] Ficha de la tienda en español e inglés: nombre, descripción corta (80) y larga (4.000), icono 512×512, imagen destacada 1024×500 y capturas del móvil — *hecho 2026-10-30: textos en [[Google Play]]; imágenes, 7 capturas por idioma y el AAB en `Escritorio/Zancavolt-Play/`*
 - [ ] Textos para los formularios de Play Console: seguridad de los datos, Health Connect (por qué cada dato), servicio en primer plano de ubicación (GPS) y vídeo del GPS grabado en el emulador
 
 **Lo haces tú (Play Console)**
@@ -248,6 +248,7 @@ Español, inglés, catalán, portugués y francés, por fases.
 
 - [/] Fase 1: selector en Perfil → Editar perfil y pantallas principales (menú, Inicio, «Tú» y la cabecera del perfil) — *hecha 2026-10-26, pendiente de que David la vea*
 - [/] Fase 2: el resto de pantallas — *hecha 2026-10-28, pendiente de que David la vea*: todas las pantallas en los 5 idiomas, también la ficha de un amigo, los avisos (métricas, instalar, notificaciones), la notificación de cada mañana y la política de privacidad (puesta al día: entrar con correo y contraseña, correo de Gmail). La IA del chat contesta en el idioma de la app. Queda en español la guía avanzada del atajo del iPhone (crearlo a mano y recuperación) y los mensajes de error que devuelve el servidor
+- [ ] Números en inglés con punto decimal (`fmtKm`/`fmtNum` usan siempre «es-ES»: sale «12,70 km» en inglés; 41 sitios) — *visto 2026-10-30 en las capturas de Play*
 - [/] Fase 3: lo generado — *2026-10-27, adelantado para el vídeo: títulos, descripción y pasos de las sesiones del plan y foco de cada semana, solo en inglés (`lib/i18n/planText.ts`); nombres de ejercicios en inglés con el nombre original del catálogo. Falta catalán, portugués y francés, respuestas de la IA, avisos e imágenes para compartir*: títulos y pasos de las sesiones del plan, respuestas de la IA, avisos de cada mañana, imágenes para compartir y pasos de los 1.036 ejercicios
 
 ## 📝 Pedido por David (2026-10-26)

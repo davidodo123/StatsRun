@@ -3,6 +3,8 @@ import { area } from "../area";
 // Ficha del entreno, filas de actividades, etiquetas (récords…), compartir, foto y repetición del recorrido
 export const actividad = area({
   es: {
+    "u.pulso": "ppm",
+    "u.cadencia": "ppm",
     "sport.run": "Correr",
     "sport.ride": "Bici",
     "sport.swim": "Natación",
@@ -91,6 +93,8 @@ export const actividad = area({
     "rr.aria": "Repetición del recorrido",
   },
   en: {
+    "u.pulso": "bpm",
+    "u.cadencia": "spm",
     "sport.run": "Run",
     "sport.ride": "Ride",
     "sport.swim": "Swim",
@@ -179,6 +183,8 @@ export const actividad = area({
     "rr.aria": "Route replay",
   },
   ca: {
+    "u.pulso": "ppm",
+    "u.cadencia": "ppm",
     "sport.run": "Córrer",
     "sport.ride": "Bici",
     "sport.swim": "Natació",
@@ -267,6 +273,8 @@ export const actividad = area({
     "rr.aria": "Repetició del recorregut",
   },
   pt: {
+    "u.pulso": "bpm",
+    "u.cadencia": "ppm",
     "sport.run": "Corrida",
     "sport.ride": "Bicicleta",
     "sport.swim": "Natação",
@@ -355,6 +363,8 @@ export const actividad = area({
     "rr.aria": "Repetição do percurso",
   },
   fr: {
+    "u.pulso": "bpm",
+    "u.cadencia": "pas/min",
     "sport.run": "Course",
     "sport.ride": "Vélo",
     "sport.swim": "Natation",

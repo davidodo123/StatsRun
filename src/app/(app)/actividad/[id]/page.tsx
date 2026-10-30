@@ -113,7 +113,7 @@ async function Content({ params, searchParams }: { params: PageProps<"/actividad
             <Stat label={t("act.tiempoMov")} value={fmtDuration(a.movingSec)} sub={a.elapsedSec > a.movingSec + 30 ? t("act.total", { t: fmtDuration(a.elapsedSec) }) : undefined} />
             {pace ? <Stat label={t("act.ritmo")} value={fmtPace(pace)} unit="/km" /> : speed ? <Stat label={t("act.velocidad")} value={fmtKm(speed)} unit="km/h" /> : null}
             {a.elevationGainM > 0 && <Stat label={t("act.desnivel")} value={fmtNum(a.elevationGainM)} unit="m" sub={a.maxAltitudeM ? t("act.altMax", { m: fmtNum(a.maxAltitudeM) }) : undefined} />}
-            {a.avgHr && <Stat label={t("act.fc")} value={Math.round(a.avgHr)} unit="ppm" sub={a.maxHr ? t("act.max", { n: Math.round(a.maxHr) }) : undefined} />}
+            {a.avgHr && <Stat label={t("act.fc")} value={Math.round(a.avgHr)} unit={t("u.pulso")} sub={a.maxHr ? t("act.max", { n: Math.round(a.maxHr) }) : undefined} />}
             {typeof a.decoupling === "number" && dc && (
               <Stat
                 label={t("act.desacople")}
@@ -123,7 +123,7 @@ async function Content({ params, searchParams }: { params: PageProps<"/actividad
                 hint={t("act.desacopleHint")}
               />
             )}
-            {a.avgCadence && <Stat label={t("act.cadencia")} value={Math.round(a.avgCadence)} unit="ppm" />}
+            {a.avgCadence && <Stat label={t("act.cadencia")} value={Math.round(a.avgCadence)} unit={t("u.cadencia")} />}
             {a.steps && <Stat label={t("act.pasos")} value={fmtNum(a.steps)} />}
             {a.workout && <Stat label={t("wl.volumen")} value={fmtNum(workoutVolume(a.workout))} unit="kg" sub={t("act.seriesReps", { series: workoutSets(a.workout), reps: workoutReps(a.workout) })} />}
             {a.rpe && <Stat label={t("act.rpe")} value={a.rpe} unit="/10" />}
