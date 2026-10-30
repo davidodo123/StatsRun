@@ -1,6 +1,5 @@
-// Texto de la notificación de cada mañana: lo que toca hoy en el plan (carrera y fuerza).
+// Notificación de cada mañana, corta: «Hoy toca» y lo del plan de hoy (carrera y fuerza), sin pasos ni ritmos.
 import type { Db, PlannedSession } from "./types";
-import { fmtPaceRange } from "./format";
 import { intlLocale, isLocale, translator, type Locale, type T } from "./i18n";
 import { planText } from "./i18n/planText";
 
@@ -27,12 +26,9 @@ export function todayMessage(db: Pick<Db, "plan" | "push" | "lang">, today: stri
     if (!db.push?.restDays) return;
     return { title: t("push.descanso"), body: t("push.descansoTexto"), url: "/plan/actual" };
   }
-  const run = sessions.find((s) => s.type !== "strength");
   const race = sessions.find((s) => s.type === "race");
-  if (race) return { title: t("push.hoy", { que: race.title }), body: t("push.carrera"), url: "/plan/actual" };
-  const main = run ?? sessions[0];
-  const extra = sessions.filter((s) => s !== main);
-  const pace = main.pace && main.type !== "strength" ? t("push.ritmo", { r: fmtPaceRange(main.pace) }) : "";
-  const body = [pace, planText(main.description, locale), ...extra.map((s) => t("push.ademas", { que: what(s, locale) }))].filter(Boolean).join(" ") || t("push.abrir");
-  return { title: t("push.hoy", { que: what(main, locale) }), body: body.length > 180 ? `${body.slice(0, 177)}…` : body, url: "/plan/actual" };
+  if (race) return { title: t("push.hoyToca"), body: t("push.carrera", { que: planText(race.title, locale) }), url: "/plan/actual" };
+  // primero la carrera y luego la fuerza
+  const ordered = [...sessions.filter((s) => s.type !== "strength"), ...sessions.filter((s) => s.type === "strength")];
+  return { title: t("push.hoyToca"), body: ordered.map((s) => what(s, locale)).join(" + "), url: "/plan/actual" };
 }
