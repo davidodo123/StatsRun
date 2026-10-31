@@ -5,6 +5,7 @@ import { addDays, diffDays, mondayOf } from "@/lib/dates";
 import { fmtKm, fmtPace } from "@/lib/format";
 import { dayMonth, translator, weekdayDate, type Locale } from "@/lib/i18n";
 import { WeekBars, type WeekBarDay } from "./WeekBars";
+import { RestStretches } from "./RestStretches";
 import { planText } from "@/lib/i18n/planText";
 
 // el nombre sin los km del final («Tirada larga 12 km»): los km ya van debajo, en grande
@@ -129,6 +130,7 @@ export function TodayHero({ plan, matches, today, goal, locale }: { plan: Plan; 
               {next.date === addDays(today, 1) ? t("hoy.manana") : t("hoy.elDia", { dia: weekdayDate(next.date, locale) })}: <strong className="text-ink">{planText(next.title, locale)}</strong>
             </p>
           )}
+          <RestStretches locale={locale} />
         </>
       )}
 

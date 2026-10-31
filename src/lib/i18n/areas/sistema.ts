@@ -3,6 +3,11 @@ import { area } from "../area";
 // Páginas de error y de «no existe», el aviso de girar el móvil y textos de accesibilidad sueltos
 export const sistema = area({
   es: {
+    "est.titulo": "Estiramientos para hoy",
+    "est.sub": "Unos 10 minutos: descansar también es entrenar. Toca cada uno para ver cómo se hace.",
+    "est.5lado": "5 por lado",
+    "est.30lado": "30″ por lado",
+    "est.30": "30″",
     "sis.fallo": "Algo ha fallado",
     "sis.falloTxt": "No hemos podido cargar esta página. Comprueba la conexión y vuelve a intentarlo.",
     "sis.codigo": "Código: {c}",
@@ -16,6 +21,11 @@ export const sistema = area({
     "sis.cambiarFoto": "Cambiar foto de perfil",
   },
   en: {
+    "est.titulo": "Stretches for today",
+    "est.sub": "About 10 minutes: resting is training too. Tap each one to see how it’s done.",
+    "est.5lado": "5 per side",
+    "est.30lado": "30″ per side",
+    "est.30": "30″",
     "sis.fallo": "Something went wrong",
     "sis.falloTxt": "We couldn't load this page. Check your connection and try again.",
     "sis.codigo": "Code: {c}",
@@ -29,6 +39,11 @@ export const sistema = area({
     "sis.cambiarFoto": "Change profile photo",
   },
   ca: {
+    "est.titulo": "Estiraments per avui",
+    "est.sub": "Uns 10 minuts: descansar també és entrenar. Toca cadascun per veure com es fa.",
+    "est.5lado": "5 per costat",
+    "est.30lado": "30″ per costat",
+    "est.30": "30″",
     "sis.fallo": "Alguna cosa ha fallat",
     "sis.falloTxt": "No hem pogut carregar aquesta pàgina. Comprova la connexió i torna-ho a provar.",
     "sis.codigo": "Codi: {c}",
@@ -42,6 +57,11 @@ export const sistema = area({
     "sis.cambiarFoto": "Canviar la foto de perfil",
   },
   pt: {
+    "est.titulo": "Alongamentos para hoje",
+    "est.sub": "Uns 10 minutos: descansar também é treinar. Toca em cada um para ver como se faz.",
+    "est.5lado": "5 de cada lado",
+    "est.30lado": "30″ de cada lado",
+    "est.30": "30″",
     "sis.fallo": "Algo correu mal",
     "sis.falloTxt": "Não conseguimos carregar esta página. Verifica a ligação e tenta outra vez.",
     "sis.codigo": "Código: {c}",
@@ -55,6 +75,11 @@ export const sistema = area({
     "sis.cambiarFoto": "Mudar a foto de perfil",
   },
   fr: {
+    "est.titulo": "Étirements du jour",
+    "est.sub": "Une dizaine de minutes : se reposer, c’est aussi s’entraîner. Touche chacun pour voir comment le faire.",
+    "est.5lado": "5 par côté",
+    "est.30lado": "30″ par côté",
+    "est.30": "30″",
     "sis.fallo": "Un problème est survenu",
     "sis.falloTxt": "Impossible de charger cette page. Vérifie ta connexion et réessaie.",
     "sis.codigo": "Code : {c}",
