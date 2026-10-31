@@ -72,7 +72,7 @@ async function Content({ params }: { params: PageProps<"/amigos/[id]">["params"]
         <>
           <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
             <Stat label="VDOT" value={f.stats.vdot.vdot.toFixed(1)} hint={f.stats.vdot.source} />
-            <Stat label={t("amf.estaSemana")} value={fmtKm(f.stats.totals.weekKm)} unit="km" sub={t("amf.media6", { km: fmtKm(f.stats.totals.avgWeeklyKm6) })} />
+            <Stat label={t("amf.estaSemana")} value={fmtKm(f.stats.totals.weekKm, 1, locale)} unit="km" sub={t("amf.media6", { km: fmtKm(f.stats.totals.avgWeeklyKm6, 1, locale) })} />
             <Stat label={t("inicio.forma")} value={f.stats.today.ctl.toFixed(0)} />
             <Stat label={t("inicio.frescura")} value={f.stats.today.tsb.toFixed(0)} />
             <Stat label={t("amf.cumplimiento")} value={f.compliance !== undefined ? `${Math.round(f.compliance * 100)} %` : "–"} sub={f.pastSessions ? t("amf.sesiones", { n: f.pastSessions }) : t("amf.sinPasadas")} />
@@ -149,8 +149,8 @@ function Comparison({ me, friend, friendName, t, locale }: { me: AthleteSummary;
     [t("amf.r.carrera"), me.goal ? `${me.goal.name} (${shortDate(me.goal.date)})` : "–", friend.goal ? `${friend.goal.name} (${shortDate(friend.goal.date)})` : "–"],
     [t("amf.r.dias"), me.daysToRace !== undefined && me.daysToRace >= 0 ? String(me.daysToRace) : "–", friend.daysToRace !== undefined && friend.daysToRace >= 0 ? String(friend.daysToRace) : "–"],
     ["VDOT", me.stats?.vdot.vdot.toFixed(1) ?? "–", friend.stats?.vdot.vdot.toFixed(1) ?? "–"],
-    [t("amf.r.km"), fmtKm(me.stats?.totals.weekKm ?? 0), fmtKm(friend.stats?.totals.weekKm ?? 0)],
-    [t("amf.r.media"), fmtKm(me.stats?.totals.avgWeeklyKm6 ?? 0), fmtKm(friend.stats?.totals.avgWeeklyKm6 ?? 0)],
+    [t("amf.r.km"), fmtKm(me.stats?.totals.weekKm ?? 0, 1, locale), fmtKm(friend.stats?.totals.weekKm ?? 0, 1, locale)],
+    [t("amf.r.media"), fmtKm(me.stats?.totals.avgWeeklyKm6 ?? 0, 1, locale), fmtKm(friend.stats?.totals.avgWeeklyKm6 ?? 0, 1, locale)],
     [t("inicio.forma"), me.stats?.today.ctl.toFixed(0) ?? "–", friend.stats?.today.ctl.toFixed(0) ?? "–"],
     [t("inicio.frescura"), me.stats?.today.tsb.toFixed(0) ?? "–", friend.stats?.today.tsb.toFixed(0) ?? "–"],
     [t("amf.r.cumplimiento"), pct(me.compliance), pct(friend.compliance)],

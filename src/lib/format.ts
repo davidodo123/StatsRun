@@ -1,3 +1,5 @@
+import type { Locale } from "./i18n";
+
 export function fmtDuration(totalSec: number): string {
   const s = Math.round(totalSec);
   const h = Math.floor(s / 3600);
@@ -19,12 +21,15 @@ export function fmtPaceRange(r: { fast: number; slow: number }): string {
   return `${fmtPace(r.fast)}–${fmtPace(r.slow)} /km`;
 }
 
-export function fmtKm(km: number, digits = 1): string {
-  return km.toLocaleString("es-ES", { minimumFractionDigits: digits, maximumFractionDigits: digits });
+// números con la coma o el punto de cada idioma («12,70» en español, «12.70» en inglés)
+const NUM: Record<Locale, string> = { es: "es-ES", en: "en-GB", ca: "ca-ES", pt: "pt-PT", fr: "fr-FR" };
+
+export function fmtKm(km: number, digits = 1, locale: Locale = "es"): string {
+  return km.toLocaleString(NUM[locale], { minimumFractionDigits: digits, maximumFractionDigits: digits });
 }
 
-export function fmtNum(n: number, digits = 0): string {
-  return n.toLocaleString("es-ES", { minimumFractionDigits: digits, maximumFractionDigits: digits });
+export function fmtNum(n: number, digits = 0, locale: Locale = "es"): string {
+  return n.toLocaleString(NUM[locale], { minimumFractionDigits: digits, maximumFractionDigits: digits });
 }
 
 /** "1:23:45", "45:30" o "45" (min) → segundos */

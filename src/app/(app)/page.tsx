@@ -119,11 +119,11 @@ async function Dashboard() {
         <Stat label={tr("inicio.carga")} value={stats.acwr ? stats.acwr.toFixed(2) : "–"} status={acwrS} />
         <Stat
           label={tr("inicio.estaSemana")}
-          value={fmtKm(stats.totals.weekKm)}
+          value={fmtKm(stats.totals.weekKm, 1, locale)}
           unit="km"
           accent
           progress={weekPlanKm ? stats.totals.weekKm / weekPlanKm : undefined}
-          sub={weekPlanKm ? tr("inicio.dePlan", { km: fmtKm(weekPlanKm) }) : tr("inicio.media6", { km: fmtKm(stats.totals.avgWeeklyKm6) })}
+          sub={weekPlanKm ? tr("inicio.dePlan", { km: fmtKm(weekPlanKm, 1, locale) }) : tr("inicio.media6", { km: fmtKm(stats.totals.avgWeeklyKm6, 1, locale) })}
         />
       </StatGroup>
 
@@ -151,16 +151,16 @@ async function Dashboard() {
               <dl className="grid grid-cols-2 gap-3 text-sm">
                 <div>
                   <dt className="text-xs text-muted">{tr("inicio.pasos")}</dt>
-                  <dd className="text-2xl font-bold tabular">{health.today?.steps !== undefined ? fmtNum(health.today.steps) : "–"}</dd>
-                  {health.avgSteps7 !== undefined && <dd className="text-xs text-ink-2">{tr("inicio.media7", { valor: fmtNum(health.avgSteps7) })}</dd>}
+                  <dd className="text-2xl font-bold tabular">{health.today?.steps !== undefined ? fmtNum(health.today.steps, 0, locale) : "–"}</dd>
+                  {health.avgSteps7 !== undefined && <dd className="text-xs text-ink-2">{tr("inicio.media7", { valor: fmtNum(health.avgSteps7, 0, locale) })}</dd>}
                 </div>
                 <div>
                   <dt className="text-xs text-muted">{tr("inicio.caloriasActivas")}</dt>
                   <dd className="text-2xl font-bold tabular">
-                    {health.today?.activeKcal !== undefined ? fmtNum(health.today.activeKcal) : "–"}
+                    {health.today?.activeKcal !== undefined ? fmtNum(health.today.activeKcal, 0, locale) : "–"}
                     <span className="ml-1 text-sm font-normal text-muted">kcal</span>
                   </dd>
-                  {health.avgActiveKcal7 !== undefined && <dd className="text-xs text-ink-2">{tr("inicio.media7", { valor: `${fmtNum(health.avgActiveKcal7)} kcal` })}</dd>}
+                  {health.avgActiveKcal7 !== undefined && <dd className="text-xs text-ink-2">{tr("inicio.media7", { valor: `${fmtNum(health.avgActiveKcal7, 0, locale)} kcal` })}</dd>}
                 </div>
               </dl>
             ) : (

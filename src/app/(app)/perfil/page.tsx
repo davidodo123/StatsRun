@@ -79,7 +79,7 @@ async function Content({ searchParams }: { searchParams: PageProps<"/perfil">["s
   return (
     <div className="space-y-4">
       {db.profile && stats && (
-        <ProfileHeader db={db} stats={stats} tab={tab} picture={me?.picture} tr={tr}>
+        <ProfileHeader db={db} stats={stats} tab={tab} picture={me?.picture} tr={tr} locale={locale}>
           {/* las pestañas, dentro de la misma tarjeta: todas a la vista también en el móvil */}
           <nav aria-label={tr("perfil.secciones")} className="mt-4 border-t border-line pt-3">
             {/* sin cortar los nombres: en otros idiomas son más largos y, si no caben, la fila se desliza */}
@@ -123,21 +123,21 @@ async function Content({ searchParams }: { searchParams: PageProps<"/perfil">["s
 
 // ---------------- Cabecera ----------------
 
-function ProfileHeader({ db, stats, tab, picture, tr, children }: { db: Db; stats: Stats; tab: Tab; picture?: string; tr: T; children: ReactNode }) {
+function ProfileHeader({ db, stats, tab, picture, tr, locale, children }: { db: Db; stats: Stats; tab: Tab; picture?: string; tr: T; locale: Locale; children: ReactNode }) {
   const p = db.profile!;
   const T = stats.totals;
   const strengthOnly = focusOf(p) === "fuerza";
   const lifts = db.activities.filter((a) => a.workout);
   const cells = strengthOnly
     ? [
-        [tr("perfil.entrenos"), fmtNum(lifts.length)],
-        [tr("perfil.toneladas"), fmtNum(lifts.reduce((t, a) => t + workoutVolume(a.workout!), 0) / 1000, 1)],
-        [tr("perfil.horas"), fmtNum(lifts.reduce((t, a) => t + a.movingSec, 0) / 3600)],
+        [tr("perfil.entrenos"), fmtNum(lifts.length, 0, locale)],
+        [tr("perfil.toneladas"), fmtNum(lifts.reduce((t, a) => t + workoutVolume(a.workout!), 0) / 1000, 1, locale)],
+        [tr("perfil.horas"), fmtNum(lifts.reduce((t, a) => t + a.movingSec, 0) / 3600, 0, locale)],
       ]
     : [
-        [tr("perfil.kmTotales"), fmtKm(T.allKm, 2)],
-        [tr("perfil.carreras"), fmtNum(T.allRuns)],
-        [tr("perfil.horas"), fmtNum(T.allHours)],
+        [tr("perfil.kmTotales"), fmtKm(T.allKm, 2, locale)],
+        [tr("perfil.carreras"), fmtNum(T.allRuns, 0, locale)],
+        [tr("perfil.horas"), fmtNum(T.allHours, 0, locale)],
       ];
   const initials = p.name
     .split(" ")
@@ -245,7 +245,7 @@ function Resumen({ db, stats, matches, today, locale }: { db: Db; stats: Stats; 
         <Card title={t("pr.forma")}>
           <ul className="divide-y divide-line text-sm">
             <Row label="VDOT" value={stats.vdot.vdot.toFixed(1)} />
-            <Row label={t("st.media6")} value={t("pr.kmSem", { n: fmtKm(stats.totals.avgWeeklyKm6) })} />
+            <Row label={t("st.media6")} value={t("pr.kmSem", { n: fmtKm(stats.totals.avgWeeklyKm6, 1, locale) })} />
             <Row label={t("st.racha")} value={t("st.diasN", { n: stats.totals.streakDays })} />
             <Row label={t("pr.constancia12")} value={`${Math.round(stats.totals.consistency)} %`} />
           </ul>
@@ -342,12 +342,12 @@ function Running({ db, stats, today, locale }: { db: Db; stats: Stats; today: st
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <Stat label={t("st.kmAno")} value={fmtNum(T.yearKm)} unit="km" sub={t("st.carreras", { n: T.yearRuns })} />
-        <Stat label={t("st.kmMes")} value={fmtKm(T.monthKm)} unit="km" />
-        <Stat label={t("st.media6")} value={fmtKm(T.avgWeeklyKm6)} unit={t("st.kmSem")} />
-        <Stat label={t("pt.desnivelTotal")} value={fmtNum(T.elevation)} unit="m" />
+        <Stat label={t("st.kmAno")} value={fmtNum(T.yearKm, 0, locale)} unit="km" sub={t("st.carreras", { n: T.yearRuns })} />
+        <Stat label={t("st.kmMes")} value={fmtKm(T.monthKm, 1, locale)} unit="km" />
+        <Stat label={t("st.media6")} value={fmtKm(T.avgWeeklyKm6, 1, locale)} unit={t("st.kmSem")} />
+        <Stat label={t("pt.desnivelTotal")} value={fmtNum(T.elevation, 0, locale)} unit="m" />
       </div>
-      <ImprovementTable rows={periodAverages(db.activities, today)} t={t} />
+      <ImprovementTable rows={periodAverages(db.activities, today)} t={t} locale={locale} />
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <BestTimesCard acts={db.activities} locale={locale} />
         <Card title={t("pt.ultimasCarreras")} className="lg:col-span-2">
@@ -364,18 +364,18 @@ function Running({ db, stats, today, locale }: { db: Db; stats: Stats; today: st
 }
 
 /** Tabla de mejora: medias de 3 bloques de 4 semanas y cambio del último respecto al anterior. */
-function ImprovementTable({ rows, t }: { rows: PeriodAvg[]; t: T }) {
+function ImprovementTable({ rows, t, locale }: { rows: PeriodAvg[]; t: T; locale: Locale }) {
   const [now, prev] = rows;
   type Metric = { label: Key; get: (r: PeriodAvg) => number | undefined; fmt: (v: number) => string; better: "up" | "down" };
   const METRICS: Metric[] = [
-    { label: "pt.m.km", get: (r) => r.kmPerWeek, fmt: (v) => fmtKm(v), better: "up" },
-    { label: "pt.m.carreras", get: (r) => r.runsPerWeek, fmt: (v) => fmtKm(v), better: "up" },
+    { label: "pt.m.km", get: (r) => r.kmPerWeek, fmt: (v) => fmtKm(v, 1, locale), better: "up" },
+    { label: "pt.m.carreras", get: (r) => r.runsPerWeek, fmt: (v) => fmtKm(v, 1, locale), better: "up" },
     { label: "pt.m.ritmo", get: (r) => r.avgPace, fmt: fmtPace, better: "down" },
     { label: "pt.m.fc", get: (r) => r.avgHr, fmt: (v) => String(Math.round(v)), better: "down" },
     { label: "pt.m.ef", get: (r) => r.ef, fmt: (v) => v.toFixed(2), better: "up" },
     { label: "pt.m.cadencia", get: (r) => r.cadence, fmt: (v) => String(Math.round(v)), better: "up" },
-    { label: "pt.m.tirada", get: (r) => r.longestKm || undefined, fmt: (v) => `${fmtKm(v)} km`, better: "up" },
-    { label: "pt.m.fuerza", get: (r) => r.strengthPerWeek, fmt: (v) => fmtKm(v), better: "up" },
+    { label: "pt.m.tirada", get: (r) => r.longestKm || undefined, fmt: (v) => `${fmtKm(v, 1, locale)} km`, better: "up" },
+    { label: "pt.m.fuerza", get: (r) => r.strengthPerWeek, fmt: (v) => fmtKm(v, 1, locale), better: "up" },
   ];
   return (
     <Card title={t("pt.mejora")} subtitle={t("pt.mejoraSub")}>
@@ -437,7 +437,7 @@ function BestTimesCard({ acts, locale = "es" }: { acts: Activity[]; locale?: Loc
                 <span className="block font-medium">{t(`pr.d.${b.label}` as Key)}</span>
                 <span className="block truncate text-xs text-muted">
                   {b.activity.name} · {dayMonth(b.activity.date, locale)}
-                  {!b.exact && t("pr.estimado", { km: fmtKm(b.activity.distanceM / 1000) })}
+                  {!b.exact && t("pr.estimado", { km: fmtKm(b.activity.distanceM / 1000, 1, locale) })}
                 </span>
               </span>
               <span className="text-right">
@@ -468,9 +468,9 @@ function Fuerza({ db, today, locale }: { db: Db; today: string; locale: Locale }
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <Stat label={t("pt.sesionesTotales")} value={s.total} sub={t("pt.hTotal", { h: fmtNum(s.totalMin / 60, 1) })} />
+        <Stat label={t("pt.sesionesTotales")} value={s.total} sub={t("pt.hTotal", { h: fmtNum(s.totalMin / 60, 1, locale) })} />
         <Stat label={t("pt.ult4")} value={s.last28} sub={t("pt.min", { n: s.min28 })} />
-        <Stat label={t("pt.mediaSemanal")} value={fmtKm(s.perWeek28)} sub={target ? t("pt.objetivo", { n: target }) : t("pt.recomendado")} />
+        <Stat label={t("pt.mediaSemanal")} value={fmtKm(s.perWeek28, 1, locale)} sub={target ? t("pt.objetivo", { n: target }) : t("pt.recomendado")} />
         <Stat label={t("pt.ultimaSesion")} value={s.last ? dayMonth(s.last.date, locale) : "–"} sub={s.last ? t("pt.haceDias", { n: diffDays(today, s.last.date) }) : undefined} />
       </div>
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
@@ -520,7 +520,7 @@ function Actividades({ db, sport, page, locale }: { db: Db; sport: string; page:
   const km = filtered.reduce((s, a) => s + a.distanceM, 0) / 1000;
   const sec = filtered.reduce((s, a) => s + a.movingSec, 0);
   return (
-    <Card title={t("pt.todas")} subtitle={t("pt.todasSub", { n: filtered.length, km: fmtNum(km), h: fmtNum(sec / 3600) })}>
+    <Card title={t("pt.todas")} subtitle={t("pt.todasSub", { n: filtered.length, km: fmtNum(km, 0, locale), h: fmtNum(sec / 3600, 0, locale) })}>
       <div className="mb-3 flex flex-wrap gap-1.5">
         {SPORT_FILTERS.map((f) => (
           <Link
@@ -623,16 +623,16 @@ async function Salud({ db, locale }: { db: Db; locale: Locale }) {
       {h ? (
         <>
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-            <Stat label={t("sal.pasosHoy")} value={h.today?.steps !== undefined ? fmtNum(h.today.steps) : "–"} sub={h.avgSteps7 !== undefined ? t("sal.media7", { v: fmtNum(h.avgSteps7) }) : undefined} />
+            <Stat label={t("sal.pasosHoy")} value={h.today?.steps !== undefined ? fmtNum(h.today.steps, 0, locale) : "–"} sub={h.avgSteps7 !== undefined ? t("sal.media7", { v: fmtNum(h.avgSteps7, 0, locale) }) : undefined} />
             <Stat
               label={t("sal.actHoy")}
-              value={h.today?.activeKcal !== undefined ? fmtNum(h.today.activeKcal) : "–"}
+              value={h.today?.activeKcal !== undefined ? fmtNum(h.today.activeKcal, 0, locale) : "–"}
               unit="kcal"
-              sub={h.avgActiveKcal7 !== undefined ? t("sal.media7kcal", { v: fmtNum(h.avgActiveKcal7) }) : undefined}
+              sub={h.avgActiveKcal7 !== undefined ? t("sal.media7kcal", { v: fmtNum(h.avgActiveKcal7, 0, locale) }) : undefined}
             />
             <Stat
               label={t("sal.totHoy")}
-              value={h.today?.activeKcal !== undefined && h.today.restingKcal !== undefined ? fmtNum(h.today.activeKcal + h.today.restingKcal) : "–"}
+              value={h.today?.activeKcal !== undefined && h.today.restingKcal !== undefined ? fmtNum(h.today.activeKcal + h.today.restingKcal, 0, locale) : "–"}
               unit="kcal"
               sub={t("sal.actReposo")}
             />
@@ -844,13 +844,13 @@ function HealthMonths({ db, today, t, locale }: { db: Db; today: string; t: T; l
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <Stat
           label={t("sal.mediaDiaria")}
-          value={cur.avgSteps !== undefined ? fmtNum(cur.avgSteps) : "–"}
+          value={cur.avgSteps !== undefined ? fmtNum(cur.avgSteps, 0, locale) : "–"}
           unit={t("sal.pasosU")}
           sub={delta !== undefined ? t("sal.vsMes", { d: `${delta > 0 ? "+" : ""}${delta}`, mes: monthName(prev!.month) }) : t("sal.diasDatos", { n: cur.days })}
         />
-        <Stat label={t("sal.pasosMes")} value={fmtNum(cur.steps)} sub={t("sal.diasDatos", { n: cur.days })} />
+        <Stat label={t("sal.pasosMes")} value={fmtNum(cur.steps, 0, locale)} sub={t("sal.diasDatos", { n: cur.days })} />
         <Stat label={t("sal.dias10k")} value={cur.days10k} sub={prev ? t("sal.enMes", { n: prev.days10k, mes: monthName(prev.month) }) : undefined} />
-        <Stat label={t("sal.mejorDia")} value={cur.bestDay ? fmtNum(cur.bestDay.steps) : "–"} unit={cur.bestDay ? t("sal.pasosU") : undefined} sub={cur.bestDay ? dayMonth(cur.bestDay.date, locale) : undefined} />
+        <Stat label={t("sal.mejorDia")} value={cur.bestDay ? fmtNum(cur.bestDay.steps, 0, locale) : "–"} unit={cur.bestDay ? t("sal.pasosU") : undefined} sub={cur.bestDay ? dayMonth(cur.bestDay.date, locale) : undefined} />
       </div>
       {months.length > 1 && (
         <div className="mt-4">
@@ -872,10 +872,10 @@ function HealthMonths({ db, today, t, locale }: { db: Db; today: string; t: T; l
           {[...months].reverse().map((m) => (
             <tr key={m.month}>
               <td className="py-1.5 capitalize">{monthName(m.month)} {m.month.slice(2, 4)}</td>
-              <td className="py-1.5 text-right font-semibold">{m.avgSteps !== undefined ? fmtNum(m.avgSteps) : "–"}</td>
+              <td className="py-1.5 text-right font-semibold">{m.avgSteps !== undefined ? fmtNum(m.avgSteps, 0, locale) : "–"}</td>
               <td className="py-1.5 text-right">{m.days10k}</td>
-              <td className="hidden py-1.5 text-right sm:table-cell">{fmtNum(m.steps)}</td>
-              <td className="py-1.5 text-right">{m.avgKcal !== undefined ? fmtNum(m.avgKcal) : "–"}</td>
+              <td className="hidden py-1.5 text-right sm:table-cell">{fmtNum(m.steps, 0, locale)}</td>
+              <td className="py-1.5 text-right">{m.avgKcal !== undefined ? fmtNum(m.avgKcal, 0, locale) : "–"}</td>
             </tr>
           ))}
         </tbody>
@@ -938,9 +938,9 @@ function Editar({ db, today, initialFocus, locale, name }: { db: Db; today: stri
             <Card title={t("ed.promedios")} subtitle={t("ed.promediosSub")}>
               <ul className="divide-y divide-line text-sm">
                 <Row label={t("ed.kmSem")} value={`${avg.weeklyKm} km`} note={t("ed.enPerfil", { v: profile.weeklyKm })} />
-                <Row label={t("ed.tirada")} value={`${fmtKm(avg.longestRunKm)} km`} note={t("ed.enPerfil", { v: profile.longestRunKm })} />
-                <Row label={t("ed.diasCorriendo")} value={fmtKm(avg.runDaysPerWeek)} />
-                <Row label={t("ed.fuerzaSem")} value={fmtKm(avg.strengthPerWeek)} />
+                <Row label={t("ed.tirada")} value={`${fmtKm(avg.longestRunKm, 1, locale)} km`} note={t("ed.enPerfil", { v: profile.longestRunKm })} />
+                <Row label={t("ed.diasCorriendo")} value={fmtKm(avg.runDaysPerWeek, 1, locale)} />
+                <Row label={t("ed.fuerzaSem")} value={fmtKm(avg.strengthPerWeek, 1, locale)} />
               </ul>
               {outdated ? (
                 <form action={syncProfileAverages} className="mt-3">

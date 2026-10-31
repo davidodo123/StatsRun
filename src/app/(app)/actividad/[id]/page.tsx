@@ -96,7 +96,7 @@ async function Content({ params, searchParams }: { params: PageProps<"/actividad
           {mine && <ActivityPhotoButtons id={a.id} hasPhoto={Boolean(photo)} locale={locale} />}
           {a.workout && <MusclesCard db={db} a={a} t={t} locale={locale} />}
           {a.workout ? (
-            <WorkoutCard workout={a.workout} records={strengthRecords(db.activities).get(a.id) ?? []} t={t} name={(id, fallback) => { const x = findExercise(db, id); return x ? exerciseName(x, locale) : fallback; }} />
+            <WorkoutCard workout={a.workout} records={strengthRecords(db.activities).get(a.id) ?? []} t={t} locale={locale} name={(id, fallback) => { const x = findExercise(db, id); return x ? exerciseName(x, locale) : fallback; }} />
           ) : a.route ? (
             <RouteReplay route={a.route} distanceKm={a.distanceM / 1000} movingSec={a.movingSec} locale={locale}>
               <RouteMap route={a.route} label={t("act.mapaDe", { nombre: a.name })} />
@@ -109,23 +109,23 @@ async function Content({ params, searchParams }: { params: PageProps<"/actividad
             </Card>
           )}
           <StatGroup className="md:grid-cols-4">
-            {a.distanceM > 0 && <Stat label={t("act.distancia")} value={fmtKm(a.distanceM / 1000, 2)} unit="km" />}
+            {a.distanceM > 0 && <Stat label={t("act.distancia")} value={fmtKm(a.distanceM / 1000, 2, locale)} unit="km" />}
             <Stat label={t("act.tiempoMov")} value={fmtDuration(a.movingSec)} sub={a.elapsedSec > a.movingSec + 30 ? t("act.total", { t: fmtDuration(a.elapsedSec) }) : undefined} />
-            {pace ? <Stat label={t("act.ritmo")} value={fmtPace(pace)} unit="/km" /> : speed ? <Stat label={t("act.velocidad")} value={fmtKm(speed)} unit="km/h" /> : null}
-            {a.elevationGainM > 0 && <Stat label={t("act.desnivel")} value={fmtNum(a.elevationGainM)} unit="m" sub={a.maxAltitudeM ? t("act.altMax", { m: fmtNum(a.maxAltitudeM) }) : undefined} />}
+            {pace ? <Stat label={t("act.ritmo")} value={fmtPace(pace)} unit="/km" /> : speed ? <Stat label={t("act.velocidad")} value={fmtKm(speed, 1, locale)} unit="km/h" /> : null}
+            {a.elevationGainM > 0 && <Stat label={t("act.desnivel")} value={fmtNum(a.elevationGainM, 0, locale)} unit="m" sub={a.maxAltitudeM ? t("act.altMax", { m: fmtNum(a.maxAltitudeM, 0, locale) }) : undefined} />}
             {a.avgHr && <Stat label={t("act.fc")} value={Math.round(a.avgHr)} unit={t("u.pulso")} sub={a.maxHr ? t("act.max", { n: Math.round(a.maxHr) }) : undefined} />}
             {typeof a.decoupling === "number" && dc && (
               <Stat
                 label={t("act.desacople")}
-                value={fmtNum(a.decoupling, 1)}
+                value={fmtNum(a.decoupling, 1, locale)}
                 unit="%"
                 status={{ ...dc, label: t(`act.dc.${dc.tone}`) }}
                 hint={t("act.desacopleHint")}
               />
             )}
             {a.avgCadence && <Stat label={t("act.cadencia")} value={Math.round(a.avgCadence)} unit={t("u.cadencia")} />}
-            {a.steps && <Stat label={t("act.pasos")} value={fmtNum(a.steps)} />}
-            {a.workout && <Stat label={t("wl.volumen")} value={fmtNum(workoutVolume(a.workout))} unit="kg" sub={t("act.seriesReps", { series: workoutSets(a.workout), reps: workoutReps(a.workout) })} />}
+            {a.steps && <Stat label={t("act.pasos")} value={fmtNum(a.steps, 0, locale)} />}
+            {a.workout && <Stat label={t("wl.volumen")} value={fmtNum(workoutVolume(a.workout), 0, locale)} unit="kg" sub={t("act.seriesReps", { series: workoutSets(a.workout), reps: workoutReps(a.workout) })} />}
             {a.rpe && <Stat label={t("act.rpe")} value={a.rpe} unit="/10" />}
           </StatGroup>
         </div>
@@ -166,7 +166,7 @@ function MusclesCard({ db, a, t, locale }: { db: Pick<Db, "customExercises" | "p
 }
 
 /** Ejercicios y series de un entreno de fuerza. */
-function WorkoutCard({ workout, records, t, name }: { workout: Workout; records: StrengthRecord[]; t: T; name: (exerciseId: string, fallback: string) => string }) {
+function WorkoutCard({ workout, records, t, name, locale }: { workout: Workout; records: StrengthRecord[]; t: T; name: (exerciseId: string, fallback: string) => string; locale: Locale }) {
   const pc = t("re.pc");
   return (
     <Card title={t("rut.ejercicios")} subtitle={workout.emom && t("act.emomRondas", { titulo: emomTitle(workout.emom), n: workout.emom.done, total: workout.emom.rounds })}>
@@ -180,7 +180,7 @@ function WorkoutCard({ workout, records, t, name }: { workout: Workout; records:
                 <Link href={`/fuerza/ejercicios/${e.exerciseId}`} className="truncate font-semibold text-accent">
                   {name(e.exerciseId, e.name)}
                 </Link>
-                {best > 0 && <span className="shrink-0 text-xs text-muted">{t("ex.rmEst", { kg: fmtNum(best, 1) })}</span>}
+                {best > 0 && <span className="shrink-0 text-xs text-muted">{t("ex.rmEst", { kg: fmtNum(best, 1, locale) })}</span>}
               </div>
               {rec && (
                 <p className="mt-1 inline-flex items-center gap-1 rounded-full bg-accent/15 px-2 py-0.5 text-xs font-semibold text-accent">

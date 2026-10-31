@@ -250,7 +250,7 @@ Español, inglés, catalán, portugués y francés, por fases.
 
 - [/] Fase 1: selector en Perfil → Editar perfil y pantallas principales (menú, Inicio, «Tú» y la cabecera del perfil) — *hecha 2026-10-26, pendiente de que David la vea*
 - [/] Fase 2: el resto de pantallas — *hecha 2026-10-28, pendiente de que David la vea*: todas las pantallas en los 5 idiomas, también la ficha de un amigo, los avisos (métricas, instalar, notificaciones), la notificación de cada mañana y la política de privacidad (puesta al día: entrar con correo y contraseña, correo de Gmail). La IA del chat contesta en el idioma de la app. Queda en español la guía avanzada del atajo del iPhone (crearlo a mano y recuperación) y los mensajes de error que devuelve el servidor
-- [ ] Números en inglés con punto decimal (`fmtKm`/`fmtNum` usan siempre «es-ES»: sale «12,70 km» en inglés; 41 sitios) — *visto 2026-10-30 en las capturas de Play*
+- [x] Números en inglés con punto decimal (`fmtKm`/`fmtNum` usaban siempre «es-ES») — *hecho 2026-10-31: ahora reciben el idioma («149.9 km», «4,287 m» en inglés); quedan en español los textos del servidor, la imagen para compartir, la tarjeta de carrera y admin*
 - [/] Fase 3: lo generado — *2026-10-27, adelantado para el vídeo: títulos, descripción y pasos de las sesiones del plan y foco de cada semana, solo en inglés (`lib/i18n/planText.ts`); nombres de ejercicios en inglés con el nombre original del catálogo. Falta catalán, portugués y francés, respuestas de la IA, avisos e imágenes para compartir*: títulos y pasos de las sesiones del plan, respuestas de la IA, avisos de cada mañana, imágenes para compartir y pasos de los 1.036 ejercicios
 
 ## 📝 Pedido por David (2026-10-26)
@@ -273,7 +273,7 @@ Español, inglés, catalán, portugués y francés, por fases.
 - [x] **Mapa al grabar con GPS** (lo vio David 2026-10-29 en Android): la pantalla de grabar solo dibujaba la línea sobre negro y nada hasta tener 2 puntos. Ahora sale el mapa de OpenStreetMap con el recorrido encima, y antes de empezar, centrado en donde estás — *hecho 2026-10-29, pendiente de comprobar en Android y iPhone* → [[Decisiones#Mapa al grabar con GPS]]
 - [x] **Aviso de cada mañana más corto** (lo pidió David 2026-10-30): título «Hoy toca» y debajo solo lo del plan («Tirada larga · 12 km + Superior · Fuerza»), sin ritmos, pasos ni «Y además»; carrera: «Media de Sevilla · ¡Mucha suerte!»; descanso: «Hoy toca descanso» — *hecho 2026-10-30, pendiente de comprobar*
 - [x] **Muñeco realista en el mapa de músculos** (lo pidió David 2026-10-31): imágenes de Gemini (gris, sin fondo) con los 17 músculos encima en lima (mezcla «overlay», se ven las fibras); hombre o mujer según el perfil, en la portada de Fuerza y en la ficha del entreno — *hecho 2026-10-31 (hombre y mujer); la imagen para compartir sigue con el dibujo de antes* → [[Decisiones#Muñeco realista]]
-- [ ] **Patreon**: una versión para que donen y se quiten los anuncios — *la app no tiene anuncios todavía: falta decidir si se ponen y la página de Patreon de David*
+- [ ] **Donaciones (Patreon o Ko-fi)**: botón «Apoya Zancavolt» en «Tú», solo en web e iPhone (oculto en Android como Premium: Google Play retira apps con enlaces a donaciones fuera de su cobro) — *aparcado por David 2026-10-31: falta que cree la página y decida Patreon (mensual, ~8-12 %) o Ko-fi (sueltas, sin comisión propia)* → [[Decisiones#Donaciones]]
 
 ## 🔚 Para el final (lo dejó David 2026-10-25)
 

@@ -20,7 +20,7 @@ export function TuneUpRaces({ goal, races, today, locale = "es" }: { goal: Goal;
   // el plan llega hasta el último objetivo: las B y C de después se quedan fuera
   const lastA = [goal.date, ...upcoming.filter((r) => r.priority === "A").map((r) => r.date)].sort().at(-1)!;
   const items = [{ main: true as const, date: goal.date }, ...upcoming.map((r) => ({ main: false as const, date: r.date, r }))].sort((a, b) => a.date.localeCompare(b.date));
-  const when = (date: string, km: number) => `${cap(shortWeekdayDate(date, locale))} · ${fmtKm(km, 1)} km`;
+  const when = (date: string, km: number) => `${cap(shortWeekdayDate(date, locale))} · ${fmtKm(km, 1, locale)} km`;
   return (
     <Card title={t("car.temporada")} subtitle={t("car.temporadaSub")}>
       <div className="space-y-3">

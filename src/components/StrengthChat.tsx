@@ -18,7 +18,7 @@ function ActivityProposal({ m, t, locale }: { m: StrengthChatMessage; t: T; loca
   const a = m.activity!;
   const pace = a.sport === "run" && a.distanceKm ? a.durationSec / a.distanceKm : undefined;
   const facts = [
-    a.distanceKm && `${fmtKm(a.distanceKm, 2)} km`,
+    a.distanceKm && `${fmtKm(a.distanceKm, 2, locale)} km`,
     fmtDuration(a.durationSec),
     pace && `${fmtPace(pace)} /km`,
     a.elevationGainM && `+${a.elevationGainM} m`,

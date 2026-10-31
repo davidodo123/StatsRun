@@ -47,7 +47,7 @@ export function CmRaceList({ races, locale = "es" }: { races: CmRace[]; locale?:
                   <strong className="mt-0.5 line-clamp-2 block text-sm leading-snug">{r.name}</strong>
                   <span className="mt-1 block truncate text-xs text-ink-2">{r.place}</span>
                   <span className="block truncate text-xs text-muted">
-                    {r.distancesKm.length ? r.distancesKm.map((d) => `${fmtKm(d, d % 1 ? 1 : 0)} km`).join(" · ") : r.distanceText}
+                    {r.distancesKm.length ? r.distancesKm.map((d) => `${fmtKm(d, d % 1 ? 1 : 0, locale)} km`).join(" · ") : r.distanceText}
                     {r.type ? ` · ${r.type}` : ""}
                   </span>
                 </span>

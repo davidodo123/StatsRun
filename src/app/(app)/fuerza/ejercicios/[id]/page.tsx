@@ -137,9 +137,9 @@ async function Progress({ history, records, t, locale }: { history: ExercisePoin
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         {weighted ? (
           <>
-            {rm.oneRm ? <Stat label={t("ech.rm")} value={fmtNum(rm.oneRm, 1)} unit="kg" sub={shortDate(rm.date)} hint={t("ex.epley")} /> : null}
+            {rm.oneRm ? <Stat label={t("ech.rm")} value={fmtNum(rm.oneRm, 1, locale)} unit="kg" sub={shortDate(rm.date)} hint={t("ex.epley")} /> : null}
             <Stat label={t("ech.masPeso")} value={fmtLoad(heavy.bw, heavy.topKg, t("re.pc"))} sub={`× ${heavySet.reps} · ${shortDate(heavy.date)}`} />
-            <Stat label={t("ex.mejorVolumen")} value={fmtNum(vol.volume)} unit="kg" sub={shortDate(vol.date)} />
+            <Stat label={t("ex.mejorVolumen")} value={fmtNum(vol.volume, 0, locale)} unit="kg" sub={shortDate(vol.date)} />
           </>
         ) : (
           <>
@@ -165,7 +165,7 @@ async function Progress({ history, records, t, locale }: { history: ExercisePoin
                       {shortDate(p.date)}
                       {records(p.activityId) && <Icon name="trophy" className="h-3.5 w-3.5 text-accent" />}
                     </Link>
-                    {p.oneRm ? <span className="text-xs text-muted">{t("ex.rmEst", { kg: fmtNum(p.oneRm, 1) })}</span> : null}
+                    {p.oneRm ? <span className="text-xs text-muted">{t("ex.rmEst", { kg: fmtNum(p.oneRm, 1, locale) })}</span> : null}
                   </div>
                   <p className="tabular text-xs text-ink-2">{p.sets.map((s) => setText(p, s, t("re.pc"))).join(" · ")}</p>
                 </li>

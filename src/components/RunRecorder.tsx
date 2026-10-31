@@ -151,8 +151,8 @@ export function RunRecorder({ locale = "es" }: { locale?: Locale }) {
     lastNotif.current = at;
     const km = stats.distanceM / 1000;
     const pace = km >= 0.05 ? `${fmtPace(stats.movingSec / km)} /km` : "–";
-    showRunData(t(`gps.${rec.sport}`), t("gps.notif", { km: fmtKm(km, 2), ritmo: pace }), rec.startedAt + rec.pausedMs);
-  }, [background, rec, stats, t]);
+    showRunData(t(`gps.${rec.sport}`), t("gps.notif", { km: fmtKm(km, 2, locale), ritmo: pace }), rec.startedAt + rec.pausedMs);
+  }, [background, rec, stats, t, locale]);
 
   if (!ready) return <div className="h-64 animate-pulse rounded-2xl bg-surface" />;
 
@@ -267,7 +267,7 @@ export function RunRecorder({ locale = "es" }: { locale?: Locale }) {
         <div className="mt-3 grid grid-cols-3 gap-2">
           <div>
             <p className="text-[11px] text-muted">{t("act.distancia")}</p>
-            <p className="tabular text-2xl font-bold">{fmtKm(km, 2)}</p>
+            <p className="tabular text-2xl font-bold">{fmtKm(km, 2, locale)}</p>
             <p className="text-[11px] text-muted">km</p>
           </div>
           <div>
@@ -327,7 +327,7 @@ export function RunRecorder({ locale = "es" }: { locale?: Locale }) {
           <form action={finish} className="max-h-[90dvh] w-full space-y-3 overflow-y-auto rounded-t-2xl bg-surface p-4 pb-[max(1rem,env(safe-area-inset-bottom))] md:max-w-md md:rounded-2xl">
             <strong className="block text-lg">{t("re.guardar")}</strong>
             <p className="text-sm text-ink-2">
-              {fmtKm(km, 2)} km · {fmtDuration(stats.movingSec)}
+              {fmtKm(km, 2, locale)} km · {fmtDuration(stats.movingSec)}
               {avgPace && ` · ${fmtPace(avgPace)} /km`}
               {stats.elevationGainM > 0 && ` · +${stats.elevationGainM} m`}
             </p>

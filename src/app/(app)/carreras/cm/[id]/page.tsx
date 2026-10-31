@@ -9,6 +9,7 @@ import { getAnalysis } from "@/lib/analysis";
 import { findCmRace } from "@/lib/cruzandolametaStore";
 import { WEEKDAYS, diffDays, shortDate, weekday } from "@/lib/dates";
 import { fmtKm } from "@/lib/format";
+import { getT } from "@/lib/i18n/server";
 
 export const metadata: Metadata = { title: "Carrera" };
 
@@ -21,7 +22,7 @@ export default function CmRacePage({ params }: PageProps<"/carreras/cm/[id]">) {
 }
 
 async function Content({ params }: { params: PageProps<"/carreras/cm/[id]">["params"] }) {
-  const [{ id }, { db, today }] = await Promise.all([params, getAnalysis()]);
+  const [{ id }, { db, today }, { locale }] = await Promise.all([params, getAnalysis(), getT()]);
   const r = await findCmRace(id);
   if (!r) notFound();
   const days = diffDays(r.date, today);
@@ -35,7 +36,7 @@ async function Content({ params }: { params: PageProps<"/carreras/cm/[id]">["par
             <Stat label="Faltan" value={days} unit="días" />
             <Stat
               label="Distancias"
-              value={r.distancesKm.length ? r.distancesKm.map((d) => fmtKm(d, d % 1 ? 1 : 0)).join(" · ") : "–"}
+              value={r.distancesKm.length ? r.distancesKm.map((d) => fmtKm(d, d % 1 ? 1 : 0, locale)).join(" · ") : "–"}
               unit={r.distancesKm.length ? "km" : undefined}
               sub={r.distanceText}
             />

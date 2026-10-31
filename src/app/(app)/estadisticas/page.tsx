@@ -60,18 +60,18 @@ async function Content() {
     <div className="space-y-4">
       {header}
       <StatGroup className="md:grid-cols-4 lg:grid-cols-6">
-        <Stat label={t("st.kmAno")} value={fmtNum(T.yearKm)} unit="km" sub={t("st.carreras", { n: T.yearRuns })} />
-        <Stat label={t("st.kmMes")} value={fmtKm(T.monthKm)} unit="km" />
-        <Stat label={t("st.kmTotales")} value={fmtNum(T.allKm)} unit="km" sub={t("st.carreras", { n: T.allRuns })} />
-        <Stat label={t("st.horas")} value={fmtNum(T.allHours)} unit="h" sub={t("st.todosDeportes")} />
-        <Stat label={t("st.desnivel")} value={fmtNum(T.elevation)} unit="m" />
-        <Stat label={t("st.kcal")} value={fmtNum(T.kcal / 1000, 1)} unit={t("st.milKcal")} />
+        <Stat label={t("st.kmAno")} value={fmtNum(T.yearKm, 0, locale)} unit="km" sub={t("st.carreras", { n: T.yearRuns })} />
+        <Stat label={t("st.kmMes")} value={fmtKm(T.monthKm, 1, locale)} unit="km" />
+        <Stat label={t("st.kmTotales")} value={fmtNum(T.allKm, 0, locale)} unit="km" sub={t("st.carreras", { n: T.allRuns })} />
+        <Stat label={t("st.horas")} value={fmtNum(T.allHours, 0, locale)} unit="h" sub={t("st.todosDeportes")} />
+        <Stat label={t("st.desnivel")} value={fmtNum(T.elevation, 0, locale)} unit="m" />
+        <Stat label={t("st.kcal")} value={fmtNum(T.kcal / 1000, 1, locale)} unit={t("st.milKcal")} />
         <Stat label={t("st.racha")} value={T.streakDays} unit={t("st.dias")} sub={t("st.recordDias", { n: T.longestStreak })} />
         <Stat label={t("st.constancia")} value={`${Math.round(T.consistency)} %`} sub={t("st.semanasActivas")} />
         <Stat label={t("st.monotonia")} value={stats.monotony.toFixed(2)} sub={stats.monotony > 2 ? t("st.monoAlta") : t("st.monoBuena")} hint={t("st.monoHint")} />
-        <Stat label={t("st.strain")} value={fmtNum(stats.strain)} sub={t("st.strainSub")} />
+        <Stat label={t("st.strain")} value={fmtNum(stats.strain, 0, locale)} sub={t("st.strainSub")} />
         <Stat label={t("st.suave")} value={`${Math.round(easyPct)} %`} sub={t("st.suaveSub")} />
-        <Stat label={t("st.media6")} value={fmtKm(T.avgWeeklyKm6)} unit={t("st.kmSem")} />
+        <Stat label={t("st.media6")} value={fmtKm(T.avgWeeklyKm6, 1, locale)} unit={t("st.kmSem")} />
       </StatGroup>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
@@ -143,12 +143,12 @@ async function Content() {
                 {[...stats.months].reverse().map((m) => (
                   <tr key={m.month}>
                     <td className="py-1.5">{monthLabel(m.month)}</td>
-                    <td className="py-1.5 text-right font-semibold">{fmtKm(m.runKm)}</td>
+                    <td className="py-1.5 text-right font-semibold">{fmtKm(m.runKm, 1, locale)}</td>
                     <td className="py-1.5 text-right">{m.runs}</td>
                     <td className="py-1.5 text-right">{m.avgPace ? fmtPace(m.avgPace) : "–"}</td>
-                    <td className="hidden py-1.5 text-right sm:table-cell">{fmtKm(m.hours)}</td>
-                    <td className="hidden py-1.5 text-right sm:table-cell">{fmtNum(m.elevation)} m</td>
-                    <td className="hidden py-1.5 text-right sm:table-cell">{fmtNum(m.kcal)}</td>
+                    <td className="hidden py-1.5 text-right sm:table-cell">{fmtKm(m.hours, 1, locale)}</td>
+                    <td className="hidden py-1.5 text-right sm:table-cell">{fmtNum(m.elevation, 0, locale)} m</td>
+                    <td className="hidden py-1.5 text-right sm:table-cell">{fmtNum(m.kcal, 0, locale)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -188,7 +188,7 @@ async function Content() {
                     )}
                     <span className="ml-2 text-xs text-muted">{t(`sport.${a.sport}`)}</span>
                   </td>
-                  <td className="py-1.5 text-right">{a.distanceM ? `${fmtKm(a.distanceM / 1000, 2)} km` : "–"}</td>
+                  <td className="py-1.5 text-right">{a.distanceM ? `${fmtKm(a.distanceM / 1000, 2, locale)} km` : "–"}</td>
                   <td className="hidden py-1.5 text-right sm:table-cell">{fmtDuration(a.movingSec)}</td>
                   <td className="py-1.5 text-right">{a.sport === "run" && a.distanceM ? fmtPace(a.movingSec / (a.distanceM / 1000)) : "–"}</td>
                   <td className="hidden py-1.5 text-right sm:table-cell">{a.avgHr ? Math.round(a.avgHr) : "–"}</td>

@@ -66,7 +66,7 @@ export function ActivityItem({
   const stats = (
     <span className="block text-xs text-muted tabular">
       {dayMonth(a.date, locale)} · {t(`sport.${a.sport}`)}
-      {a.distanceM > 0 && ` · ${fmtKm(a.distanceM / 1000, 2)} km`} · {fmtDuration(a.movingSec)}
+      {a.distanceM > 0 && ` · ${fmtKm(a.distanceM / 1000, 2, locale)} km`} · {fmtDuration(a.movingSec)}
       {a.sport === "run" && a.distanceM > 0 && ` · ${fmtPace(a.movingSec / (a.distanceM / 1000))}/km`}
       {a.avgHr && ` · ${Math.round(a.avgHr)} ${t("u.pulso")}`}
     </span>

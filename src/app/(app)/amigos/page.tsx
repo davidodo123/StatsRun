@@ -145,11 +145,11 @@ async function Content({ searchParams }: { searchParams: PageProps<"/amigos">["s
                 <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-sm tabular">
                   <span>
                     <span className="text-muted">{t("am.semana")} </span>
-                    <strong>{fmtKm(s.stats?.totals.weekKm ?? 0)} km</strong>
+                    <strong>{fmtKm(s.stats?.totals.weekKm ?? 0, 1, locale)} km</strong>
                   </span>
                   <span>
                     <span className="text-muted">{t("am.media6")} </span>
-                    <strong>{fmtKm(s.stats?.totals.avgWeeklyKm6 ?? 0)} km</strong>
+                    <strong>{fmtKm(s.stats?.totals.avgWeeklyKm6 ?? 0, 1, locale)} km</strong>
                   </span>
                   {s.stats && (
                     <span>

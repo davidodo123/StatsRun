@@ -61,7 +61,7 @@ async function Content({ params }: { params: PageProps<"/plan/anterior/[id]">["p
       />
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <Stat label={t("plan.cumplimiento")} value={c.compliance !== undefined ? `${Math.round(c.compliance * 100)} %` : "–"} sub={t("plan.sesionesCarrera", { n: c.past })} />
-        <Stat label={t("plan.kmHechos")} value={fmtKm(c.doneKm)} unit="km" sub={t("plan.dePlanKm", { km: Math.round(totalKm) })} />
+        <Stat label={t("plan.kmHechos")} value={fmtKm(c.doneKm, 1, locale)} unit="km" sub={t("plan.dePlanKm", { km: Math.round(totalKm) })} />
         <Stat label="VDOT" value={`${plan.startVdot.toFixed(1)} → ${plan.targetVdot.toFixed(1)}`} sub={t("plan.alEmpezar")} />
         <Stat label={t("plan.carrerasSecundarias")} value={past.races?.length ?? 0} />
       </div>
@@ -82,7 +82,7 @@ async function Content({ params }: { params: PageProps<"/plan/anterior/[id]">["p
                     </span>
                     <span className="min-w-0 flex-1 truncate">{s.title}</span>
                     <span className="shrink-0 text-xs text-ink-2">
-                      {s.distanceKm ? `${m && m.doneKm ? `${fmtKm(m.doneKm, 1)}/` : ""}${fmtKm(s.distanceKm, 1)} km` : `${s.durationMin} min`}
+                      {s.distanceKm ? `${m && m.doneKm ? `${fmtKm(m.doneKm, 1, locale)}/` : ""}${fmtKm(s.distanceKm, 1, locale)} km` : `${s.durationMin} min`}
                     </span>
                   </li>
                 );

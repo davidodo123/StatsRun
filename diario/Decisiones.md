@@ -1092,3 +1092,10 @@ Fuentes: screensdesign.com, posthog.com/pricing, revenuecat.com/pricing, revenue
 - Los músculos son contornos dibujados a mano sobre la imagen (`lib/strength/bodyPhoto.ts`, mitad izquierda reflejada). Se pintan en lima con la mezcla `overlay` (se ven las fibras y sombras), con borde suave y recortados con la silueta.
 - Mujer: Gemini no hacía un cuerpo de mujer sin ropa; con top y pantalón corto sí. Mismo encuadre que el hombre, así que valen los mismos contornos.
 - La imagen para compartir (`shareCard.ts`) sigue con el dibujo vectorial de antes: la genera el servidor con satori y no admite esa mezcla.
+
+## Donaciones
+*2026-10-31*
+
+- David quiere un Patreon para donaciones. Aparcado hasta que cree la página.
+- Google Play ha retirado o avisado a apps por enlaces a donaciones fuera de su cobro (WireGuard, AnkiDroid); solo lo tolera para organizaciones sin ánimo de lucro. Por eso el botón irá **solo en la web y el iPhone**, oculto en la app de Android (`webOnly`, como Premium).
+- Patreon encaja con apoyos mensuales con ventajas (comisión ~8-12 % + pago); Ko-fi o Buy Me a Coffee, con donaciones sueltas (Ko-fi no cobra comisión propia).

@@ -149,7 +149,7 @@ export function TodayHero({ plan, matches, today, goal, locale }: { plan: Plan; 
           <span className="min-w-0">
             <span className="block text-xs font-semibold tracking-wider text-muted uppercase">{goal.name}</span>
             <span className="font-bold">
-              {fmtKm(goal.distanceKm, 1)} km · {dayMonth(goal.date, locale)}
+              {fmtKm(goal.distanceKm, 1, locale)} km · {dayMonth(goal.date, locale)}
             </span>
           </span>
           {/* número y «días» siempre juntos en una línea: con un nombre de carrera largo, «días» bajaba a otra */}
