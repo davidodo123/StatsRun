@@ -29,7 +29,7 @@ function Placeholder({ cat, className }: { cat: Exercise["cat"]; className: stri
 export function ExerciseThumb({ x, className = "h-12 w-12" }: { x: Media; className?: string }) {
   const rounded = className.includes("rounded-") ? "" : "rounded-lg";
   if (!x.img) return <Placeholder cat={x.cat} className={`${rounded} ${className}`} />;
-  return <img src={exerciseImage(x.imgId ?? x.id)} alt="" loading="lazy" decoding="async" className={`shrink-0 bg-white object-cover ${rounded} ${className}`} />;
+  return <img src={exerciseImage(x.imgId ?? x.id)} alt="" loading="lazy" decoding="async" className={`shrink-0 bg-surface-2 object-cover ${rounded} ${className}`} />;
 }
 
 /** Foto grande: alterna la posición inicial y la final. */

@@ -11,6 +11,7 @@ import { dayMonth, shortWeekdayDate, type Key } from "@/lib/i18n";
 import { viewToday } from "@/lib/analysis";
 import { fmtKm } from "@/lib/format";
 import type { Phase } from "@/lib/types";
+import { planText } from "@/lib/i18n/planText";
 
 export const metadata: Metadata = { title: "Plan anterior" };
 
@@ -80,7 +81,7 @@ async function Content({ params }: { params: PageProps<"/plan/anterior/[id]">["p
                     <span className="w-16 shrink-0 text-xs text-muted">
                       {shortWeekdayDate(s.date, locale)}
                     </span>
-                    <span className="min-w-0 flex-1 truncate">{s.title}</span>
+                    <span className="min-w-0 flex-1 truncate">{planText(s.title, locale)}</span>
                     <span className="shrink-0 text-xs text-ink-2">
                       {s.distanceKm ? `${m && m.doneKm ? `${fmtKm(m.doneKm, 1, locale)}/` : ""}${fmtKm(s.distanceKm, 1, locale)} km` : `${s.durationMin} min`}
                     </span>

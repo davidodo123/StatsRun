@@ -62,7 +62,8 @@ for (const s of shots) {
     await wait(js.includes("esperar") ? 7000 : 800);
   }
   const h = full ? Math.min(6000, (await send("Runtime.evaluate", { expression: "document.documentElement.scrollHeight", returnByValue: true })).result.value) : height;
-  const { data } = await send("Page.captureScreenshot", { format: "png", captureBeyondViewport: full, clip: { x: 0, y: 0, width, height: h, scale: 1 } });
+  // página entera: desde arriba; si no, lo que se ve (también tras desplazar con el js)
+  const { data } = await send("Page.captureScreenshot", full ? { format: "png", captureBeyondViewport: true, clip: { x: 0, y: 0, width, height: h, scale: 1 } } : { format: "png" });
   writeFileSync(path.join(dir, file), Buffer.from(data, "base64"));
   console.log(file);
 }

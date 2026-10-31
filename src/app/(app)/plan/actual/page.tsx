@@ -181,22 +181,27 @@ async function Content({ searchParams }: { searchParams: PageProps<"/plan/actual
             const doneKm = done.reduce((s, m) => s + (m?.doneKm ?? 0), 0);
             return (
               <details key={w.index} id={`semana-${w.index + 1}`} open={current} className="group rounded-2xl border border-line bg-surface">
-                <summary className="flex cursor-pointer list-none flex-wrap items-center gap-x-3 gap-y-1 p-4">
-                  <span className={`h-3 w-3 rounded-sm ${PHASE_BG[w.phase]}`} aria-hidden />
-                  <span className="font-semibold">{t("plan.semana", { n: w.index + 1 })}</span>
-                  <span className="text-sm text-ink-2">
-                    {dayMonth(w.start, locale)} – {dayMonth(addDays(w.start, 6), locale)}
+                {/* a la izquierda la semana (fechas y fase debajo); a la derecha, siempre en su sitio, los km y la flecha */}
+                <summary className="flex cursor-pointer list-none items-center gap-3 p-4">
+                  <span className={`h-3 w-3 shrink-0 rounded-sm ${PHASE_BG[w.phase]}`} aria-hidden />
+                  <span className="min-w-0 flex-1">
+                    <span className="flex flex-wrap items-baseline gap-x-2">
+                      <span className="font-semibold">{t("plan.semana", { n: w.index + 1 })}</span>
+                      <span className="text-sm text-ink-2">
+                        {dayMonth(w.start, locale)} – {dayMonth(addDays(w.start, 6), locale)}
+                      </span>
+                    </span>
+                    <span className="block text-xs text-muted">
+                      {t(PHASE_LABEL[w.phase])}
+                      {w.recovery && ` · ${t("plan.descarga")}`}
+                      {current && ` · ${t("plan.estaSemana")}`}
+                    </span>
                   </span>
-                  <span className="text-xs text-muted">
-                    {t(PHASE_LABEL[w.phase])}
-                    {w.recovery && ` · ${t("plan.descarga")}`}
-                    {current && ` · ${t("plan.estaSemana")}`}
-                  </span>
-                  <span className="ml-auto text-sm tabular">
+                  <span className="shrink-0 text-sm tabular">
                     {(ended || current) && doneKm > 0 && <span className="text-ink-2">{doneKm.toFixed(0)} / </span>}
                     <strong>{w.targetKm} km</strong>
                   </span>
-                  <span className="text-muted transition group-open:rotate-90">›</span>
+                  <span className="shrink-0 text-muted transition group-open:rotate-90">›</span>
                 </summary>
                 <div className="space-y-2 border-t border-line p-4">
                   <p className="text-sm text-ink-2">{planText(w.focus, locale)}</p>

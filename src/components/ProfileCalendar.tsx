@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Icon, type IconName } from "./icons";
 import { DoneChip } from "./ui";
 import { intlLocale, translator, weekdayDate, weekdayInitials, type Locale } from "@/lib/i18n";
+import { planText } from "@/lib/i18n/planText";
 
 export interface CalendarDay {
   acts: { id: string; name: string; sport: string; km: number; min: number }[];
@@ -118,7 +119,7 @@ export function ProfileCalendar({ days, today, locale }: { days: Record<string, 
                 <Link href="/plan/actual" className="flex items-center gap-3 hover:text-accent">
                   <Icon name={p.strength ? "dumbbell" : "run"} className="h-5 w-5 text-muted" />
                   <span className="min-w-0 flex-1">
-                    <strong className="block truncate">{p.title}</strong>
+                    <strong className="block truncate">{planText(p.title, locale)}</strong>
                     <span className="text-xs text-ink-2 tabular">
                       {p.km > 0 && `${p.km.toLocaleString(nf)} km · `}~{p.min} min
                     </span>

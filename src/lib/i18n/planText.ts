@@ -196,14 +196,17 @@ export const PATTERNS: [RegExp, Tr][] = [
 
 /** Un texto del plan en el idioma (si no hay traducción, se queda en español). */
 export function planText(s: string, locale: Locale): string {
-  if (locale === "es" || !s) return s;
+  if (!s) return s;
+  // los km se guardan con punto («Tirada larga 12.5 km»): coma decimal en todos los idiomas menos en inglés
+  const decimals = (x: string) => (locale === "en" ? x : x.replace(/(\d)\.(\d)/g, "$1,$2"));
+  if (locale === "es") return decimals(s);
   const more = locale === "en" ? undefined : PLAN_MORE[locale];
   const exact = EXACT[s]?.[locale] ?? more?.exact[s];
   if (exact) return exact;
   for (let i = 0; i < PATTERNS.length; i++) {
     const [re, tr] = PATTERNS[i];
     const out = tr[locale] ?? more?.patterns[i];
-    if (out && re.test(s)) return s.replace(re, out);
+    if (out && re.test(s)) return decimals(s.replace(re, out));
   }
-  return s;
+  return decimals(s);
 }

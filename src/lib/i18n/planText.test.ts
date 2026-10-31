@@ -27,3 +27,14 @@ describe("textos del plan en catalán, portugués y francés", () => {
     expect(planText("Algo nuevo", "ca")).toBe("Algo nuevo");
   });
 });
+
+describe("decimales de los km del plan", () => {
+  it("coma en español y en los demás; punto en inglés", () => {
+    expect(planText("Tirada larga 12.5 km", "es")).toBe("Tirada larga 12,5 km");
+    expect(planText("Tirada larga 12.5 km", "fr")).toBe("Sortie longue 12,5 km");
+    expect(planText("Tirada larga 12.5 km", "en")).toBe("Long run 12.5 km");
+  });
+  it("los ritmos no cambian", () => {
+    expect(planText("8 km a ritmo E (5:43–6:29 /km)", "es")).toBe("8 km a ritmo E (5:43–6:29 /km)");
+  });
+});

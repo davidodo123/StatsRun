@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Card } from "./ui";
 import { PlateCalc } from "./PlateCalc";
 import { hrZones, raceTimeFromVdot, riegel, trainingPaces, vdotFromRace, flatEquivalentKm, heatFactor } from "@/lib/engine/physiology";
-import { fmtDuration, fmtPace, fmtPaceRange, parseTime } from "@/lib/format";
+import { fmtDuration, fmtKm, fmtPace, fmtPaceRange, parseTime } from "@/lib/format";
 import { translator, type Key, type Locale } from "@/lib/i18n";
 
 const DISTANCES = [
@@ -165,7 +165,7 @@ export function Calculators({ locale = "es" }: { locale?: Locale }) {
         {paceSec && speed ? (
           <ul className="mt-3 space-y-1 text-sm tabular">
             <li>
-              {t("calc.velocidad")} <strong>{speed.toFixed(2)} km/h</strong> · {fmtPace(paceSec * 1.60934)} {t("calc.milla2")}
+              {t("calc.velocidad")} <strong>{fmtKm(speed, 2, locale)} km/h</strong> · {fmtPace(paceSec * 1.60934)} {t("calc.milla2")}
             </li>
             {DISTANCES.slice(1).map((d) => {
               const f = (flatEquivalentKm(d.km, Number(gain) * (d.km / 42.195)) / d.km) * heatFactor(Number(temp), d.km);

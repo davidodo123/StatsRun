@@ -126,7 +126,7 @@ export function TodayHero({ plan, matches, today, goal, locale }: { plan: Plan; 
           <h2 className="mt-1 font-display text-6xl leading-none tracking-[0.03em] uppercase">{t("hoy.descanso")}</h2>
           {next && (
             <p className="mt-3 text-ink-2">
-              {next.date === addDays(today, 1) ? t("hoy.manana") : t("hoy.elDia", { dia: weekdayDate(next.date, locale) })}: <strong className="text-ink">{next.title}</strong>
+              {next.date === addDays(today, 1) ? t("hoy.manana") : t("hoy.elDia", { dia: weekdayDate(next.date, locale) })}: <strong className="text-ink">{planText(next.title, locale)}</strong>
             </p>
           )}
         </>
