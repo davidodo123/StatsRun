@@ -3,6 +3,7 @@ import { Anton, Inter } from "next/font/google";
 import "./globals.css";
 import { ServiceWorkerRegister } from "@/components/Pwa";
 import { NativeBridge } from "@/components/NativeBridge";
+import { RotateHint } from "@/components/RotateHint";
 
 // estilo Volt (elegido por David 2026-10-24): Inter para el texto y Anton, condensada, solo en títulos y cifras grandes
 const body = Inter({ subsets: ["latin"], variable: "--font-body", display: "swap" });
@@ -32,14 +33,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         {children}
         <ServiceWorkerRegister />
         <NativeBridge />
-        {/* el iPhone no deja bloquear el giro en la app instalada: en horizontal se pide volver a vertical */}
-        <div className="rotate-hint" role="alert">
-          <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-            <rect x="7" y="2" width="10" height="20" rx="2" />
-            <path d="M11 18h2" />
-          </svg>
-          <p>Gira el móvil: Zancavolt se usa en vertical.</p>
-        </div>
+        <RotateHint />
       </body>
     </html>
   );

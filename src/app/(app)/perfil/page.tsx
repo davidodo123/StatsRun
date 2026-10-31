@@ -149,7 +149,7 @@ function ProfileHeader({ db, stats, tab, picture, tr, locale, children }: { db: 
   return (
     <section className="rounded-2xl border border-line bg-surface p-4 md:p-5">
       <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
-        <AvatarPicker picture={picture} initials={initials} custom={Boolean(picture?.startsWith("/api/avatar/"))} />
+        <AvatarPicker picture={picture} initials={initials} custom={Boolean(picture?.startsWith("/api/avatar/"))} label={tr("sis.cambiarFoto")} />
         <div className="min-w-0 flex-1">
           <p className="truncate text-lg font-bold">{p.name}</p>
           <p className="text-xs text-ink-2">

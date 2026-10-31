@@ -6,7 +6,7 @@ import { Icon } from "./icons";
 import { toJpeg } from "./imageFile";
 
 /** Foto de perfil: al tocarla se elige otra (de la galería o la cámara); si es una subida, sale un menú para cambiarla o quitarla. */
-export function AvatarPicker({ picture, initials, custom }: { picture?: string; initials: string; custom: boolean }) {
+export function AvatarPicker({ picture, initials, custom, label = "Cambiar foto de perfil" }: { picture?: string; initials: string; custom: boolean; label?: string }) {
   const input = useRef<HTMLInputElement>(null);
   const [pending, start] = useTransition();
   const [error, setError] = useState<string>();
@@ -41,7 +41,7 @@ export function AvatarPicker({ picture, initials, custom }: { picture?: string; 
         onClick={() => (custom ? setMenu((m) => !m) : input.current?.click())}
         aria-expanded={custom ? menu : undefined}
         disabled={pending}
-        aria-label="Cambiar foto de perfil"
+        aria-label={label}
         className="relative grid h-14 w-14 place-items-center rounded-full bg-accent text-lg font-bold text-accent-ink"
       >
         {shown ? (

@@ -22,6 +22,7 @@ import { perfilSalud } from "./perfilSalud";
 import { avisos } from "./avisos";
 import { premium } from "./premium";
 import { carreraFicha } from "./carreraFicha";
+import { sistema } from "./sistema";
 import { borrarCuenta } from "./borrarCuenta";
 
-export const AREAS = [sesion, plan, planExtras, etiquetas, entreno, calendario, fuerzaMas, acceso, actividad, estadisticas, amigos, importar, carreras, perfilResumen, estados, registrar, herramientas, entrenadorIA, perfilTabs, perfilSalud, avisos, premium, borrarCuenta, carreraFicha] as const;
+export const AREAS = [sesion, plan, planExtras, etiquetas, entreno, calendario, fuerzaMas, acceso, actividad, estadisticas, amigos, importar, carreras, perfilResumen, estados, registrar, herramientas, entrenadorIA, perfilTabs, perfilSalud, avisos, premium, borrarCuenta, carreraFicha, sistema] as const;
