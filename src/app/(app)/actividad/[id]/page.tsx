@@ -149,14 +149,14 @@ async function Content({ params, searchParams }: { params: PageProps<"/actividad
 }
 
 /** Músculos que ha trabajado este entreno, en el dibujo del cuerpo (como en la imagen para compartir). */
-function MusclesCard({ db, a, t, locale }: { db: Pick<Db, "customExercises">; a: Activity; t: T; locale: Locale }) {
+function MusclesCard({ db, a, t, locale }: { db: Pick<Db, "customExercises" | "profile">; a: Activity; t: T; locale: Locale }) {
   const sets = muscleSets([{ ...a, date: "0000-00-00" }], "0000-00-00", (id) => findExercise(db, id));
   const worked = MUSCLES.filter((m) => sets[m.id]).sort((x, y) => sets[y.id]! - sets[x.id]!);
   if (!worked.length) return null;
   return (
     <Card title={t("act.musculos")}>
       {/* color pleno en el músculo que más series ha tenido en este entreno */}
-      <MuscleMap sets={sets} locale={locale} full={Math.max(...worked.map((m) => sets[m.id]!))} />
+      <MuscleMap sets={sets} locale={locale} sex={db.profile?.sex} full={Math.max(...worked.map((m) => sets[m.id]!))} />
       <p className="mt-3 text-xs text-ink-2">
         {worked.map((m) => `${t(`musculo.${m.id}` as Key)} ${sets[m.id]!.toLocaleString(intlLocale(locale))}`).join(" · ")}
       </p>

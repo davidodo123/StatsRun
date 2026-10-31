@@ -135,7 +135,7 @@ export async function StrengthHome({ title, subtitle }: { title?: string; subtit
         <>
           <p className="mt-6 text-sm text-muted">{t("fh.seriesMusculo")}</p>
           <section className="mt-2 grid grid-cols-1 gap-4 rounded-2xl border border-line bg-surface p-4 md:grid-cols-2">
-            <MuscleMap sets={sets} locale={locale} />
+            <MuscleMap sets={sets} locale={locale} sex={db.profile?.sex} />
             <div>
               {worked.length ? (
                 <ul className="space-y-1.5">
