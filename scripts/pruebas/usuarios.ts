@@ -46,7 +46,7 @@ const N = Number(process.argv[2] ?? 1000);
 const OUT = process.argv[3] ?? "informe-usuarios.json";
 
 // ---------- azar con semilla (siempre los mismos usuarios) ----------
-let seed = 12345;
+let seed = Number(process.env.SEMILLA ?? 12345);
 const rnd = () => ((seed = (seed * 1664525 + 1013904223) % 4294967296), seed / 4294967296);
 const pick = <T,>(a: readonly T[]): T => a[Math.floor(rnd() * a.length)];
 const chance = (p: number) => rnd() < p;
@@ -71,7 +71,7 @@ function profileFor(i: number): Profile {
     age: int(15, 80),
     weightKg: int(42, 140),
     heightCm: int(148, 205),
-    level: pick(["principiante", "intermedio", "avanzado"] as const),
+    level: pick(["nuevo", "principiante", "intermedio", "avanzado"] as const),
     yearsRunning: int(0, 30),
     weeklyKm,
     longestRunKm: Math.min(45, Math.round(weeklyKm * (0.2 + rnd() * 0.4))),
@@ -184,6 +184,13 @@ function check(id: string, db: Db) {
   if (db.goal && db.goal.date > today && !plan.weeks.some((w) => w.sessions.some((s) => s.date === db.goal!.date && s.type === "race"))) bad(id, "sin-dia-de-carrera", db.goal.date);
   // volumen: que no se dispare de una semana a otra (más de +50 % con al menos 10 km)
   const kms = plan.weeks.map((w) => w.targetKm);
+  // ninguna sesión (salvo tirada y carrera) más del doble que la más larga de la semana anterior
+  for (let k = 2; k < plan.weeks.length; k++) {
+    const runs = (w: (typeof plan.weeks)[number]) => w.sessions.filter((x) => !["strength", "long", "race"].includes(x.type)).map((x) => x.distanceKm);
+    const before = Math.max(0, ...runs(plan.weeks[k - 1]));
+    const now = Math.max(0, ...runs(plan.weeks[k]));
+    if (!plan.weeks[k - 1].recovery && before >= 2 && now > before * 2.2) bad(id, "sesion-se-dispara", `semana ${k + 1}: ${before} → ${now} km`);
+  }
   // la primera semana empieza a mitad (hoy) y tras una de descarga se vuelve al nivel de antes: esas no cuentan
   for (let k = 2; k < kms.length; k++) {
     const prev = plan.weeks[k - 1];

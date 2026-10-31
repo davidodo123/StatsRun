@@ -338,7 +338,7 @@ export async function addTuneUpRace(_: FormState, fd: FormData): Promise<FormSta
   if (!db.goal) return { error: await say("Primero elige la carrera principal.") };
   // un objetivo A puede ir antes o después de la principal; las B y C, antes del último objetivo
   const lastA = [db.goal.date, ...(db.races ?? []).filter((r) => r.priority === "A").map((r) => r.date)].sort().at(-1)!;
-  if (priority === "A" && date === db.goal.date) return { error: await say("Ese día ya es la carrera principal.") };
+  if (date === db.goal.date) return { error: await say("Ese día ya es la carrera principal.") };
   if (priority === "A" && diffDays(date, today) > 730) return { error: await say("Como mucho dentro de dos años.") };
   if (priority !== "A" && date >= lastA) return { error: `Tiene que ser antes de tu último objetivo (${lastA}), o márcala como objetivo A.` };
   if ((db.races ?? []).some((r) => r.date === date)) return { error: await say("Ya hay otra carrera ese día.") };

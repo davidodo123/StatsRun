@@ -183,7 +183,11 @@ Usuarios ficticios solo en local (`scripts/pruebas/usuarios.ts`: perfiles, objet
 - [x] Guardar dos veces a la vez el mismo usuario fallaba en local (EPERM en Windows) — *arreglado (solo afectaba a local)*
 - [x] El Plan de un objetivo lejano pesaba 1,5 MB — *bajado a la mitad: las semanas lejanas se ven resumidas*
 - [x] Recorrido completo después de arreglar: 0 páginas con error, 0 errores del servidor (media 150 ms, la más lenta 0,7 s)
-- [ ] Decidir con David: el paso de correr-caminar a correr hace saltar el volumen (de 4,5 a 8-11 km por sesión) en principiantes; y un «principiante» con mucho volumen recibe correr-caminar y tiradas de 24 km a la vez
+- [x] Principiantes: el paso de correr-caminar a correr hacía saltar las sesiones (de 4,5 a 8-11 km) y un «principiante» con mucho volumen recibía correr-caminar y tiradas de 24 km a la vez — *arreglado 2026-10-31 (David dijo «sí»): correr-caminar solo si corre menos de 20 km/semana; las 4 semanas siguientes las sesiones suben poco a poco; calentamiento y vuelta a la calma de 1 km en sesiones cortas*
+- [x] Segunda tanda (semillas 12345, 777, 4242, 99 y 2026: 5.000 usuarios): un rodaje suave de 30 km con la tirada limitada a 7 km (con pocos días el volumen sobrante iba todo a él) — *arreglado: nunca más largo que la tirada*
+- [x] Se podía añadir una carrera B o C el mismo día que la principal (dos carreras ese día) — *arreglado: la app no lo deja y el plan ignora las que ya hubiera*
+- [x] Recorrido de pantallas con otra tanda (semilla 777): 16.007 páginas sin errores — *2026-10-31*
+- [ ] Planes imposibles (de no correr a 10-30 km en 3-5 semanas): el plan avisa, pero aún mete sesiones de ritmo de carrera de 8 km
 - [ ] Un reajuste de la IA que falla gasta igualmente un uso del límite del día (se hace para no reintentar en cada visita)
 - [ ] Pendiente de probar: las acciones (guardar formularios) con muchos usuarios; aquí solo se abren páginas
 

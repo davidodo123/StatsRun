@@ -209,6 +209,8 @@ export function applyTuneUpRaces(plan: Plan, races: TuneUpRace[], today: string)
   let all = plan.weeks.flatMap((w) => w.sessions);
 
   for (const r of [...races].sort((a, b) => a.date.localeCompare(b.date))) {
+    // el día de un objetivo ya es carrera (datos de antes de no permitirlo)
+    if (r.date === plan.goal.date || plan.objectives?.some((o) => o.date === r.date)) continue;
     const wi = plan.weeks.findIndex((w) => r.date >= w.start && r.date <= addDays(w.start, 6));
     // las A no se tocan aquí: tienen su propio tramo (generateSeason)
     if (r.priority === "A" || r.date < today || r.date >= plan.goal.date || wi < 0) continue;
@@ -392,7 +394,9 @@ export function generatePlan(input: PlanInput): Plan {
   const maxVol = Math.max(...vols);
   const avail = availableDaysOf(profile);
   const style = profile.strengthStyle ?? "general";
-  const runWalkWeeks = lvl === 0 ? Math.min(6, Math.ceil(buildWeeks / 2)) : heavy && lvl === 1 ? 3 : 0;
+  // correr-caminar: quien empieza (o principiante con sobrepeso), pero no quien ya corre 20 km o más a la semana
+  const runWalkWeeks = input.currentWeeklyKm >= 20 ? 0 : lvl === 0 ? Math.min(6, Math.ceil(buildWeeks / 2)) : heavy && lvl === 1 ? 3 : 0;
+  let runWalkKm = 0; // lo que dura la última sesión de correr-caminar: al dejarlo, los rodajes suben desde ahí
   let longKmPrev = Math.max(input.longestRecentKm, lvl === 0 ? 3 : 5);
   let peakLong = 0; // la tirada más larga del propio plan (el afinamiento baja desde ella, no desde el historial)
   let lastLong = 0; // la tirada de la última semana normal (la descarga baja desde ella)
@@ -450,7 +454,8 @@ export function generatePlan(input: PlanInput): Plan {
     // con muy poco volumen, el mínimo de la sesión de calidad no puede comerse la semana (como mucho un 30 %)
     const qKm = clamp(vol * 0.2, Math.min(lvl === 0 ? 3 : 5, Math.max(2, vol * 0.3)), 16);
     const easySlots = slots.filter(([, s]) => s === "E" || s === "R").length;
-    const easyKm = Math.max(3, (vol - longKm - nQ * qKm) / Math.max(1, easySlots));
+    // un rodaje suave nunca más largo que la tirada (con pocos días y la tirada limitada, el volumen sobrante iba todo a él)
+    const easyKm = Math.min(Math.max(3, (vol - longKm - nQ * qKm) / Math.max(1, easySlots)), Math.max(3, longKm));
 
     const sessions: PlannedSession[] = [];
     const ctx: SessionCtx = { paces, cat, lvl, phase, phaseIdx, recovery, racePaceFlat, runWalk, weekIdx: w };
@@ -465,13 +470,18 @@ export function generatePlan(input: PlanInput): Plan {
         continue;
       }
       let s: PlannedSession;
+      // las 4 semanas después del correr-caminar, las sesiones (menos la tirada) suben poco a poco desde lo que duraba
+      // (si no, se pasaba de golpe de 4-5 km a 8-11 km por sesión)
+      const after = runWalkKm > 0 && w >= runWalkWeeks && w - runWalkWeeks < 4;
+      const ease = (km: number) => (after ? Math.min(km, Math.max(3, runWalkKm * (1.25 + 0.25 * (w - runWalkWeeks)))) : km);
       // en la semana de la carrera no hay tirada larga: ese día, rodaje suave
       if (slot === "L" && isRaceWeek) s = easyRun(date, round1(Math.min(easyKm, 6)), paces, phase);
       else if (slot === "L") s = longRun(date, round1(longKm), ctx);
-      else if (slot === "Q1") s = quality1(date, round1(qKm), ctx);
-      else if (slot === "Q2") s = quality2(date, round1(qKm), ctx);
-      else if (slot === "R") s = recoveryRun(date, round1(Math.max(3, easyKm * 0.7)), paces);
-      else s = runWalk ? runWalkSession(date, round1(easyKm), w, paces) : easyRun(date, round1(easyKm), paces, phase);
+      else if (slot === "Q1") s = quality1(date, round1(ease(qKm)), ctx);
+      else if (slot === "Q2") s = quality2(date, round1(ease(qKm)), ctx);
+      else if (slot === "R") s = recoveryRun(date, round1(ease(Math.max(3, easyKm * 0.7))), paces);
+      else s = runWalk ? runWalkSession(date, round1(easyKm), w, paces) : easyRun(date, round1(ease(easyKm)), paces, phase);
+      if (s.type === "run_walk") runWalkKm = Math.max(runWalkKm, s.distanceKm);
       sessions.push(s);
     }
 
@@ -761,14 +771,17 @@ function workout(
   p: TrainingPaces,
   zone: string,
 ): PlannedSession {
-  const total = Math.max(totalKm, mainKm + WU + CD);
+  // con sesiones cortas (quien corre poco), 1 km de calentamiento y 1 de vuelta a la calma en vez de 2 y 2
+  const short = totalKm < mainKm + WU + CD;
+  const wu = short ? 1 : WU;
+  const total = Math.max(totalKm, mainKm + wu + (short ? 1 : CD));
   const easyPart = total - mainKm;
   return mk(
     date,
     type,
     title,
     description,
-    [`Calentamiento ${WU} km suave + movilidad + 3 rectas`, main, `Vuelta a la calma: ${round1(easyPart - WU)} km suave`],
+    [`Calentamiento ${wu} km suave + movilidad + 3 rectas`, main, `Vuelta a la calma: ${round1(easyPart - wu)} km suave`],
     round1(total),
     (easyPart * avg(p.easy) + mainKm * avg(pace)) / 60,
     pace,
