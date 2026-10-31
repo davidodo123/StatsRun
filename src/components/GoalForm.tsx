@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import { saveGoal, type FormState } from "@/app/actions";
 import type { Race } from "@/lib/races";
 import { keepForm } from "./keepForm";
+import { DEFAULT_LOCALE, intlLocale, translator, type Key, type Locale } from "@/lib/i18n";
 
 /** Datos ya conocidos de una carrera de fuera del catálogo (p. ej. de Cruzando la Meta). */
 export interface GoalPreset {
@@ -13,17 +14,22 @@ export interface GoalPreset {
   date: string;
 }
 
-const DISTANCES = [
+// las distancias con nombre: tal cual (5K…) o con su texto en cada idioma
+const DISTANCES: { km: number; label: string; key?: Key }[] = [
   { km: 5, label: "5K" },
   { km: 10, label: "10K" },
   { km: 15, label: "15K" },
-  { km: 21.0975, label: "Media maratón" },
-  { km: 42.195, label: "Maratón" },
+  { km: 21.0975, label: "", key: "gf.media" },
+  { km: 42.195, label: "", key: "gf.maraton" },
 ];
-const kmLabel = (km: number) => DISTANCES.find((d) => Math.abs(d.km - km) < 0.05)?.label ?? `${km.toLocaleString("es-ES", { maximumFractionDigits: 2 })} km`;
 
-export function GoalForm({ race, preset, defaultDate, hasProfile }: { race?: Race; preset?: GoalPreset; defaultDate: string; hasProfile: boolean }) {
+export function GoalForm({ race, preset, defaultDate, hasProfile, locale = DEFAULT_LOCALE }: { race?: Race; preset?: GoalPreset; defaultDate: string; hasProfile: boolean; locale?: Locale }) {
+  const t = translator(locale);
   const [state, action, pending] = useActionState<FormState, FormData>(saveGoal, {});
+  const kmLabel = (km: number) => {
+    const d = DISTANCES.find((x) => Math.abs(x.km - km) < 0.05);
+    return d ? (d.key ? t(d.key) : d.label) : `${km.toLocaleString(intlLocale(locale), { maximumFractionDigits: 2 })} km`;
+  };
   // con una carrera conocida, sus distancias (la más larga primero); si no, las habituales
   const options = preset?.distances.length ? [...preset.distances].sort((a, b) => b - a) : DISTANCES.map((d) => d.km);
   return (
@@ -40,12 +46,12 @@ export function GoalForm({ race, preset, defaultDate, hasProfile }: { race?: Rac
           <>
             {!preset && (
               <label className="field sm:col-span-2">
-                Nombre de la carrera
-                <input className="input" name="name" placeholder="Ej.: Media Maratón de mi ciudad" required />
+                {t("gf.nombre")}
+                <input className="input" name="name" placeholder={t("gf.nombrePh")} required />
               </label>
             )}
             <label className="field">
-              Distancia
+              {t("gf.distancia")}
               <select className="input" name="distanceKm" defaultValue={String(preset ? options[0] : 21.0975)}>
                 {options.map((km) => (
                   <option key={km} value={km}>
@@ -57,25 +63,25 @@ export function GoalForm({ race, preset, defaultDate, hasProfile }: { race?: Rac
           </>
         )}
         <label className="field">
-          Fecha de la carrera
+          {t("gf.fecha")}
           <input className="input" type="date" name="date" defaultValue={defaultDate} required />
         </label>
         <label className="field">
-          Tiempo objetivo (opcional)
-          <input className="input" name="targetTime" placeholder="Ej.: 3:45:00 · vacío = terminar" />
+          {t("gf.tiempo")}
+          <input className="input" name="targetTime" placeholder={t("gf.tiempoPh")} />
         </label>
         <label className="field">
-          Desnivel positivo (m)
+          {t("gf.desnivel")}
           <input className="input" type="number" name="elevationGainM" defaultValue={race?.elevationGainM ?? 0} />
         </label>
         <label className="field">
-          Temperatura esperada (°C)
+          {t("gf.temp")}
           <input className="input" type="number" name="temperatureC" defaultValue={race?.temperatureC ?? 12} />
         </label>
       </div>
       <div className="flex flex-wrap items-center gap-3">
         <button className="btn shrink-0" disabled={pending}>
-          {pending ? "Generando plan…" : hasProfile ? "Generar mi plan" : "Guardar objetivo"}
+          {pending ? t("gf.generando") : hasProfile ? t("gf.generar") : t("gf.guardar")}
         </button>
         {state.error && <p className="text-sm font-medium text-critical">✕ {state.error}</p>}
         {state.message && <p className="text-sm font-medium text-good-ink">✓ {state.message}</p>}

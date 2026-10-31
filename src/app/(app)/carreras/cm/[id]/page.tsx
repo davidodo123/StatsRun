@@ -7,7 +7,8 @@ import { GoalForm } from "@/components/GoalForm";
 import { Card, Loading, Notice, PageHeader, Stat } from "@/components/ui";
 import { getAnalysis } from "@/lib/analysis";
 import { findCmRace } from "@/lib/cruzandolametaStore";
-import { WEEKDAYS, diffDays, shortDate, weekday } from "@/lib/dates";
+import { diffDays } from "@/lib/dates";
+import { weekdayDate } from "@/lib/i18n";
 import { fmtKm } from "@/lib/format";
 import { getT } from "@/lib/i18n/server";
 
@@ -22,45 +23,45 @@ export default function CmRacePage({ params }: PageProps<"/carreras/cm/[id]">) {
 }
 
 async function Content({ params }: { params: PageProps<"/carreras/cm/[id]">["params"] }) {
-  const [{ id }, { db, today }, { locale }] = await Promise.all([params, getAnalysis(), getT()]);
+  const [{ id }, { db, today }, { t, locale }] = await Promise.all([params, getAnalysis(), getT()]);
   const r = await findCmRace(id);
   if (!r) notFound();
   const days = diffDays(r.date, today);
   return (
     <>
-      <BackLink href="/carreras" />
-      <PageHeader title={r.name} subtitle={`${WEEKDAYS[weekday(r.date)]} ${shortDate(r.date)}${r.time ? ` · ${r.time}` : ""} · ${r.place}`} />
+      <BackLink href="/carreras" label={t("comun.volver")} />
+      <PageHeader title={r.name} subtitle={`${weekdayDate(r.date, locale)}${r.time ? ` · ${r.time}` : ""} · ${r.place}`} />
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <div className="space-y-4 lg:col-span-2">
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-            <Stat label="Faltan" value={days} unit="días" />
+            <Stat label={t("cf.faltan")} value={days} unit={t("cf.dias")} />
             <Stat
-              label="Distancias"
+              label={t("cf.distancias")}
               value={r.distancesKm.length ? r.distancesKm.map((d) => fmtKm(d, d % 1 ? 1 : 0, locale)).join(" · ") : "–"}
               unit={r.distancesKm.length ? "km" : undefined}
               sub={r.distanceText}
             />
-            <Stat label="Tipo" value={<span className="text-base">{r.type || "–"}</span>} />
-            <Stat label="Salida" value={<span className="text-base">{r.startPlace || r.place}</span>} />
+            <Stat label={t("cf.tipo")} value={<span className="text-base">{r.type || "–"}</span>} />
+            <Stat label={t("cf.salida")} value={<span className="text-base">{r.startPlace || r.place}</span>} />
           </div>
-          <Card title="Preparar esta carrera" subtitle="Generamos un plan periodizado desde hoy hasta el día de la carrera.">
+          <Card title={t("cf.preparar")} subtitle={t("cf.prepararSub")}>
             {days < 3 ? (
-              <Notice tone="warn">Es dentro de menos de 3 días: ya no da tiempo a preparar un plan.</Notice>
+              <Notice tone="warn">{t("cf.tarde")}</Notice>
             ) : (
               <>
                 {!db.profile && (
                   <div className="mb-4">
                     <Notice tone="warn">
-                      Completa primero{" "}
+                      {t("cf.perfilAntes")}
                       <Link href="/perfil" className="font-semibold text-accent">
-                        tu perfil
-                      </Link>{" "}
-                      para que el plan se ajuste a ti.
+                        {t("cf.perfilLink")}
+                      </Link>
+                      {t("cf.perfilDespuesCm")}
                     </Notice>
                   </div>
                 )}
-                <GoalForm preset={{ raceId: `cm-${r.id}`, name: r.name, distances: r.distancesKm, date: r.date }} defaultDate={r.date} hasProfile={Boolean(db.profile)} />
-                {r.courseUrl && <p className="mt-3 text-xs text-muted">Su recorrido se carga solo en tu plan (mapa, distancia y desnivel).</p>}
+                <GoalForm preset={{ raceId: `cm-${r.id}`, name: r.name, distances: r.distancesKm, date: r.date }} defaultDate={r.date} hasProfile={Boolean(db.profile)} locale={locale} />
+                {r.courseUrl && <p className="mt-3 text-xs text-muted">{t("cf.recorridoSolo")}</p>}
               </>
             )}
           </Card>
@@ -68,20 +69,20 @@ async function Content({ params }: { params: PageProps<"/carreras/cm/[id]">["par
         <div className="space-y-4">
           {r.image && (
             // eslint-disable-next-line @next/next/no-img-element -- cartel de su web, sin optimizar
-            <img src={r.image} alt={`Cartel de ${r.name}`} referrerPolicy="no-referrer" className="w-full rounded-2xl border border-line" />
+            <img src={r.image} alt={t("cf.cartel", { nombre: r.name })} referrerPolicy="no-referrer" className="w-full rounded-2xl border border-line" />
           )}
-          <Card title="Información">
+          <Card title={t("cf.info")}>
             <ul className="space-y-2 text-sm">
-              {r.registration && <li>Inscripciones {r.registration}</li>}
+              {r.registration && <li>{t("cf.inscripciones", { texto: r.registration })}</li>}
               <li>
                 <a href={r.url} target="_blank" rel="noreferrer" className="font-semibold text-accent">
-                  Ficha e inscripción en Cruzando la Meta ↗
+                  {t("cf.ficha")}
                 </a>
               </li>
               {r.website && (
                 <li>
                   <a href={r.website} target="_blank" rel="noreferrer" className="text-accent">
-                    Web oficial ↗
+                    {t("cf.web")}
                   </a>
                 </li>
               )}
@@ -95,12 +96,12 @@ async function Content({ params }: { params: PageProps<"/carreras/cm/[id]">["par
               {r.lat !== undefined && r.lon !== undefined && (
                 <li>
                   <a href={`https://www.openstreetmap.org/?mlat=${r.lat}&mlon=${r.lon}#map=16/${r.lat}/${r.lon}`} target="_blank" rel="noreferrer" className="text-accent">
-                    Ver la salida en el mapa ↗
+                    {t("cf.mapa")}
                   </a>
                 </li>
               )}
             </ul>
-            <p className="mt-3 text-xs text-muted">Datos de cruzandolameta.es: confírmalos allí antes de inscribirte.</p>
+            <p className="mt-3 text-xs text-muted">{t("cf.datosCm")}</p>
           </Card>
         </div>
       </div>
