@@ -48,6 +48,7 @@ const TAPER: Record<DistanceCat, number[]> = {
 // Disposición semanal (lunes = 0) con la tirada larga el domingo; luego se rota al día elegido.
 type Slot = "L" | "Q1" | "Q2" | "E" | "R";
 const LAYOUT: Record<number, [number, Slot][]> = {
+  1: [[6, "L"]], // un solo día (la app pide 2, pero puede llegar de datos antiguos): ese día, la tirada
   2: [[2, "Q1"], [6, "L"]],
   3: [[1, "Q1"], [3, "E"], [6, "L"]],
   4: [[1, "Q1"], [3, "Q2"], [5, "E"], [6, "L"]],
@@ -394,6 +395,7 @@ export function generatePlan(input: PlanInput): Plan {
   const runWalkWeeks = lvl === 0 ? Math.min(6, Math.ceil(buildWeeks / 2)) : heavy && lvl === 1 ? 3 : 0;
   let longKmPrev = Math.max(input.longestRecentKm, lvl === 0 ? 3 : 5);
   let peakLong = 0; // la tirada más larga del propio plan (el afinamiento baja desde ella, no desde el historial)
+  let lastLong = 0; // la tirada de la última semana normal (la descarga baja desde ella)
   let spikeLimited = false;
   const weeks: PlanWeek[] = [];
 
@@ -429,7 +431,8 @@ export function generatePlan(input: PlanInput): Plan {
       const base = peakLong || Math.min(longKmPrev, LONG_CAP[cat][lvl]);
       longKm = isRaceWeek ? 0 : Math.floor(Math.min(base * (vol / maxVol) * 1.1, vol * 0.4, base) * 2) / 2;
     }
-    else if (recovery) longKm = longKmPrev * 0.75;
+    // descarga: tres cuartos de la última tirada del plan (no de la más larga del historial, que podía hacerla subir)
+    else if (recovery) longKm = Math.floor((lastLong || longKmPrev) * 0.75 * 2) / 2;
     else {
       // pico de una sola sesión (Frandsen 2025, BJSM): no pasar de la más larga reciente + 10 %
       // (con un mínimo de 0,5 km para que las tiradas muy cortas puedan crecer), y como mucho +1,5/+2 km
@@ -439,11 +442,13 @@ export function generatePlan(input: PlanInput): Plan {
       longKm = Math.floor(Math.min(vol * longPct, LONG_CAP[cat][lvl], longKmPrev + step) * 2) / 2;
       longKmPrev = Math.max(longKmPrev, longKm);
       peakLong = Math.max(peakLong, longKm);
+      lastLong = longKm;
     }
     longKm = Math.max(longKm, isRaceWeek ? 0 : 3);
 
     const nQ = slots.filter(([, s]) => s === "Q1" || s === "Q2").length;
-    const qKm = clamp(vol * 0.2, lvl === 0 ? 3 : 5, 16);
+    // con muy poco volumen, el mínimo de la sesión de calidad no puede comerse la semana (como mucho un 30 %)
+    const qKm = clamp(vol * 0.2, Math.min(lvl === 0 ? 3 : 5, Math.max(2, vol * 0.3)), 16);
     const easySlots = slots.filter(([, s]) => s === "E" || s === "R").length;
     const easyKm = Math.max(3, (vol - longKm - nQ * qKm) / Math.max(1, easySlots));
 
@@ -553,6 +558,17 @@ export function generateSeason(input: PlanInput, extraGoals: Goal[] = []): Plan 
   const parts: Plan[] = [];
   let next = input;
   for (const goal of goals) {
+    // dentro de los días de recuperación de la anterior: no hay tiempo para prepararla, pero la carrera se queda en su día
+    if (goal.date <= next.today && parts.length && !parts.some((x) => x.goal.date === goal.date)) {
+      const last = parts[parts.length - 1];
+      const week = last.weeks.find((w) => goal.date >= w.start && goal.date <= addDays(w.start, 6));
+      const predicted = goal.targetTimeSec ?? raceTimeFromVdot(next.currentVdot, goal.distanceKm);
+      const race = raceSession(goal, predicted / goal.distanceKm, predicted);
+      if (week) week.sessions = [...week.sessions, race].sort((a, b) => a.date.localeCompare(b.date));
+      else last.weeks.push({ index: 0, start: mondayOf(goal.date), phase: "taper", recovery: true, targetKm: Math.round(goal.distanceKm), sessions: [race], focus: "" });
+      last.warnings.push(`${goal.name} es muy poco después de otra carrera: entre las dos, solo recuperar.`);
+      continue;
+    }
     if (goal.date <= next.today) continue;
     const part = generatePlan({ ...next, goal });
     parts.push(part);

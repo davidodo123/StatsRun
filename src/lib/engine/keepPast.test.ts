@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { generatePlan, keepPastWeeks } from "./planner";
+import { generatePlan, generateSeason, keepPastWeeks } from "./planner";
 import type { Profile } from "../types";
 
 // lunes 26 oct 2026 a domingo 1 nov; se rehace el jueves 29
@@ -64,5 +64,15 @@ describe("fuerza ya hecha esta semana", () => {
 
   it("con 1 hecha de 3, quedan como mucho 2", () => {
     expect(left(keepPastWeeks(old, fresh, "2026-10-29", { perWeek: 3, doneThisWeek: 1 }))).toBeLessThanOrEqual(2);
+  });
+});
+
+describe("dos objetivos muy seguidos", () => {
+  it("la segunda carrera se queda en su día aunque caiga en la recuperación de la primera", () => {
+    const main = { name: "Ultra", distanceKm: 50, date: "2027-03-20" };
+    const plan = generateSeason({ profile, goal: main, currentVdot: 40, currentWeeklyKm: 40, longestRecentKm: 15, today: "2026-10-29" }, [{ name: "Media", distanceKm: 21.0975, date: "2027-03-16" }]);
+    const races = plan.weeks.flatMap((w) => w.sessions).filter((s) => s.type === "race").map((s) => s.date);
+    expect(races).toEqual(["2027-03-16", "2027-03-20"]);
+    expect(plan.warnings.some((w) => w.includes("Ultra"))).toBe(true);
   });
 });

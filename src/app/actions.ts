@@ -11,7 +11,7 @@ import { applyBlockedDates, applyTuneUpRaces, availableDaysOf, generateSeason, k
 import { computeStats } from "@/lib/engine/stats";
 import { profileAverages } from "@/lib/engine/profile";
 import { areFriends, getFriends } from "@/lib/auth";import { findRace } from "@/lib/races";
-import { adaptWithAI, coachConfig } from "@/lib/coach";
+import { adaptIfMissed, adaptWithAI, coachConfig } from "@/lib/coach";
 import { fmtNum, parsePace, parseTime } from "@/lib/format";
 import { createHealthToken, revokeHealthToken } from "@/lib/healthToken";
 import { mergeHealth, parseHealthPayload, todayMadrid } from "@/lib/health";
@@ -707,4 +707,11 @@ export async function deleteActivity(fd: FormData): Promise<void> {
 export async function refreshViews(): Promise<void> {
   updateTag(VIEW_TAG);
   refresh();
+}
+
+/** Al abrir el plan (components/AutoAdapt): si quedaron sesiones sin hacer, la IA reprograma en segundo plano (máx. 1 vez al día). */
+export async function checkMissedSessions(): Promise<void> {
+  if (!coachConfig().configured) return;
+  const uid = await requireUserId();
+  after(() => adaptIfMissed(uid));
 }

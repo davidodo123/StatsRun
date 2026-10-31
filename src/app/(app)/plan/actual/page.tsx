@@ -11,11 +11,11 @@ import { ReadinessCard } from "@/components/ReadinessCard";
 import { RaceCard } from "@/components/RaceCard";
 import { assessReadiness } from "@/lib/engine/readiness";
 import { UnavailableForm } from "@/components/UnavailableForm";
-import { adaptIfMissed, coachConfig, strengthModel } from "@/lib/coach";
+import { coachConfig, strengthModel } from "@/lib/coach";
+import { AutoAdapt } from "@/components/AutoAdapt";
 import { AI_LIMITS, aiLeft } from "@/lib/aiPlan";
 import { viewAiUnlimited } from "@/lib/authView";
 import { availableDaysOf, planTitle } from "@/lib/engine/planner";
-import { after } from "next/server";
 import { requireViewerId } from "@/lib/session";
 import { trainingPaces } from "@/lib/engine/physiology";
 import { fmtDuration, fmtPaceRange } from "@/lib/format";
@@ -68,9 +68,7 @@ async function Content({ searchParams }: { searchParams: PageProps<"/plan/actual
       </>
     );
 
-  // si se han quedado sesiones sin hacer, la IA reprograma en segundo plano (máx. 1 vez al día)
   const uid = await requireViewerId();
-  after(() => adaptIfMissed(uid));
   const aiUnlimited = await viewAiUnlimited(uid);
   const thisWeek = mondayOf(today);
   const blockedSoon = (db.unavailableDates ?? []).filter((d) => d >= today);
@@ -86,6 +84,7 @@ async function Content({ searchParams }: { searchParams: PageProps<"/plan/actual
 
   return (
     <>
+      <AutoAdapt />
       <BackLink href="/plan" label={t("comun.volver")} />
       <PageHeader
         title={planTitle(plan)}
@@ -177,6 +176,9 @@ async function Content({ searchParams }: { searchParams: PageProps<"/plan/actual
           {plan.weeks.map((w) => {
             const current = w.start === thisWeek;
             const ended = addDays(w.start, 6) < today;
+            // lejos de hoy (antes de la semana pasada o después de las 3 siguientes), sesiones resumidas: con planes de
+            // muchos meses la página pesaba más de 1 MB; la IA solo ajusta los próximos 14 días y los pasos pueden cambiar
+            const far = w.start < addDays(thisWeek, -7) || w.start > addDays(thisWeek, 21);
             const done = w.sessions.map((s) => matches?.get(s.id)).filter((m) => m && m.session.type !== "strength");
             const doneKm = done.reduce((s, m) => s + (m?.doneKm ?? 0), 0);
             return (
@@ -218,7 +220,7 @@ async function Content({ searchParams }: { searchParams: PageProps<"/plan/actual
                       </form>
                     ))}
                   {w.sessions.map((s) => (
-                    <SessionCard key={s.id} s={s} match={matches?.get(s.id)} today={today} locale={locale} />
+                    <SessionCard key={s.id} s={s} match={matches?.get(s.id)} today={today} locale={locale} compact={far} />
                   ))}
                 </div>
               </details>

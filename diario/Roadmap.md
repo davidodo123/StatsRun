@@ -171,6 +171,22 @@ Base: [[Estudio entrenamiento#6. La Pirámide de Entrenamiento (Helms, Valdez, M
 - [ ] Prueba cerrada: subir el AAB, invitar a 12 personas (correo de Google) y que sigan apuntadas 14 días seguidos
 - [ ] Pedir el acceso a producción y publicar
 
+## 🧪 Pruebas con 1.000 usuarios (lo pidió David 2026-10-31) → [[Decisiones#Pruebas con 1.000 usuarios]]
+
+Usuarios ficticios solo en local (`scripts/pruebas/usuarios.ts`: perfiles, objetivos, idiomas, historial y casos raros) y recorrido de 16 pantallas por usuario (`scripts/pruebas/recorrido.mjs`): 15.980 páginas.
+
+- [x] El plan se rompía con un solo día disponible (15 usuarios sin plan) — *arreglado 2026-10-31*
+- [x] En las semanas de descarga la tirada larga subía (salía de la más larga del historial, no del plan): 117 usuarios — *arreglado 2026-10-31*
+- [x] Con muy poco volumen, la sesión de calidad tenía 5 km fijos y se comía la semana — *arreglado: como mucho un 30 % de la semana*
+- [x] Una carrera A pocos días antes de la principal hacía desaparecer la principal del plan — *arreglado: se queda en su día con un aviso*
+- [x] El reajuste automático con IA al abrir el Plan se cortaba a veces (prerender) — *arreglado: lo lanza el navegador al abrir el plan (`AutoAdapt`)*
+- [x] Guardar dos veces a la vez el mismo usuario fallaba en local (EPERM en Windows) — *arreglado (solo afectaba a local)*
+- [x] El Plan de un objetivo lejano pesaba 1,5 MB — *bajado a la mitad: las semanas lejanas se ven resumidas*
+- [x] Recorrido completo después de arreglar: 0 páginas con error, 0 errores del servidor (media 150 ms, la más lenta 0,7 s)
+- [ ] Decidir con David: el paso de correr-caminar a correr hace saltar el volumen (de 4,5 a 8-11 km por sesión) en principiantes; y un «principiante» con mucho volumen recibe correr-caminar y tiradas de 24 km a la vez
+- [ ] Un reajuste de la IA que falla gasta igualmente un uso del límite del día (se hace para no reintentar en cada visita)
+- [ ] Pendiente de probar: las acciones (guardar formularios) con muchos usuarios; aquí solo se abren páginas
+
 ## ✨ Fase 7 · Ideas nuevas (2026-10-18) — *7.1-7.3 comprobadas por David 2026-10-19* → [[Decisiones#Ideas nuevas: orden y alcance]]
 1. [x] **EMOM** (Fuerza → EMOM): intervalo y rondas, ejercicios que se turnan, pitidos 3-2-1, pantalla encendida, marcar rondas sin completar; se guarda como entreno de fuerza — *hecho 2026-10-18, comprobado 2026-10-19* → [[Decisiones#EMOM]]
 2. [x] **Compartir el entreno** en Instagram/WhatsApp (imagen de historia): fuerza con el cuerpo humano y los músculos coloreados (cuerpo nuevo en SVG, también en la portada de Fuerza); running con la línea del recorrido sobre fondo oscuro — *hecho 2026-10-18, comprobado 2026-10-19* → [[Decisiones#Compartir el entreno]]

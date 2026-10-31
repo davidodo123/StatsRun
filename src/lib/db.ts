@@ -61,9 +61,22 @@ export async function kvSet(key: string, json: string): Promise<void> {
   if (process.env.VERCEL) throw new Error("En Vercel hace falta una base de datos Redis (Upstash): conéctala en Storage y vuelve a desplegar.");
   await fs.mkdir(DATA_DIR, { recursive: true });
   const file = fileFor(key);
-  const tmp = `${file}.tmp`;
+  // temporal propio de cada escritura: dos a la vez sobre el mismo archivo chocaban (EPERM en Windows)
+  const tmp = `${file}.${process.pid}.${Math.random().toString(36).slice(2)}.tmp`;
   await fs.writeFile(tmp, json, "utf8");
-  await fs.rename(tmp, file);
+  for (let i = 0; ; i++) {
+    try {
+      await fs.rename(tmp, file);
+      return;
+    } catch (e) {
+      // Windows bloquea un momento el archivo si otro lo está leyendo: se reintenta
+      if (i >= 5 || (e as NodeJS.ErrnoException).code !== "EPERM") {
+        await fs.rm(tmp, { force: true });
+        throw e;
+      }
+      await new Promise((r) => setTimeout(r, 20 * (i + 1)));
+    }
+  }
 }
 
 /** Borra un documento (y su contador de versión). */

@@ -1099,3 +1099,12 @@ Fuentes: screensdesign.com, posthog.com/pricing, revenuecat.com/pricing, revenue
 - David quiere un Patreon para donaciones. Aparcado hasta que cree la página.
 - Google Play ha retirado o avisado a apps por enlaces a donaciones fuera de su cobro (WireGuard, AnkiDroid); solo lo tolera para organizaciones sin ánimo de lucro. Por eso el botón irá **solo en la web y el iPhone**, oculto en la app de Android (`webOnly`, como Premium).
 - Patreon encaja con apoyos mensuales con ventajas (comisión ~8-12 % + pago); Ko-fi o Buy Me a Coffee, con donaciones sueltas (Ko-fi no cobra comisión propia).
+
+## Pruebas con 1.000 usuarios
+*2026-10-31*
+
+- Se hacen **en local**, nunca en producción: 1.000 cuentas en Upstash costarían, ensuciarían los datos reales y saldrían en las búsquedas de Amigos. Los ids empiezan por `prueba-` y se borran con `npx jiti scripts/pruebas/usuarios.ts --borrar`.
+- `scripts/pruebas/usuarios.ts` crea los usuarios con una semilla fija (siempre los mismos), les hace el plan como `rebuildPlan` y comprueba reglas: días disponibles, días bloqueados, tirada en su día, una carrera y una fuerza por día como mucho, fuerza pedida, día de la carrera, números raros, saltos de volumen y descargas.
+- `scripts/pruebas/recorrido.mjs` abre 16 pantallas por usuario contra `next start` y busca errores del servidor, la pantalla de error, textos rotos (NaN, undefined…) y páginas lentas.
+- **El servidor de pruebas, sin la clave de la IA** (`OPENROUTER_API_KEY= npx next start -p 3005`): la primera vez, abrir el Plan de 504 usuarios intentó llamar a OpenRouter (no cobró nada porque no hay saldo).
+- Lo encontrado y arreglado está en el [[Roadmap]] (sección «Pruebas con 1.000 usuarios»).
