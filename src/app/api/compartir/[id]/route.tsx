@@ -2,9 +2,7 @@ import { ImageResponse } from "next/og";
 import { getUserId } from "@/lib/session";
 import { readDbNow as getDb } from "@/lib/db";
 import { ACCENT, shareCard, type ShareCard } from "@/lib/shareCard";
-import { WEEKDAYS, weekday } from "@/lib/dates";
-
-const MONTHS = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
+import { intlLocale, isLocale } from "@/lib/i18n";
 
 const LOGO = (
   <svg width="56" height="56" viewBox="0 0 64 64" style={{ marginRight: 18 }}>
@@ -52,10 +50,11 @@ export async function GET(req: Request, { params }: RouteContext<"/api/compartir
   const db = await getDb(uid);
   const a = db.activities.find((x) => x.id === decodeURIComponent(id));
   if (!a) return Response.json({ error: "No existe" }, { status: 404 });
-  if (new URL(req.url).searchParams.get("formato") === "sticker") return sticker(shareCard(db, a, "sticker"));
-  const c = shareCard(db, a);
-  const [y, m, d] = c.date.split("-").map(Number);
-  const date = `${WEEKDAYS[weekday(c.date)]} ${d} de ${MONTHS[m - 1]} de ${y}`;
+  // en el idioma de la app de quien lo comparte
+  const locale = isLocale(db.lang) ? db.lang : "es";
+  if (new URL(req.url).searchParams.get("formato") === "sticker") return sticker(shareCard(db, a, "sticker", locale));
+  const c = shareCard(db, a, "historia", locale);
+  const date = new Date(`${c.date}T12:00:00Z`).toLocaleDateString(intlLocale(locale), { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
   const strength = c.kind === "fuerza";
 
   return new ImageResponse(
@@ -66,7 +65,8 @@ export async function GET(req: Request, { params }: RouteContext<"/api/compartir
           ZANCAVOLT
         </div>
         <div style={{ marginTop: 70, fontSize: 36, color: "#a6a6a6" }}>{date}</div>
-        <div style={{ marginTop: 14, fontSize: 84, lineHeight: 1.05, letterSpacing: -2, display: "flex" }}>{c.title}</div>
+        {/* título largo (p. ej. en francés): más pequeño, para que no se monte sobre la imagen */}
+        <div style={{ marginTop: 14, fontSize: c.title.length > 22 ? 64 : 84, lineHeight: 1.05, letterSpacing: -2, display: "flex" }}>{c.title}</div>
         {c.subtitle && <div style={{ marginTop: 16, fontSize: 40, color: ACCENT }}>{c.subtitle}</div>}
 
         <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", margin: "50px 0" }}>

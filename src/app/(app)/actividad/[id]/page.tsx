@@ -75,7 +75,7 @@ async function Content({ params, searchParams }: { params: PageProps<"/actividad
         }
         action={
           <div className="flex flex-wrap gap-2">
-            {mine && <ShareActivityButton id={a.id} name={a.name} video={shareVideo(db, raw)} locale={locale} />}
+            {mine && <ShareActivityButton id={a.id} name={a.name} video={shareVideo(db, raw, locale)} locale={locale} />}
             {mine && (
               <Link href={`/registrar?editar=${encodeURIComponent(a.id)}`} className="btn btn-ghost">
                 {t("ex.editar")}

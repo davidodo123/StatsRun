@@ -1,12 +1,13 @@
 // Textos que genera el plan (lib/engine/planner.ts) en otros idiomas: títulos, descripción y pasos de cada sesión
 // y el foco de cada semana. El plan se guarda en español; se traduce al pintar.
-// De momento solo en inglés: catalán, portugués y francés siguen en español (fase 3 de idiomas).
+// Aquí, el inglés junto al español; catalán, portugués y francés, en planTextMore.ts.
 import type { Locale } from "./index";
+import { PLAN_MORE } from "./planTextMore";
 
 type Tr = Partial<Record<Exclude<Locale, "es">, string>>;
 
 // textos fijos, tal cual los escribe el planificador
-const EXACT: Record<string, Tr> = {
+export const EXACT: Record<string, Tr> = {
   // foco de la semana
   "Base aeróbica: volumen suave, técnica y fuerza. Construir el motor.": { en: "Aerobic base: easy volume, technique and strength. Build the engine." },
   "Construcción: umbral y VO2max. Subir la cilindrada.": { en: "Build: threshold and VO2max. Raise your ceiling." },
@@ -139,7 +140,7 @@ const EXACT: Record<string, Tr> = {
 };
 
 // textos con números o ritmos dentro: [patrón en español, texto en cada idioma con $1, $2…]
-const PATTERNS: [RegExp, Tr][] = [
+export const PATTERNS: [RegExp, Tr][] = [
   [/^Rodaje suave (.+) km$/, { en: "Easy run $1 km" }],
   [/^Recuperación (.+) km$/, { en: "Recovery $1 km" }],
   [/^Correr-caminar (.+)$/, { en: "Run-walk $1" }],
@@ -196,10 +197,12 @@ const PATTERNS: [RegExp, Tr][] = [
 /** Un texto del plan en el idioma (si no hay traducción, se queda en español). */
 export function planText(s: string, locale: Locale): string {
   if (locale === "es" || !s) return s;
-  const exact = EXACT[s]?.[locale];
+  const more = locale === "en" ? undefined : PLAN_MORE[locale];
+  const exact = EXACT[s]?.[locale] ?? more?.exact[s];
   if (exact) return exact;
-  for (const [re, tr] of PATTERNS) {
-    const out = tr[locale];
+  for (let i = 0; i < PATTERNS.length; i++) {
+    const [re, tr] = PATTERNS[i];
+    const out = tr[locale] ?? more?.patterns[i];
     if (out && re.test(s)) return s.replace(re, out);
   }
   return s;
