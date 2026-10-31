@@ -1091,7 +1091,7 @@ Fuentes: screensdesign.com, posthog.com/pricing, revenuecat.com/pricing, revenue
 - Las imágenes las genera David con Gemini: cuerpo entero en gris, sin músculos marcados, fondo negro, 687 × 1024, mismo encuadre las 4. `scripts/cuerpo-sin-fondo.mjs` quita el fondo y las deja en `public/cuerpo/` (WebP con transparencia).
 - Los músculos son contornos dibujados a mano sobre la imagen (`lib/strength/bodyPhoto.ts`, mitad izquierda reflejada). Se pintan en lima con la mezcla `overlay` (se ven las fibras y sombras), con borde suave y recortados con la silueta.
 - Mujer: Gemini no hacía un cuerpo de mujer sin ropa; con top y pantalón corto sí. Mismo encuadre que el hombre, así que valen los mismos contornos.
-- La imagen para compartir (`shareCard.ts`) sigue con el dibujo vectorial de antes: la genera el servidor con satori y no admite esa mezcla.
+- La imagen para compartir lo compone en el servidor con sharp (`lib/bodyPng.ts`: mezcla «overlay» y recorte con la silueta), porque satori no mezcla colores. Las imágenes van con la función gracias a `outputFileTracingIncludes`. Si falla, sale el dibujo vectorial de antes.
 
 ## Donaciones
 *2026-10-31*

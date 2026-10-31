@@ -3,6 +3,19 @@ import { getUserId } from "@/lib/session";
 import { readDbNow as getDb } from "@/lib/db";
 import { ACCENT, shareCard, type ShareCard } from "@/lib/shareCard";
 import { intlLocale, isLocale } from "@/lib/i18n";
+import { bodyPng } from "@/lib/bodyPng";
+import type { Sex } from "@/lib/types";
+
+// fuerza: el muñeco realista de la app; si algo falla al componerlo, el dibujo de antes
+async function withBody(c: ShareCard, sex?: Sex): Promise<ShareCard> {
+  if (!c.muscles) return c;
+  try {
+    return { ...c, image: await bodyPng(c.muscles, sex) };
+  } catch (err) {
+    console.error("compartir: muñeco", err);
+    return c;
+  }
+}
 
 const LOGO = (
   <svg width="56" height="56" viewBox="0 0 64 64" style={{ marginRight: 18 }}>
@@ -22,7 +35,7 @@ function sticker(c: ShareCard) {
       <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", alignItems: "center", color: "#fff", padding: "30px 40px" }}>
         {c.image ? (
           // eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text -- imagen generada (Satori)
-          <img src={c.image} width={strength ? 700 : 960} height={strength ? 735 : 760} style={{ objectFit: "contain" }} />
+          <img src={c.image} width={strength ? 620 : 960} height={strength ? 740 : 760} style={{ objectFit: "contain" }} />
         ) : null}
         <div style={{ display: "flex", width: "100%", justifyContent: "space-around", marginTop: c.image ? 30 : 0 }}>
           {stats.map((st) => (
@@ -52,8 +65,8 @@ export async function GET(req: Request, { params }: RouteContext<"/api/compartir
   if (!a) return Response.json({ error: "No existe" }, { status: 404 });
   // en el idioma de la app de quien lo comparte
   const locale = isLocale(db.lang) ? db.lang : "es";
-  if (new URL(req.url).searchParams.get("formato") === "sticker") return sticker(shareCard(db, a, "sticker", locale));
-  const c = shareCard(db, a, "historia", locale);
+  if (new URL(req.url).searchParams.get("formato") === "sticker") return sticker(await withBody(shareCard(db, a, "sticker", locale), db.profile?.sex));
+  const c = await withBody(shareCard(db, a, "historia", locale), db.profile?.sex);
   const date = new Date(`${c.date}T12:00:00Z`).toLocaleDateString(intlLocale(locale), { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
   const strength = c.kind === "fuerza";
 
@@ -72,7 +85,7 @@ export async function GET(req: Request, { params }: RouteContext<"/api/compartir
         <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", margin: "50px 0" }}>
           {c.image ? (
             // eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text -- imagen generada (Satori)
-            <img src={c.image} width={strength ? 830 : 920} height={strength ? 870 : 860} style={{ objectFit: "contain" }} />
+            <img src={c.image} width={strength ? 620 : 920} height={strength ? 740 : 860} style={{ objectFit: "contain" }} />
           ) : (
             <div style={{ fontSize: 220, color: ACCENT, letterSpacing: -6 }}>{c.stats[0]?.value}</div>
           )}

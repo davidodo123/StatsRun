@@ -15,6 +15,8 @@ const nextConfig: NextConfig = {
     ];
   },
   skipTrailingSlashRedirect: true,
+  // la imagen para compartir compone el muñeco con las imágenes de public/cuerpo: que vayan con la función
+  outputFileTracingIncludes: { "/api/compartir/*": ["./public/cuerpo/**/*"] },
   experimental: {
     // volver a una pestaña ya vista en los últimos 30 s es instantáneo; las acciones que guardan datos la refrescan igual
     staleTimes: { dynamic: 30 },

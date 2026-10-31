@@ -70,7 +70,8 @@ export interface ShareCard {
   stats: { label: string; value: string }[];
   lines: string[]; // ejercicios (fuerza)
   subtitle?: string;
-  image?: string; // data URI del cuerpo o del recorrido
+  image?: string; // data URI del cuerpo (dibujo de respaldo) o del recorrido
+  muscles?: Partial<Record<Muscle, number>>; // fuerza: series por músculo, para el muñeco realista (bodyPng)
 }
 
 /** Lo que sale en la imagen de un entreno. */
@@ -87,6 +88,7 @@ export function shareCard(db: Pick<Db, "customExercises" | "activities">, a: Act
       kind: "fuerza",
       subtitle: w.emom ? `${emomTitle(w.emom)} · ${t("sh.rondas", { n: w.emom.done, total: w.emom.rounds })}` : undefined,
       image: bodySvg(sets, sticker ? IDLE_STICKER : IDLE),
+      muscles: sets,
       stats: [
         { label: t("sh.tiempo"), value: fmtDuration(a.movingSec) },
         { label: t("sh.series"), value: String(workoutSets(w)) },
