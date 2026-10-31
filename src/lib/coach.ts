@@ -22,6 +22,14 @@ import { STUDY_RULE, studyFor } from "./knowledge";
 const API = "https://openrouter.ai/api/v1/chat/completions";
 const HORIZON_DAYS = 14;
 
+/** Instrucciones en español y respuesta en el idioma de la app del atleta (lo que añade al final del prompt). */
+export function withLanguage(system: string, lang?: string): string {
+  const name = { en: "inglés", ca: "catalán", pt: "portugués de Portugal", fr: "francés" }[lang ?? ""];
+  return name ? `${system}
+
+IMPORTANTE: el atleta usa la app en ${name}. Escribe todo lo que lee (textos, títulos, descripciones, pasos y nombres) en ${name}.` : system;
+}
+
 export function coachConfig() {
   const apiKey = process.env.OPENROUTER_API_KEY;
   const model = process.env.OPENROUTER_MODEL || "openai/gpt-4o-mini";
@@ -379,7 +387,7 @@ async function run(uid: string, request?: string): Promise<CoachResult> {
   const blocked = (db.unavailableDates ?? []).join();
 
   try {
-    const ai = await chatJson<AiResponse>(SYSTEM, JSON.stringify(request ? { ...built.context, peticionDelAtleta: request } : built.context));
+    const ai = await chatJson<AiResponse>(withLanguage(SYSTEM, db.lang), JSON.stringify(request ? { ...built.context, peticionDelAtleta: request } : built.context));
     const byId = new Map((Array.isArray(ai?.sessions) ? ai.sessions : []).filter((s) => s && typeof s.id === "string").map((s) => [s.id, s]));
     let changed = 0;
     await updateDb((d) => {

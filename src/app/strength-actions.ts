@@ -7,7 +7,7 @@ import { redirect } from "next/navigation";
 import { after } from "next/server";
 import { readDbNow, updateDb } from "@/lib/db";
 import { requireUserId } from "@/lib/session";
-import { adaptWithAI, chatJson, coachConfig, strengthModel } from "@/lib/coach";
+import { adaptWithAI, chatJson, coachConfig, strengthModel, withLanguage } from "@/lib/coach";
 import { aiLeft, aiLimitMessage, countAiUse } from "@/lib/aiPlan";
 import { isAiUnlimited } from "@/lib/auth";
 import { CHAT_SYSTEM, chatContext, chatEquipment, chatExerciseList, chatHistory, chatReplyFromAi, type AiChatReply } from "@/lib/strength/chat";
@@ -331,14 +331,15 @@ export async function generateStrengthRoutines(_: StrengthCoachForm, fd: FormDat
   try {
     const db = await readDbNow();
     const request = JSON.stringify(strengthRequest(db, material, ability, today));
+    const system = withLanguage(STRENGTH_SYSTEM, db.lang);
     let reply: AiStrengthReply;
     try {
-      reply = await chatJson<AiStrengthReply>(STRENGTH_SYSTEM, request, 0.3, model, 3500);
+      reply = await chatJson<AiStrengthReply>(system, request, 0.3, model, 3500);
     } catch (e) {
       // sin saldo para el modelo bueno: se intenta con el barato (unas 16 veces menos)
       if ((e as Error).message !== "NO_CREDITS" || model === coachConfig().model) throw e;
       used = coachConfig().model;
-      reply = await chatJson<AiStrengthReply>(STRENGTH_SYSTEM, request, 0.3, used, 3500);
+      reply = await chatJson<AiStrengthReply>(system, request, 0.3, used, 3500);
     }
     result = routinesFromAi(reply, now, equipmentFromText(material));
     if (!result.routines.length) throw new Error("no propuso ninguna rutina válida con tu material");
@@ -399,8 +400,7 @@ export async function sendStrengthChat(_: FormState, fd: FormData): Promise<Form
     mensaje: message,
   });
   // en el idioma de la app: las instrucciones van en español, la respuesta en el suyo
-  const langName = { en: "inglés", ca: "catalán", pt: "portugués de Portugal", fr: "francés" }[db.lang ?? ""];
-  const system = langName ? `${CHAT_SYSTEM}\n\nIMPORTANTE: el atleta usa la app en ${langName}. Escribe todo lo que lee (el texto de la respuesta y los nombres de rutinas y entrenos) en ${langName}.` : CHAT_SYSTEM;
+  const system = withLanguage(CHAT_SYSTEM, db.lang);
   let reply: ReturnType<typeof chatReplyFromAi>;
   try {
     await updateDb((d) => countAiUse(d, "chat", today));
