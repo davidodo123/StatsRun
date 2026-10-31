@@ -3,6 +3,7 @@ import { cookies, headers } from "next/headers";
 import { getDb } from "../db";
 import { viewCache } from "../session";
 import { DEFAULT_LOCALE, LANG_COOKIE, LOCALES, isLocale, translator, type Locale } from "./index";
+import { SERVER_TEXT } from "./serverText";
 
 /**
  * Idioma para pintar: el de la cookie de este dispositivo; si no hay, el guardado en la cuenta (otro dispositivo,
@@ -33,4 +34,10 @@ export async function loginLocale(): Promise<Locale> {
   // «en-GB,en;q=0.9,es;q=0.8» → el primero que tengamos
   const wanted = ((await headers()).get("accept-language") ?? "").split(",").map((p) => p.split(";")[0].trim().slice(0, 2).toLowerCase());
   return wanted.find((l): l is Locale => (LOCALES as readonly string[]).includes(l)) ?? DEFAULT_LOCALE;
+}
+
+/** Mensaje de una acción del servidor (escrito en español) en el idioma de este dispositivo (serverText.ts). */
+export async function say(es: string): Promise<string> {
+  const locale = await loginLocale();
+  return locale === "es" ? es : (SERVER_TEXT[es]?.[locale] ?? es);
 }

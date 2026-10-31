@@ -1,4 +1,5 @@
 "use server";
+import { say } from "@/lib/i18n/server";
 
 import { refresh, updateTag } from "next/cache";
 import { redirect } from "next/navigation";
@@ -47,7 +48,7 @@ export async function saveProfile(_: FormState, fd: FormData): Promise<FormState
   const weightKg = num(fd, "weightKg");
   const heightCm = num(fd, "heightCm");
   if (!age || !weightKg || !heightCm || age < 10 || age > 100 || weightKg < 30 || weightKg > 250 || heightCm < 120 || heightCm > 230)
-    return { error: "Revisa edad, peso y altura." };
+    return { error: await say("Revisa edad, peso y altura.") };
 
   const focus: Focus = fd.get("focus") === "running" ? "running" : fd.get("focus") === "fuerza" ? "fuerza" : "ambos";
   const prev = (await getDb()).profile;
@@ -56,8 +57,8 @@ export async function saveProfile(_: FormState, fd: FormData): Promise<FormState
   let availableDays = [...new Set(fd.getAll("availableDays").map(Number))].filter((d) => d >= 0 && d <= 6).sort((a, b) => a - b);
   let longRunDay = num(fd, "longRunDay") ?? 6;
   if (runner) {
-    if (availableDays.length < 2) return { error: "Marca al menos 2 días en los que puedas entrenar." };
-    if (!availableDays.includes(longRunDay)) return { error: "El día de la tirada larga tiene que ser uno de tus días disponibles." };
+    if (availableDays.length < 2) return { error: await say("Marca al menos 2 días en los que puedas entrenar.") };
+    if (!availableDays.includes(longRunDay)) return { error: await say("El día de la tirada larga tiene que ser uno de tus días disponibles.") };
   } else {
     availableDays = prev?.availableDays ?? availableDaysOf(prev ?? { daysPerWeek: 4, longRunDay: 6 });
     longRunDay = prev?.longRunDay ?? 6;
@@ -121,12 +122,12 @@ export async function saveGoal(_: FormState, fd: FormData): Promise<FormState> {
   const cmId = /^cm-\d+$/.test(raceId) ? raceId.slice(3) : undefined;
   const date = String(fd.get("date") ?? "");
   const distanceKm = num(fd, "distanceKm") ?? race?.distanceKm;
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return { error: "Indica la fecha de la carrera." };
-  if (diffDays(date, todayLocal()) < 3) return { error: "La fecha debe ser al menos dentro de 3 días." };
-  if (!distanceKm || distanceKm < 1 || distanceKm > 100) return { error: "Distancia no válida." };
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return { error: await say("Indica la fecha de la carrera.") };
+  if (diffDays(date, todayLocal()) < 3) return { error: await say("La fecha debe ser al menos dentro de 3 días.") };
+  if (!distanceKm || distanceKm < 1 || distanceKm > 100) return { error: await say("Distancia no válida.") };
   const target = String(fd.get("targetTime") ?? "").trim();
   const targetTimeSec = target ? parseTime(target) : undefined;
-  if (target && !targetTimeSec) return { error: "Tiempo objetivo con formato h:mm:ss o mm:ss." };
+  if (target && !targetTimeSec) return { error: await say("Tiempo objetivo con formato h:mm:ss o mm:ss.") };
 
   const goal: Goal = {
     raceId: race?.id ?? (cmId ? raceId : undefined),
@@ -255,11 +256,11 @@ async function rebuildPlan(db: Db): Promise<Plan | undefined> {
 
 export async function regeneratePlan(): Promise<FormState> {
   const db = await getDb();
-  if (!db.profile) return { error: "Completa tu perfil para poder adaptar el plan." };
-  if (!db.goal) return { error: "Elige tu carrera objetivo para poder adaptar el plan." };
+  if (!db.profile) return { error: await say("Completa tu perfil para poder adaptar el plan.") };
+  if (!db.goal) return { error: await say("Elige tu carrera objetivo para poder adaptar el plan.") };
   const before = db.plan;
   const plan = await rebuildPlan(db);
-  if (!plan) return { error: "No se ha podido recalcular el plan." };
+  if (!plan) return { error: await say("No se ha podido recalcular el plan.") };
   await scheduleAiAdapt();
   refresh();
   const { changedDays, kmBefore, kmAfter } = planChanges(before, plan, todayLocal());
@@ -330,18 +331,18 @@ export async function addTuneUpRace(_: FormState, fd: FormData): Promise<FormSta
   const priority: TuneUpRace["priority"] = fd.get("priority") === "C" ? "C" : fd.get("priority") === "A" ? "A" : "B";
   const target = String(fd.get("targetTime") ?? "").trim();
   const targetTimeSec = target ? parseTime(target) : undefined;
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || date <= today) return { error: "Indica una fecha a partir de mañana." };
-  if (!distanceKm || distanceKm < 1 || distanceKm > 100) return { error: "Distancia no válida." };
-  if (target && !targetTimeSec) return { error: "Tiempo objetivo con formato h:mm:ss o mm:ss." };
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || date <= today) return { error: await say("Indica una fecha a partir de mañana.") };
+  if (!distanceKm || distanceKm < 1 || distanceKm > 100) return { error: await say("Distancia no válida.") };
+  if (target && !targetTimeSec) return { error: await say("Tiempo objetivo con formato h:mm:ss o mm:ss.") };
   const db = await getDb();
-  if (!db.goal) return { error: "Primero elige la carrera principal." };
+  if (!db.goal) return { error: await say("Primero elige la carrera principal.") };
   // un objetivo A puede ir antes o después de la principal; las B y C, antes del último objetivo
   const lastA = [db.goal.date, ...(db.races ?? []).filter((r) => r.priority === "A").map((r) => r.date)].sort().at(-1)!;
-  if (priority === "A" && date === db.goal.date) return { error: "Ese día ya es la carrera principal." };
-  if (priority === "A" && diffDays(date, today) > 730) return { error: "Como mucho dentro de dos años." };
+  if (priority === "A" && date === db.goal.date) return { error: await say("Ese día ya es la carrera principal.") };
+  if (priority === "A" && diffDays(date, today) > 730) return { error: await say("Como mucho dentro de dos años.") };
   if (priority !== "A" && date >= lastA) return { error: `Tiene que ser antes de tu último objetivo (${lastA}), o márcala como objetivo A.` };
-  if ((db.races ?? []).some((r) => r.date === date)) return { error: "Ya hay otra carrera ese día." };
-  if ((db.races ?? []).filter((r) => r.date >= today).length >= 8) return { error: "Como máximo 8 carreras secundarias." };
+  if ((db.races ?? []).some((r) => r.date === date)) return { error: await say("Ya hay otra carrera ese día.") };
+  if ((db.races ?? []).filter((r) => r.date >= today).length >= 8) return { error: await say("Como máximo 8 carreras secundarias.") };
 
   await updateDb((d) => {
     d.races = [
@@ -380,7 +381,7 @@ export async function newHealthKey(): Promise<HealthKeyState> {
 
 /** Datos de Health Connect que manda la app de Android (con la sesión: no hace falta la clave del atajo). */
 export async function saveHealthFromApp(body: unknown): Promise<FormState> {
-  if (JSON.stringify(body ?? null).length > 200_000) return { error: "Demasiados datos." };
+  if (JSON.stringify(body ?? null).length > 200_000) return { error: await say("Demasiados datos.") };
   const today = todayMadrid();
   const parsed = parseHealthPayload(body, today);
   if ("error" in parsed) return { error: parsed.error };
@@ -403,9 +404,9 @@ export async function revokeHealthKey(): Promise<void> {
 export async function markUnavailable(_: FormState, fd: FormData): Promise<FormState> {
   const from = String(fd.get("from") ?? "");
   const to = String(fd.get("to") ?? "") || from;
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(from) || !/^\d{4}-\d{2}-\d{2}$/.test(to) || to < from) return { error: "Revisa las fechas." };
-  if (diffDays(to, from) > 60) return { error: "Como máximo 60 días seguidos." };
-  if (from < todayLocal()) return { error: "Elige hoy o un día que no haya pasado." };
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(from) || !/^\d{4}-\d{2}-\d{2}$/.test(to) || to < from) return { error: await say("Revisa las fechas.") };
+  if (diffDays(to, from) > 60) return { error: await say("Como máximo 60 días seguidos.") };
+  if (from < todayLocal()) return { error: await say("Elige hoy o un día que no haya pasado.") };
   const dates: string[] = [];
   for (let d = from; d <= to; d = addDays(d, 1)) dates.push(d);
   return markUnavailableDates(dates);
@@ -415,7 +416,7 @@ export async function markUnavailable(_: FormState, fd: FormData): Promise<FormS
 export async function markUnavailableDates(list: string[]): Promise<FormState> {
   const today = todayLocal();
   const dates = [...new Set(list)].filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(d) && Math.abs(diffDays(d, today)) <= 60).sort();
-  if (!dates.length) return { error: "Revisa las fechas." };
+  if (!dates.length) return { error: await say("Revisa las fechas.") };
   let moved = 0;
   let dropped = 0;
   await updateDb((db) => {
@@ -433,10 +434,10 @@ export async function markUnavailableDates(list: string[]): Promise<FormState> {
 export async function moveSessionDay(_: FormState, fd: FormData): Promise<FormState> {
   const id = String(fd.get("session") ?? "");
   const to = String(fd.get("to") ?? "");
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(to)) return { error: "Elige un día." };
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(to)) return { error: await say("Elige un día.") };
   const today = todayLocal();
   // se asigna dentro de updateDb: el tipo, explícito (si no, TypeScript lo deja en el valor inicial)
-  let result = { error: "No tienes plan." } as ReturnType<typeof moveSession>;
+  let result = { error: await say("No tienes plan.") } as ReturnType<typeof moveSession>;
   let title = "";
   let from = "";
   await updateDb((db) => {
@@ -499,27 +500,27 @@ const FEELS: Feel[] = ["muy_facil", "facil", "bien", "duro", "muy_duro"];
 
 export async function saveActivity(_: FormState, fd: FormData): Promise<FormState> {
   const date = String(fd.get("date") ?? "");
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return { error: "Indica la fecha." };
-  if (date > todayLocal()) return { error: "La fecha no puede ser futura." };
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return { error: await say("Indica la fecha.") };
+  if (date > todayLocal()) return { error: await say("La fecha no puede ser futura.") };
   const sport = String(fd.get("sport") ?? "run") as (typeof SPORTS)[number];
-  if (!SPORTS.includes(sport)) return { error: "Deporte no válido." };
+  if (!SPORTS.includes(sport)) return { error: await say("Deporte no válido.") };
   const distanceKm = num(fd, "distanceKm") ?? 0;
-  if (distanceKm < 0 || distanceKm > 400) return { error: "Distancia no válida." };
+  if (distanceKm < 0 || distanceKm > 400) return { error: await say("Distancia no válida.") };
   // tiempo en movimiento; si no se indica, a partir del ritmo medio y la distancia
   const paceSec = parsePace(String(fd.get("pace") ?? ""));
   const typedSec = parseTime(String(fd.get("duration") ?? ""));
   const durationSec = typedSec ?? (paceSec && distanceKm > 0 ? Math.round(paceSec * distanceKm) : undefined);
   if (!durationSec || durationSec < 60 || durationSec > 24 * 3600)
-    return { error: "Indica el tiempo en movimiento (h:mm:ss o mm:ss, mínimo 1 minuto) o la distancia y el ritmo medio." };
-  if (sport === "run" && distanceKm > 0 && durationSec / distanceKm < 150) return { error: "Ese ritmo es más rápido que 2:30 /km: revisa distancia y tiempo." };
+    return { error: await say("Indica el tiempo en movimiento (h:mm:ss o mm:ss, mínimo 1 minuto) o la distancia y el ritmo medio.") };
+  if (sport === "run" && distanceKm > 0 && durationSec / distanceKm < 150) return { error: await say("Ese ritmo es más rápido que 2:30 /km: revisa distancia y tiempo.") };
   const avgHr = num(fd, "avgHr");
-  if (avgHr !== undefined && (avgHr < 40 || avgHr > 230)) return { error: "FC media fuera de rango (40-230)." };
+  if (avgHr !== undefined && (avgHr < 40 || avgHr > 230)) return { error: await say("FC media fuera de rango (40-230).") };
   const maxHr = num(fd, "maxHr");
-  if (maxHr !== undefined && (maxHr < 40 || maxHr > 240)) return { error: "FC máxima fuera de rango." };
+  if (maxHr !== undefined && (maxHr < 40 || maxHr > 240)) return { error: await say("FC máxima fuera de rango.") };
   const steps = num(fd, "steps");
-  if (steps !== undefined && (steps < 0 || steps > 200_000)) return { error: "Pasos fuera de rango." };
+  if (steps !== undefined && (steps < 0 || steps > 200_000)) return { error: await say("Pasos fuera de rango.") };
   const maxAltitudeM = num(fd, "maxAltitudeM");
-  if (maxAltitudeM !== undefined && (maxAltitudeM < -500 || maxAltitudeM > 9000)) return { error: "Altitud máxima fuera de rango." };
+  if (maxAltitudeM !== undefined && (maxAltitudeM < -500 || maxAltitudeM > 9000)) return { error: await say("Altitud máxima fuera de rango.") };
   // sin cadencia del reloj, se saca de los pasos: pasos por minuto en movimiento
   const stepCadence = steps && (sport === "run" || sport === "walk") ? Math.round(steps / (durationSec / 60)) : undefined;
   const avgCadence = num(fd, "avgCadence") ?? (stepCadence && stepCadence >= 30 && stepCadence <= 260 ? stepCadence : undefined);
@@ -536,7 +537,7 @@ export async function saveActivity(_: FormState, fd: FormData): Promise<FormStat
   // foto del entreno: llega ya reducida desde el navegador
   const photoRaw = String(fd.get("photo") ?? "");
   const photo = photoRaw ? jpegFromDataUrl(photoRaw, MAX_PHOTO) : undefined;
-  if (photoRaw && !photo) return { error: "La foto no es válida o es demasiado grande." };
+  if (photoRaw && !photo) return { error: await say("La foto no es válida o es demasiado grande.") };
   const uid = await requireUserId();
   if (photo) await putImage(photoKey(uid, id), photo);
   else if (fd.get("removePhoto")) await deleteImage(photoKey(uid, id));
@@ -585,7 +586,7 @@ const MAX_GPS_POINTS = 15_000;
 export async function saveRecordedRun(input: { sport?: string; name?: string; startLocal?: string; points?: unknown; rpe?: number; feel?: string; feelings?: string }): Promise<FormState> {
   const sport = (["run", "walk", "ride"] as const).find((x) => x === input.sport) ?? "run";
   const startLocal = String(input.startLocal ?? "");
-  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/.test(startLocal) || startLocal.slice(0, 10) > todayLocal()) return { error: "Fecha de la carrera no válida." };
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/.test(startLocal) || startLocal.slice(0, 10) > todayLocal()) return { error: await say("Fecha de la carrera no válida.") };
   const raw = Array.isArray(input.points) ? input.points.slice(0, MAX_GPS_POINTS) : [];
   const points: GpsPoint[] = [];
   for (const r of raw) {
@@ -597,7 +598,7 @@ export async function saveRecordedRun(input: { sport?: string; name?: string; st
     if (Number.isFinite(p.t) && acceptPoint(points.at(-1), p)) points.push(p);
   }
   const stats = trackStats(points);
-  if (stats.distanceM < 100 || stats.movingSec < 60) return { error: "La grabación es demasiado corta para guardarla (menos de 100 m o de 1 minuto)." };
+  if (stats.distanceM < 100 || stats.movingSec < 60) return { error: await say("La grabación es demasiado corta para guardarla (menos de 100 m o de 1 minuto).") };
   const elapsedSec = Math.round((points.at(-1)!.t - points[0].t) / 1000);
   const rpe = Number(input.rpe);
   const label = { run: "Carrera", walk: "Caminata", ride: "Bici" }[sport];
@@ -634,8 +635,8 @@ export async function saveRecordedRun(input: { sport?: string; name?: string; st
 export async function setActivityPhoto(id: string, dataUrl: string | null): Promise<FormState> {
   const uid = await requireUserId();
   const photo = dataUrl === null ? undefined : jpegFromDataUrl(dataUrl, MAX_PHOTO);
-  if (dataUrl !== null && !photo) return { error: "La foto no es válida o es demasiado grande." };
-  if (!(await getDb()).activities.some((a) => a.id === id)) return { error: "No existe ese entreno." };
+  if (dataUrl !== null && !photo) return { error: await say("La foto no es válida o es demasiado grande.") };
+  if (!(await getDb()).activities.some((a) => a.id === id)) return { error: await say("No existe ese entreno.") };
   if (photo) await putImage(photoKey(uid, id), photo);
   else await deleteImage(photoKey(uid, id));
   await updateDb((db) => {

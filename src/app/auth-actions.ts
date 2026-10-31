@@ -24,7 +24,7 @@ import {
 import { GOOGLE_PENDING_COOKIE, endSession, requireUserId, sealValue, startSession, unsealValue } from "@/lib/session";
 import { clearAttempts, noteAttempt, tooMany } from "@/lib/attempts";
 import { mailConfigured, sendMail } from "@/lib/mail";
-import { loginLocale } from "@/lib/i18n/server";
+import { loginLocale, say } from "@/lib/i18n/server";
 import { translator } from "@/lib/i18n";
 import type { FormState } from "./actions";
 import { healthTokenKey, kvDel, readDbNow } from "@/lib/db";
@@ -167,7 +167,7 @@ export async function unfriend(fd: FormData): Promise<void> {
 
 /** Borra la cuenta y todos sus datos. Hay que escribir BORRAR para confirmar. */
 export async function deleteAccount(_: FormState, fd: FormData): Promise<FormState> {
-  if (str(fd, "confirm").trim().toUpperCase() !== "BORRAR") return { error: "Escribe BORRAR para confirmar." };
+  if (str(fd, "confirm").trim().toUpperCase() !== "BORRAR") return { error: await say("Escribe BORRAR para confirmar.") };
   const uid = await requireUserId();
   // desconectar Strava para que deje de dar acceso a la app
   const db = await readDbNow(uid);
@@ -190,7 +190,7 @@ export async function newFriendCode(): Promise<void> {
 export async function saveAvatar(dataUrl: string): Promise<FormState> {
   // JPEG de verdad y pequeño (el navegador la deja en ~20-40 KB)
   const jpeg = jpegFromDataUrl(dataUrl, 200_000);
-  if (!jpeg) return { error: "La foto no es válida." };
+  if (!jpeg) return { error: await say("La foto no es válida.") };
   await setAvatar(await requireUserId(), jpeg);
   refresh();
   return { ok: true };

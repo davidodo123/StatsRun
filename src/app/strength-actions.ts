@@ -1,4 +1,5 @@
 "use server";
+import { say } from "@/lib/i18n/server";
 // Fuerza: lugares con su material, ejercicios propios, rutinas, entrenos y el chat del entrenador IA.
 
 import { refresh } from "next/cache";
@@ -43,7 +44,7 @@ export async function savePlace(_: FormState, fd: FormData): Promise<FormState> 
   const id = text(fd, "id", 20);
   const name = text(fd, "name", 40);
   const equipment = equipmentOf(fd);
-  if (!name) return { error: "Ponle un nombre (Casa, Gimnasio…)." };
+  if (!name) return { error: await say("Ponle un nombre (Casa, Gimnasio…).") };
   if (!equipment.includes("corporal")) equipment.unshift("corporal");
   let error: string | undefined;
   await updateDb((db) => {
@@ -77,7 +78,7 @@ const MEASURE_RANGE: Record<(typeof MEASURE_FIELDS)[number], [number, number]> =
 
 export async function saveMeasurement(_: FormState, fd: FormData): Promise<FormState> {
   const date = text(fd, "date", 10);
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || date > todayLocal()) return { error: "Fecha no válida." };
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || date > todayLocal()) return { error: await say("Fecha no válida.") };
   const m: BodyMeasurement = { date };
   for (const k of MEASURE_FIELDS) {
     const raw = text(fd, k, 10).replace(",", ".");
@@ -87,7 +88,7 @@ export async function saveMeasurement(_: FormState, fd: FormData): Promise<FormS
     if (!Number.isFinite(n) || n < lo || n > hi) return { error: `Revisa el valor de ${k === "fatPct" ? "% de grasa" : k === "weightKg" ? "peso" : "los perímetros"}.` };
     m[k] = Math.round(n * 10) / 10;
   }
-  if (Object.keys(m).length === 1) return { error: "Apunta al menos una medida." };
+  if (Object.keys(m).length === 1) return { error: await say("Apunta al menos una medida.") };
   await updateDb((db) => {
     const list = (db.measurements ??= []).filter((x) => x.date !== date);
     list.push(m);
@@ -153,9 +154,9 @@ export async function saveCustomExercise(_: FormState, fd: FormData): Promise<Fo
     .map((s) => s.trim())
     .filter(Boolean)
     .slice(0, 12);
-  if (name.length < 3) return { error: "Ponle un nombre de al menos 3 letras." };
-  if (!CAT_IDS.has(cat)) return { error: "Tipo de ejercicio no válido." };
-  if (!muscles.length) return { error: "Marca al menos un músculo principal." };
+  if (name.length < 3) return { error: await say("Ponle un nombre de al menos 3 letras.") };
+  if (!CAT_IDS.has(cat)) return { error: await say("Tipo de ejercicio no válido.") };
+  if (!muscles.length) return { error: await say("Marca al menos un músculo principal.") };
 
   let error: string | undefined;
   let savedId = id;
@@ -193,8 +194,8 @@ export async function saveRoutine(input: { id?: string; name?: string; notes?: s
   const db = await readDbNow();
   const name = String(input.name ?? "").trim().slice(0, 60);
   const exercises = cleanRoutineExercises(input.exercises, (id) => Boolean(findExercise(db, id)));
-  if (!name) return { error: "Ponle un nombre a la rutina." };
-  if (!exercises.length) return { error: "Añade al menos un ejercicio." };
+  if (!name) return { error: await say("Ponle un nombre a la rutina.") };
+  if (!exercises.length) return { error: await say("Añade al menos un ejercicio.") };
 
   let id = String(input.id ?? "");
   let error: string | undefined;
@@ -268,7 +269,7 @@ export async function finishWorkout(input: {
   const db = await readDbNow();
   const workout = cleanWorkout(input.workout, (id) => findExercise(db, id)?.name, db.profile?.weightKg);
   const startLocal = String(input.startLocal ?? "");
-  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/.test(startLocal) || startLocal.slice(0, 10) > todayLocal()) return { error: "Fecha del entreno no válida." };
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/.test(startLocal) || startLocal.slice(0, 10) > todayLocal()) return { error: await say("Fecha del entreno no válida.") };
   const durationSec = Math.round(Math.min(Math.max(Number(input.durationSec) || 0, 60), 6 * 3600));
   const rpe = Number(input.rpe);
   const routineName = workout.routineId ? db.routines?.find((r) => r.id === workout.routineId)?.name : undefined;
@@ -314,8 +315,8 @@ export interface StrengthCoachForm extends FormState {
 export async function generateStrengthRoutines(_: StrengthCoachForm, fd: FormData): Promise<StrengthCoachForm> {
   const material = text(fd, "material", 600);
   const ability = text(fd, "ability", 1200);
-  if (material.length < 3) return { error: "Cuéntale qué material tienes (o «nada, solo mi cuerpo»)." };
-  if (!coachConfig().configured) return { error: "La IA no está configurada (falta OPENROUTER_API_KEY)." };
+  if (material.length < 3) return { error: await say("Cuéntale qué material tienes (o «nada, solo mi cuerpo»).") };
+  if (!coachConfig().configured) return { error: await say("La IA no está configurada (falta OPENROUTER_API_KEY).") };
   const now = new Date().toISOString();
   const today = todayLocal();
   const model = strengthModel();
@@ -379,8 +380,8 @@ const MAX_CHAT = 40;
 
 export async function sendStrengthChat(_: FormState, fd: FormData): Promise<FormState> {
   const message = text(fd, "message", 1500);
-  if (message.length < 2) return { error: "Escribe tu pregunta." };
-  if (!coachConfig().configured) return { error: "La IA no está configurada (falta OPENROUTER_API_KEY)." };
+  if (message.length < 2) return { error: await say("Escribe tu pregunta.") };
+  if (!coachConfig().configured) return { error: await say("La IA no está configurada (falta OPENROUTER_API_KEY).") };
   const now = new Date().toISOString();
   const db = await readDbNow();
   const today = todayLocal();
@@ -499,9 +500,9 @@ export async function applyChatPlan(_: FormState, fd: FormData): Promise<FormSta
   const at = text(fd, "at", 40);
   const db = await readDbNow();
   const m = db.strengthChat?.find((x) => x.at === at && x.role === "assistant");
-  if (!m?.planRequest && !m?.planDays?.length) return { error: "No hay ningún cambio que aplicar." };
+  if (!m?.planRequest && !m?.planDays?.length) return { error: await say("No hay ningún cambio que aplicar.") };
   if (m.planResult) return { ok: true, message: m.planResult };
-  if (!db.plan) return { error: "No tienes plan de carrera." };
+  if (!db.plan) return { error: await say("No tienes plan de carrera.") };
   const parts: string[] = [];
   // los días que no puede: como «No puedo ese día» (las sesiones se mueven y se puede deshacer)
   if (m.planDays?.length) {

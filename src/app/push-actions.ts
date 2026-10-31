@@ -1,5 +1,6 @@
 "use server";
 
+import { say } from "@/lib/i18n/server";
 import { refresh } from "next/cache";
 import { updateDb } from "@/lib/db";
 import type { PushSub } from "@/lib/types";
@@ -11,7 +12,7 @@ export async function savePushSubscription(sub: { endpoint: string; keys?: { p25
   const { endpoint } = sub;
   const p256dh = sub.keys?.p256dh;
   const auth = sub.keys?.auth;
-  if (!endpoint?.startsWith("https://") || !p256dh || !auth) return { error: "Suscripción no válida." };
+  if (!endpoint?.startsWith("https://") || !p256dh || !auth) return { error: await say("Suscripción no válida.") };
   await updateDb((db) => {
     const subs = (db.push?.subs ?? []).filter((s) => s.endpoint !== endpoint);
     const s: PushSub = { endpoint, p256dh, auth, at: new Date().toISOString(), ...(device ? { device: device.slice(0, 40) } : {}) };

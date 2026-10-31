@@ -1,4 +1,5 @@
 "use server";
+import { say } from "@/lib/i18n/server";
 // Memoria de la IA: valorar sus respuestas y gestionar lo que recuerda del atleta.
 
 import { refresh } from "next/cache";
@@ -17,7 +18,7 @@ export async function rateAi(_: FormState, fd: FormData): Promise<FormState> {
   const ref = text(fd, "ref", 40);
   const rating: 1 | -1 | 0 = fd.get("rating") === "1" ? 1 : fd.get("rating") === "-1" ? -1 : 0;
   const reason = cleanPreference(fd.get("reason"));
-  if (!AREAS.includes(area) || !ref || !rating) return { error: "Valoración no válida." };
+  if (!AREAS.includes(area) || !ref || !rating) return { error: await say("Valoración no válida.") };
   const at = new Date().toISOString();
   await updateDb((db) => {
     // copia de lo valorado: servirá de ejemplo bueno o malo
@@ -34,14 +35,14 @@ export async function rateAi(_: FormState, fd: FormData): Promise<FormState> {
 export async function addAiPreference(_: FormState, fd: FormData): Promise<FormState> {
   const t = cleanPreference(fd.get("text"));
   const area = (["todas", "plan", "fuerza"].includes(String(fd.get("area"))) ? fd.get("area") : "todas") as AiPreference["area"];
-  if (t.length < 3) return { error: "Escribe la preferencia (p. ej. «No quiero zancadas»)." };
+  if (t.length < 3) return { error: await say("Escribe la preferencia (p. ej. «No quiero zancadas»).") };
   const at = new Date().toISOString();
   let dup = false;
   await updateDb((db) => {
     db.aiPreferences = addPreferences(db.aiPreferences, [{ text: t, area, source: "manual", at }], newId);
     dup = !db.aiPreferences.some((p) => p.at === at);
   });
-  if (dup) return { error: "Ya la tenía apuntada." };
+  if (dup) return { error: await say("Ya la tenía apuntada.") };
   refresh();
   return { ok: true, message: "Apuntado." };
 }
