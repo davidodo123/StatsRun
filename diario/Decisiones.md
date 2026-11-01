@@ -1127,3 +1127,11 @@ Fuentes: screensdesign.com, posthog.com/pricing, revenuecat.com/pricing, revenue
 - Por defecto en el código; `OPENROUTER_MODEL` y `OPENROUTER_STRENGTH_MODEL` (uno o varios separados por comas) lo cambian sin tocar código.
 - Ojo: los modelos gratis pueden guardar lo que se les manda para entrenar. La IA recibe datos de entreno, edad, peso, lesiones y (en el chat) el nombre de pila; nunca el correo. Si preocupa, volver a uno de pago.
 
+## Pantalla de novedades
+*2026-11-01*
+
+- David quiere que, al haber una actualización, salga una pantalla con lo nuevo y el botón de actualizar (antes solo salía un botón arriba).
+- La app ya miraba `/api/version` (commit de Vercel) al volver a ella y cada 10 min. Ahora esa ruta devuelve también las últimas novedades y la app enseña las que son más nuevas que la suya; si no hay ninguna (arreglos sin entrada), sale «Mejoras y arreglos».
+- Las novedades se escriben a mano en `src/lib/novedades.ts` (una entrada con fecha, en los 5 idiomas) al subir algo que se note. Alternativa descartada: sacarlas de los commits (salen técnicos y en español).
+- Sale una vez por versión; «Más tarde» deja el botón de arriba. En el APK de Android funciona igual (carga la app de Vercel); las versiones nuevas del APK van por Google Play.
+

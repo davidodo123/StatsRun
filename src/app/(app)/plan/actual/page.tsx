@@ -3,7 +3,7 @@ import { planText } from "@/lib/i18n/planText";
 import { BackLink } from "@/components/BackLink";
 import { Suspense } from "react";
 import { getAnalysis } from "@/lib/analysis";
-import { Card, ChipLink, Empty, FoldCard, Loading, MoreMenu, Notice, PageHeader, Stat, StatGroup } from "@/components/ui";
+import { Card, ChipLink, Empty, FoldCard, Loading, MoreMenu, Notice, PageHeader, Pill, Stat, StatGroup } from "@/components/ui";
 import { SessionCard } from "@/components/SessionCard";
 import { AiCoachButton } from "@/components/AiCoachButton";
 import { StrengthCoachCard } from "@/components/StrengthCoachCard";
@@ -22,13 +22,23 @@ import { fmtDuration, fmtPaceRange } from "@/lib/format";
 import { addDays, diffDays, mondayOf } from "@/lib/dates";
 import { getT } from "@/lib/i18n/server";
 import { dayMonth, intlLocale, shortWeekdayDate, weekdayDate, type Key } from "@/lib/i18n";
-import type { Phase } from "@/lib/types";
+import type { CoachState, Phase } from "@/lib/types";
 import { clearPlan, clearUnavailable } from "@/app/actions";
 import { AdaptPlanButton } from "@/components/AdaptPlanButton";
 import { UndoSkip } from "@/components/UndoSkip";
 import { AiRating } from "@/components/AiRating";
 import { feedbackFor } from "@/lib/aiMemory";
 import { serverText } from "@/lib/i18n/serverText";
+
+const VERDICT_TONE: Record<NonNullable<CoachState["verdict"]>, string> = {
+  progresar: "bg-good/15 text-good-ink",
+  mantener: "bg-surface text-ink-2",
+  descargar: "bg-critical/15 text-critical",
+  recuperar: "bg-warning/15 text-warning",
+};
+
+/** El diagnóstico ya sale en la etiqueta: se quita del principio del resumen («Diagnóstico: recuperar. …»). */
+const coachSummary = (s: string) => s.replace(/^\s*diagn[oó]stico\s*:?\s*\p{L}+\s*[.:]\s*/iu, "");
 
 export const metadata: Metadata = { title: "Plan" };
 // crear las rutinas con IA puede tardar un minuto (las acciones de la página heredan este límite)
@@ -246,12 +256,29 @@ async function Content({ searchParams }: { searchParams: PageProps<"/plan/actual
           <Card title={t("plan.entrenadorIA")} subtitle={coachConfig().configured ? t("plan.modelo", { modelo: modelName(coachConfig().model) }) : t("plan.desactivado")}>
             {coachConfig().configured ? (
               <div className="space-y-3 text-sm text-ink-2">
-                {db.coach?.summary ? <p>{db.coach.summary}</p> : <p>{t("plan.aunNoReviso")}</p>}
-                {db.coach?.summary && <AiRating area="plan" refId={db.coach.updatedAt} rating={feedbackFor(db, "plan", db.coach.updatedAt)?.rating} locale={locale} />}
-                {db.coach?.updatedAt && (
-                  <p className="text-xs text-muted">
-                    {t("plan.ultimaRevision", { fecha: new Date(db.coach.updatedAt).toLocaleString(intlLocale(locale)), n: db.coach.changed })}
-                  </p>
+                {db.coach?.summary ? (
+                  <div className="space-y-3 rounded-xl border border-line bg-surface-2 p-3.5">
+                    <div className="flex flex-wrap items-center gap-2">
+                      {db.coach.verdict && (
+                        <Pill className={VERDICT_TONE[db.coach.verdict]}>
+                          <span className="mr-1.5 h-1.5 w-1.5 rounded-full bg-current" aria-hidden />
+                          {t(`plan.v.${db.coach.verdict}`)}
+                        </Pill>
+                      )}
+                      <Pill className="border border-line text-ink-2">
+                        {db.coach.changed === 0 ? t("plan.sinCambios") : db.coach.changed === 1 ? t("plan.ajustada1") : t("plan.ajustadas", { n: db.coach.changed })}
+                      </Pill>
+                    </div>
+                    <p className="leading-relaxed text-ink">{coachSummary(db.coach.summary)}</p>
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <p className="text-xs text-muted">
+                        {t("plan.revisadoEl", { fecha: new Date(db.coach.updatedAt).toLocaleString(intlLocale(locale), { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) })}
+                      </p>
+                      <AiRating area="plan" refId={db.coach.updatedAt} rating={feedbackFor(db, "plan", db.coach.updatedAt)?.rating} locale={locale} />
+                    </div>
+                  </div>
+                ) : (
+                  <p>{t("plan.aunNoReviso")}</p>
                 )}
                 {db.coach?.error && <Notice tone="warn">{t("plan.ultimoFallo", { error: serverText(db.coach.error, locale) })}</Notice>}
                 <p className="text-xs text-muted">

@@ -44,13 +44,13 @@ export function ReadinessCard({ r, t = translator("es") }: { r: Readiness; t?: T
 
         <div>
           <p className="mb-1 text-xs text-muted">{t("forma.faseSelye")}</p>
-          <div className="flex gap-1" role="list">
+          <div className="flex flex-wrap gap-1" role="list">
             {ORDER.map((p) => (
               <span
                 key={p}
                 role="listitem"
                 aria-current={p === r.phase ? "step" : undefined}
-                className={`min-w-0 flex-1 break-words rounded-md px-1 py-1 text-center text-[10px] leading-tight ${p === r.phase ? "bg-accent font-semibold text-accent-ink" : "bg-surface-2 text-muted"}`}
+                className={`flex-auto whitespace-nowrap rounded-md px-2 py-1 text-center text-[10px] leading-tight ${p === r.phase ? "bg-accent font-semibold text-accent-ink" : "bg-surface-2 text-muted"}`}
                 title={t(FULL[p])}
               >
                 {/* en móvil no caben los nombres largos («Supercompensación») */}
