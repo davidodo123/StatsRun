@@ -30,20 +30,27 @@ export function withLanguage(system: string, lang?: string): string {
 IMPORTANTE: el atleta usa la app en ${name}. Escribe todo lo que lee (textos, títulos, descripciones, pasos y nombres) en ${name}.` : system;
 }
 
+// Modelos gratis de OpenRouter (sin saldo): si el primero está saturado, OpenRouter pasa al siguiente.
+// Cupo de la cuenta: 50 peticiones al día entre todos (1.000 si alguna vez se recargan 10 $)
+const FREE_MODELS = "nvidia/nemotron-3.5-super-vl:free,google/gemma-4-31b-it:free,google/gemma-4-26b-a4b-it:free";
+
 export function coachConfig() {
   const apiKey = process.env.OPENROUTER_API_KEY;
-  const model = process.env.OPENROUTER_MODEL || "openai/gpt-4o-mini";
+  const model = process.env.OPENROUTER_MODEL || FREE_MODELS;
   return { apiKey, model, configured: Boolean(apiKey) };
 }
 
-/** Modelo para crear rutinas de fuerza: más capaz que el de los reajustes diarios (se cambia en OPENROUTER_STRENGTH_MODEL). */
-export const strengthModel = () => process.env.OPENROUTER_STRENGTH_MODEL || "openai/gpt-4o";
+/** Modelo para crear rutinas de fuerza (se cambia en OPENROUTER_STRENGTH_MODEL; puede ser uno de pago más capaz). */
+export const strengthModel = () => process.env.OPENROUTER_STRENGTH_MODEL || FREE_MODELS;
+
+/** Nombre para enseñar: el primer modelo de la lista, sin «:free». */
+export const modelName = (model: string) => model.split(",")[0].trim().replace(/:free$/, "");
 
 /** Llamada a OpenRouter que devuelve el primer objeto JSON de la respuesta. */
 // sin «max_tokens», OpenRouter reserva el máximo del modelo (16 k) y con poco saldo responde 402
 export async function chatJson<T>(system: string, user: string, temperature = 0.4, modelOverride?: string, maxTokens = 3500): Promise<T> {
   const { apiKey, model: defaultModel } = coachConfig();
-  const model = modelOverride ?? defaultModel;
+  const models = (modelOverride ?? defaultModel).split(",").map((m) => m.trim()).filter(Boolean);
   const res = await fetch(API, {
     method: "POST",
     headers: {
@@ -53,7 +60,7 @@ export async function chatJson<T>(system: string, user: string, temperature = 0.
       "X-Title": "StatsRun",
     },
     body: JSON.stringify({
-      model,
+      ...(models.length > 1 ? { models } : { model: models[0] }),
       temperature,
       max_tokens: maxTokens,
       response_format: { type: "json_object" },
@@ -64,7 +71,8 @@ export async function chatJson<T>(system: string, user: string, temperature = 0.
     }),
     signal: AbortSignal.timeout(150_000),
   });
-  if (res.status === 402) throw new Error("NO_CREDITS");
+  // sin saldo (402) o modelos gratis saturados o sin cupo del día (429)
+  if (res.status === 402 || res.status === 429) throw new Error("NO_CREDITS");
   if (!res.ok) throw new Error(`OpenRouter ${res.status}: ${(await res.text()).slice(0, 300)}`);
   const json = await res.json();
   const content: string = json.choices?.[0]?.message?.content ?? "";

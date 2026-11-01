@@ -1116,3 +1116,14 @@ Fuentes: screensdesign.com, posthog.com/pricing, revenuecat.com/pricing, revenue
 - Ahora, en el chat, al crear rutinas, en «Adaptar» y en el aviso del plan: «La IA no está disponible ahora mismo. Vuelve a intentarlo más tarde.» (o «no ha podido responder» si es otro fallo), en el idioma de cada uno. El detalle técnico va al registro del servidor (Vercel → Logs, buscar «IA (»).
 - Un intento fallido **no gasta** un uso del límite (`refundAiUse`). El reajuste automático no se reintenta en cada visita (queda apuntado como hecho ese día).
 - Para que vuelva a funcionar hace falta saldo: recargar OpenRouter o pasar a la API de Claude (lo que David tenía pensado para todas sus apps).
+
+## IA gratis: modelos «:free» de OpenRouter
+*2026-11-01*
+
+- La cuenta de OpenRouter nunca se ha recargado (`total_credits: 0`): el saldo gratis del principio se acabó y lo que queda (~0,002 $) no llega a una petición. David no quiere recargar.
+- Alternativas: modelos gratis de OpenRouter (misma clave, sin código nuevo), la capa gratis de Gemini (otra clave y otro formato; límites que Google cambia a menudo), recargar (5–10 $) o la API de Claude (de pago).
+- Elegido: **modelos gratis de OpenRouter**, con relevo: `nvidia/nemotron-3.5-super-vl:free` → `google/gemma-4-31b-it:free` → `google/gemma-4-26b-a4b-it:free` (parámetro `models`; si uno está saturado pasa al siguiente). Probado: rutinas en JSON correcto, en el idioma pedido, ~24 s.
+- Límites: **50 peticiones al día entre todos los usuarios** (20 por minuto); con 10 $ recargados alguna vez sube a 1.000 al día para siempre. Un 429 (sin cupo o saturado) se trata igual que sin saldo: «La IA no está disponible ahora mismo».
+- Por defecto en el código; `OPENROUTER_MODEL` y `OPENROUTER_STRENGTH_MODEL` (uno o varios separados por comas) lo cambian sin tocar código.
+- Ojo: los modelos gratis pueden guardar lo que se les manda para entrenar. La IA recibe datos de entreno, edad, peso, lesiones y (en el chat) el nombre de pila; nunca el correo. Si preocupa, volver a uno de pago.
+

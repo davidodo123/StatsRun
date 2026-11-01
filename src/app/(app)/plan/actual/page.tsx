@@ -11,7 +11,7 @@ import { ReadinessCard } from "@/components/ReadinessCard";
 import { RaceCard } from "@/components/RaceCard";
 import { assessReadiness } from "@/lib/engine/readiness";
 import { UnavailableForm } from "@/components/UnavailableForm";
-import { coachConfig, strengthModel } from "@/lib/coach";
+import { coachConfig, modelName, strengthModel } from "@/lib/coach";
 import { AutoAdapt } from "@/components/AutoAdapt";
 import { AI_LIMITS, aiLeft } from "@/lib/aiPlan";
 import { viewAiUnlimited } from "@/lib/authView";
@@ -243,7 +243,7 @@ async function Content({ searchParams }: { searchParams: PageProps<"/plan/actual
               t={t}
             />
           )}
-          <Card title={t("plan.entrenadorIA")} subtitle={coachConfig().configured ? t("plan.modelo", { modelo: coachConfig().model }) : t("plan.desactivado")}>
+          <Card title={t("plan.entrenadorIA")} subtitle={coachConfig().configured ? t("plan.modelo", { modelo: modelName(coachConfig().model) }) : t("plan.desactivado")}>
             {coachConfig().configured ? (
               <div className="space-y-3 text-sm text-ink-2">
                 {db.coach?.summary ? <p>{db.coach.summary}</p> : <p>{t("plan.aunNoReviso")}</p>}
@@ -274,7 +274,7 @@ async function Content({ searchParams }: { searchParams: PageProps<"/plan/actual
               refId={db.strengthCoach?.summary ? db.strengthCoach.updatedAt : undefined}
               rating={feedbackFor(db, "fuerza", db.strengthCoach?.updatedAt)?.rating}
               routines={(db.routines ?? []).filter((r) => r.source === "ia").map((r) => ({ id: r.id, name: r.name }))}
-              model={strengthModel()}
+              model={modelName(strengthModel())}
               locale={locale}
             />
           </Card>

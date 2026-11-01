@@ -257,7 +257,7 @@ Propuesta de Gratis / Premium en [[Suscripción]]. Primero decidir; después, co
 - [x] Recorrido de todas las páginas en Chrome (móvil claro y oscuro, ordenador; usuario con datos, vacío, sin sesión y enlaces rotos)
 - [x] Flujos de uso reales, también con la IA de verdad
 - [x] Revocar la clave de OpenRouter de local que se pegó en el chat y crear otra (hecho 2026-10-10)
-- [ ] Recargar saldo en OpenRouter (o pasar a la API de Claude, como David tenía pensado): sin saldo, la IA no funciona — *2026-11-01: la app ya lo lleva bien (aviso «La IA no está disponible ahora mismo» en el idioma de cada uno, sin el mensaje técnico, y el intento no gasta usos)*
+- [/] IA gratis sin recargar → [[Decisiones#IA gratis: modelos «:free» de OpenRouter]] — *2026-11-01: modelos gratis de OpenRouter con relevo (50 peticiones al día entre todos); falta que David lo pruebe en el móvil. Antes: la app ya lo lleva bien (aviso «La IA no está disponible ahora mismo» en el idioma de cada uno, sin el mensaje técnico, y el intento no gasta usos)*
 
 ## 🔧 Pendientes técnicos
 

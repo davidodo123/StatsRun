@@ -20,7 +20,7 @@ tags: [config]
 | `GMAIL_APP_PASSWORD` | Contraseña de aplicación de esa cuenta (no la contraseña normal) |
 | `AUTH_SECRET` | Firmar la cookie de sesión |
 | `KV_REST_API_URL` / `KV_REST_API_TOKEN` | Base de datos Upstash Redis |
-| `OPENROUTER_API_KEY` / `OPENROUTER_MODEL` | Entrenador IA |
+| `OPENROUTER_API_KEY` / `OPENROUTER_MODEL` / `OPENROUTER_STRENGTH_MODEL` | Entrenador IA. Sin modelo puesto, usa los gratis (lista en `src/lib/coach.ts`); admite varios separados por comas |
 | `NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN` | PostHog (métricas y errores, región UE). Es la clave pública del proyecto (`phc_…`); sin ella no se carga nada |
 | `ADMIN_EMAILS` | Correos con acceso al panel `/admin` (y sin límite de IA) |
 | `AI_SIN_LIMITE` | Correos (separados por comas) sin límite de uso de la IA, para probar |
