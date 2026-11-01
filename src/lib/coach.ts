@@ -63,6 +63,8 @@ export async function chatJson<T>(system: string, user: string, temperature = 0.
       ...(models.length > 1 ? { models } : { model: models[0] }),
       temperature,
       max_tokens: maxTokens,
+      // los modelos gratis «piensan» antes de responder y se comían todo max_tokens sin llegar al JSON
+      reasoning: { enabled: false },
       response_format: { type: "json_object" },
       messages: [
         { role: "system", content: system },
