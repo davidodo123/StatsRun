@@ -184,6 +184,9 @@ function check(id: string, db: Db) {
   if (db.goal && db.goal.date > today && !plan.weeks.some((w) => w.sessions.some((s) => s.date === db.goal!.date && s.type === "race"))) bad(id, "sin-dia-de-carrera", db.goal.date);
   // volumen: que no se dispare de una semana a otra (más de +50 % con al menos 10 km)
   const kms = plan.weeks.map((w) => w.targetKm);
+  // si no da tiempo («llegar sano»), nada de series ni ritmos de carrera
+  const QUALITY = ["tempo", "intervals", "repetitions", "marathon_pace", "race_pace", "hills", "fartlek"];
+  if (!(plan.objectives?.length ?? 0) && plan.notes.some((n) => n.startsWith("No da tiempo"))) for (const w of plan.weeks) for (const s of w.sessions) if (QUALITY.includes(s.type) && s.date >= addDays(mondayOf(today), 7)) bad(id, "calidad-sin-tiempo", `${s.date} ${s.type}`);
   // ninguna sesión (salvo tirada y carrera) más del doble que la más larga de la semana anterior
   for (let k = 2; k < plan.weeks.length; k++) {
     const runs = (w: (typeof plan.weeks)[number]) => w.sessions.filter((x) => !["strength", "long", "race"].includes(x.type)).map((x) => x.distanceKm);

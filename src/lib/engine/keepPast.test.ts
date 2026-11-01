@@ -76,3 +76,13 @@ describe("dos objetivos muy seguidos", () => {
     expect(plan.warnings.some((w) => w.includes("Ultra"))).toBe(true);
   });
 });
+
+describe("no da tiempo a preparar la carrera", () => {
+  it("quien no corre y tiene un 10K en 4 semanas: solo rodajes, sin series ni ritmos de carrera", () => {
+    const novato: Profile = { ...profile, level: "nuevo", weeklyKm: 0, longestRunKm: 0 };
+    const plan = generatePlan({ profile: novato, goal: { name: "10K", distanceKm: 10, date: "2026-11-26" }, currentVdot: 30, currentWeeklyKm: 0, longestRecentKm: 0, today: "2026-10-29" });
+    const quality = plan.weeks.flatMap((w) => w.sessions).filter((s) => ["tempo", "intervals", "repetitions", "race_pace", "hills", "fartlek", "marathon_pace"].includes(s.type));
+    expect(quality).toEqual([]);
+    expect(plan.notes.some((n) => n.startsWith("No da tiempo"))).toBe(true);
+  });
+});

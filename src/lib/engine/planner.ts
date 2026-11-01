@@ -397,6 +397,9 @@ export function generatePlan(input: PlanInput): Plan {
   // correr-caminar: quien empieza (o principiante con sobrepeso), pero no quien ya corre 20 km o más a la semana
   const runWalkWeeks = input.currentWeeklyKm >= 20 ? 0 : lvl === 0 ? Math.min(6, Math.ceil(buildWeeks / 2)) : heavy && lvl === 1 ? 3 : 0;
   let runWalkKm = 0; // lo que dura la última sesión de correr-caminar: al dejarlo, los rodajes suben desde ahí
+  // no da tiempo (menos semanas de las recomendadas) y corre poco o está empezando: solo rodajes, para llegar sano
+  const survive = nWeeks < MIN_WEEKS[cat] && (lvl === 0 || runWalkWeeks > 0 || input.currentWeeklyKm < goal.distanceKm);
+  if (survive) notes.push("No da tiempo a prepararla del todo: el plan solo tiene rodajes suaves y la tirada, sin series ni ritmos de carrera.");
   let longKmPrev = Math.max(input.longestRecentKm, lvl === 0 ? 3 : 5);
   let peakLong = 0; // la tirada más larga del propio plan (el afinamiento baja desde ella, no desde el historial)
   let lastLong = 0; // la tirada de la última semana normal (la descarga baja desde ella)
@@ -477,6 +480,9 @@ export function generatePlan(input: PlanInput): Plan {
       // en la semana de la carrera no hay tirada larga: ese día, rodaje suave
       if (slot === "L" && isRaceWeek) s = easyRun(date, round1(Math.min(easyKm, 6)), paces, phase);
       else if (slot === "L") s = longRun(date, round1(longKm), ctx);
+      // calidad: nada mientras se hace correr-caminar (la segunda sesión de calidad no lo miraba) ni si no da tiempo
+      else if ((slot === "Q1" || slot === "Q2") && runWalk) s = runWalkSession(date, round1(easyKm), w, paces);
+      else if ((slot === "Q1" || slot === "Q2") && survive) s = easyRun(date, round1(ease(easyKm)), paces, phase);
       else if (slot === "Q1") s = quality1(date, round1(ease(qKm)), ctx);
       else if (slot === "Q2") s = quality2(date, round1(ease(qKm)), ctx);
       else if (slot === "R") s = recoveryRun(date, round1(ease(Math.max(3, easyKm * 0.7))), paces);

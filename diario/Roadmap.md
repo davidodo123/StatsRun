@@ -187,7 +187,9 @@ Usuarios ficticios solo en local (`scripts/pruebas/usuarios.ts`: perfiles, objet
 - [x] Segunda tanda (semillas 12345, 777, 4242, 99 y 2026: 5.000 usuarios): un rodaje suave de 30 km con la tirada limitada a 7 km (con pocos días el volumen sobrante iba todo a él) — *arreglado: nunca más largo que la tirada*
 - [x] Se podía añadir una carrera B o C el mismo día que la principal (dos carreras ese día) — *arreglado: la app no lo deja y el plan ignora las que ya hubiera*
 - [x] Recorrido de pantallas con otra tanda (semilla 777): 16.007 páginas sin errores — *2026-10-31*
-- [ ] Planes imposibles (de no correr a 10-30 km en 3-5 semanas): el plan avisa, pero aún mete sesiones de ritmo de carrera de 8 km
+- [x] Planes sin tiempo (menos semanas de las recomendadas y corre poco o empieza): solo rodajes suaves y la tirada, sin series ni ritmos de carrera, con una nota que lo explica — *arreglado 2026-10-31 (David: «arréglalo»)*
+- [x] Recorrido de pantallas tras estos cambios (semilla 4242): 16.013 páginas sin errores — *2026-10-31*
+- [x] De paso: quien hacía correr-caminar podía recibir la segunda sesión de calidad de la semana (no lo comprobaba) — *arreglado*
 - [ ] Un reajuste de la IA que falla gasta igualmente un uso del límite del día (se hace para no reintentar en cada visita)
 - [ ] Pendiente de probar: las acciones (guardar formularios) con muchos usuarios; aquí solo se abren páginas
 
