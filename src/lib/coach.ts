@@ -72,7 +72,10 @@ export async function chatJson<T>(system: string, user: string, temperature = 0.
     signal: AbortSignal.timeout(150_000),
   });
   // sin saldo (402) o modelos gratis saturados o sin cupo del día (429)
-  if (res.status === 402 || res.status === 429) throw new Error("NO_CREDITS");
+  if (res.status === 402 || res.status === 429) {
+    console.error(`OpenRouter ${res.status} (${models.join(", ")}):`, (await res.text()).slice(0, 300));
+    throw new Error("NO_CREDITS");
+  }
   if (!res.ok) throw new Error(`OpenRouter ${res.status}: ${(await res.text()).slice(0, 300)}`);
   const json = await res.json();
   const content: string = json.choices?.[0]?.message?.content ?? "";
