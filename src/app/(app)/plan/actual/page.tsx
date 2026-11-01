@@ -28,6 +28,7 @@ import { AdaptPlanButton } from "@/components/AdaptPlanButton";
 import { UndoSkip } from "@/components/UndoSkip";
 import { AiRating } from "@/components/AiRating";
 import { feedbackFor } from "@/lib/aiMemory";
+import { serverText } from "@/lib/i18n/serverText";
 
 export const metadata: Metadata = { title: "Plan" };
 // crear las rutinas con IA puede tardar un minuto (las acciones de la página heredan este límite)
@@ -252,7 +253,7 @@ async function Content({ searchParams }: { searchParams: PageProps<"/plan/actual
                     {t("plan.ultimaRevision", { fecha: new Date(db.coach.updatedAt).toLocaleString(intlLocale(locale)), n: db.coach.changed })}
                   </p>
                 )}
-                {db.coach?.error && <Notice tone="warn">{t("plan.ultimoFallo", { error: db.coach.error })}</Notice>}
+                {db.coach?.error && <Notice tone="warn">{t("plan.ultimoFallo", { error: serverText(db.coach.error, locale) })}</Notice>}
                 <p className="text-xs text-muted">
                   {aiUnlimited
                     ? t("plan.iaSinLimite")

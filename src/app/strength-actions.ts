@@ -8,7 +8,7 @@ import { after } from "next/server";
 import { readDbNow, updateDb } from "@/lib/db";
 import { requireUserId } from "@/lib/session";
 import { adaptWithAI, chatJson, coachConfig, strengthModel, withLanguage } from "@/lib/coach";
-import { aiLeft, aiLimitMessage, countAiUse } from "@/lib/aiPlan";
+import { aiLeft, aiLimitMessage, countAiUse, refundAiUse } from "@/lib/aiPlan";
 import { isAiUnlimited } from "@/lib/auth";
 import { CHAT_SYSTEM, chatContext, chatEquipment, chatExerciseList, chatHistory, chatReplyFromAi, type AiChatReply } from "@/lib/strength/chat";
 import { STRENGTH_SYSTEM, equipmentFromText, routinesFromAi, strengthRequest, type AiStrengthReply } from "@/lib/strength/aiRoutines";
@@ -345,12 +345,12 @@ export async function generateStrengthRoutines(_: StrengthCoachForm, fd: FormDat
     if (!result.routines.length) throw new Error("no propuso ninguna rutina válida con tu material");
   } catch (e) {
     const msg = (e as Error).message;
-    const error =
-      msg === "NO_CREDITS"
-        ? "Tu cuenta de OpenRouter no tiene saldo suficiente. Recarga créditos en openrouter.ai/settings/credits y vuelve a intentarlo."
-        : `La IA no pudo crear las rutinas: ${msg}`.slice(0, 300);
+    // al usuario, sin detalles técnicos (el detalle, al registro de Vercel); y el intento no gasta
+    console.error("IA (rutinas de fuerza):", msg);
+    const error = msg === "NO_CREDITS" ? await say("La IA no está disponible ahora mismo. Vuelve a intentarlo más tarde.") : await say("La IA no ha podido crear las rutinas. Vuelve a intentarlo.");
     await updateDb((d) => {
       if (d.strengthCoach) d.strengthCoach.error = error;
+      refundAiUse(d, "routines", today);
     });
     return { error };
   }
@@ -416,7 +416,9 @@ export async function sendStrengthChat(_: FormState, fd: FormData): Promise<Form
     if (!reply.text) throw new Error("respuesta vacía");
   } catch (e) {
     const msg = (e as Error).message;
-    return { error: msg === "NO_CREDITS" ? "Tu cuenta de OpenRouter no tiene saldo suficiente. Recarga créditos en openrouter.ai/settings/credits." : `La IA no ha podido responder: ${msg}`.slice(0, 300) };
+    console.error("IA (chat):", msg);
+    await updateDb((d) => refundAiUse(d, "chat", today));
+    return { error: msg === "NO_CREDITS" ? await say("La IA no está disponible ahora mismo. Vuelve a intentarlo más tarde.") : await say("La IA no ha podido responder. Vuelve a intentarlo.") };
   }
   await updateDb((d) => {
     d.strengthChat = [

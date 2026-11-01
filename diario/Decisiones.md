@@ -1108,3 +1108,11 @@ Fuentes: screensdesign.com, posthog.com/pricing, revenuecat.com/pricing, revenue
 - `scripts/pruebas/recorrido.mjs` abre 16 pantallas por usuario contra `next start` y busca errores del servidor, la pantalla de error, textos rotos (NaN, undefined…) y páginas lentas.
 - **El servidor de pruebas, sin la clave de la IA** (`OPENROUTER_API_KEY= npx next start -p 3005`): la primera vez, abrir el Plan de 504 usuarios intentó llamar a OpenRouter (no cobró nada porque no hay saldo).
 - Lo encontrado y arreglado está en el [[Roadmap]] (sección «Pruebas con 1.000 usuarios»).
+
+## IA sin saldo: aviso para el usuario
+*2026-11-01*
+
+- Sin saldo en OpenRouter, a los usuarios les salía «Tu cuenta de OpenRouter no tiene saldo suficiente. Recarga créditos en openrouter.ai…»: un mensaje para David, no para ellos.
+- Ahora, en el chat, al crear rutinas, en «Adaptar» y en el aviso del plan: «La IA no está disponible ahora mismo. Vuelve a intentarlo más tarde.» (o «no ha podido responder» si es otro fallo), en el idioma de cada uno. El detalle técnico va al registro del servidor (Vercel → Logs, buscar «IA (»).
+- Un intento fallido **no gasta** un uso del límite (`refundAiUse`). El reajuste automático no se reintenta en cada visita (queda apuntado como hecho ese día).
+- Para que vuelva a funcionar hace falta saldo: recargar OpenRouter o pasar a la API de Claude (lo que David tenía pensado para todas sus apps).

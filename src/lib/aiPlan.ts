@@ -25,6 +25,12 @@ export function countAiUse(db: Db, use: AiUse, today: string): void {
   (db.aiUsage ??= {})[use] = { period, n: u && u.period === period ? u.n + 1 : 1 };
 }
 
+/** Si la IA falla (sin saldo, caída…), el intento no gasta: se devuelve el uso. */
+export function refundAiUse(db: Db, use: AiUse, today: string): void {
+  const u = db.aiUsage?.[use];
+  if (u && u.period === periodOf(use, today) && u.n > 0) u.n -= 1;
+}
+
 const WHAT: Record<AiUse, string> = { chat: "mensajes al entrenador", routines: "rutinas creadas con IA", adapt: "reajustes del plan con IA" };
 
 /** El aviso al llegar al límite. */

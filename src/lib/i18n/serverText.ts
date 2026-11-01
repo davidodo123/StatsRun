@@ -5,6 +5,10 @@ import type { Locale } from "./index";
 type Tr = Record<Exclude<Locale, "es">, string>;
 
 export const SERVER_TEXT: Record<string, Tr> = {
+  "La IA no está disponible ahora mismo. Vuelve a intentarlo más tarde.": { en: "The AI isn't available right now. Try again later.", ca: "La IA no està disponible ara mateix. Torna-ho a provar més tard.", pt: "A IA não está disponível neste momento. Tenta mais tarde.", fr: "L'IA n'est pas disponible pour le moment. Réessaie plus tard." },
+  "La IA no ha podido responder. Vuelve a intentarlo.": { en: "The AI couldn't answer. Try again.", ca: "La IA no ha pogut respondre. Torna-ho a provar.", pt: "A IA não conseguiu responder. Tenta outra vez.", fr: "L'IA n'a pas pu répondre. Réessaie." },
+  "La IA no ha podido crear las rutinas. Vuelve a intentarlo.": { en: "The AI couldn't create the routines. Try again.", ca: "La IA no ha pogut crear les rutines. Torna-ho a provar.", pt: "A IA não conseguiu criar as rotinas. Tenta outra vez.", fr: "L'IA n'a pas pu créer les routines. Réessaie." },
+  "No se ha podido revisar el plan con la IA. Vuelve a intentarlo.": { en: "The plan couldn't be reviewed with the AI. Try again.", ca: "No s'ha pogut revisar el pla amb la IA. Torna-ho a provar.", pt: "Não foi possível rever o plano com a IA. Tenta outra vez.", fr: "Le plan n'a pas pu être revu avec l'IA. Réessaie." },
   "Altitud máxima fuera de rango.": { en: "Max altitude out of range.", ca: "Altitud màxima fora de rang.", pt: "Altitude máxima fora do intervalo.", fr: "Altitude maximale hors limites." },
   "Apunta al menos una medida.": { en: "Enter at least one measurement.", ca: "Apunta almenys una mesura.", pt: "Regista pelo menos uma medida.", fr: "Saisis au moins une mesure." },
   "Añade al menos un ejercicio.": { en: "Add at least one exercise.", ca: "Afegeix almenys un exercici.", pt: "Adiciona pelo menos um exercício.", fr: "Ajoute au moins un exercice." },
@@ -61,3 +65,6 @@ export const SERVER_TEXT: Record<string, Tr> = {
   "Ya hay otra carrera ese día.": { en: "There's already another race that day.", ca: "Ja hi ha una altra cursa aquest dia.", pt: "Já há outra prova nesse dia.", fr: "Il y a déjà une autre course ce jour-là." },
   "Ya la tenía apuntada.": { en: "It was already noted.", ca: "Ja la tenia apuntada.", pt: "Já a tinha registado.", fr: "C'était déjà noté." },
 };
+
+/** Un mensaje guardado en español (p. ej. el último fallo de la IA) en el idioma de quien lo lee. */
+export const serverText = (es: string, locale: string): string => (locale === "es" ? es : (SERVER_TEXT[es]?.[locale as keyof Tr] ?? es));

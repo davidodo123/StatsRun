@@ -279,7 +279,7 @@ export async function regeneratePlan(): Promise<FormState> {
 export async function adaptPlanWithAI(): Promise<FormState> {
   const r = await adaptWithAI(await requireUserId());
   refresh();
-  return r.ok ? { ok: true, message: `${r.changed} sesiones ajustadas. ${r.message}` } : { error: r.message };
+  return r.ok ? { ok: true, message: `${r.changed} sesiones ajustadas. ${r.message}` } : { error: await say(r.message) }; // los avisos del reajuste, en el idioma de cada uno (serverText.ts)
 }
 
 export async function loadDemo(): Promise<void> {

@@ -463,11 +463,13 @@ async function run(uid: string, request?: string): Promise<CoachResult> {
     return { ok: true, changed, message: typeof ai.summary === "string" ? ai.summary : "Plan revisado." };
   } catch (e) {
     const raw = (e as Error).message;
-    const message = raw === "NO_CREDITS" ? "sin saldo en OpenRouter (recarga créditos en openrouter.ai/settings/credits)" : raw;
+    // al usuario, un aviso sin detalles técnicos; el detalle, al registro del servidor (Vercel)
+    console.error("IA (reajuste del plan):", raw);
+    const message = raw === "NO_CREDITS" ? "La IA no está disponible ahora mismo. Vuelve a intentarlo más tarde." : "No se ha podido revisar el plan con la IA. Vuelve a intentarlo.";
     await updateDb((d) => {
-      countAiUse(d, "adapt", today);
-      d.coach = { ...d.coach, updatedAt: d.coach?.updatedAt ?? new Date().toISOString(), model, summary: d.coach?.summary ?? "", changed: d.coach?.changed ?? 0, error: message };
+      // el intento fallido no gasta un uso; updatedAt de hoy evita reintentarlo en cada visita
+      d.coach = { ...d.coach, updatedAt: new Date().toISOString(), model, summary: d.coach?.summary ?? "", changed: d.coach?.changed ?? 0, error: message };
     }, uid);
-    return { ok: false, changed: 0, message: `Error de la IA: ${message}` };
+    return { ok: false, changed: 0, message };
   }
 }
