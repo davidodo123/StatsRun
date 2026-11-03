@@ -3,7 +3,8 @@ import type { Goal, Plan, PlannedSession } from "@/lib/types";
 import type { SessionMatch } from "@/lib/engine/planner";
 import { addDays, diffDays, mondayOf } from "@/lib/dates";
 import { fmtKm, fmtPace } from "@/lib/format";
-import { dayMonth, translator, weekdayDate, type Locale } from "@/lib/i18n";
+import { dayMonth, intlLocale, translator, weekdayDate, type Locale } from "@/lib/i18n";
+import { Icon } from "./icons";
 import { WeekBars, type WeekBarDay } from "./WeekBars";
 import { RestStretches } from "./RestStretches";
 import { planText } from "@/lib/i18n/planText";
@@ -69,7 +70,7 @@ export function TodayHero({ plan, matches, today, goal, locale }: { plan: Plan; 
           <h2 className={`mt-1 font-display leading-none tracking-[0.03em] uppercase ${titleSize(heroTitle(main, locale))}`}>{heroTitle(main, locale)}</h2>
           {main.type !== "strength" && main.distanceKm > 0 ? (
             <p className="mt-3 flex items-baseline gap-2">
-              <span className="font-display text-[110px] leading-[0.85] text-accent tabular">{main.distanceKm.toLocaleString("es-ES")}</span>
+              <span className="font-display text-[110px] leading-[0.85] text-accent tabular">{main.distanceKm.toLocaleString(intlLocale(locale))}</span>
               <span className="font-display text-4xl uppercase">km</span>
             </p>
           ) : (
@@ -99,16 +100,26 @@ export function TodayHero({ plan, matches, today, goal, locale }: { plan: Plan; 
             )}
           </dl>
           {extra.length > 0 && (
-            <div className="mt-3 space-y-2">
-              <p className="text-sm text-ink-2">{t("hoy.yAdemas", { sesiones: extra.map((s) => planText(s.title, locale)).join(", ") })}</p>
-              {/* la rutina de fuerza de hoy también se empieza desde aquí (el botón grande es para la carrera) */}
-              {extra
-                .filter((s) => s.type === "strength" && matches?.get(s.id)?.status !== "done")
-                .map((s) => (
-                  <Link key={s.id} href={startHref(s)} className="btn btn-ghost w-full py-3 text-sm tracking-wider uppercase">
-                    {t(s.routineId ? "hoy.empezarRutina" : "hoy.empezarFuerza", { nombre: planText(s.title, locale) })}
-                  </Link>
-                ))}
+            <div className="mt-4 space-y-2">
+              {/* la fuerza de hoy, en una fila con su botón corto (el grande es para la carrera); lo demás, en texto */}
+              {extra.map((s) =>
+                s.type === "strength" && matches?.get(s.id)?.status !== "done" ? (
+                  <div key={s.id} className="flex items-center gap-3 rounded-xl border border-line bg-surface p-3">
+                    <Icon name="dumbbell" className="h-5 w-5 shrink-0 text-accent" />
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-xs text-muted">{t("hoy.ademas")}</span>
+                      <strong className="block truncate text-sm text-ink">{planText(s.title, locale)}</strong>
+                    </span>
+                    <Link href={startHref(s)} className="btn btn-ghost shrink-0 px-4 py-2 text-sm" aria-label={t(s.routineId ? "hoy.empezarRutina" : "hoy.empezarFuerza", { nombre: planText(s.title, locale) })}>
+                      {t("hoy.empezar")}
+                    </Link>
+                  </div>
+                ) : (
+                  <p key={s.id} className="text-sm text-ink-2">
+                    {t("hoy.yAdemas", { sesiones: planText(s.title, locale) })}
+                  </p>
+                ),
+              )}
             </div>
           )}
           {done ? (

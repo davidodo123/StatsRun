@@ -79,6 +79,7 @@ export const en: Record<keyof typeof es, string> = {
   "hoy.minutos": "minutes",
   "hoy.zona": "zone",
   "hoy.yAdemas": "Also: {sesiones}",
+  "hoy.ademas": "Also",
   "hoy.empezar": "Start",
   "hoy.empezarRutina": "Start routine: {nombre}",
   "hoy.empezarFuerza": "Start strength: {nombre}",

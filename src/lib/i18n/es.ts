@@ -81,6 +81,7 @@ export const es = {
   "hoy.minutos": "minutos",
   "hoy.zona": "zona",
   "hoy.yAdemas": "Y además: {sesiones}",
+  "hoy.ademas": "Y además",
   "hoy.empezar": "Empezar",
   "hoy.empezarRutina": "Empezar rutina: {nombre}",
   "hoy.empezarFuerza": "Empezar fuerza: {nombre}",
