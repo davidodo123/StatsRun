@@ -314,12 +314,23 @@ function strengthSummary(db: Db, w: Workout) {
 }
 
 /** Valida y acota el contenido de una sesión propuesta por la IA frente a la original. */
+/**
+ * Título tras el ajuste: si el tipo no cambia, el del plan con los km nuevos («Tirada larga 3 km» → «… 2.2 km»;
+ * la IA ponía «3 km» con 2,2 km); si cambia, el de la IA.
+ */
+function sessionTitle(orig: PlannedSession, type: SessionType, aiTitle: unknown, km: number): string {
+  const own = typeof aiTitle === "string" ? aiTitle.trim().slice(0, 80) : "";
+  if (type !== orig.type && own) return own;
+  return km > 0 ? orig.title.replace(`${orig.distanceKm} km`, `${km} km`) : orig.title;
+}
+
 function applyAi(orig: PlannedSession, ai: AiSession, date: string, limits: Readiness["limits"]): PlannedSession {
   const type = TYPES.includes(ai.type as SessionType) ? (ai.type as SessionType) : orig.type;
-  // no convertir carrera en fuerza ni al revés: el emparejamiento depende del deporte
-  let safeType = (type === "strength") === (orig.type === "strength") ? type : orig.type;
-  // con molestias no se permite convertir nada en sesión de calidad
-  if (!limits.qualityAllowed && isHardSession(safeType) && !isHardSession(orig.type)) safeType = orig.type;
+  // el tipo solo puede quedarse, bajar a rodaje suave o recuperación, o pasar de una sesión de calidad a otra:
+  // los modelos gratis creaban tiradas largas en otros días o pasaban todo a correr-caminar
+  const easier = orig.type !== "strength" && orig.type !== "race" && (type === "easy" || type === "recovery");
+  const otherQuality = limits.qualityAllowed && isHardSession(orig.type) && isHardSession(type);
+  const safeType = type === orig.type || easier || otherQuality ? type : orig.type;
   const isStrength = safeType === "strength";
   // el diagnóstico acota la distancia: al progresar hasta +10 % (mín. 1 km, máx. 2 km); al mantener, igual; al descargar o recuperar, menos
   let maxKm =
@@ -331,15 +342,16 @@ function applyAi(orig: PlannedSession, ai: AiSession, date: string, limits: Read
   const km = Number(ai.distanceKm);
   const min = Number(ai.durationMin);
   const steps = Array.isArray(ai.steps) ? ai.steps.filter((x) => typeof x === "string" && x.trim()).slice(0, 12) : [];
+  const distanceKm = isStrength ? 0 : Number.isFinite(km) && km >= 0 ? Math.round(Math.min(km, maxKm) * 10) / 10 : orig.distanceKm;
   return {
     ...orig,
     date,
     type: safeType,
-    title: (typeof ai.title === "string" && ai.title.trim().slice(0, 80)) || orig.title,
+    title: sessionTitle(orig, safeType, ai.title, distanceKm),
     // la nota «IA: …» se sustituye en cada revisión; si no, se acumulaba repetida
     description: [((typeof ai.description === "string" && ai.description.trim()) || orig.description).replace(/\s*IA:[\s\S]*$/, ""), typeof ai.reason === "string" && ai.reason.trim() && `IA: ${ai.reason.trim()}`].filter(Boolean).join(" ").slice(0, 600),
     steps: steps.length ? steps : orig.steps,
-    distanceKm: isStrength ? 0 : Number.isFinite(km) && km >= 0 ? Math.round(Math.min(km, maxKm) * 10) / 10 : orig.distanceKm,
+    distanceKm,
     durationMin: Number.isFinite(min) && min > 0 ? Math.round(Math.min(min, Math.max(orig.durationMin * 1.3, 20))) : orig.durationMin,
     // el ritmo calculado solo sigue siendo válido si no cambia el tipo de sesión
     pace: isStrength || safeType !== orig.type ? undefined : orig.pace,
@@ -450,8 +462,8 @@ async function run(uid: string, request?: string): Promise<CoachResult> {
         const strength = s.type === "strength";
         let date = s.date;
         const wanted = typeof prop.date === "string" ? prop.date.slice(0, 10) : s.date;
-        // el día de una sesión que el atleta cambió con «Cambiar de día» no se toca
-        if (wanted !== s.date && !s.movedFrom && free.has(wanted) && !isRunOn(wanted, strength)) date = wanted;
+        // el día de una sesión que el atleta cambió con «Cambiar de día» no se toca; la tirada larga, tampoco (va en su día elegido)
+        if (wanted !== s.date && !s.movedFrom && s.type !== "long" && free.has(wanted) && !isRunOn(wanted, strength)) date = wanted;
         const next = applyAi(s, prop, date, built.readiness.limits);
         // si choca con otra sesión (o pone dos duras seguidas), conservar la fecha original
         if (isRunOn(next.date, strength) || (!strength && isHardSession(next.type) && hardOn(next.date) && next.date !== s.date)) next.date = s.date;

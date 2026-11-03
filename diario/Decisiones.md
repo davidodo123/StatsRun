@@ -1135,3 +1135,11 @@ Fuentes: screensdesign.com, posthog.com/pricing, revenuecat.com/pricing, revenue
 - Las novedades se escriben a mano en `src/lib/novedades.ts` (una entrada con fecha, en los 5 idiomas) al subir algo que se note. Alternativa descartada: sacarlas de los commits (salen técnicos y en español).
 - Sale una vez por versión; «Más tarde» deja el botón de arriba. En el APK de Android funciona igual (carga la app de Vercel); las versiones nuevas del APK van por Google Play.
 
+## IA gratis con menos libertad
+*2026-11-03*
+
+- Con los modelos gratis (Nemotron), el reajuste hacía cosas raras: otra tirada larga el lunes, sesiones pasadas a correr-caminar y títulos con otros km. David: «la IA va muy mal ahora».
+- En vez de volver a un modelo de pago (David no quiere recargar), se limita lo que la IA puede cambiar en `applyAi` (`src/lib/coach.ts`): el tipo solo se queda, baja a rodaje suave o recuperación, o pasa de una sesión de calidad a otra (si se permite calidad). Ya no puede subir un rodaje a calidad.
+- La tirada larga no cambia de día. Si el tipo no cambia, el título es el del plan con los km nuevos.
+- Lo que sigue pudiendo hacer: acortar, quitar (con descarga o recuperación), mover sesiones a días libres, cambiar descripción y pasos.
+
