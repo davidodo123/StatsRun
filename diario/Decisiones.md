@@ -1166,3 +1166,13 @@ Fuentes: screensdesign.com, posthog.com/pricing, revenuecat.com/pricing, revenue
 - Se usan las mismas sesiones y los mismos textos que el plan (así salen traducidas) y la distancia habitual de las últimas 4 semanas. Ninguna pasa de su carrera más larga de 30 días + 10 % (las de calidad incluidas: con poco margen, series de 400 m).
 - «Ponerlo hoy en mi plan» cambia la sesión de correr de hoy por esa (la fuerza se queda). Sin plan, se ven igual pero no se pueden poner.
 
+## Calibrar la IA del chat
+*2026-11-03*
+
+- David: «le he dicho de cambiar algunas cosas de la rutina y no me ha cambiado nada». Causas: el chat recibía sus rutinas solo por nombre (sin id) y lo que proponía se guardaba **siempre como rutina nueva** en «Entrenador IA»; y si pedía cambiar qué rutina toca un día del plan, la IA del plan tenía prohibido hacerlo.
+- Ahora: el chat recibe sus rutinas con id y ejercicios exactos y, si pide cambiar una, la devuelve entera con `"cambia": "<id>"`. La tarjeta dice «Cambios en tu rutina» y el botón «Guardar los cambios en «Pierna»» la cambia en su sitio (mismo id, carpeta y día del plan). Sin mirar el material (si pide prensa, la tiene). Las suyas que devuelve sin cambios se descartan.
+- En el plan: si lo pide él, una sesión de fuerza puede pasar a otra de sus rutinas (campo `rutina` o, si no, la rutina nombrada en el título de esa sesión).
+- Probado con el modelo gratis y los datos de David: cambiar la sentadilla por prensa, quitar y añadir ejercicios, «el jueves no puedo», «solo puedo martes y sábado», acortar la tirada (3 → 2 km), poner su rutina un día, registrar un entreno de ayer y una molestia de rodilla. Todo bien tras los arreglos.
+- Arreglos de la calibración: «ayer», «anteayer» y «hoy» del mensaje mandan sobre la fecha de la IA (ponía hoy por ayer); si hay rutina, fuera del texto la lista de ejercicios repetida; un segundo intento si el modelo contesta sin JSON; y que escriba con tildes (el gratis las quitaba).
+- De paso: dos expresiones regulares tenían caracteres de control en vez de `\b` (se colaron al escribirlas): «gym» no se reconocía como gimnasio en el chat, y en Cruzando la Meta no se descartaban las carreras de BTT/MTB por el nombre. Arreglado, con prueba.
+

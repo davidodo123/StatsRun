@@ -59,6 +59,16 @@ export const NOVEDADES: Novedad[] = [
         },
       },
       {
+        icon: "dumbbell",
+        txt: {
+          es: ["El chat cambia tus rutinas", "Pídele «cambia la sentadilla por prensa en Pierna» y guarda los cambios: se cambia tu rutina, no una copia."],
+          en: ["The chat edits your routines", "Ask «swap squats for leg press in Legs» and save: your routine changes, not a copy."],
+          ca: ["El xat canvia les teves rutines", "Demana-li «canvia l'esquat per premsa a Cama» i desa els canvis: canvia la teva rutina, no una còpia."],
+          pt: ["O chat muda as tuas rotinas", "Pede «troca o agachamento pela prensa em Pernas» e guarda: muda a tua rotina, não uma cópia."],
+          fr: ["Le chat modifie tes séances", "Demande «remplace le squat par la presse dans Jambes» et enregistre : ta séance change, pas une copie."],
+        },
+      },
+      {
         icon: "sparkle",
         txt: {
           es: ["IA más prudente con tu plan", "Ya no cambia el tipo de sesión ni mueve tu tirada larga."],

@@ -42,6 +42,8 @@ export const entrenadorIA = area({
     "mem.ph": "Ej.: no quiero zancadas, entreno a las 7:00",
     "mem.nueva": "Nueva preferencia",
     "mem.paraQue": "Para qué IA",
+    "chat.cambiaTuRutina": "Cambios en tu rutina",
+    "chat.guardarCambios": "Guardar los cambios en «{nombre}»",
   },
   en: {
     "chat.sug1": "I ran 8 km in 45 minutes today, it was quite hard",
@@ -83,6 +85,8 @@ export const entrenadorIA = area({
     "mem.ph": "E.g.: no lunges, I train at 7:00",
     "mem.nueva": "New preference",
     "mem.paraQue": "Which AI",
+    "chat.cambiaTuRutina": "Changes to your routine",
+    "chat.guardarCambios": "Save the changes to «{nombre}»",
   },
   ca: {
     "chat.sug1": "Avui he corregut 8 km en 45 minuts, m'ha costat bastant",
@@ -124,6 +128,8 @@ export const entrenadorIA = area({
     "mem.ph": "Ex.: no vull gambades, entreno a les 7:00",
     "mem.nueva": "Preferència nova",
     "mem.paraQue": "Per a quina IA",
+    "chat.cambiaTuRutina": "Canvis a la teva rutina",
+    "chat.guardarCambios": "Desar els canvis a «{nombre}»",
   },
   pt: {
     "chat.sug1": "Hoje corri 8 km em 45 minutos, custou-me bastante",
@@ -165,6 +171,8 @@ export const entrenadorIA = area({
     "mem.ph": "Ex.: não quero passadas, treino às 7:00",
     "mem.nueva": "Nova preferência",
     "mem.paraQue": "Para que IA",
+    "chat.cambiaTuRutina": "Alterações na tua rotina",
+    "chat.guardarCambios": "Guardar as alterações em «{nombre}»",
   },
   fr: {
     "chat.sug1": "Aujourd'hui j'ai couru 8 km en 45 minutes, c'était assez dur",
@@ -206,5 +214,7 @@ export const entrenadorIA = area({
     "mem.ph": "Ex. : pas de fentes, je m'entraîne à 7 h",
     "mem.nueva": "Nouvelle préférence",
     "mem.paraQue": "Pour quelle IA",
+    "chat.cambiaTuRutina": "Modifications de ta séance",
+    "chat.guardarCambios": "Enregistrer les modifications de «{nombre}»",
   },
 });

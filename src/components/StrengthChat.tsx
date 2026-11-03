@@ -158,6 +158,7 @@ function Proposal({ m, names, t }: { m: StrengthChatMessage; names: Record<strin
         const letters = supersetLetters(r.exercises);
         return (
           <div key={i} className="rounded-xl border border-line bg-surface p-3">
+            {r.id && <span className="mb-1 block text-[11px] font-semibold tracking-wider text-accent uppercase">{t("chat.cambiaTuRutina")}</span>}
             <strong className="text-sm">{r.name}</strong>
             <ul className="mt-1 space-y-0.5 text-xs text-ink-2">
               {r.exercises.map((e, j) => (
@@ -181,7 +182,9 @@ function Proposal({ m, names, t }: { m: StrengthChatMessage; names: Record<strin
       ) : (
         <form action={saveChatRoutines}>
           <input type="hidden" name="at" value={m.at} />
-          <button className="btn w-full py-2 text-sm">{m.routines!.length === 1 ? t("chat.guardarRutina") : t("chat.guardarRutinas", { n: m.routines!.length })}</button>
+          <button className="btn w-full py-2 text-sm">
+            {m.routines!.every((r) => r.id) ? t("chat.guardarCambios", { nombre: m.routines!.map((r) => r.name).join(", ") }) : m.routines!.length === 1 ? t("chat.guardarRutina") : t("chat.guardarRutinas", { n: m.routines!.length })}
+          </button>
         </form>
       )}
     </div>

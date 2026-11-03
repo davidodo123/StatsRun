@@ -118,3 +118,37 @@ describe("días sin entrenar sacados del mensaje", () => {
     expect(unavailableFromText("No puedo más con las agujetas", "2026-10-18")).toBeUndefined();
   });
 });
+
+describe("material según el mensaje", () => {
+  it("«en el gym» es el gimnasio (se había roto: caracteres de control en vez de \b)", () => {
+    expect(chatEquipment({ places: [] }, "hoy voy al gym, ¿qué hago?").from).toBe("su mensaje: en el gimnasio");
+  });
+});
+
+describe("cambiar una rutina suya desde el chat", () => {
+  const now = "2026-11-03T10:00:00.000Z";
+  const pierna = { id: "r_1", name: "Pierna", createdAt: now, updatedAt: now, exercises: [
+    { exerciseId: "Barbell_Squat", sets: [{ reps: 8, kg: 60 }, { reps: 8, kg: 60 }], restSec: 150 },
+    { exerciseId: "Romanian_Deadlift", sets: [{ reps: 10, kg: 50 }], restSec: 120 },
+  ] };
+  const db = { routines: [pierna] } as Pick<Db, "routines">;
+
+  it("con «cambia», la misma rutina (mismo id) ya cambiada", () => {
+    const r = chatReplyFromAi({ reply: "Hecho.", routines: [{ cambia: "r_1", name: "Pierna", exercises: [{ id: "Leg_Press", sets: 2, reps: "8", kg: 60 }, { id: "Romanian_Deadlift", sets: 1, reps: "10", kg: 50 }] }] } as never, ["corporal"], now, db, "2026-11-03", "cambia la sentadilla por prensa");
+    expect(r.routines).toHaveLength(1);
+    expect(r.routines[0].id).toBe("r_1");
+    expect(r.routines[0].exercises.map((e) => e.exerciseId)).toEqual(["Leg_Press", "Romanian_Deadlift"]);
+  });
+
+  it("las suyas que devuelve sin cambios se descartan", () => {
+    const r = chatReplyFromAi({ reply: "Hecho.", routines: [{ cambia: "r_1", name: "Pierna", exercises: [{ id: "Barbell_Squat", sets: 2, reps: "8", kg: 60 }, { id: "Romanian_Deadlift", sets: 1, reps: "10", kg: 50 }] }] } as never, ["barra"], now, db, "2026-11-03", "nada");
+    expect(r.routines).toEqual([]);
+  });
+});
+
+describe("fecha del entreno que cuenta", () => {
+  it("«ayer» manda aunque la IA ponga hoy", () => {
+    const r = chatReplyFromAi({ reply: "Listo.", registrar: { tipo: "run", fecha: "2026-11-03", nombre: "Rodaje", km: 5, tiempo: "30:00" } } as never, ["corporal"], "2026-11-03T10:00:00.000Z", {}, "2026-11-03", "Ayer corrí 5 km en 30 minutos");
+    expect(r.activity?.date).toBe("2026-11-02");
+  });
+});

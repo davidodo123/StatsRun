@@ -440,7 +440,7 @@ export async function sendStrengthChat(_: FormState, fd: FormData): Promise<Form
   return { ok: true };
 }
 
-/** Guarda como rutinas propias las que propuso la IA en un mensaje (carpeta «Entrenador IA»). */
+/** Guarda las rutinas que propuso la IA en un mensaje: las nuevas, en la carpeta «Entrenador IA»; las suyas cambiadas, en su sitio. */
 export async function saveChatRoutines(fd: FormData): Promise<void> {
   const at = text(fd, "at", 40);
   await updateDb((d) => {
@@ -448,7 +448,12 @@ export async function saveChatRoutines(fd: FormData): Promise<void> {
     if (!m?.routines?.length || m.saved) return;
     const list = (d.routines ??= []);
     const now = new Date().toISOString();
-    for (const r of m.routines) if (list.length < MAX_ROUTINES) list.push({ ...structuredClone(r), id: newId("r_"), createdAt: now, updatedAt: now });
+    for (const r of m.routines) {
+      // una de las suyas cambiada: se sustituye en su sitio (mismo id, carpeta y día del plan)
+      const own = r.id ? list.findIndex((x) => x.id === r.id) : -1;
+      if (own >= 0) list[own] = { ...list[own], name: r.name, exercises: structuredClone(r.exercises), updatedAt: now };
+      else if (list.length < MAX_ROUTINES) list.push({ ...structuredClone(r), id: newId("r_"), createdAt: now, updatedAt: now });
+    }
     m.saved = true;
     syncPlanRoutines(d);
   });

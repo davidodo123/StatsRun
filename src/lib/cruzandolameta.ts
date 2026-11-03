@@ -130,4 +130,4 @@ export function parseCmDetail(html: string): Pick<CmRace, "startPlace" | "lat" |
 
 /** Tipos que no son carreras a pie para adultos (se ocultan por defecto). */
 export const isRunning = (r: Pick<CmRace, "type" | "name">) =>
-  !/infantil|btt|mtb|bici|ciclis|nado|natacion|triatl|duatl|acuatl|marcha nordica|senderismo/.test(plain(r.type)) && !/btt|mtb|ciclis|triatl|duatl/.test(plain(r.name));
+  !/infantil|btt|mtb|bici|ciclis|nado|natacion|triatl|duatl|acuatl|marcha nordica|senderismo/.test(plain(r.type)) && !/\bbtt\b|\bmtb\b|ciclis|triatl|duatl/.test(plain(r.name));

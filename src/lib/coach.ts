@@ -25,9 +25,12 @@ const HORIZON_DAYS = 14;
 /** Instrucciones en español y respuesta en el idioma de la app del atleta (lo que añade al final del prompt). */
 export function withLanguage(system: string, lang?: string): string {
   const name = { en: "inglés", ca: "catalán", pt: "portugués de Portugal", fr: "francés" }[lang ?? ""];
+  // los modelos gratis escribían sin tildes («Diagnostico», «sesion»)
   return name ? `${system}
 
-IMPORTANTE: el atleta usa la app en ${name}. Escribe todo lo que lee (textos, títulos, descripciones, pasos y nombres) en ${name}.` : system;
+IMPORTANTE: el atleta usa la app en ${name}. Escribe todo lo que lee (textos, títulos, descripciones, pasos y nombres) en ${name}, con su ortografía y acentos correctos.` : `${system}
+
+IMPORTANTE: escribe con buena ortografía, con todas las tildes y eñes («sesión», «día», «más», «está»).`;
 }
 
 // Modelos gratis de OpenRouter (sin saldo): si el primero está saturado, OpenRouter pasa al siguiente.
@@ -49,8 +52,20 @@ export const modelName = (model: string) => model.split(",")[0].trim().replace(/
 /** Llamada a OpenRouter que devuelve el primer objeto JSON de la respuesta. */
 // sin «max_tokens», OpenRouter reserva el máximo del modelo (16 k) y con poco saldo responde 402
 export async function chatJson<T>(system: string, user: string, temperature = 0.4, modelOverride?: string, maxTokens = 3500): Promise<T> {
-  const { apiKey, model: defaultModel } = coachConfig();
+  const { model: defaultModel } = coachConfig();
   const models = (modelOverride ?? defaultModel).split(",").map((m) => m.trim()).filter(Boolean);
+  try {
+    return await chatJsonOnce<T>(models, system, user, temperature, maxTokens);
+  } catch (e) {
+    // a veces el modelo gratis contesta sin JSON (o roto): un segundo intento empezando por el siguiente de la lista
+    const noJson = e instanceof SyntaxError || (e as Error).message === "La IA no devolvió JSON.";
+    if (!noJson || models.length < 2) throw e;
+    return chatJsonOnce<T>([...models.slice(1), models[0]], system, user, temperature, maxTokens);
+  }
+}
+
+async function chatJsonOnce<T>(models: string[], system: string, user: string, temperature: number, maxTokens: number): Promise<T> {
+  const { apiKey } = coachConfig();
   const res = await fetch(API, {
     method: "POST",
     headers: {
@@ -105,6 +120,7 @@ interface AiSession {
   distanceKm?: number;
   durationMin?: number;
   reason?: string;
+  rutina?: string; // otra rutina suya para esa sesión de fuerza (solo si la pidió)
 }
 
 interface AiResponse {
@@ -140,7 +156,7 @@ PRINCIPIOS:
 
 FUERZA ("strength", distanceKm 0) para corredores:
 - 1-3 sesiones/semana según "fuerzaPorSemana" (1 en afinamiento). Cada sesión trae "tipoFuerza": "pierna" (fuerza pesada de pierna), "posterior" (cadena posterior + pliometría), "superior" (tren superior y core) o "completo". Con fuerza por grupos: "pecho", "espalda", "hombro" (tren superior, no cargan las piernas) y "pierna" en un día sin correr: no pongas carrera ese día.
-- Si la sesión trae "rutina", es una rutina del propio atleta (sus ejercicios están en "rutinasDeFuerza"): respeta sus ejercicios. Puedes quitar series (descarga, fatiga) o quitar saltos (molestias), pero no la sustituyas por otra rutina ni inventes ejercicios. Nunca cambies una sesión de tren superior por una de pierna ni al revés.
+- Si la sesión trae "rutina", es una rutina del propio atleta (sus ejercicios están en "rutinasDeFuerza"): respeta sus ejercicios. Puedes quitar series (descarga, fatiga) o quitar saltos (molestias), pero no la sustituyas por otra rutina ni inventes ejercicios, salvo que lo pida en "peticionDelAtleta": entonces pon en esa sesión "rutina": "<nombre exacto de una de rutinasDeFuerza>". Nunca cambies una sesión de tren superior por una de pierna ni al revés.
 - Tren superior y core no cansan las piernas: no interfieren con la carrera y pueden ir cualquier día. La de pierna y la posterior sí: nunca el día antes de la tirada larga o de una sesión clave.
 - Mira "fuerza" en las actividades recientes (músculos, series, volumen): tras una sesión pesada de pierna (cuádriceps, isquios, glúteos), el día siguiente no pongas calidad ni tirada larga; si fue de tren superior, sigue con normalidad.
 - Multiarticulares (sentadilla o búlgara, peso muerto rumano, hip thrust, step-up), gemelo y sóleo, core antirrotación.
@@ -165,7 +181,7 @@ ${STUDY_RULE}
 EJEMPLO (orientativo, no lo copies): diagnóstico "mantener"; el jueves hizo series y escribió «muy duras, piernas cargadas»; el martes tenía series otra vez.
 {"summary": "Mantienes la carga: el jueves las series se te hicieron muy duras y llegas con las piernas cargadas. Cambio las series del martes por un tempo corto para no encadenar dos sesiones al límite; la tirada del domingo se queda igual.", "sessions": [{"id": "<id de la sesión del martes>", "type": "tempo", "title": "Tempo 15′", "description": "Tempo corto en lugar de series: estímulo de calidad sin llegar al límite.", "steps": ["15′ suave", "15′ a ritmo T", "10′ suave"], "distanceKm": 8, "durationMin": 45, "reason": "Piernas cargadas tras las series del jueves"}]}
 Fíjate: cita lo que dijo, explica el porqué en una frase y cambia solo lo necesario.
-Sin emojis en ningún texto. Responde SOLO con JSON: {"summary": "2-4 frases explicando el diagnóstico, qué has cambiado y por qué", "sessions": [{"id","date","type","title","description","steps":[...],"distanceKm","durationMin","reason"} | {"id","remove":true,"reason"}]}.
+Sin emojis en ningún texto. Responde SOLO con JSON: {"summary": "2-4 frases explicando el diagnóstico, qué has cambiado y por qué", "sessions": [{"id","date","type","title","description","steps":[...],"distanceKm","durationMin","reason"} | {"id","rutina":"<nombre de una de rutinasDeFuerza, solo si lo pide>","reason"} | {"id","remove":true,"reason"}]}.
 Incluye solo las sesiones que cambies.`;
 
 const pace = (sec: number) => `${Math.floor(sec / 60)}:${String(Math.round(sec % 60)).padStart(2, "0")}`;
@@ -465,6 +481,17 @@ async function run(uid: string, request?: string): Promise<CoachResult> {
         // el día de una sesión que el atleta cambió con «Cambiar de día» no se toca; la tirada larga, tampoco (va en su día elegido)
         if (wanted !== s.date && !s.movedFrom && s.type !== "long" && free.has(wanted) && !isRunOn(wanted, strength)) date = wanted;
         const next = applyAi(s, prop, date, built.readiness.limits);
+        // otra de sus rutinas en esa sesión de fuerza: solo si la pidió él en el chat
+        // (en "rutina" o, si no lo puso ahí, nombrada en el título de esa sesión: «Fuerza Pierna»)
+        const plainName = (t: string) => t.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase().trim();
+        const asked = request ? plainName(request) : "";
+        const named = (r: { name: string }) => {
+          const n = plainName(r.name);
+          if (typeof prop.rutina === "string") return plainName(prop.rutina) === n;
+          return n.length >= 3 && asked.includes(n) && typeof prop.title === "string" && plainName(prop.title).includes(n);
+        };
+        const swap = request && strength ? d.routines?.find(named) : undefined;
+        if (swap) Object.assign(next, { routineId: swap.id, title: swap.name });
         // si choca con otra sesión (o pone dos duras seguidas), conservar la fecha original
         if (isRunOn(next.date, strength) || (!strength && isHardSession(next.type) && hardOn(next.date) && next.date !== s.date)) next.date = s.date;
         // tampoco convertir en sesión dura un día pegado a una carrera

@@ -38,6 +38,9 @@ EJEMPLOS (orientativos, no los copies tal cual):
 2) «¿Cada cuánto subo peso en press banca?» Bien: 2-4 frases sobre la progresión doble (cuando llegues al tope del rango en todas las series, sube 2,5 kg) y "routines": [], "recordar": [].
 3) «Me operé el hombro, nada de press por encima de la cabeza.» Bien: "recordar": ["Operado del hombro: sin press por encima de la cabeza"] y, si pide rutina, sin ese movimiento.
 
+CAMBIAR UNA DE SUS RUTINAS («en Pierna cambia la sentadilla por prensa», «quita el peso muerto», «añade gemelo», «pon 4 series»): devuelve en "routines" ESA rutina entera ya cambiada, con "cambia": "<su id de susRutinas>" y su mismo nombre. Copia igual los ejercicios que no te pide tocar (mismo "id", series, reps y kg) y cambia solo lo que pide; aquí no hace falta que tenga entre 5 y 8 ejercicios. Nunca la des como rutina nueva. En "reply", 1-2 frases con lo que has cambiado y que lo guarde con el botón.
+  Ejemplo: susRutinas tiene {"id": "r_1", "nombre": "Pierna", "ejercicios": [{"id": "Barbell_Squat", "series": 4, "reps": 8, "kg": 60}, {"id": "Romanian_Deadlift", "series": 3, "reps": 10, "kg": 50}]} y dice «cambia la sentadilla por prensa» → "routines": [{"cambia": "r_1", "name": "Pierna", "exercises": [{"id": "<id de prensa de la lista>", "sets": 4, "reps": "8", "kg": 60}, {"id": "Romanian_Deadlift", "sets": 3, "reps": "10", "kg": 50}]}].
+
 CUÁNDO PROPONER RUTINAS: solo si te las pide o si para responder hace falta una rutina nueva o cambiada. Si solo pregunta algo, contesta sin rutinas.
 - Usa SOLO ejercicios de la lista ("id" exacto) que pueda hacer con su material. CADA rutina lleva entre 5 y 8 ejercicios (nunca menos de 5), salvo que pida algo más corto.
 - "reps" es un rango como "8-12" o un número; "kg" solo con peso externo y nunca más del que tiene; "bw": true si es con peso corporal (los "kg" serían lastre).
@@ -85,7 +88,12 @@ export function chatContext(db: Db, today: string) {
     corre: Boolean(db.plan) || db.activities.some((a) => a.sport === "run" && a.date >= since),
     carrera: db.plan && { nombre: db.plan.goal.name, km: db.plan.goal.distanceKm, fecha: db.plan.goal.date },
     lugares: (db.places ?? []).map((pl) => ({ nombre: pl.name, material: pl.equipment, notas: pl.notes })),
-    susRutinas: (db.routines ?? []).map((r) => ({ nombre: r.name, ejercicios: r.exercises.map((e) => `${findExercise(db, e.exerciseId)?.name ?? e.exerciseId} ${e.sets.length}×${e.sets[0]?.reps ?? "?"}`) })),
+    // con su id y sus ejercicios tal cual: para cambiar una, la IA la devuelve entera con "cambia"
+    susRutinas: (db.routines ?? []).map((r) => ({
+      id: r.id,
+      nombre: r.name,
+      ejercicios: r.exercises.map((e) => ({ id: e.exerciseId, nombre: findExercise(db, e.exerciseId)?.name ?? e.exerciseId, series: e.sets.length, reps: e.sets[0]?.reps, ...(e.sets[0]?.kg ? { kg: e.sets[0].kg } : {}), ...(e.bw ? { bw: true } : {}), restSec: e.restSec })),
+    })),
     entrenosUltimas4Semanas: [...lifts.values()].map((l) => ({ nombre: l.nombre, sesiones: l.sesiones, mejorSerie: l.mejorSerie, ultimaVez: l.ultimaVez })),
     medidas: db.measurements?.at(-1),
     plan: db.plan && {
@@ -121,7 +129,7 @@ export function chatEquipment(db: Pick<Db, "places">, message = ""): { equipment
   });
   if (place) return { equipment: place.equipment, from: `lo que tiene en «${place.name}», que nombra en su mensaje` };
   if (/sin material|solo (con )?mi (propio )?cuerpo|peso corporal|nada de material/.test(t)) return { equipment: ["corporal"], from: "su mensaje: sin material" };
-  if (/gimnasio|gym/.test(t)) return { equipment: ALL, from: "su mensaje: en el gimnasio" };
+  if (/gimnasio|\bgym\b/.test(t)) return { equipment: ALL, from: "su mensaje: en el gimnasio" };
   const said = equipmentFromText(message);
   if (said.length > 1) return { equipment: said, from: "el material que nombra en su mensaje" };
   return { equipment: db.places?.length ? allEquipment(db) : ALL };
@@ -260,22 +268,33 @@ export function chatReplyFromAi(
   input: AiChatReply | null | undefined,
   equipment: Equipment[],
   now: string,
-  db: Pick<Db, "customExercises" | "profile" | "plan"> = {},
+  db: Pick<Db, "customExercises" | "profile" | "plan" | "routines"> = {},
   today = now.slice(0, 10),
   message = "",
 ): { text: string; routines: Routine[]; remember: string[]; activity?: ChatActivity; planRequest?: string; planDays?: string[] } {
   const raw = input && typeof input === "object" ? input : {};
-  const text = typeof raw.reply === "string" ? raw.reply.trim().slice(0, 4000) : "";
+  const rawText = typeof raw.reply === "string" ? raw.reply.trim().slice(0, 4000) : "";
   const routines: Routine[] = [];
   for (const r of Array.isArray(raw.routines) ? raw.routines.slice(0, 6) : []) {
     const o = (r ?? {}) as Record<string, unknown>;
-    const exercises = exercisesFromAi(o.exercises, BY_ID, equipment);
-    if (exercises.length < 2) continue;
-    const name = typeof o.name === "string" && o.name.trim() ? o.name.trim().slice(0, 60) : `Rutina ${routines.length + 1}`;
-    routines.push({ id: "", name, exercises, folder: "Entrenador IA", createdAt: now, updatedAt: now });
+    // una de las suyas, cambiada: por su id o, si la IA no lo puso, por el mismo nombre
+    const nameIn = typeof o.name === "string" ? plain(o.name.trim()) : "";
+    const own = (db.routines ?? []).find((x) => x.id === o.cambia) ?? (nameIn ? (db.routines ?? []).find((x) => plain(x.name) === nameIn) : undefined);
+    // en las suyas, sin mirar el material: el cambio lo pide él («pon prensa» es que tiene prensa)
+    const exercises = own ? exercisesFromAi(o.exercises, BY_ID) : exercisesFromAi(o.exercises, BY_ID, equipment);
+    if (exercises.length < (own ? 1 : 2)) continue;
+    const name = typeof o.name === "string" && o.name.trim() ? o.name.trim().slice(0, 60) : own?.name ?? `Rutina ${routines.length + 1}`;
+    // una suya que la IA devolvió sin cambios (a veces añade todas): fuera
+    const same = (a: Routine["exercises"], b: Routine["exercises"]) => JSON.stringify(a.map((e) => [e.exerciseId, e.sets.length, e.sets[0]?.reps, e.sets[0]?.kg])) === JSON.stringify(b.map((e) => [e.exerciseId, e.sets.length, e.sets[0]?.reps, e.sets[0]?.kg]));
+    if (own && name === own.name && same(exercises, own.exercises)) continue;
+    routines.push(own ? { ...own, name, exercises, updatedAt: now } : { id: "", name, exercises, folder: "Entrenador IA", createdAt: now, updatedAt: now });
   }
   const remember = (Array.isArray(raw.recordar) ? raw.recordar : []).map(cleanPreference).filter((t) => t.length >= 3).slice(0, 5);
-  const activity = activityFromAi(raw.registrar, db, today);
+  const told = activityFromAi(raw.registrar, db, today);
+  // «ayer», «anteayer», «hoy» en su mensaje mandan sobre la fecha que ponga la IA (el modelo gratis ponía hoy por ayer)
+  const said = plain(message);
+  const dayFix = /\banteayer\b/.test(said) ? addDays(today, -2) : /\bayer\b/.test(said) ? addDays(today, -1) : /\bhoy\b/.test(said) ? today : undefined;
+  const activity = told && dayFix ? { ...told, date: dayFix } : told;
   // si la IA marca el cambio pero no lo pone en texto, vale su propio mensaje
   const asked = typeof raw.ajustarPlan === "string" ? raw.ajustarPlan.trim() : raw.ajustarPlan && typeof raw.ajustarPlan === "object" ? message.trim() : "";
   // con días que marcar, el cambio ya está hecho: lo demás (la IA que reajusta) va solo después
@@ -284,6 +303,8 @@ export function chatReplyFromAi(
   const fromText = unavailableFromText(message, today);
   const fromAi = (Array.isArray(raw.diasSinEntrenar) ? raw.diasSinEntrenar : []).filter((d): d is string => typeof d === "string" && /^\d{4}-\d{2}-\d{2}$/.test(d));
   const planDays = db.plan ? [...new Set(fromText ?? fromAi)].filter((d) => d >= today && d <= addDays(today, 30)).sort().slice(0, 30) : [];
+  // con rutinas, la lista de ejercicios ya sale en la tarjeta: fuera del texto las líneas que la repiten («- Press…: 3 series…»)
+  const text = routines.length ? rawText.split("\n").filter((l) => !/^\s*[-•*]\s.*\d+\s*(series|×|x)\b/i.test(l)).join("\n").replace(/\n{3,}/g, "\n\n").trim() : rawText;
   return {
     text: text || (routines.length ? "Te propongo estas rutinas:" : activity ? "Lo tengo listo para guardar:" : ""),
     routines,
