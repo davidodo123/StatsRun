@@ -315,11 +315,11 @@ En la ficha de cada carrera:
 - [ ] **Resumen de la IA en una frase** («Hoy corriste más rápido que tu ritmo habitual…»), en la ficha y por zonas
 
 En Estadísticas / «Tú»:
-- [ ] **Progreso de la semana**: distancia, tiempo y desnivel, y gráfico de las últimas 12 semanas, por deporte — *ya hay km por semana en Estadísticas; falta el resumen tipo Strava*
-- [ ] **Mejores tiempos con medallas** (récord y 2.º mejor) por distancia — *ya hay récords; faltan las medallas y más distancias*
-- [ ] **Predicción con tendencia**: tiempo previsto del 10K (u objetivo) y cómo ha cambiado en el último mes — *ya hay predicción; falta la gráfica y la mejora*
-- [ ] **Esfuerzo relativo de la semana**: puntuación con el rango recomendado y la de la semana pasada — *ya hay carga (CTL/ACWR); falta enseñarlo así de simple*
-- [ ] **Objetivos semanales, mensuales o anuales** (km, tiempo, desnivel o número de carreras), con uno sugerido («3 a la semana»)
+- [/] **Progreso de la semana**: distancia, tiempo y desnivel, y gráfico de las últimas 12 semanas, por deporte — *hecho 2026-11-03: arriba en Estadísticas; tocar una semana la elige*
+- [/] **Mejores tiempos con medallas** (récord y 2.º mejor) de 1 km, milla, 5 km, 10 km, media y maratón — *hecho 2026-11-03, de los mejores esfuerzos de cada carrera; botón «Buscar en mis carreras de Strava» que trae las antiguas de 8 en 8*
+- [/] **Predicción con tendencia**: tiempo previsto de tu carrera objetivo (o del 10K) semana a semana y la mejora en un mes — *hecho 2026-11-03*
+- [/] **Esfuerzo de la semana**: carga de la semana con el rango recomendado (80-130 % de la media de las 4 anteriores) y la de la semana pasada — *hecho 2026-11-03*
+- [/] **Objetivos semanales, mensuales o anuales** (km, horas, desnivel o actividades, por deporte), con uno sugerido — *hecho 2026-11-03 (hasta 6)*
 
 Entrenos:
 - [ ] **Entrenos al momento** fuera del plan: elige «Más fácil», «Constante», «Más difícil» o «Variedad» y te propone 3-4 sesiones (tiempo, dificultad, descripción) según lo que vienes haciendo

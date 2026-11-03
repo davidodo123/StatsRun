@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { getAnalysis } from "@/lib/analysis";
+import { getAnalysis, viewToday } from "@/lib/analysis";
+import { ProgressSection, type ProgressData } from "@/components/ProgressSection";
+import { bestTimes, predictionTrend, suggestedTarget, targetProgress, weekEffort, weeklyProgress } from "@/lib/engine/progress";
+import type { SportKind } from "@/lib/types";
 import { Card, Empty, FoldCard, Loading, PageHeader, Stat, StatGroup } from "@/components/ui";
 import { SimpleBars, TrendLine, WeeklyKmChart } from "@/components/charts";
 import { activityLoad } from "@/lib/engine/load";
@@ -20,7 +23,7 @@ export default function StatsPage() {
 }
 
 async function Content() {
-  const [{ db, stats }, { t, locale }] = await Promise.all([getAnalysis(), getT()]);
+  const [{ db, stats }, { t, locale }, today] = await Promise.all([getAnalysis(), getT(), viewToday()]);
   const header = <PageHeader title={t("nav.estadisticas")} />;
   if (!db.profile || !stats)
     return (
@@ -56,9 +59,26 @@ async function Content() {
   const vdotByMonth = stats.vdotTrend.map((v) => ({ month: v.month, vdot: v.vdot }));
   const monthsKm = stats.months.map((m) => ({ month: m.month, km: m.runKm }));
 
+  // «Progreso» (como en Strava): por deporte, el que más se usa primero
+  const sports = [...new Set(db.activities.map((a) => a.sport))].sort(
+    (x, y) => db.activities.filter((a) => a.sport === y).length - db.activities.filter((a) => a.sport === x).length,
+  ) as SportKind[];
+  const goal = db.plan && db.plan.goal.date >= today ? db.plan.goal : undefined;
+  const progress: ProgressData = {
+    weeks: Object.fromEntries((["all", ...sports] as const).map((sp) => [sp, weeklyProgress(db.activities, today, sp)])),
+    sports,
+    effort: weekEffort(db.activities, db.profile, stats.vdot.vdot, today),
+    prediction: { km: goal?.distanceKm ?? 10, label: goal ? `${goal.name} · ${fmtKm(goal.distanceKm, 1, locale)} km` : "10 km", trend: predictionTrend(db.activities, db.profile, today, goal?.distanceKm ?? 10) },
+    best: bestTimes(db.activities, [1000, 1609, 5000, 10000, 21097, 42195]),
+    oldPending: db.strava ? db.activities.filter((a) => a.sport === "run" && a.source === "strava" && a.efforts === undefined && a.distanceM >= 400).length : 0,
+    targets: (db.targets ?? []).map((target) => ({ target, done: targetProgress(db.activities, target, today).done })),
+    suggested: db.targets?.length ? undefined : suggestedTarget(db.activities, today),
+  };
+
   return (
     <div className="space-y-4">
       {header}
+      <ProgressSection data={progress} locale={locale} />
       <StatGroup className="md:grid-cols-4 lg:grid-cols-6">
         <Stat label={t("st.kmAno")} value={fmtNum(T.yearKm, 0, locale)} unit="km" sub={t("st.carreras", { n: T.yearRuns })} />
         <Stat label={t("st.kmMes")} value={fmtKm(T.monthKm, 1, locale)} unit="km" />

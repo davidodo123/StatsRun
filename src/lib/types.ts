@@ -230,6 +230,7 @@ export interface Db {
   plan?: Plan;
   pastPlans?: ArchivedPlan[]; // planes terminados o sustituidos, del más reciente al más antiguo
   measurements?: BodyMeasurement[]; // medidas corporales, por fecha (una por día)
+  targets?: Target[]; // objetivos de semana, mes o año (Estadísticas)
   activities: Activity[];
   strava?: StravaAuth;
   lastSync?: string;  dismissedShared?: string[]; // sesiones compartidas por amigos que no se quieren añadir ("<idUsuario>:<idActividad>")
@@ -408,6 +409,15 @@ export interface ArchivedPlan {
   archivedAt: string;
   plan: Plan;
   races?: TuneUpRace[]; // carreras secundarias que tenía
+}
+
+/** Objetivo de semana, mes o año: km, horas, desnivel o número de actividades. */
+export interface Target {
+  id: string;
+  period: "week" | "month" | "year";
+  metric: "km" | "hours" | "elev" | "count";
+  sport: SportKind | "all";
+  value: number;
 }
 
 export interface CoachState {

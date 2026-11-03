@@ -39,6 +39,16 @@ export const NOVEDADES: Novedad[] = [
         },
       },
       {
+        icon: "calendar",
+        txt: {
+          es: ["Tu progreso, como en Strava", "Tu semana y las 12 anteriores, esfuerzo de la semana, predicción con su tendencia, mejores tiempos con medalla y objetivos."],
+          en: ["Your progress, Strava-style", "Your week and the previous 12, weekly effort, prediction trend, best times with medals and goals."],
+          ca: ["El teu progrés, com a Strava", "La teva setmana i les 12 anteriors, esforç de la setmana, predicció amb la tendència, millors temps amb medalla i objectius."],
+          pt: ["O teu progresso, como no Strava", "A tua semana e as 12 anteriores, esforço da semana, previsão com tendência, melhores tempos com medalha e objetivos."],
+          fr: ["Ta progression, façon Strava", "Ta semaine et les 12 précédentes, effort de la semaine, tendance de la prédiction, meilleurs temps avec médailles et objectifs."],
+        },
+      },
+      {
         icon: "sparkle",
         txt: {
           es: ["IA más prudente con tu plan", "Ya no cambia el tipo de sesión ni mueve tu tirada larga."],

@@ -42,6 +42,12 @@ function Legend({ items, line }: { items: { label: string; color: string }[]; li
   );
 }
 
+const fmtTime = (s: number) => {
+  const r = Math.round(s);
+  const h = Math.floor(r / 3600);
+  const mm = String(Math.floor((r % 3600) / 60)).padStart(h ? 2 : 1, "0");
+  return `${h ? `${h}:` : ""}${mm}:${String(r % 60).padStart(2, "0")}`;
+};
 const fmtPace = (s?: number) => (s && isFinite(s) ? `${Math.floor(s / 60)}:${String(Math.round(s % 60)).padStart(2, "0")}` : "–");
 // fechas («25 oct», «oct 26») y decimales en el idioma de cada uno
 const fmtFor = (locale: Locale) => {
@@ -88,7 +94,7 @@ interface Series {
   area?: boolean; // línea con el área de debajo rellena (desnivel)
 }
 
-const PAD = { top: 8, right: 8, bottom: 22, left: 40 };
+const BASE_PAD = { top: 8, right: 8, bottom: 22, left: 40 };
 
 /** Gráfica cartesiana: barras agrupadas y/o líneas sobre las mismas categorías. */
 function Chart({
@@ -107,6 +113,7 @@ function Chart({
   hover: sharedHover,
   onHover,
   labelGap = 52,
+  padLeft,
 }: {
   height: number;
   labels: string[];
@@ -124,7 +131,9 @@ function Chart({
   hover?: number;
   onHover?: (i: number | undefined) => void;
   labelGap?: number; // px mínimos entre etiquetas del eje X
+  padLeft?: number; // sitio para etiquetas del eje Y largas (h:mm:ss)
 }) {
+  const PAD = { ...BASE_PAD, left: padLeft ?? BASE_PAD.left };
   const [ref, width] = useWidth();
   const [ownHover, setOwnHover] = useState<number>();
   const hover = onHover ? sharedHover : ownHover;
@@ -282,6 +291,28 @@ export function RunProfileCharts({ data, locale = "es" }: { data: { km: number; 
   );
 }
 
+// ---------- Progreso: 12 semanas, una elegida ----------
+/** Km (u horas) de las últimas semanas; tocar una semana la elige (la línea se queda en ella, como en Strava). */
+export function WeeklyProgressChart({ data, selected, onSelect, metric, locale = "es" }: { data: { week: string; km: number; sec: number }[]; selected: number; onSelect: (i: number) => void; metric: "km" | "hours"; locale?: Locale }) {
+  const { dayLabel } = fmtFor(locale);
+  const values = data.map((d) => (metric === "km" ? d.km : Math.round((d.sec / 3600) * 10) / 10));
+  const unit = metric === "km" ? "km" : "h";
+  return (
+    <Chart
+      height={170}
+      labels={data.map((d) => d.week)}
+      series={[{ kind: "line", name: unit, values, color: S1, dots: true, area: true }]}
+      xFmt={dayLabel}
+      yFmt={(v) => `${Math.round(v)}`}
+      labelGap={64}
+      hover={selected}
+      onHover={(i) => i !== undefined && onSelect(i)}
+      // los datos de la semana elegida van encima de la gráfica: sin cuadro flotante
+      tip={() => null}
+    />
+  );
+}
+
 // ---------- Volumen semanal ----------
 export function WeeklyKmChart({ data, height = 220, locale = "es" }: { data: { week: string; km: number; planned?: number }[]; height?: number; locale?: Locale }) {
   const { dayLabel } = fmtFor(locale);
@@ -362,7 +393,7 @@ export function TrendLine({
   dataKey: string;
   name: string;
   color?: "s1" | "s2" | "s3";
-  format?: "pace" | "int" | "dec2" | "dec1";
+  format?: "pace" | "int" | "dec2" | "dec1" | "time";
   invert?: boolean;
   height?: number;
   xKey?: string;
@@ -370,7 +401,7 @@ export function TrendLine({
   locale?: Locale;
 }) {
   const { dayLabel, monthLabel, dec } = fmtFor(locale);
-  const f = (v: number) => (format === "pace" ? fmtPace(v) : format === "dec2" ? dec(v, 2) : format === "dec1" ? dec(v, 1) : Math.round(v).toString());
+  const f = (v: number) => (format === "time" ? fmtTime(v) : format === "pace" ? fmtPace(v) : format === "dec2" ? dec(v, 2) : format === "dec1" ? dec(v, 1) : Math.round(v).toString());
   const stroke = { s1: S1, s2: S2, s3: "var(--series-3)" }[color];
   const xf = xFormat === "month" ? monthLabel : dayLabel;
   const values = data.map((d) => (typeof d[dataKey] === "number" ? (d[dataKey] as number) : null));
@@ -381,6 +412,7 @@ export function TrendLine({
       series={[{ kind: "line", name, values, color: stroke, dots: true }]}
       xFmt={xf}
       yFmt={f}
+      padLeft={format === "time" ? 58 : undefined}
       zeroBased={false}
       invert={invert}
       tip={(i) => (values[i] == null ? null : <TipBox title={xf(String(data[i][xKey]))} rows={[{ color: stroke, label: name, value: f(values[i]!) + (format === "pace" ? " /km" : "") }]} />)}

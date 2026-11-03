@@ -57,6 +57,8 @@ export const SERVER_TEXT: Record<string, Tr> = {
   "Ponle un nombre de al menos 3 letras.": { en: "Give it a name of at least 3 letters.", ca: "Posa-li un nom d'almenys 3 lletres.", pt: "Dá-lhe um nome com pelo menos 3 letras.", fr: "Donne-lui un nom d'au moins 3 lettres." },
   "Primero elige la carrera principal.": { en: "Choose your main race first.", ca: "Primer tria la cursa principal.", pt: "Primeiro escolhe a prova principal.", fr: "Choisis d'abord ta course principale." },
   "Revisa edad, peso y altura.": { en: "Check your age, weight and height.", ca: "Revisa l'edat, el pes i l'alçada.", pt: "Revê a idade, o peso e a altura.", fr: "Vérifie l'âge, le poids et la taille." },
+  "Revisa el objetivo.": { en: "Check the goal.", ca: "Revisa l'objectiu.", pt: "Revê o objetivo.", fr: "Vérifie l'objectif." },
+  "Como mucho 6 objetivos.": { en: "6 goals at most.", ca: "Com a màxim 6 objectius.", pt: "No máximo 6 objetivos.", fr: "6 objectifs au maximum." },
   "Revisa las fechas.": { en: "Check the dates.", ca: "Revisa les dates.", pt: "Revê as datas.", fr: "Vérifie les dates." },
   "Suscripción no válida.": { en: "Invalid subscription.", ca: "Subscripció no vàlida.", pt: "Subscrição inválida.", fr: "Abonnement non valide." },
   "Tiempo objetivo con formato h:mm:ss o mm:ss.": { en: "Target time as h:mm:ss or mm:ss.", ca: "Temps objectiu amb format h:mm:ss o mm:ss.", pt: "Tempo objetivo no formato h:mm:ss ou mm:ss.", fr: "Temps objectif au format h:mm:ss ou mm:ss." },
