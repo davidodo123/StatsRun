@@ -130,10 +130,12 @@ function routinesFor(): Routine[] {
 }
 
 function racesFor(goal: Goal): TuneUpRace[] {
-  return Array.from({ length: chance(0.7) ? 0 : int(1, 4) }, (_, k) => ({
+  const list = Array.from({ length: chance(0.7) ? 0 : int(1, 4) }, (_, k) => ({
     id: `c${k}`, name: `Secundaria ${k}`, distanceKm: pick([5, 10, 21.0975]),
     date: addDays(today, int(4, Math.max(5, diffDays(goal.date, today) + 120))), priority: pick(["A", "B", "C", "C"] as const),
   }));
+  // como en la app: una carrera por día y ninguna el día de la principal («Ya hay otra carrera ese día»)
+  return list.filter((r, i) => r.date !== goal.date && list.findIndex((x) => x.date === r.date) === i);
 }
 
 // ---------- reglas del plan ----------
@@ -169,10 +171,10 @@ function check(id: string, db: Db) {
       if (!avail.has(weekday(s.date)) && !raceDates.has(s.date) && s.type !== "race") bad(id, "dia-no-disponible", `${s.date} (${weekday(s.date)}) ${s.type} · disponibles ${[...avail]}`);
       // la carrera va en su fecha aunque ese día se marcara «no puedo»
       if (blocked.has(s.date) && s.type !== "race") bad(id, "dia-bloqueado", `${s.date} ${s.type}`);
-      // la tirada, en su día; salvo que ese día esté bloqueado o haya carrera esa semana (entonces se mueve)
+      // la tirada, en su día; salvo que ese día esté bloqueado, haya carrera esa semana o ya haya pasado esta semana (entonces se mueve)
       const lrDate = addDays(w.start, (p.longRunDay + 7) % 7);
       const raceWeek = w.sessions.some((x) => x.type === "race") || [...raceDates].some((d) => d && d >= w.start && d <= addDays(w.start, 6));
-      if (s.type === "long" && avail.has(p.longRunDay) && weekday(s.date) !== p.longRunDay && !blocked.has(lrDate) && !raceWeek) bad(id, "tirada-otro-dia", `${s.date} (${weekday(s.date)}) en vez de ${p.longRunDay}`);
+      if (s.type === "long" && avail.has(p.longRunDay) && weekday(s.date) !== p.longRunDay && !blocked.has(lrDate) && !raceWeek && lrDate >= today) bad(id, "tirada-otro-dia", `${s.date} (${weekday(s.date)}) en vez de ${p.longRunDay}`);
     }
     for (const [date, d] of byDay) {
       if (d.run > 1) bad(id, "dos-carreras-mismo-dia", date);
@@ -192,7 +194,9 @@ function check(id: string, db: Db) {
     const runs = (w: (typeof plan.weeks)[number]) => w.sessions.filter((x) => !["strength", "long", "race"].includes(x.type)).map((x) => x.distanceKm);
     const before = Math.max(0, ...runs(plan.weeks[k - 1]));
     const now = Math.max(0, ...runs(plan.weeks[k]));
-    if (!plan.weeks[k - 1].recovery && before >= 2 && now > before * 2.2) bad(id, "sesion-se-dispara", `semana ${k + 1}: ${before} → ${now} km`);
+    // tras la semana de una carrera la anterior solo tiene la activación (3-4 km): no cuenta
+    const raceBefore = plan.weeks[k - 1].sessions.some((x) => x.type === "race");
+    if (!plan.weeks[k - 1].recovery && !raceBefore && before >= 2 && now > before * 2.2) bad(id, "sesion-se-dispara", `semana ${k + 1}: ${before} → ${now} km`);
   }
   // la primera semana empieza a mitad (hoy) y tras una de descarga se vuelve al nivel de antes: esas no cuentan
   for (let k = 2; k < kms.length; k++) {

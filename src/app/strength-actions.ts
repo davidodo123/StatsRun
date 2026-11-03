@@ -85,7 +85,7 @@ export async function saveMeasurement(_: FormState, fd: FormData): Promise<FormS
     if (!raw) continue;
     const n = Number(raw);
     const [lo, hi] = MEASURE_RANGE[k];
-    if (!Number.isFinite(n) || n < lo || n > hi) return { error: `Revisa el valor de ${k === "fatPct" ? "% de grasa" : k === "weightKg" ? "peso" : "los perímetros"}.` };
+    if (!Number.isFinite(n) || n < lo || n > hi) return { error: k === "fatPct" ? await say("Revisa el % de grasa.") : k === "weightKg" ? await say("Revisa el peso.") : await say("Revisa los perímetros.") };
     m[k] = Math.round(n * 10) / 10;
   }
   if (Object.keys(m).length === 1) return { error: await say("Apunta al menos una medida.") };

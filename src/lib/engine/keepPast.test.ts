@@ -109,3 +109,14 @@ describe("planes que ya traían la carrera repetida", () => {
     expect(plan.weeks.flatMap((w) => w.sessions).filter((s) => s.type === "race")).toHaveLength(1);
   });
 });
+
+describe("carrera principal pocos días después de otra A", () => {
+  it("su día queda solo con la carrera (sin el rodaje que había)", () => {
+    // como prueba-1792 (semilla 303): todos los días, 90 km/semana, 50 km tres días después de un 5K A
+    const main = { name: "Ultra", distanceKm: 50, date: "2026-11-13" };
+    const all: Profile = { ...profile, sex: "female", age: 48, weightKg: 95, heightCm: 174, weeklyKm: 90, longestRunKm: 22, availableDays: [0, 1, 2, 3, 4, 5, 6], daysPerWeek: 7, strengthPerWeek: 2 };
+    const plan = generateSeason({ profile: all, goal: main, currentVdot: 40, currentWeeklyKm: 90, longestRecentKm: 22, today: "2026-11-03" }, [{ name: "5K", distanceKm: 5, date: "2026-11-10" }, { name: "5K b", distanceKm: 5, date: "2026-12-21" }]);
+    const that = plan.weeks.flatMap((w) => w.sessions).filter((s) => s.date === "2026-11-13");
+    expect(that.map((s) => s.type)).toEqual(["race"]);
+  });
+});

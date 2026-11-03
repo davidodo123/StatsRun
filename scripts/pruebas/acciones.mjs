@@ -1,6 +1,7 @@
 // Prueba las acciones (guardar formularios) con los usuarios de prueba (scripts/pruebas/usuarios.ts) contra `npx next start -p 3005`:
 // cada usuario registra un entreno, una medida, salta una sesión y lo deshace, bloquea y libera un día, rehace el plan,
-// guarda un entreno de fuerza y borra el entreno; además manda 5 medidas a la vez (no se debe perder ninguna).
+// guarda un entreno de fuerza, pone y quita un objetivo, pone un entreno al momento, graba una carrera con GPS (y pide su serie)
+// y borra el entreno; además manda 5 medidas a la vez (no se debe perder ninguna).
 // Después se lee el Db de cada uno y se comprueba que quedó como debe.
 //
 //   npm run build && OPENROUTER_API_KEY= npx next start -p 3005
@@ -69,6 +70,7 @@ const ymd = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate(
 const now = new Date();
 const today = ymd(now);
 const dayOff = (n) => ymd(new Date(now.getFullYear(), now.getMonth(), now.getDate() + n));
+const dayAfter = (d, n) => { const x = new Date(`${d}T12:00:00`); x.setDate(x.getDate() + n); return ymd(x); };
 const readDb = (id) => JSON.parse(readFileSync(`data/db_${id}.json`, "utf8"));
 
 const problems = [];
@@ -126,13 +128,47 @@ async function run(id) {
   // 7. cinco medidas a la vez (días distintos): no se debe perder ninguna
   await Promise.all([2, 3, 4, 5, 6].map((n) => step(id, "medidas-a-la-vez", "src/app/strength-actions.ts#saveMeasurement", [{}, form({ date: dayOff(-n), weightKg: String(70 + n / 10) })])));
 
+  // 8. un objetivo y quitarlo
+  await step(id, "objetivo", "src/app/progress-actions.ts#addTarget", [{}, form({ period: "week", metric: "km", sport: "run", value: "20" })]);
+  const tg = (readDb(id).targets ?? []).find((x) => x.period === "week" && x.metric === "km" && x.sport === "run");
+  if (!tg || tg.value !== 20) problems.push({ id, step: "objetivo", kind: "no-guardado", detail: JSON.stringify(tg) });
+  else {
+    await step(id, "quitar-objetivo", "src/app/progress-actions.ts#deleteTarget", [form({ id: tg.id })]);
+    if ((readDb(id).targets ?? []).some((x) => x.id === tg.id)) problems.push({ id, step: "quitar-objetivo", kind: "no-borrado", detail: tg.id });
+  }
+  // 9. un entreno al momento, hoy en el plan (si el plan tiene la semana de hoy y hoy no hay carrera)
+  const planNow = readDb(id).plan;
+  const week = planNow?.weeks.find((w) => w.start <= today && dayAfter(w.start, 6) >= today);
+  const raceToday = week?.sessions.some((s) => s.date === today && s.type === "race");
+  await step(id, "al-momento", "src/app/progress-actions.ts#addInstantSession", [{}, form({ mode: "constante", i: "0" })], { error: !week || raceToday });
+  if (week && !raceToday) {
+    const todayRuns = readDb(id).plan.weeks.flatMap((w) => w.sessions).filter((s) => s.date === today && s.type !== "strength");
+    if (todayRuns.length !== 1 || !todayRuns[0].id.includes("-ahora-")) problems.push({ id, step: "al-momento", kind: "no-puesto", detail: todayRuns.map((s) => s.id).join(",") });
+  }
+  // 10. «Grabar con GPS»: 2,5 km a 4:00 /km con una cuesta; luego su serie y sus mejores esfuerzos
+  const t0run = Date.parse(`${today}T07:00:00`);
+  const points = Array.from({ length: 301 }, (_, k) => ({ t: t0run + k * 2000, lat: 37.2 + k * 7.48e-5, lon: -3.6, alt: 630 + 10 * Math.sin(k / 40), acc: 5 }));
+  await step(id, "gps", "src/app/actions.ts#saveRecordedRun", [{ sport: "run", name: "GPS prueba", startLocal: `${today}T07:00:00`, points, rpe: 6 }]);
+  const gps = readDb(id).activities.find((a) => a.name === "GPS prueba");
+  if (!gps) problems.push({ id, step: "gps", kind: "no-guardado", detail: "" });
+  else {
+    if (!gps.efforts?.[1000]) problems.push({ id, step: "gps", kind: "sin-esfuerzos", detail: JSON.stringify(gps.efforts) });
+    try {
+      const r = await fetch(`${BASE}/api/serie/${encodeURIComponent(id)}/${encodeURIComponent(gps.id)}`, { headers: { cookie: `sr_session=${cookieFor(id)}` } });
+      const j = await r.json();
+      if (!j.stream?.t?.length || !j.efforts?.[1000] || j.zones?.length !== 5) problems.push({ id, step: "serie", kind: "incompleta", detail: `${r.status} ${JSON.stringify(j).slice(0, 120)}` });
+    } catch (e) {
+      problems.push({ id, step: "serie", kind: "error", detail: e.message });
+    }
+  }
+
   // comprobar lo guardado
   const after = readDb(id);
   const mine = after.activities.find((a) => a.name === "Prueba acciones");
   if (!mine) problems.push({ id, step: "registrar", kind: "no-guardado", detail: "el entreno no está" });
   else if (Math.abs(mine.distanceM - 6200) > 1 || mine.movingSec !== 2050) problems.push({ id, step: "registrar", kind: "datos", detail: `${mine.distanceM} m, ${mine.movingSec} s` });
   if (!after.activities.some((a) => a.name === "Fuerza prueba" && a.workout?.exercises?.length === 1)) problems.push({ id, step: "fuerza", kind: "no-guardado", detail: "el entreno de fuerza no está" });
-  if (after.activities.length !== nActs + 2) problems.push({ id, step: "final", kind: "actividades", detail: `${nActs} → ${after.activities.length} (esperaba +2)` });
+  if (after.activities.length !== nActs + 3) problems.push({ id, step: "final", kind: "actividades", detail: `${nActs} → ${after.activities.length} (esperaba +3)` });
   const meas = after.measurements ?? [];
   const expectMeas = new Set([...(before.measurements ?? []).map((m) => m.date), today, ...[2, 3, 4, 5, 6].map((n) => dayOff(-n))]).size;
   if (meas.length !== expectMeas) problems.push({ id, step: "medidas-a-la-vez", kind: "perdidas", detail: `${nMeas} → ${meas.length} (esperaba ${expectMeas})` });

@@ -511,6 +511,13 @@ export function generatePlan(input: PlanInput): Plan {
     });
   }
 
+  // el día de la carrera, solo la carrera: con muy pocos días de plan caían ahí también la tirada y la fuerza
+  for (const w of weeks) {
+    if (!w.sessions.some((x) => x.type === "race" && x.date === goal.date)) continue;
+    w.sessions = w.sessions.filter((x) => x.date !== goal.date || x.type === "race");
+    w.targetKm = Math.round(w.sessions.reduce((t, x) => t + x.distanceKm, 0));
+  }
+
   if (spikeLimited)
     notes.push(
       `La tirada larga sube como mucho un 10 % sobre la más larga reciente (más es un pico de riesgo de lesión). Tirada más larga del plan: ${round1(Math.max(...weeks.flatMap((w) => w.sessions).filter((s) => s.type === "long").map((s) => s.distanceKm), 0))} km.`,
@@ -584,9 +591,12 @@ export function generateSeason(input: PlanInput, extraGoals: Goal[] = []): Plan 
       const week = last.weeks.find((w) => goal.date >= w.start && goal.date <= addDays(w.start, 6));
       const predicted = goal.targetTimeSec ?? raceTimeFromVdot(next.currentVdot, goal.distanceKm);
       const race = raceSession(goal, predicted / goal.distanceKm, predicted);
-      if (week) week.sessions = [...week.sessions, race].sort((a, b) => a.date.localeCompare(b.date));
+      // ese día, solo la carrera (había un rodaje o fuerza y salían dos sesiones)
+      if (week) week.sessions = [...week.sessions.filter((s) => s.date !== goal.date), race].sort((a, b) => a.date.localeCompare(b.date));
       else last.weeks.push({ index: 0, start: mondayOf(goal.date), phase: "taper", recovery: true, targetKm: Math.round(goal.distanceKm), sessions: [race], focus: "" });
       last.warnings.push(`${goal.name} es muy poco después de otra carrera: entre las dos, solo recuperar.`);
+      // y lo que venga después, tras la recuperación de esta (si no, el tramo siguiente empezaba el mismo día de la carrera)
+      next = { ...next, today: addDays(goal.date, recoveryDaysAfter(goal.distanceKm) + 1) };
       continue;
     }
     if (goal.date <= next.today) continue;
