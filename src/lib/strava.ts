@@ -154,7 +154,7 @@ export async function syncActivities(auth: StravaAuth, existing: Activity[], ini
   const stravaActs = existing.filter((a) => a.source === "strava");
   const latest = stravaActs.reduce((m, a) => (a.startLocal > m ? a.startLocal : m), "");
   // margen de 2 días por zonas horarias y ediciones
-  // ull: vuelve a traer todo el periodo (p. ej. para rellenar los recorridos de lo ya sincronizado)
+  // full: vuelve a traer todo el periodo (p. ej. para rellenar los recorridos de lo ya sincronizado)
   const after = latest && !full
     ? Math.floor(new Date(`${latest}Z`).getTime() / 1000) - 2 * 86400
     : Math.floor(Date.now() / 1000) - initialDays * 86400;
