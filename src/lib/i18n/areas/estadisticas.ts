@@ -91,6 +91,8 @@ export const estadisticas = area({
     "ch.fatiga": "Fatiga (ATL 7 d)",
     "ch.frescura": "Frescura",
     "ch.frescuraTsb": "Frescura (TSB)",
+    "ch.ritmo": "Ritmo",
+    "ch.altitud": "Altitud",
   },
   en: {
     "st.sinPerfil": "Create your profile to see stats",
@@ -181,6 +183,8 @@ export const estadisticas = area({
     "ch.fatiga": "Fatigue (ATL 7 d)",
     "ch.frescura": "Form",
     "ch.frescuraTsb": "Form (TSB)",
+    "ch.ritmo": "Pace",
+    "ch.altitud": "Elevation",
   },
   ca: {
     "st.sinPerfil": "Crea el teu perfil per veure estadístiques",
@@ -271,6 +275,8 @@ export const estadisticas = area({
     "ch.fatiga": "Fatiga (ATL 7 d)",
     "ch.frescura": "Frescor",
     "ch.frescuraTsb": "Frescor (TSB)",
+    "ch.ritmo": "Ritme",
+    "ch.altitud": "Altitud",
   },
   pt: {
     "st.sinPerfil": "Cria o teu perfil para ver estatísticas",
@@ -361,6 +367,8 @@ export const estadisticas = area({
     "ch.fatiga": "Fadiga (ATL 7 d)",
     "ch.frescura": "Frescura",
     "ch.frescuraTsb": "Frescura (TSB)",
+    "ch.ritmo": "Ritmo",
+    "ch.altitud": "Altitude",
   },
   fr: {
     "st.sinPerfil": "Crée ton profil pour voir les statistiques",
@@ -451,5 +459,7 @@ export const estadisticas = area({
     "ch.fatiga": "Fatigue (ATL 7 j)",
     "ch.frescura": "Fraîcheur",
     "ch.frescuraTsb": "Fraîcheur (TSB)",
+    "ch.ritmo": "Allure",
+    "ch.altitud": "Altitude",
   },
 });

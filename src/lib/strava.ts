@@ -3,6 +3,7 @@ import "server-only";
 // Docs: https://developers.strava.com/docs/reference/
 import type { Activity, SportKind, StravaAuth } from "./types";
 import { updateDb } from "./db";
+import { compactStream, type Stream } from "./engine/streams";
 import { aerobicDecoupling, DECOUPLING_MIN_MIN } from "./engine/decoupling";
 
 const API = "https://www.strava.com/api/v3";
@@ -226,6 +227,22 @@ async function fillDecoupling(token: string, acts: Activity[]): Promise<void> {
   await updateDb((db) => {
     for (const a of db.activities) if (results.has(a.id)) a.decoupling = results.get(a.id);
   });
+}
+
+/** Serie de una actividad de Strava (tiempo, distancia, altitud y pulso); null si no tiene; "limite" si Strava dice que esperemos. */
+export async function fetchStream(auth: StravaAuth, activityId: string): Promise<Stream | null | "limite"> {
+  const token = await validToken(auth);
+  const res = await fetch(`${API}/activities/${activityId.replace("strava-", "")}/streams?keys=time,distance,altitude,heartrate&key_by_type=true`, {
+    headers: { Authorization: `Bearer ${token}` },
+    cache: "no-store",
+  });
+  if (res.status === 429) return "limite";
+  if (!res.ok) return null;
+  const s = (await res.json()) as Record<string, { data: number[] } | undefined>;
+  const t = s.time?.data;
+  const d = s.distance?.data;
+  if (!t?.length || !d?.length) return null;
+  return compactStream({ t, d, alt: s.altitude?.data, hr: s.heartrate?.data }) ?? null;
 }
 
 export async function deauthorize(auth: StravaAuth): Promise<void> {

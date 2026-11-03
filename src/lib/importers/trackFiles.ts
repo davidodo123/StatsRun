@@ -2,6 +2,26 @@
 import type { Activity } from "../types";
 import { localParts, shortHash, sportFromName } from "./common";
 import { routeFromPoints } from "../route";
+import { bestEfforts, compactStream, type Stream } from "../engine/streams";
+
+/** Serie de cada actividad importada (se guarda aparte, en streamStore): la ficha dibuja con ella ritmo, desnivel y zonas. */
+export const importedStreams = new WeakMap<Activity, Stream>();
+
+function streamOf(points: Point[]): Stream | undefined {
+  const pts = points.filter((p) => p.t !== undefined);
+  if (pts.length < 2) return undefined;
+  const t0 = pts[0].t!;
+  const d: number[] = [];
+  let dist = 0;
+  pts.forEach((p, i) => {
+    if (p.dist !== undefined) dist = p.dist;
+    else if (i && p.lat !== undefined && pts[i - 1].lat !== undefined) dist += haversine(pts[i - 1], p);
+    d.push(dist);
+  });
+  const alt = pts.map((p) => p.ele ?? NaN);
+  const hr = pts.map((p) => p.hr ?? 0);
+  return compactStream({ t: pts.map((p) => (p.t! - t0) / 1000), d, alt: alt.some(Number.isFinite) ? alt : undefined, hr: hr.some((x) => x > 0) ? hr : undefined });
+}
 
 interface Point {
   t?: number; // ms
@@ -88,7 +108,7 @@ function summarize(points: Point[]) {
 function build(id: string, name: string, sportRaw: string, s: ReturnType<typeof summarize>, cadencePerLeg: boolean, points: Point[]): Activity | undefined {
   if (!s.start || s.elapsedSec <= 0) return undefined;
   const sport = sportFromName(sportRaw);
-  return {
+  const act: Activity = {
     id,
     source: "manual",
     name,
@@ -104,6 +124,12 @@ function build(id: string, name: string, sportRaw: string, s: ReturnType<typeof 
     avgCadence: s.avgCad ? Math.round(sport === "run" && cadencePerLeg && s.avgCad < 120 ? s.avgCad * 2 : s.avgCad) : undefined,
     route: routeFromPoints(points),
   };
+  const stream = sport === "run" ? streamOf(points) : undefined;
+  if (stream) {
+    act.efforts = bestEfforts(stream);
+    importedStreams.set(act, stream);
+  }
+  return act;
 }
 
 export function parseGpx(xml: string, fileName: string): Activity | undefined {

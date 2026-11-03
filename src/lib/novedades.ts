@@ -16,6 +16,41 @@ export interface Novedad {
  */
 export const NOVEDADES: Novedad[] = [
   {
+    id: "2026-11-03",
+    items: [
+      {
+        icon: "trend",
+        txt: {
+          es: ["Tu carrera, al detalle", "Gráficos de ritmo y desnivel, ritmo ajustado a las cuestas y tiempo en cada zona."],
+          en: ["Your run in detail", "Pace and elevation charts, grade-adjusted pace and time in each zone."],
+          ca: ["La teva cursa, al detall", "Gràfics de ritme i desnivell, ritme ajustat a les pujades i temps a cada zona."],
+          pt: ["A tua corrida ao pormenor", "Gráficos de ritmo e desnível, ritmo ajustado às subidas e tempo em cada zona."],
+          fr: ["Ta course en détail", "Graphiques d'allure et de dénivelé, allure ajustée à la pente et temps dans chaque zone."],
+        },
+      },
+      {
+        icon: "trophy",
+        txt: {
+          es: ["Mejores esfuerzos y récords", "Tu mejor 400 m, 1 km, milla, 5 km… de cada carrera, con medalla si es récord."],
+          en: ["Best efforts and PRs", "Your best 400 m, 1 km, mile, 5 km… in each run, with a medal when it's a PR."],
+          ca: ["Millors esforços i rècords", "El teu millor 400 m, 1 km, milla, 5 km… de cada cursa, amb medalla si és rècord."],
+          pt: ["Melhores esforços e recordes", "Os teus melhores 400 m, 1 km, milha, 5 km… de cada corrida, com medalha se for recorde."],
+          fr: ["Meilleurs efforts et records", "Ton meilleur 400 m, 1 km, mile, 5 km… de chaque course, avec une médaille si c'est un record."],
+        },
+      },
+      {
+        icon: "sparkle",
+        txt: {
+          es: ["IA más prudente con tu plan", "Ya no cambia el tipo de sesión ni mueve tu tirada larga."],
+          en: ["A more careful AI", "It no longer changes session types or moves your long run."],
+          ca: ["IA més prudent amb el teu pla", "Ja no canvia el tipus de sessió ni mou la teva tirada llarga."],
+          pt: ["IA mais prudente com o teu plano", "Já não muda o tipo de sessão nem mexe no teu longo."],
+          fr: ["Une IA plus prudente", "Elle ne change plus le type de séance et ne déplace plus ta sortie longue."],
+        },
+      },
+    ],
+  },
+  {
     id: "2026-11-01",
     items: [
       {

@@ -122,6 +122,7 @@ export interface Activity {
   sharedFrom?: string; // "<idUsuario>:<idActividad>" si se copió de la sesión de un amigo
   photoAt?: string; // cuándo se subió su foto (va aparte, en photoKey)
   workout?: Workout; // entreno de fuerza registrado en vivo: ejercicios y series
+  efforts?: Partial<Record<number, number>>; // mejores esfuerzos (metros → segundos) sacados de su serie (lib/engine/streams.ts)
 }
 
 export type SessionType =

@@ -1143,3 +1143,13 @@ Fuentes: screensdesign.com, posthog.com/pricing, revenuecat.com/pricing, revenue
 - La tirada larga no cambia de día. Si el tipo no cambia, el título es el del plan con los km nuevos.
 - Lo que sigue pudiendo hacer: acortar, quitar (con descarga o recuperación), mover sesiones a días libres, cambiar descripción y pasos.
 
+## Serie de cada carrera
+*2026-11-03*
+
+- Para los gráficos de la ficha hace falta la serie (tiempo, distancia, altitud y pulso), no solo el recorrido. Se guarda **aparte del Db**, como las fotos (`statsrun:serie:<usuario>:<actividad>`, `src/lib/streamStore.ts`), reducida a un punto cada ≥ 10 m y 1.500 como mucho (unos 20 kB): meterla en el Db de cada usuario lo haría crecer mucho.
+- De dónde sale: **Strava**, la primera vez que el dueño abre la ficha (una lectura de su API, `fetchStream`; si dice que esperemos, se vuelve a intentar otro día); **«Grabar con GPS»**, al guardar; **archivos GPX, TCX y FIT**, al importar. Las carreras de amigos se ven si su dueño ya la abrió.
+- Cálculos en `src/lib/engine/streams.ts` (con pruebas): ritmo por tramos, ritmo ajustado a la pendiente (coste de Minetti 2002 con la altitud suavizada ±50 m), zonas de ritmo con los ritmos del VDOT (Z1 más lento que suave … Z6 más rápido que series) y mejores esfuerzos (ventana deslizante).
+- Los mejores esfuerzos de cada carrera se guardan en la actividad (`efforts`, unos pocos números) para dar medalla de récord o 2.º comparando con las demás.
+- Gráficos: ritmo y desnivel en **dos gráficas apiladas** con el mismo eje de km y la línea al tocar compartida (Strava los superpone con dos ejes; la guía de gráficos lo desaconseja).
+- Pendiente: el resumen de una frase de la IA (punto 6), y que las carreras de Strava antiguas tengan sus esfuerzos sin tener que abrirlas una a una.
+

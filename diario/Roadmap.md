@@ -304,14 +304,14 @@ Español, inglés, catalán, portugués y francés, por fases.
 - [ ] **La semana ha cambiado y antes estaba bien** (lo vio David 2026-11-03 en Inicio, semana del 2 nov): 3 / 7 km en la semana, a 12 días de su 10K; la tirada larga es «correr-caminar 3 km» pero pone 2,2 km; «Empezar rutina: Pierna · Fuerza (mañana)» sale en mayúsculas y en dos líneas. Posible causa: el reajuste de la IA del 1 nov (modelo gratis) puso un tope de 3,3 km por sesión porque su tirada más larga de los últimos 30 días era de 3 km, y además pasó a correr-caminar. Por revisar: el tope de la IA, por qué cambia el tipo de sesión, el título frente a la distancia y el botón
 - [ ] **Donaciones (Patreon o Ko-fi)**: botón «Apoya Zancavolt» en «Tú», solo en web e iPhone (oculto en Android como Premium: Google Play retira apps con enlaces a donaciones fuera de su cobro) — *aparcado por David 2026-10-31: falta que cree la página y decida Patreon (mensual, ~8-12 %) o Ko-fi (sueltas, sin comisión propia)* → [[Decisiones#Donaciones]]
 
-## 📊 Fase 10 · Ideas de Strava (lo pidió David 2026-11-03) — *después de Google Play; luego se decide qué va en Premium* → [[Ideas]]
+## 📊 Fase 10 · Ideas de Strava (lo pidió David 2026-11-03) — *empezada 2026-11-03 (David: «sí, empieza»); luego se decide qué va en Premium* → [[Ideas]] · [[Decisiones#Serie de cada carrera]]
 
 En la ficha de cada carrera:
-- [ ] **Gráfico de ritmo** a lo largo de la carrera (con GPS), con el desnivel de fondo
-- [ ] **Gráfico de desnivel** (altitud por km)
-- [ ] **Ritmo ajustado a la pendiente** (como el RAP de Strava): ritmo medio equivalente en llano
-- [ ] **Ritmo por zonas**: % del tiempo en cada zona (Z1-Z6) con tus ritmos del VDOT
-- [ ] **Mejores esfuerzos de la carrera**: tu mejor 1 km, media milla, milla, 5 km… dentro de esa actividad, y medalla si es récord
+- [/] **Gráfico de ritmo** a lo largo de la carrera — *hecho 2026-11-03: dos gráficas apiladas (ritmo, con lo rápido arriba, y desnivel) con el mismo eje de km y la línea al tocar compartida; no un gráfico con dos ejes*
+- [/] **Gráfico de desnivel** (altitud por km) — *hecho 2026-11-03*
+- [/] **Ritmo ajustado a la pendiente** (como el RAP de Strava) — *hecho 2026-11-03: coste de Minetti con la altitud suavizada*
+- [/] **Ritmo por zonas**: % del tiempo en Z1-Z6 con tus ritmos del VDOT — *hecho 2026-11-03*
+- [/] **Mejores esfuerzos de la carrera** (400 m, 1 km, milla, 3 km, 5 km, 10 km, media, maratón) con medalla de récord o 2.º — *hecho 2026-11-03; la medalla compara con las carreras que ya tienen serie (las de Strava la cogen al abrir su ficha)*
 - [ ] **Resumen de la IA en una frase** («Hoy corriste más rápido que tu ritmo habitual…»), en la ficha y por zonas
 
 En Estadísticas / «Tú»:

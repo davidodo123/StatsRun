@@ -85,6 +85,7 @@ interface Series {
   values: (number | null | undefined)[];
   color: string | ((i: number) => string);
   dots?: boolean;
+  area?: boolean; // línea con el área de debajo rellena (desnivel)
 }
 
 const PAD = { top: 8, right: 8, bottom: 22, left: 40 };
@@ -103,6 +104,9 @@ function Chart({
   zeroLine,
   rounded = true,
   gap = 0.2,
+  hover: sharedHover,
+  onHover,
+  labelGap = 52,
 }: {
   height: number;
   labels: string[];
@@ -116,9 +120,15 @@ function Chart({
   zeroLine?: boolean;
   rounded?: boolean;
   gap?: number; // hueco entre categorías (fracción)
+  // dos gráficas con el mismo eje X (ritmo y desnivel) comparten la línea al pasar el dedo
+  hover?: number;
+  onHover?: (i: number | undefined) => void;
+  labelGap?: number; // px mínimos entre etiquetas del eje X
 }) {
   const [ref, width] = useWidth();
-  const [hover, setHover] = useState<number>();
+  const [ownHover, setOwnHover] = useState<number>();
+  const hover = onHover ? sharedHover : ownHover;
+  const setHover = onHover ?? setOwnHover;
   const n = labels.length;
   const nums = series.flatMap((s) => s.values.filter((v): v is number => typeof v === "number" && isFinite(v)));
   let lo = nums.length ? Math.min(...nums) : 0;
@@ -143,7 +153,7 @@ function Chart({
   const barW = bars.length ? Math.max(1, (group - (bars.length - 1) * 2) / bars.length) : 0;
   const base = y(Math.max(y0, Math.min(0, y1)));
   // etiquetas del eje X sin solaparse: una de cada `step`, y la última siempre
-  const step = Math.max(1, Math.ceil(52 / bw));
+  const step = Math.max(1, Math.ceil(labelGap / bw));
   const shown = labels.map((_, i) => i % step === 0);
   if (n > 1) shown[n - 1] = true;
   for (let i = n - 2; i >= 0 && n - 1 - i < step; i--) shown[i] = false;
@@ -213,6 +223,9 @@ function Chart({
               const pts = s.values.flatMap((v, i) => (typeof v === "number" && isFinite(v) ? [[cx(i), y(v)] as const] : []));
               return (
                 <g key={s.name}>
+                  {s.area && pts.length > 1 && (
+                    <path d={`M${pts[0][0].toFixed(1)},${PAD.top + plotH}${pts.map(([a, b]) => `L${a.toFixed(1)},${b.toFixed(1)}`).join("")}L${pts[pts.length - 1][0].toFixed(1)},${PAD.top + plotH}Z`} fill={color} fillOpacity={0.18} />
+                  )}
                   <polyline points={pts.map(([a, b]) => `${a.toFixed(1)},${b.toFixed(1)}`).join(" ")} fill="none" stroke={color} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
                   {s.dots && pts.map(([a, b], i) => <circle key={i} cx={a} cy={b} r={3} fill={color} />)}
                   {hover !== undefined && typeof s.values[hover] === "number" && <circle cx={cx(hover)} cy={y(s.values[hover]!)} r={4.5} fill={color} stroke="var(--surface)" strokeWidth={1.5} />}
@@ -232,6 +245,38 @@ function Chart({
         <div className="pointer-events-none absolute top-1 z-10 w-max max-w-[14rem]" style={{ left: Math.max(0, Math.min(width - 180, cx(hover) + (cx(hover) > width / 2 ? -190 : 12))) }}>
           {tip(hover)}
         </div>
+      )}
+    </div>
+  );
+}
+
+// ---------- Ritmo y desnivel de una carrera ----------
+/** Dos gráficas apiladas con el mismo eje de km (no un gráfico con dos ejes): ritmo (rápido arriba) y desnivel. */
+export function RunProfileCharts({ data, locale = "es" }: { data: { km: number; pace?: number; alt?: number }[]; locale?: Locale }) {
+  const t = translator(locale);
+  const { dec } = fmtFor(locale);
+  const [hover, setHover] = useState<number>();
+  const labels = data.map((d) => String(d.km));
+  const xFmt = (v: string) => `${dec(Number(v), Number(v) < 10 ? 1 : 0)} km`;
+  const hasAlt = data.some((d) => d.alt !== undefined);
+  const tip = (i: number) => (
+    <TipBox
+      title={xFmt(labels[i])}
+      rows={[
+        { color: S1, label: t("ch.ritmo"), value: `${fmtPace(data[i].pace)} /km` },
+        ...(hasAlt ? [{ color: "var(--muted)", label: t("ch.altitud"), value: `${Math.round(data[i].alt ?? 0)} m` }] : []),
+      ]}
+    />
+  );
+  return (
+    <div className="space-y-1">
+      <p className="text-xs font-semibold text-muted">{t("ch.ritmo")}</p>
+      <Chart height={150} labels={labels} series={[{ kind: "line", name: t("ch.ritmo"), values: data.map((d) => d.pace), color: S1 }]} xFmt={xFmt} yFmt={fmtPace} zeroBased={false} invert tip={tip} hover={hover} onHover={setHover} labelGap={72} />
+      {hasAlt && (
+        <>
+          <p className="pt-2 text-xs font-semibold text-muted">{t("ch.altitud")}</p>
+          <Chart height={110} labels={labels} series={[{ kind: "line", name: t("ch.altitud"), values: data.map((d) => d.alt), color: "var(--muted)", area: true }]} xFmt={xFmt} yFmt={(v) => `${Math.round(v)}`} zeroBased={false} tip={tip} hover={hover} onHover={setHover} labelGap={72} />
+        </>
       )}
     </div>
   );

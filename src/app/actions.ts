@@ -22,6 +22,8 @@ import { downloadCmCourse, findCmRace } from "@/lib/cruzandolametaStore";
 import { parseCourseFile } from "@/lib/importers/course";
 import { deleteImage, jpegFromDataUrl, photoKey, putImage } from "@/lib/photoStore";
 import { acceptPoint, trackStats, type GpsPoint } from "@/lib/gpsTrack";
+import { bestEfforts, streamFromPoints } from "@/lib/engine/streams";
+import { deleteStream, putStream } from "@/lib/streamStore";
 import { routeFromPoints } from "@/lib/route";
 
 export interface FormState {
@@ -603,6 +605,7 @@ export async function saveRecordedRun(input: { sport?: string; name?: string; st
   const rpe = Number(input.rpe);
   const label = { run: "Carrera", walk: "Caminata", ride: "Bici" }[sport];
   const id = `gps-${Date.now().toString(36)}`;
+  const stream = streamFromPoints(points);
   await updateDb((db) => {
     db.activities = [
       ...db.activities,
@@ -623,9 +626,11 @@ export async function saveRecordedRun(input: { sport?: string; name?: string; st
         feel: FEELS.find((f) => f === input.feel),
         feelings: String(input.feelings ?? "").trim().slice(0, 1000) || undefined,
         route: routeFromPoints(points),
+        efforts: stream && sport === "run" ? bestEfforts(stream) : undefined,
       },
     ].sort((a, b) => a.startLocal.localeCompare(b.startLocal));
   });
+  if (stream) await putStream(await requireUserId(), id, stream);
   await scheduleAiAdapt();
   refresh();
   redirect(`/actividad/${id}`);
@@ -698,7 +703,8 @@ export async function deleteActivity(fd: FormData): Promise<void> {
   await updateDb((db) => {
     db.activities = db.activities.filter((a) => a.id !== id);
   });
-  await deleteImage(photoKey(await requireUserId(), id));
+  const uid = await requireUserId();
+  await Promise.all([deleteImage(photoKey(uid, id)), deleteStream(uid, id)]);
   // la vuelta a la página de antes la hace el botón (DeleteActivityButton), que sabe de dónde se venía
   refresh();
 }

@@ -5,7 +5,8 @@ import { requireUserId } from "@/lib/session";
 import { updateDb } from "@/lib/db";
 import { mergeActivities } from "@/lib/importers/common";
 import { parseStravaActivitiesCsv } from "@/lib/importers/stravaCsv";
-import { parseFit, parseGpx, parseTcx } from "@/lib/importers/trackFiles";
+import { importedStreams, parseFit, parseGpx, parseTcx } from "@/lib/importers/trackFiles";
+import { putStream } from "@/lib/streamStore";
 import type { Activity } from "@/lib/types";
 
 const MAX_FILE = 50 * 1024 * 1024;
@@ -70,6 +71,11 @@ export async function POST(req: Request) {
       skipped = r.skipped;
       db.lastSync = new Date().toISOString();
     }, uid);
+  // la serie de cada carrera, aparte (para los gráficos de la ficha)
+  await Promise.all(incoming.flatMap((a) => {
+    const s = importedStreams.get(a);
+    return s ? [putStream(uid, a.id, s)] : [];
+  }));
 
   // entrenos nuevos: la IA reajusta los próximos días en segundo plano
   if (added > 0 && coachConfig().configured) after(() => adaptWithAI(uid).then(() => undefined));
