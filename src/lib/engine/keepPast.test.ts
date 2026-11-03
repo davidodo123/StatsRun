@@ -86,3 +86,26 @@ describe("no da tiempo a preparar la carrera", () => {
     expect(plan.notes.some((n) => n.startsWith("No da tiempo"))).toBe(true);
   });
 });
+
+describe("rehacer el plan con la carrera ya corrida", () => {
+  it("la carrera no se duplica cada vez que se rehace", () => {
+    const race = { name: "15K", distanceKm: 15, date: "2026-10-04" };
+    const input = (today: string) => ({ profile, goal: race, currentVdot: 38, currentWeeklyKm: 25, longestRecentKm: 12, today });
+    let plan = generatePlan(input("2026-08-20"));
+    for (const today of ["2026-10-06", "2026-10-07", "2026-10-08"]) plan = keepPastWeeks(plan, generatePlan(input(today)), today);
+    const races = plan.weeks.flatMap((w) => w.sessions).filter((s) => s.type === "race");
+    expect(races.map((s) => s.date)).toEqual(["2026-10-04"]);
+  });
+});
+
+describe("planes que ya traían la carrera repetida", () => {
+  it("al rehacer, se queda una", () => {
+    const race = { name: "15K", distanceKm: 15, date: "2026-10-04" };
+    const input = (today: string) => ({ profile, goal: race, currentVdot: 38, currentWeeklyKm: 25, longestRecentKm: 12, today });
+    const old = generatePlan(input("2026-08-20"));
+    const week = old.weeks.find((w) => w.sessions.some((s) => s.type === "race"))!;
+    week.sessions.push(...week.sessions.filter((s) => s.type === "race"));
+    const plan = keepPastWeeks(old, generatePlan(input("2026-10-06")), "2026-10-06");
+    expect(plan.weeks.flatMap((w) => w.sessions).filter((s) => s.type === "race")).toHaveLength(1);
+  });
+});

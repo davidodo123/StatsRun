@@ -27,6 +27,15 @@ node scripts/pruebas/recorrido.mjs <scratchpad>/informe-recorrido.json 1000 8
 - Revisa también `srv.log`: errores del servidor que no se ven en la página (p. ej. en `after()`).
 - Sin la clave de la IA: abrir el Plan puede lanzar el reajuste con IA y llamaría a OpenRouter de verdad.
 
+## 3b. Acciones (guardar formularios)
+```bash
+npx jiti scripts/pruebas/usuarios.ts --borrar && npx jiti scripts/pruebas/usuarios.ts 1000 <scratchpad>/informe-usuarios.json   # usuarios recién hechos
+node scripts/pruebas/acciones.mjs <scratchpad>/informe-acciones.json 1000 16
+```
+- Llama a las acciones como el navegador (ids del build en `.next/server/server-reference-manifest.json`, así que **después** de `npm run build`): registrar, medida, saltar y deshacer, bloquear y liberar, rehacer el plan, fuerza, borrar, y 5 medidas a la vez.
+- Luego lee el Db de cada uno y comprueba que quedó como debe (nada perdido, sin dos carreras el mismo día…). ~3 min con 16 a la vez.
+- Cambia los datos de los usuarios: para volver a pasar el recorrido, créalos otra vez.
+
 ## 4. Arreglar y apuntar
 - Cada fallo real: arreglo + prueba unitaria si es del motor, y repetir los pasos 2-3 hasta que salga limpio.
 - En `diario/Roadmap.md`, sección «Pruebas con 1.000 usuarios»: lo encontrado (`[x]` arreglado, `[ ]` para decidir con David). Decisiones y nota del día como siempre.

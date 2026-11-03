@@ -190,8 +190,9 @@ Usuarios ficticios solo en local (`scripts/pruebas/usuarios.ts`: perfiles, objet
 - [x] Planes sin tiempo (menos semanas de las recomendadas y corre poco o empieza): solo rodajes suaves y la tirada, sin series ni ritmos de carrera, con una nota que lo explica — *arreglado 2026-10-31 (David: «arréglalo»)*
 - [x] Recorrido de pantallas tras estos cambios (semilla 4242): 16.013 páginas sin errores — *2026-10-31*
 - [x] De paso: quien hacía correr-caminar podía recibir la segunda sesión de calidad de la semana (no lo comprobaba) — *arreglado*
-- [ ] Un reajuste de la IA que falla gasta igualmente un uso del límite del día (se hace para no reintentar en cada visita)
-- [ ] Pendiente de probar: las acciones (guardar formularios) con muchos usuarios; aquí solo se abren páginas
+- [x] Un reajuste de la IA que falla gastaba un uso del límite del día — *arreglado 2026-11-01: el intento fallido se devuelve (`refundAiUse`); no se reintenta en cada visita porque queda apuntado como hecho ese día*
+- [x] Acciones (guardar formularios) con muchos usuarios — *2026-11-03: `scripts/pruebas/acciones.mjs` (registrar, medida, saltar y deshacer, bloquear y liberar, rehacer el plan, fuerza, borrar y 5 medidas a la vez): 1.000 usuarios, 12.951 acciones, 0 errores del servidor y nada perdido*
+- [x] Rehacer el plan con la carrera ya corrida la duplicaba en su día cada vez (3-4 copias en 40 de 1.000) — *arreglado 2026-11-03: los días pasados salen solo del plan anterior y se quitan las repetidas que ya hubiera (con prueba)*
 
 ## ✨ Fase 7 · Ideas nuevas (2026-10-18) — *7.1-7.3 comprobadas por David 2026-10-19* → [[Decisiones#Ideas nuevas: orden y alcance]]
 1. [x] **EMOM** (Fuerza → EMOM): intervalo y rondas, ejercicios que se turnan, pitidos 3-2-1, pantalla encendida, marcar rondas sin completar; se guarda como entreno de fuerza — *hecho 2026-10-18, comprobado 2026-10-19* → [[Decisiones#EMOM]]

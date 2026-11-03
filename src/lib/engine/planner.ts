@@ -549,18 +549,22 @@ export const planTitle = (plan: Pick<Plan, "goal" | "objectives">) => (plan.obje
 export function keepPastWeeks(prev: Plan | undefined, next: Plan, today: string, strength?: { perWeek: number; doneThisWeek: number }): Plan {
   const first = next.weeks[0];
   if (!prev || !first) return next;
-  const before = prev.weeks.filter((w) => w.start < first.start);
+  // sin repetidas: antes del 2026-11-03, cada rehacer duplicaba la carrera ya corrida
+  const unique = (list: PlannedSession[]) => list.filter((s, i) => list.findIndex((x) => x.id === s.id) === i);
+  const before = prev.weeks.filter((w) => w.start < first.start).map((w) => ({ ...w, sessions: unique(w.sessions) }));
   const same = prev.weeks.find((w) => w.start === first.start);
   let current = first;
   if (same) {
-    const past = same.sessions.filter((s) => s.date < today);
+    const past = unique(same.sessions.filter((s) => s.date < today));
     // la fuerza que le quedaba a esta semana en el plan anterior: como mucho esa (mejor en los mismos días)
     const leftDates = same.sessions.filter((s) => s.date >= today && s.type === "strength").map((s) => s.date);
-    const strength_ = first.sessions.filter((s) => s.type === "strength");
+    // los días ya pasados salen del plan anterior; los del nuevo se descartan (si no, la carrera ya corrida se duplicaba en cada rehacer)
+    const upcoming = first.sessions.filter((s) => s.date >= today);
+    const strength_ = upcoming.filter((s) => s.type === "strength");
     const pastStrength = past.filter((s) => s.type === "strength").length;
     const allowed = strength ? Math.max(0, strength.perWeek - Math.max(pastStrength, strength.doneThisWeek)) : leftDates.length;
     const keep = [...strength_.filter((s) => leftDates.includes(s.date)), ...strength_.filter((s) => !leftDates.includes(s.date))].slice(0, allowed);
-    const sessions = [...past, ...first.sessions.filter((s) => s.type !== "strength" || keep.includes(s))].sort(
+    const sessions = [...past, ...upcoming.filter((s) => s.type !== "strength" || keep.includes(s))].sort(
       (a, b) => a.date.localeCompare(b.date) || (a.type === "strength" ? 1 : -1),
     );
     current = { ...first, sessions, targetKm: Math.round(sessions.reduce((t, s) => t + s.distanceKm, 0)) };
