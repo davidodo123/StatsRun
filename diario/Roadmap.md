@@ -304,6 +304,26 @@ Español, inglés, catalán, portugués y francés, por fases.
 - [ ] **La semana ha cambiado y antes estaba bien** (lo vio David 2026-11-03 en Inicio, semana del 2 nov): 3 / 7 km en la semana, a 12 días de su 10K; la tirada larga es «correr-caminar 3 km» pero pone 2,2 km; «Empezar rutina: Pierna · Fuerza (mañana)» sale en mayúsculas y en dos líneas. Posible causa: el reajuste de la IA del 1 nov (modelo gratis) puso un tope de 3,3 km por sesión porque su tirada más larga de los últimos 30 días era de 3 km, y además pasó a correr-caminar. Por revisar: el tope de la IA, por qué cambia el tipo de sesión, el título frente a la distancia y el botón
 - [ ] **Donaciones (Patreon o Ko-fi)**: botón «Apoya Zancavolt» en «Tú», solo en web e iPhone (oculto en Android como Premium: Google Play retira apps con enlaces a donaciones fuera de su cobro) — *aparcado por David 2026-10-31: falta que cree la página y decida Patreon (mensual, ~8-12 %) o Ko-fi (sueltas, sin comisión propia)* → [[Decisiones#Donaciones]]
 
+## 📊 Fase 10 · Ideas de Strava (lo pidió David 2026-11-03) — *después de Google Play; luego se decide qué va en Premium* → [[Ideas]]
+
+En la ficha de cada carrera:
+- [ ] **Gráfico de ritmo** a lo largo de la carrera (con GPS), con el desnivel de fondo
+- [ ] **Gráfico de desnivel** (altitud por km)
+- [ ] **Ritmo ajustado a la pendiente** (como el RAP de Strava): ritmo medio equivalente en llano
+- [ ] **Ritmo por zonas**: % del tiempo en cada zona (Z1-Z6) con tus ritmos del VDOT
+- [ ] **Mejores esfuerzos de la carrera**: tu mejor 1 km, media milla, milla, 5 km… dentro de esa actividad, y medalla si es récord
+- [ ] **Resumen de la IA en una frase** («Hoy corriste más rápido que tu ritmo habitual…»), en la ficha y por zonas
+
+En Estadísticas / «Tú»:
+- [ ] **Progreso de la semana**: distancia, tiempo y desnivel, y gráfico de las últimas 12 semanas, por deporte — *ya hay km por semana en Estadísticas; falta el resumen tipo Strava*
+- [ ] **Mejores tiempos con medallas** (récord y 2.º mejor) por distancia — *ya hay récords; faltan las medallas y más distancias*
+- [ ] **Predicción con tendencia**: tiempo previsto del 10K (u objetivo) y cómo ha cambiado en el último mes — *ya hay predicción; falta la gráfica y la mejora*
+- [ ] **Esfuerzo relativo de la semana**: puntuación con el rango recomendado y la de la semana pasada — *ya hay carga (CTL/ACWR); falta enseñarlo así de simple*
+- [ ] **Objetivos semanales, mensuales o anuales** (km, tiempo, desnivel o número de carreras), con uno sugerido («3 a la semana»)
+
+Entrenos:
+- [ ] **Entrenos al momento** fuera del plan: elige «Más fácil», «Constante», «Más difícil» o «Variedad» y te propone 3-4 sesiones (tiempo, dificultad, descripción) según lo que vienes haciendo
+
 ## 🔚 Para el final (lo dejó David 2026-10-25)
 
 - [ ] **Datos de la carrera en la pantalla de bloqueo, como Strava** (lo pidió David 2026-10-23; aparcado con el resto de «Grabar con GPS» 2026-10-30) — *Android hecho 2026-10-24: «Corriendo · 12:55 / 2,41 km · ritmo medio 5:13 /km», probado en el emulador; falta un APK nuevo y probarlo corriendo con el Android de David* → [[Decisiones#Datos de la carrera en la notificación (Android)]]. Lo que se vio antes: al grabar con el GPS, ver tiempo, ritmo medio y km con el móvil bloqueado. **Android**: la notificación «Grabando carrera» del complemento no se puede cambiar una vez puesta; habría que poner otra notificación fija que se actualice cada pocos segundos (`@capacitor/local-notifications`, misma id) o tocar el código nativo del complemento. **iPhone**: lo de Strava son «Actividades en directo», que solo puede hacer una app nativa (App Store); desde la web no se puede
