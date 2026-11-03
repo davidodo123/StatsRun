@@ -35,7 +35,7 @@ function pagesFor(id) {
   const db = JSON.parse(readFileSync(`data/db_${id}.json`, "utf8"));
   const act = db.activities?.[0]?.id;
   const run = db.activities?.find((a) => a.sport === "run")?.id;
-  const pages = ["/", "/plan", "/plan/actual", "/fuerza", "/perfil", "/perfil?tab=running", "/perfil?tab=fuerza", "/perfil?tab=actividades", "/perfil?tab=salud", "/registrar", "/estadisticas", "/amigos", "/entrenador", "/carreras", "/sueno"];
+  const pages = ["/", "/plan", "/plan/actual", "/fuerza", "/perfil", "/perfil?tab=running", "/perfil?tab=fuerza", "/perfil?tab=actividades", "/perfil?tab=salud", "/registrar", "/estadisticas", "/amigos", "/entrenador", "/carreras", "/sueno", "/plan/al-momento"];
   if (act) pages.push(`/actividad/${encodeURIComponent(act)}`);
   if (run && run !== act) pages.push(`/actividad/${encodeURIComponent(run)}`);
   return { db, pages };

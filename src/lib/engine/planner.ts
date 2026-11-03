@@ -898,6 +898,72 @@ function quality2(date: string, km: number, c: SessionCtx): PlannedSession {
   return workout(date, "tempo", `2×${tKm / 2} km a umbral`, "Mantener el umbral alto durante el bloque específico.", `2 × ${tKm / 2} km a ritmo T (${fmtPaceRange(p.threshold)}), rec 2′`, tKm, km, p.threshold, p, "Z4");
 }
 
+// ---------- Entrenos al momento (fuera del plan, como los de Strava) ----------
+
+export type InstantMode = "facil" | "constante" | "dificil" | "variedad";
+export interface InstantWorkout {
+  session: PlannedSession;
+  level: "facil" | "moderada" | "dificil";
+}
+
+/**
+ * Tres o cuatro sesiones para hoy según lo que viene haciendo (distancia habitual de las últimas 4 semanas),
+ * con los mismos textos que las del plan (así salen traducidas). Nunca más largas que su carrera más larga
+ * de 30 días + 10 %.
+ */
+export function instantWorkouts(acts: Activity[], profile: Profile | undefined, vdot: number, today: string): Record<InstantMode, InstantWorkout[]> {
+  const p = trainingPaces(vdot);
+  const runs = acts.filter((a) => a.sport === "run" && a.distanceM >= 1000 && a.date <= today);
+  const recent = runs.filter((a) => diffDays(today, a.date) <= 28).map((a) => a.distanceM / 1000).sort((x, y) => x - y);
+  const fallback = profile ? Math.max(3, (profile.weeklyKm || 10) / Math.max(1, profile.daysPerWeek || 3)) : 5;
+  const usual = recent.length ? recent[Math.floor(recent.length / 2)] : fallback;
+  const longest = Math.max(0, ...runs.filter((a) => diffDays(today, a.date) <= 30).map((a) => a.distanceM / 1000));
+  const cap = Math.max(usual, (longest || profile?.longestRunKm || usual) * 1.1);
+  // hacia abajo a 0,5 km: el tope no se pasa al redondear
+  const km = (x: number) => Math.max(2, Math.floor(Math.min(cap, x) * 2) / 2);
+  const u = km(usual);
+  const easy = (x: number): InstantWorkout => ({ session: easyRun(today, km(x), p, "base"), level: "facil" });
+  const strides: InstantWorkout = {
+    session: mk(today, "strides", `Rodaje + rectas ${u} km`, "Técnica y economía de carrera sin fatiga.", [`${u} km a ritmo E (${fmtPaceRange(p.easy)})`, "6 rectas de 20″ a ritmo R, recuperación andando 1′"], u, (u * avg(p.easy)) / 60 + 6, p.easy, "Z2"),
+    level: "facil",
+  };
+  const progressive = (x: number): InstantWorkout => {
+    const k = km(x);
+    const mKm = Math.min(5, Math.max(1, round1(k * 0.3)));
+    return {
+      session: mk(today, "easy", `Rodaje progresivo ${k} km`, "Empieza suave y termina a ritmo maratón: enseña a acabar fuerte sin fatiga.", [`${round1(k - mKm)} km a ritmo E (${fmtPaceRange(p.easy)})`, `${mKm} km a ritmo M (${fmtPaceRange(p.marathon)})`], k, ((k - mKm) * avg(p.easy) + mKm * avg(p.marathon)) / 60, p.easy, "Z2→Z3"),
+      level: "moderada",
+    };
+  };
+  const long = (x: number): InstantWorkout => {
+    const k = km(x);
+    return { session: mk(today, "long", `Tirada larga ${k} km`, "Ritmo cómodo y constante. Lleva agua si pasa de 75′.", [`${k} km a ritmo E (${fmtPaceRange(p.easy)})`], k, (k * avg(p.easy)) / 60, p.easy, "Z2"), level: "moderada" };
+  };
+  // las de calidad también respetan el tope: con calentamiento y vuelta a la calma de 1 km
+  const total = Math.max(3, Math.floor(Math.min(cap, Math.max(u, 4)) * 2) / 2);
+  const main = Math.max(1, total - 2);
+  const fartlek: InstantWorkout = { session: workout(today, "fartlek", "Fartlek", "Cambios de ritmo por sensaciones.", `${clamp(Math.round(u), 5, 10)} × (1′ rápido a ritmo T-I + 1′ suave)`, Math.min(3, main), total, p.threshold, p, "Z3-Z4"), level: "moderada" };
+  const hills: InstantWorkout = { session: workout(today, "hills", "Cuestas cortas", "Fuerza específica: subidas explosivas con buena técnica.", `${clamp(Math.round(u * 1.5), 6, 12)} × 30″ en cuesta (6-8 %) fuerte, bajada trotando`, Math.min(2, main), total, p.repetition, p, "Z4-Z5"), level: "dificil" };
+  const tKm = clamp(round1(Math.min(u * 0.4, main)), 1, 8);
+  const tempo: InstantWorkout = { session: workout(today, "tempo", `Tempo ${Math.round((tKm * avg(p.threshold)) / 60)}′`, "Umbral: «cómodamente duro». Podrías decir frases cortas.", `${tKm} km continuos a ritmo T (${fmtPaceRange(p.threshold)})`, tKm, total, p.threshold, p, "Z4"), level: "dificil" };
+  const reps = clamp(Math.round(Math.min(u / 1.5, main)), 2, 6);
+  const r400 = clamp(Math.round(main / 0.4), 3, 8);
+  // con poco margen, series cortas (400 m) en vez de 1000 m
+  const intervals: InstantWorkout = main < 2
+    ? { session: workout(today, "repetitions", `${r400}×400 m a ritmo R`, "Velocidad y economía.", `${r400} × 400 m a ritmo R (${fmtPaceRange(p.repetition)}), rec 400 m trote`, r400 * 0.4, total, p.repetition, p, "Z5"), level: "dificil" }
+    : { session: workout(today, "intervals", `${reps}×1000 m a ritmo I`, "VO2max: duro pero controlado, todas las series iguales.", `${reps} × 1000 m a ritmo I (${fmtPaceRange(p.interval)}), rec trote igual de largo`, reps, total, p.interval, p, "Z5"), level: "dificil" };
+  const cr = clamp(Math.floor(main / 1.6), 1, 5);
+  const cruisers: InstantWorkout = { session: workout(today, "tempo", `Cruceros ${cr}×1,6 km`, "Intervalos a umbral con recuperación corta.", `${cr} × 1,6 km a ritmo T (${fmtPaceRange(p.threshold)}), rec 1′ trote`, cr * 1.6, total, p.threshold, p, "Z4"), level: "dificil" };
+  // ids distintos: la misma sesión no se repite en un modo
+  const withIds = (list: InstantWorkout[], mode: InstantMode) => list.map((w, i) => ({ ...w, session: { ...w.session, id: `${today}-ahora-${mode}-${i}` } }));
+  return {
+    facil: withIds([{ session: recoveryRun(today, km(usual * 0.7), p), level: "facil" }, easy(usual * 0.8), strides], "facil"),
+    constante: withIds([easy(usual), progressive(usual), long(usual * 1.3)], "constante"),
+    dificil: withIds([tempo, intervals, long(usual * 1.5)], "dificil"),
+    variedad: withIds([fartlek, hills, cruisers, strides], "variedad"),
+  };
+}
+
 function raceSession(goal: Goal, pace: number, predicted: number): PlannedSession {
   const start = { fast: pace + 2, slow: pace + 6 };
   return mk(

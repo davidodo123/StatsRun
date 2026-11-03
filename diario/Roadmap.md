@@ -312,7 +312,7 @@ En la ficha de cada carrera:
 - [/] **Ritmo ajustado a la pendiente** (como el RAP de Strava) — *hecho 2026-11-03: coste de Minetti con la altitud suavizada*
 - [/] **Ritmo por zonas**: % del tiempo en Z1-Z6 con tus ritmos del VDOT — *hecho 2026-11-03*
 - [/] **Mejores esfuerzos de la carrera** (400 m, 1 km, milla, 3 km, 5 km, 10 km, media, maratón) con medalla de récord o 2.º — *hecho 2026-11-03; la medalla compara con las carreras que ya tienen serie (las de Strava la cogen al abrir su ficha)*
-- [ ] **Resumen de la IA en una frase** («Hoy corriste más rápido que tu ritmo habitual…»), en la ficha y por zonas
+- [/] **Resumen de la carrera en unas frases** («Has ido 25 s/km más rápido que tu ritmo habitual…») — *hecho 2026-11-03 con reglas, sin IA (gratis, al momento y en los 5 idiomas)* → [[Decisiones#Resumen de la carrera sin IA]]
 
 En Estadísticas / «Tú»:
 - [/] **Progreso de la semana**: distancia, tiempo y desnivel, y gráfico de las últimas 12 semanas, por deporte — *hecho 2026-11-03: arriba en Estadísticas; tocar una semana la elige*
@@ -322,7 +322,7 @@ En Estadísticas / «Tú»:
 - [/] **Objetivos semanales, mensuales o anuales** (km, horas, desnivel o actividades, por deporte), con uno sugerido — *hecho 2026-11-03 (hasta 6)*
 
 Entrenos:
-- [ ] **Entrenos al momento** fuera del plan: elige «Más fácil», «Constante», «Más difícil» o «Variedad» y te propone 3-4 sesiones (tiempo, dificultad, descripción) según lo que vienes haciendo
+- [/] **Entrenos al momento**: «Más fácil», «Constante», «Más difícil» o «Variedad», 3-4 sesiones cada uno con tiempo, distancia y dificultad, y «Ponerlo hoy en mi plan» — *hecho 2026-11-03 (Plan → «Entreno al momento»); mismas sesiones y textos que el plan, con el tope de su carrera más larga + 10 %*
 
 ## 🔚 Para el final (lo dejó David 2026-10-25)
 

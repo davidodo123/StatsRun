@@ -1153,3 +1153,16 @@ Fuentes: screensdesign.com, posthog.com/pricing, revenuecat.com/pricing, revenue
 - Gráficos: ritmo y desnivel en **dos gráficas apiladas** con el mismo eje de km y la línea al tocar compartida (Strava los superpone con dos ejes; la guía de gráficos lo desaconseja).
 - Pendiente: el resumen de una frase de la IA (punto 6), y que las carreras de Strava antiguas tengan sus esfuerzos sin tener que abrirlas una a una.
 
+## Resumen de la carrera sin IA
+*2026-11-03*
+
+- Strava pone un resumen hecho con IA en cada carrera. Con la IA gratis hay 50 peticiones al día entre todos: se gastarían solo en esto.
+- Se hace con reglas (`src/lib/engine/runSummary.ts`, con pruebas): ritmo frente al habitual (mediana de los 60 días anteriores), si es la más larga del último mes, la zona donde más estuvo, si hubo muchos cambios de ritmo, cuánto costaron las cuestas (ritmo real frente al ajustado) y los récords. Gratis, al momento y en los 5 idiomas.
+
+## Entrenos al momento
+*2026-11-03*
+
+- Como los «entrenamientos instantáneos» de Strava: cuatro modos con 3-4 sesiones (Plan → «Entreno al momento», `instantWorkouts` en `planner.ts`).
+- Se usan las mismas sesiones y los mismos textos que el plan (así salen traducidas) y la distancia habitual de las últimas 4 semanas. Ninguna pasa de su carrera más larga de 30 días + 10 % (las de calidad incluidas: con poco margen, series de 400 m).
+- «Ponerlo hoy en mi plan» cambia la sesión de correr de hoy por esa (la fuerza se queda). Sin plan, se ven igual pero no se pueden poner.
+

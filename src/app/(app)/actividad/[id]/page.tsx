@@ -10,6 +10,7 @@ import { activityPhotoUrl } from "@/lib/photos";
 import { TagChips, withText } from "@/components/ActivityItem";
 import { RouteReplay } from "@/components/RouteReplay";
 import { RunAnalysis } from "@/components/RunAnalysis";
+import { summaryContext } from "@/lib/engine/runSummary";
 import { ShareActivityButton } from "@/components/ShareActivityButton";
 import { shareVideo } from "@/lib/shareCard";
 import { tagsForDb } from "@/lib/engine/tags";
@@ -129,7 +130,7 @@ async function Content({ params, searchParams }: { params: PageProps<"/actividad
             {a.workout && <Stat label={t("wl.volumen")} value={fmtNum(workoutVolume(a.workout), 0, locale)} unit="kg" sub={t("act.seriesReps", { series: workoutSets(a.workout), reps: workoutReps(a.workout) })} />}
             {a.rpe && <Stat label={t("act.rpe")} value={a.rpe} unit="/10" />}
           </StatGroup>
-          {a.sport === "run" && !a.workout && <RunAnalysis uid={ownerId} id={a.id} locale={locale} />}
+          {a.sport === "run" && !a.workout && <RunAnalysis uid={ownerId} id={a.id} context={summaryContext(db.activities, raw)} locale={locale} />}
         </div>
         <div className="space-y-4">
           {mine && (a.feel || a.feelings || a.notes) && (

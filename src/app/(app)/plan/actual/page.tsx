@@ -112,6 +112,7 @@ async function Content({ searchParams }: { searchParams: PageProps<"/plan/actual
         }
       />
 
+      <ChipLink href="/plan/al-momento">{t("plan.alMomento")}</ChipLink>
       <UndoSkip db={db} today={today} locale={locale} />
       <Suspense fallback={null}>
         <SavedNotice searchParams={searchParams} />

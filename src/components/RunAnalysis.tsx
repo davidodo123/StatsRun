@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import type { StreamResponse } from "@/app/api/serie/[uid]/[id]/route";
 import { gradeAdjustedPace, paceProfile, zoneTimes } from "@/lib/engine/streams";
+import { runSummary, type SummaryContext } from "@/lib/engine/runSummary";
 import { fmtDuration, fmtPace } from "@/lib/format";
 import { translator, type Key, type Locale } from "@/lib/i18n";
 import { RunProfileCharts } from "./charts";
@@ -16,7 +17,7 @@ const ZONE_OPACITY = [0.3, 0.42, 0.55, 0.68, 0.84, 1];
  * Análisis de una carrera con su serie (Strava, «Grabar con GPS» o archivo): ritmo y desnivel a lo largo
  * de la carrera, ritmo ajustado a la pendiente, tiempo en cada zona y mejores esfuerzos (con medalla si es récord).
  */
-export function RunAnalysis({ uid, id, locale }: { uid: string; id: string; locale: Locale }) {
+export function RunAnalysis({ uid, id, context, locale }: { uid: string; id: string; context: SummaryContext; locale: Locale }) {
   const t = translator(locale);
   const [data, setData] = useState<StreamResponse | null | undefined>(undefined);
   useEffect(() => {
@@ -40,8 +41,32 @@ export function RunAnalysis({ uid, id, locale }: { uid: string; id: string; loca
   const zoneTotal = zones.reduce((a, b) => a + b, 0);
   const efforts = Object.entries(data.efforts).map(([d, sec]) => ({ d: Number(d), sec, rank: data.ranks[Number(d)] }));
 
+  const totalSec = s.t[s.t.length - 1];
+  const km = s.d[s.d.length - 1] / 1000;
+  const moving = zones.reduce((a, b) => a + b, 0) || totalSec;
+  const summary = runSummary(
+    { paceSec: moving / km, distanceKm: km, gapSec: gap, zones, records: efforts.filter((e) => e.rank === 1).map((e) => e.d) },
+    context,
+    fmtPace,
+  );
+
   return (
     <>
+      {summary.length > 0 && (
+        <Card title={t("ra.resumen")}>
+          <p className="flex gap-2 text-sm leading-relaxed text-ink">
+            <Icon name="sparkle" className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
+            <span>
+              {summary
+                .map((p) => {
+                  const key = p.key === "ra.s.record" && p.params?.n === 1 ? "ra.s.record1" : p.key;
+                  return t(key as Key, { ...p.params, ...(p.key === "ra.s.zona" ? { nombre: t(`ra.z${p.params!.z}` as Key) } : {}) });
+                })
+                .join(" ")}
+            </span>
+          </p>
+        </Card>
+      )}
       {profile.length > 0 && (
         <Card title={t("ra.titulo")}>
           {gap && (

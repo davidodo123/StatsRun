@@ -6,10 +6,12 @@ import { refresh } from "next/cache";
 import { readDbNow, updateDb } from "@/lib/db";
 import { bestEfforts } from "@/lib/engine/streams";
 import { suggestedTarget } from "@/lib/engine/progress";
+import { instantWorkouts, type InstantMode } from "@/lib/engine/planner";
+import { estimateVdot } from "@/lib/engine/stats";
 import { fetchStream } from "@/lib/strava";
 import { getStream, putStream } from "@/lib/streamStore";
 import { requireUserId } from "@/lib/session";
-import { todayLocal } from "@/lib/dates";
+import { addDays, todayLocal } from "@/lib/dates";
 import type { SportKind, Target } from "@/lib/types";
 import type { FormState } from "./actions";
 
@@ -17,6 +19,7 @@ const PERIODS: Target["period"][] = ["week", "month", "year"];
 const METRICS: Target["metric"][] = ["km", "hours", "elev", "count"];
 const SPORTS: (SportKind | "all")[] = ["all", "run", "ride", "swim", "walk", "strength", "other"];
 const MAX_TARGETS = 6;
+const MODES: InstantMode[] = ["facil", "constante", "dificil", "variedad"];
 
 export async function addTarget(_: FormState, fd: FormData): Promise<FormState> {
   const period = PERIODS.find((p) => p === fd.get("period"));
@@ -86,4 +89,26 @@ export async function loadOldEfforts(): Promise<{ done: number; left: number }> 
     refresh();
   }
   return { done: found.size, left: pending.length - found.size };
+}
+
+/** «Ponerlo hoy en mi plan»: un entreno al momento pasa a ser la sesión de correr de hoy (la fuerza se queda). */
+export async function addInstantSession(_: FormState, fd: FormData): Promise<FormState> {
+  const mode = MODES.find((m) => m === fd.get("mode"));
+  const i = Number(fd.get("i"));
+  const today = todayLocal();
+  const db = await readDbNow();
+  const pick = mode ? instantWorkouts(db.activities, db.profile, estimateVdot(db.activities, db.profile, today).vdot, today)[mode][i] : undefined;
+  if (!pick) return { error: await say("Ese entreno ya no está.") };
+  let status = "ok" as "ok" | "sinPlan" | "carrera"; // lo cambia la escritura
+  await updateDb((d) => {
+    const week = d.plan?.weeks.find((w) => w.start <= today && addDays(w.start, 6) >= today);
+    if (!d.plan || !week) return void (status = "sinPlan");
+    if (week.sessions.some((s) => s.date === today && s.type === "race")) return void (status = "carrera");
+    week.sessions = [...week.sessions.filter((s) => s.date !== today || s.type === "strength"), pick.session].sort((a, b) => a.date.localeCompare(b.date) || (a.type === "strength" ? 1 : -1));
+    week.targetKm = Math.round(week.sessions.reduce((t, s) => t + s.distanceKm, 0));
+  });
+  if (status === "sinPlan") return { error: await say("Para ponerlo en el plan hace falta un plan con el día de hoy. Puedes hacerlo igualmente y registrarlo.") };
+  if (status === "carrera") return { error: await say("Hoy tienes carrera.") };
+  refresh();
+  return { ok: true };
 }

@@ -49,6 +49,16 @@ export const NOVEDADES: Novedad[] = [
         },
       },
       {
+        icon: "bolt",
+        txt: {
+          es: ["Entreno al momento", "En Plan: elige «Más fácil», «Constante», «Más difícil» o «Variedad» y ponlo hoy en tu plan."],
+          en: ["Instant workout", "In Plan: pick «Easier», «Steady», «Harder» or «Variety» and put it in today's plan."],
+          ca: ["Entrenament al moment", "A Pla: tria «Més fàcil», «Constant», «Més difícil» o «Varietat» i posa'l avui al teu pla."],
+          pt: ["Treino no momento", "No Plano: escolhe «Mais fácil», «Constante», «Mais difícil» ou «Variedade» e põe-no hoje no plano."],
+          fr: ["Entraînement du moment", "Dans Plan : choisis «Plus facile», «Régulier», «Plus dur» ou «Variété» et ajoute-le à ton plan du jour."],
+        },
+      },
+      {
         icon: "sparkle",
         txt: {
           es: ["IA más prudente con tu plan", "Ya no cambia el tipo de sesión ni mueve tu tirada larga."],
