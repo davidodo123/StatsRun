@@ -30,6 +30,7 @@ import type { FormState } from "./actions";
 import { healthTokenKey, kvDel, readDbNow } from "@/lib/db";
 import { deauthorize } from "@/lib/strava";
 import { jpegFromDataUrl, photoKey } from "@/lib/photoStore";
+import { deleteStream } from "@/lib/streamStore";
 const str = (fd: FormData, k: string) => String(fd.get(k) ?? "");
 
 /** Identidad de Google que acaba de volver del inicio de sesión y aún no tiene cuenta. */
@@ -174,8 +175,11 @@ export async function deleteAccount(_: FormState, fd: FormData): Promise<FormSta
   if (db.strava) await deauthorize(db.strava).catch(() => undefined);
   // y que la clave del atajo de Salud deje de apuntar a la cuenta
   if (db.healthTokenHash) await kvDel(healthTokenKey(db.healthTokenHash));
-  // y las fotos de sus entrenos
-  await Promise.all(db.activities.filter((a) => a.photoAt).map((a) => kvDel(photoKey(uid, a.id))));
+  // y las fotos y las series de GPS de sus entrenos (las series se quedaban: su recorrido con horas)
+  await Promise.all([
+    ...db.activities.filter((a) => a.photoAt).map((a) => kvDel(photoKey(uid, a.id))),
+    ...db.activities.filter((a) => a.sport === "run").map((a) => deleteStream(uid, a.id)),
+  ]);
   await deleteUser(uid);
   await endSession();
   redirect("/login?borrada=1");

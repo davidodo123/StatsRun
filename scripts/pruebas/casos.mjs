@@ -89,6 +89,11 @@ const visible = (html) =>
 const BROKEN = /\bNaN\b|\bundefined\b|Invalid Date|\[object Object\]|\bInfinity\b/;
 // palabras de la interfaz que solo existen en español (para buscar lo que no se tradujo)
 const ES_WORDS = /\b(Semana|semanas|Hoy|Mañana|Guardar|Añadir|Quitar|Empezar|Volver|sesiones|sesión|días|Rodaje|Tirada|Descanso|Objetivo|Ritmo|Distancia|Desnivel|Carrera|carreras|Entreno|entrenos|Fuerza|Rutina|rutinas|Ajustar|Registrar|Ver más|Ver en|Estadísticas|Amigos|Perfil|Récord|Últimas|Esta semana|Este mes|minutos|Añade|Cuánto|Qué|Estiramiento|ejercicio|Rodillas|pecho|mancuernas)\b/;
+// en catalán y portugués muchas palabras son iguales que en español («Perfil», «Semana», «Ritmo»…): solo las que no
+const ES_WORDS_BY = {
+  ca: /\b(Semana|semanas|Hoy|Mañana|Guardar|Añadir|Quitar|Empezar|Volver|sesiones|sesión|días|Rodaje|Entreno|entrenos|Fuerza|Ritmo|Carrera|carreras|Estadísticas|Amigos|Últimas|Esta semana|Este mes|minutos|Cuánto|Estiramiento|ejercicio|Rodillas|mancuernas|Descanso|Objetivo|Distancia|Desnivel)\b/,
+  pt: /\b(Hoy|Mañana|Añadir|Quitar|Empezar|Volver|sesiones|sesión|días|Rodaje|Tirada|Distancia|Desnivel|Carrera|carreras|Entreno|entrenos|Fuerza|Rutina|rutinas|Estadísticas|Récord|Este mes|Cuánto|Estiramiento|ejercicio|Rodillas|pecho|mancuernas)\b/,
+};
 
 async function page(who, lang, path, { expect = [], spanishOk = [] } = {}) {
   steps++;
@@ -107,7 +112,8 @@ async function page(who, lang, path, { expect = [], spanishOk = [] } = {}) {
   for (const l of lines) if (BROKEN.test(l)) bad(who, path, "texto-roto", l);
   for (const e of expect) if (!lines.some((l) => l.includes(e))) bad(who, path, "falta-texto", e);
   if (lang !== "es") {
-    const es = lines.filter((l) => ES_WORDS.test(l) && !spanishOk.some((ok) => l.includes(ok)));
+    const words = ES_WORDS_BY[lang] ?? ES_WORDS;
+    const es = lines.filter((l) => words.test(l) && !spanishOk.some((ok) => l.includes(ok)));
     for (const l of [...new Set(es)].slice(0, 15)) bad(who, path, "sin-traducir", l);
   }
   return lines;
@@ -248,16 +254,17 @@ async function otroIdioma(L) {
   const who = `prueba-caso-${L}`;
   addUser(who, "Emma English");
   await act(who, L, "idioma", "src/app/lang-actions.ts#setLanguage", [form({ lang: L })]);
-  await act(who, L, "perfil", "src/app/actions.ts#saveProfile", [{}, profileForm({ name: "Emma English", level: "intermedio", yearsRunning: 3, weeklyKm: 30, longestRunKm: 14, days: [1, 3, 5, 6], longRunDay: 6 })]);
-  await act(who, L, "carrera", "src/app/actions.ts#saveGoal", [{}, form({ name: "London Half", date: day(84), distanceKm: "21.0975", targetTime: "1:55:00" })]);
+  await act(who, L, "perfil", "src/app/actions.ts#saveProfile", [{}, profileForm({ name: "Emma English", level: "intermedio", yearsRunning: 3, weeklyKm: 30, longestRunKm: 14, days: [1, 3, 5, 6], longRunDay: 6, injuries: "knee pain" })]);
+  await act(who, L, "carrera", "src/app/actions.ts#saveGoal", [{}, form({ name: "London Half", date: day(84), distanceKm: "21.0975", targetTime: "1:25:00" })]);
   await act(who, L, "registrar", "src/app/actions.ts#saveActivity", [{}, form({ date: day(-2), time: "08:00", sport: "run", name: "Morning run", distanceKm: "8", duration: "46:00", feel: "bien" })]);
   await act(who, L, "fuerza", "src/app/strength-actions.ts#finishWorkout", [{ name: "Legs", startLocal: `${day(-1)}T18:00:00`, durationSec: 2400, rpe: 7, workout: { exercises: [{ exerciseId: "Goblet_Squat", sets: [{ kg: 16, reps: 10, done: true }] }] } }]);
   await act(who, L, "objetivo", "src/app/progress-actions.ts#addTarget", [{}, form({ period: "month", metric: "km", sport: "run", value: "100" })]);
   const db = readDb(who);
   check(who, "idioma", db.lang === L, db.lang);
+  check(who, "avisos", db.plan?.warnings.length >= 2, JSON.stringify(db.plan?.warnings));
   // nombres propios o del usuario; la guía del atajo de Salud del iPhone sigue en español (apuntado en el Roadmap);
   // los tipos de carrera de Cruzando la Meta son de su web
-  const ok = ["Emma", "London", "Morning", "Legs", "Zancavolt", "Carrera urbana"];
+  const ok = ["Emma", "London", "Morning", "Legs", "Zancavolt", "Carrera urbana", "knee pain"];
   const guide = L !== "es";
   for (const p of PAGES.filter((x) => !(guide && x === "/perfil?tab=salud"))) await page(who, L, p, { spanishOk: ok });
   await page(who, L, "/perfil?tab=salud", { spanishOk: [""] }); // abre bien, aunque la guía siga en español
@@ -291,8 +298,224 @@ async function amigos() {
   check(a, "dejar", !JSON.parse(readFileSync(USERS, "utf8")).users.find((u) => u.id === a)?.friends.includes(b), "");
 }
 
+// ---------- 7. Importa un GPX, lo edita y le pone foto ----------
+async function importadora() {
+  const who = "prueba-caso-gpx", L = "es";
+  addUser(who, "Nuria Importa");
+  await act(who, L, "perfil", "src/app/actions.ts#saveProfile", [{}, profileForm({ name: "Nuria Importa", level: "intermedio", weeklyKm: 25, longestRunKm: 12 })]);
+  // 3 km con una cuesta, un punto cada 5 s
+  const start = Date.parse(`${day(-3)}T08:00:00Z`);
+  const trkpts = Array.from({ length: 200 }, (_, k) => `<trkpt lat="${(40.4 + k * 1.35e-4).toFixed(6)}" lon="-3.7"><ele>${(650 + 15 * Math.sin(k / 30)).toFixed(1)}</ele><time>${new Date(start + k * 5000).toISOString()}</time></trkpt>`).join("");
+  const gpx = `<?xml version="1.0"?><gpx version="1.1" creator="prueba"><trk><name>Retiro con cuestas</name><type>running</type><trkseg>${trkpts}</trkseg></trk></gpx>`;
+  const fd = new FormData();
+  fd.append("files", new Blob([gpx], { type: "application/gpx+xml" }), "retiro.gpx");
+  steps++;
+  const res = await fetch(`${BASE}/api/import`, { method: "POST", headers: { cookie: cookieFor(who), Origin: BASE }, body: fd });
+  const j = await res.json().catch(() => ({}));
+  check(who, "importar", res.status === 200 && j.added === 1, `${res.status} ${JSON.stringify(j)}`);
+  let db = readDb(who);
+  const a = db.activities[0];
+  check(who, "importar-datos", a && Math.abs(a.distanceM - 3000) < 150 && a.efforts?.[1000] && a.elevationGainM > 10, JSON.stringify(a)?.slice(0, 200));
+  if (!a) return;
+  // la serie para los gráficos
+  steps++;
+  const s = await (await fetch(`${BASE}/api/serie/${who}/${encodeURIComponent(a.id)}`, { headers: { cookie: cookieFor(who) } })).json();
+  check(who, "serie", s.stream?.alt?.length > 10 && s.efforts?.[1000], JSON.stringify(s).slice(0, 120));
+  // el mismo archivo otra vez: no se duplica
+  const fd2 = new FormData();
+  fd2.append("files", new Blob([gpx], { type: "application/gpx+xml" }), "retiro.gpx");
+  steps++;
+  const j2 = await (await fetch(`${BASE}/api/import`, { method: "POST", headers: { cookie: cookieFor(who), Origin: BASE }, body: fd2 })).json();
+  check(who, "sin-duplicar", j2.added === 0 && readDb(who).activities.length === 1, JSON.stringify(j2));
+  // editarlo: nombre, sensaciones y RPE
+  await act(who, L, "editar", "src/app/actions.ts#saveActivity", [{}, form({ id: a.id, date: a.date, time: a.startLocal.slice(11, 16), sport: "run", name: "Retiro con cuestas (editada)", distanceKm: String(a.distanceM / 1000), duration: `${Math.floor(a.movingSec / 60)}:${String(a.movingSec % 60).padStart(2, "0")}`, feel: "duro", feelings: "Las cuestas me costaron", rpe: "8" })]);
+  db = readDb(who);
+  const e = db.activities.find((x) => x.id === a.id);
+  check(who, "editar", e?.name === "Retiro con cuestas (editada)" && e.feelings === "Las cuestas me costaron" && db.activities.length === 1 && e.efforts?.[1000], JSON.stringify(e)?.slice(0, 160));
+  // una foto (JPEG mínimo hecho con sharp)
+  const sharp = (await import("sharp")).default;
+  const jpg = await sharp({ create: { width: 16, height: 16, channels: 3, background: "#d4ff3a" } }).jpeg().toBuffer();
+  await act(who, L, "foto", "src/app/actions.ts#setActivityPhoto", [a.id, `data:image/jpeg;base64,${jpg.toString("base64")}`]);
+  db = readDb(who);
+  check(who, "foto", Boolean(db.activities.find((x) => x.id === a.id)?.photoAt), "");
+  for (const p of [`/actividad/${encodeURIComponent(a.id)}`, "/perfil?tab=actividades", "/estadisticas"]) await page(who, L, p);
+  await act(who, L, "quitar-foto", "src/app/actions.ts#setActivityPhoto", [a.id, null]);
+  check(who, "quitar-foto", !readDb(who).activities.find((x) => x.id === a.id)?.photoAt, "");
+}
+
+// ---------- 8. iPhone: atajo de Salud ----------
+async function salud() {
+  const who = "prueba-caso-salud", L = "es";
+  addUser(who, "Hugo Salud");
+  await act(who, L, "perfil", "src/app/actions.ts#saveProfile", [{}, profileForm({ name: "Hugo Salud", sex: "male" })]);
+  // la clave sale en la respuesta de la acción (formato de React): se busca «rio_…»
+  const a = ACTIONS["src/app/actions.ts#newHealthKey"];
+  steps++;
+  const r = await fetch(BASE + a.path, { method: "POST", headers: { "Next-Action": a.id, Accept: "text/x-component", Origin: BASE, cookie: cookieFor(who), "Content-Type": "text/plain;charset=UTF-8" }, body: "[]" });
+  const token = (await r.text()).match(/rio_[A-Za-z0-9_-]+/)?.[0];
+  check(who, "clave", Boolean(token), "");
+  if (!token) return;
+  const send = async (body, key = token) => {
+    steps++;
+    const res = await fetch(`${BASE}/api/salud`, { method: "POST", headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    return [res.status, await res.json().catch(() => ({}))];
+  };
+  let [st, j] = await send({ date: today, steps: 8234, activeKcal: 512, sueno: "7,5", pulsoReposo: 52, vfc: 58 });
+  check(who, "salud-hoy", st === 200 && j.ok && /pasos/.test(j.message), `${st} ${JSON.stringify(j)}`);
+  // la respuesta (sale en la notificación del iPhone), en su idioma
+  await act(who, "en", "idioma-en", "src/app/lang-actions.ts#setLanguage", [form({ lang: "en" })]);
+  [st, j] = await send({ date: today, steps: 9000 });
+  check(who, "salud-en-ingles", st === 200 && /9,000 steps/.test(j.message), `${st} ${JSON.stringify(j)}`);
+  await act(who, "es", "idioma-es", "src/app/lang-actions.ts#setLanguage", [form({ lang: "es" })]);
+  // varios días a la vez (lista)
+  [st, j] = await send({ dias: [{ date: day(-2), steps: 6000 }, { date: day(-1), steps: 11000, sleep: 420 }] });
+  check(who, "salud-lista", st === 200, `${st} ${JSON.stringify(j)}`);
+  [st, j] = await send({ steps: 100 }, "rio_falsa");
+  check(who, "clave-falsa", st === 401, String(st));
+  [st, j] = await send("nada");
+  check(who, "cuerpo-raro", st === 400, `${st} ${JSON.stringify(j)}`);
+  const db = readDb(who);
+  const h = db.health ?? [];
+  check(who, "guardado", h.find((x) => x.date === today)?.steps === 9000 && h.find((x) => x.date === today)?.sleepHours === 7.5 && h.length >= 3, JSON.stringify(h).slice(0, 200));
+  for (const p of ["/", "/perfil?tab=salud", "/sueno", "/plan"]) await page(who, L, p);
+  await act(who, L, "revocar", "src/app/actions.ts#revokeHealthKey", []);
+  [st] = await send({ steps: 1 });
+  check(who, "revocada", st === 401, String(st));
+}
+
+// ---------- 9. Fuerza por grupos, lugares, ejercicio propio y EMOM ----------
+async function grupos() {
+  const who = "prueba-caso-grupos", L = "es";
+  addUser(who, "Alba Grupos");
+  await act(who, L, "perfil", "src/app/actions.ts#saveProfile", [{}, profileForm({ name: "Alba Grupos", level: "intermedio", weeklyKm: 30, longestRunKm: 14, days: [0, 1, 2, 3, 4, 5, 6], longRunDay: 6, strengthPerWeek: 4, strengthStyle: "grupos" })]);
+  await act(who, L, "carrera", "src/app/actions.ts#saveGoal", [{}, form({ name: "15K", date: day(90), distanceKm: "15", targetTime: "" })]);
+  await act(who, L, "lugar", "src/app/strength-actions.ts#savePlace", [{}, form([["name", "Casa"], ["notes", "Mancuernas de 12 kg"], ["eq", "mancuernas"], ["eq", "bandas"]])]);
+  await act(who, L, "lugar-2", "src/app/strength-actions.ts#addPresetPlace", [form({ preset: "Gimnasio" })]);
+  let db = readDb(who);
+  const casa = db.places?.find((p) => p.name === "Casa");
+  check(who, "lugares", db.places?.length === 2 && casa?.equipment.includes("corporal"), JSON.stringify(db.places)?.slice(0, 160));
+  await act(who, L, "lugar-activo", "src/app/strength-actions.ts#setActivePlace", [form({ id: casa?.id })]);
+  await act(who, L, "ejercicio-propio", "src/app/strength-actions.ts#saveCustomExercise", [{}, form([["name", "Remo con toalla"], ["cat", "fuerza"], ["muscles", "espalda"], ["secondary", "biceps"], ["eq", "corporal"], ["steps", "Tira de la toalla\nAguanta 2 segundos"]])]);
+  db = readDb(who);
+  const own = db.customExercises?.[0];
+  check(who, "ejercicio-propio", own?.name === "Remo con toalla", JSON.stringify(db.customExercises)?.slice(0, 120));
+  await act(who, L, "rutina", "src/app/strength-actions.ts#saveRoutine", [{ name: "Espalda casa", exercises: [{ exerciseId: own?.id, sets: [{ reps: 12 }, { reps: 12 }], restSec: 60 }, { exerciseId: "Bent_Over_Two-Dumbbell_Row", sets: [{ reps: 10, kg: 12 }], restSec: 90 }] }]);
+  db = readDb(who);
+  const r = db.routines?.find((x) => x.name === "Espalda casa");
+  await act(who, L, "rutina-al-plan", "src/app/strength-actions.ts#setRoutinePlanSlot", [form({ id: r?.id, slot: "espalda" })]);
+  db = readDb(who);
+  const used = db.plan?.weeks.flatMap((w) => w.sessions).filter((s) => s.routineId === r?.id) ?? [];
+  check(who, "rutina-en-plan", used.length > 0, `sesiones con la rutina: ${used.length}`);
+  // EMOM de 10 minutos con 8 rondas hechas
+  await act(who, L, "emom", "src/app/strength-actions.ts#finishWorkout", [{ name: "EMOM burpees", startLocal: `${today}T07:00:00`, durationSec: 600, rpe: 9, workout: { emom: { intervalSec: 60, rounds: 10, done: 8 }, exercises: [{ exerciseId: "Mountain_Climbers", sets: Array.from({ length: 10 }, (_, i) => ({ reps: 10, done: i < 8 })) }] } }]);
+  db = readDb(who);
+  const emom = db.activities.find((a) => a.name === "EMOM burpees");
+  check(who, "emom", emom?.workout?.emom?.done === 8 && emom.workout.exercises[0]?.sets.length === 8, JSON.stringify(emom?.workout)?.slice(0, 160));
+  for (const p of ["/fuerza", "/plan/actual", "/", `/actividad/${encodeURIComponent(emom?.id ?? "x")}`, `/fuerza/ejercicios/${encodeURIComponent(own?.id ?? "x")}`]) await page(who, L, p);
+  // borrar lo propio: el ejercicio no puede romper la rutina
+  await act(who, L, "borrar-ejercicio", "src/app/strength-actions.ts#deleteCustomExercise", [form({ id: own?.id })]);
+  await act(who, L, "borrar-lugar", "src/app/strength-actions.ts#deletePlace", [form({ id: casa?.id })]);
+  for (const p of ["/fuerza", "/plan/actual"]) await page(who, L, p);
+}
+
+// ---------- 10. Se equivoca: los errores tienen que salir (y nada se guarda) ----------
+async function errores() {
+  const who = "prueba-caso-errores", L = "es";
+  addUser(who, "Rita Errores");
+  await act(who, L, "edad-rara", "src/app/actions.ts#saveProfile", [{}, profileForm({ name: "Rita", age: 3 })], { error: true });
+  await act(who, L, "sin-dias", "src/app/actions.ts#saveProfile", [{}, profileForm({ name: "Rita", days: [3] })], { error: true });
+  await act(who, L, "tirada-fuera", "src/app/actions.ts#saveProfile", [{}, profileForm({ name: "Rita", days: [0, 2], longRunDay: 6 })], { error: true });
+  check(who, "nada-guardado", !readDb(who).profile, "");
+  await act(who, L, "perfil", "src/app/actions.ts#saveProfile", [{}, profileForm({ name: "Rita Errores" })]);
+  await act(who, L, "carrera-pasada", "src/app/actions.ts#saveGoal", [{}, form({ name: "Pasada", date: day(-5), distanceKm: "10", targetTime: "" })], { error: true });
+  await act(who, L, "carrera-tiempo-raro", "src/app/actions.ts#saveGoal", [{}, form({ name: "Rara", date: day(60), distanceKm: "10", targetTime: "abc" })], { error: true });
+  await act(who, L, "entreno-futuro", "src/app/actions.ts#saveActivity", [{}, form({ date: day(2), sport: "run", distanceKm: "5", duration: "30:00" })], { error: true });
+  await act(who, L, "ritmo-imposible", "src/app/actions.ts#saveActivity", [{}, form({ date: day(-1), sport: "run", distanceKm: "10", duration: "10:00" })], { error: true });
+  await act(who, L, "sin-tiempo", "src/app/actions.ts#saveActivity", [{}, form({ date: day(-1), sport: "run", distanceKm: "5" })], { error: true });
+  await act(who, L, "fc-rara", "src/app/actions.ts#saveActivity", [{}, form({ date: day(-1), sport: "run", distanceKm: "5", duration: "30:00", avgHr: "300" })], { error: true });
+  await act(who, L, "medida-rara", "src/app/strength-actions.ts#saveMeasurement", [{}, form({ date: today, weightKg: "900" })], { error: true });
+  await act(who, L, "objetivo-raro", "src/app/progress-actions.ts#addTarget", [{}, form({ period: "week", metric: "km", sport: "run", value: "-3" })], { error: true });
+  await act(who, L, "rutina-vacia", "src/app/strength-actions.ts#saveRoutine", [{ name: "Vacía", exercises: [] }], { error: true });
+  await act(who, L, "rutina-sin-nombre", "src/app/strength-actions.ts#saveRoutine", [{ name: "", exercises: [{ exerciseId: "Pushups", sets: [{ reps: 10 }] }] }], { error: true });
+  await act(who, L, "bloquear-pasado", "src/app/actions.ts#markUnavailable", [{}, form({ from: day(-3), to: day(-1) })], { error: true });
+  await act(who, L, "bloquear-largo", "src/app/actions.ts#markUnavailable", [{}, form({ from: day(1), to: day(80) })], { error: true });
+  await act(who, L, "foto-mala", "src/app/actions.ts#setActivityPhoto", ["no-existe", "data:image/jpeg;base64,xxxx"], { error: true });
+  await act(who, L, "borrar-sin-confirmar", "src/app/auth-actions.ts#deleteAccount", [{}, form({ confirm: "no" })], { error: true });
+  const db = readDb(who);
+  check(who, "nada-de-mas", db.activities.length === 0 && !(db.measurements ?? []).length && !(db.targets ?? []).length && !(db.routines ?? []).length && !(db.unavailableDates ?? []).length, JSON.stringify({ a: db.activities.length, m: db.measurements, t: db.targets, r: db.routines?.length, u: db.unavailableDates }));
+  // los mensajes, en su idioma: el mismo error en inglés no sale en español
+  const en = await act(who, "en", "error-en-ingles", "src/app/actions.ts#saveActivity", [{}, form({ date: day(2), sport: "run", distanceKm: "5", duration: "30:00" })], { error: true });
+  check(who, "error-traducido", en && !/futura|fecha/i.test(en), en);
+}
+
+// ---------- 11. Cambia de idea: termina el plan, otro objetivo, otro idioma ----------
+async function cambia() {
+  const who = "prueba-caso-cambia", L = "es";
+  addUser(who, "Leo Cambia");
+  await act(who, L, "perfil", "src/app/actions.ts#saveProfile", [{}, profileForm({ name: "Leo Cambia", level: "intermedio", weeklyKm: 30, longestRunKm: 15 })]);
+  await act(who, L, "media", "src/app/actions.ts#saveGoal", [{}, form({ name: "Media", date: day(80), distanceKm: "21.0975", targetTime: "" })]);
+  await act(who, L, "terminar", "src/app/actions.ts#clearPlan", []);
+  let db = readDb(who);
+  check(who, "terminar", !db.plan && (db.pastPlans?.length ?? 0) === 1, `plan ${Boolean(db.plan)} anteriores ${db.pastPlans?.length}`);
+  await act(who, L, "10k", "src/app/actions.ts#saveGoal", [{}, form({ name: "10K nuevo", date: day(45), distanceKm: "10", targetTime: "45:00" })]);
+  db = readDb(who);
+  check(who, "nuevo-plan", db.plan?.goal.name === "10K nuevo", db.plan?.goal.name);
+  const past = db.pastPlans?.[0];
+  if (past) {
+    await page(who, L, `/plan/anterior/${encodeURIComponent(past.id)}`);
+    await act(who, L, "borrar-anterior", "src/app/actions.ts#deletePastPlan", [form({ id: past.id })]);
+    check(who, "borrar-anterior", !(readDb(who).pastPlans ?? []).length, JSON.stringify(readDb(who).pastPlans?.map((p) => p.id)));
+  }
+  // cambia la fecha de su carrera (otra vez el mismo formulario)
+  await act(who, L, "otra-fecha", "src/app/actions.ts#saveGoal", [{}, form({ name: "10K nuevo", date: day(60), distanceKm: "10", targetTime: "45:00" })]);
+  check(who, "otra-fecha", readDb(who).plan?.goal.date === day(60), readDb(who).plan?.goal.date);
+  for (const lang of ["ca", "pt"]) {
+    await act(who, lang, `idioma-${lang}`, "src/app/lang-actions.ts#setLanguage", [form({ lang })]);
+    check(who, `idioma-${lang}`, readDb(who).lang === lang, readDb(who).lang);
+    for (const p of PAGES.filter((x) => x !== "/perfil?tab=salud")) await page(who, lang, p, { spanishOk: ["Leo", "10K nuevo", "Zancavolt", "Carrera urbana"] });
+  }
+}
+
+// ---------- 12. Memoria de la IA: preferencias y valoraciones (sin llamar a la IA) ----------
+async function memoria() {
+  const who = "prueba-caso-memoria", L = "es";
+  addUser(who, "Ana Memoria");
+  await act(who, L, "perfil", "src/app/actions.ts#saveProfile", [{}, profileForm({ name: "Ana Memoria" })]);
+  await act(who, L, "preferencia", "src/app/ai-actions.ts#addAiPreference", [{}, form({ text: "No quiero zancadas", area: "fuerza" })]);
+  await act(who, L, "repetida", "src/app/ai-actions.ts#addAiPreference", [{}, form({ text: "No quiero zancadas", area: "fuerza" })], { error: true });
+  await act(who, L, "corta", "src/app/ai-actions.ts#addAiPreference", [{}, form({ text: "x", area: "todas" })], { error: true });
+  let db = readDb(who);
+  const pref = db.aiPreferences?.[0];
+  check(who, "preferencia", db.aiPreferences?.length === 1 && pref?.text === "No quiero zancadas", JSON.stringify(db.aiPreferences));
+  // valorar una respuesta del plan (hace falta un resumen guardado)
+  db.coach = { updatedAt: new Date().toISOString(), model: "x", summary: "Mantienes la carga.", changed: 0 };
+  writeDb(who, db);
+  await act(who, L, "valorar-mal", "src/app/ai-actions.ts#rateAi", [{}, form({ area: "plan", ref: db.coach.updatedAt, rating: "-1", reason: "Me pone las series el día antes de la tirada" })]);
+  db = readDb(who);
+  check(who, "valoracion", db.aiFeedback?.length === 1 && db.aiPreferences?.length === 2, `valoraciones ${db.aiFeedback?.length} preferencias ${db.aiPreferences?.length}`);
+  await act(who, L, "quitar-preferencia", "src/app/ai-actions.ts#deleteAiPreference", [form({ id: pref?.id })]);
+  check(who, "quitar-preferencia", readDb(who).aiPreferences?.length === 1, "");
+  for (const p of ["/entrenador", "/plan/actual"]) await page(who, L, p);
+}
+
+// ---------- 13. Se va: borra su cuenta y no queda nada ----------
+async function seVa() {
+  const who = "prueba-caso-adios", L = "es";
+  addUser(who, "Iván Adiós");
+  await act(who, L, "perfil", "src/app/actions.ts#saveProfile", [{}, profileForm({ name: "Iván Adiós" })]);
+  const t0r = Date.parse(`${today}T07:00:00`);
+  const pts = Array.from({ length: 121 }, (_, k) => ({ t: t0r + k * 3000, lat: 37.2 + k * 5e-5, lon: -3.6, alt: 640, acc: 6 }));
+  await act(who, L, "gps", "src/app/actions.ts#saveRecordedRun", [{ sport: "run", name: "Última", startLocal: `${today}T07:00:00`, points: pts, rpe: 5 }]);
+  const a = readDb(who).activities[0];
+  await act(who, L, "borrar-cuenta", "src/app/auth-actions.ts#deleteAccount", [{}, form({ confirm: "BORRAR" })]);
+  const { existsSync } = await import("node:fs");
+  check(who, "sin-datos", !existsSync(`data/db_${who}.json`), "queda su Db");
+  check(who, "sin-usuario", !JSON.parse(readFileSync(USERS, "utf8")).users.some((u) => u.id === who), "queda en users.json");
+  check(who, "sin-serie", !a || !existsSync(`data/serie_${who}_${a.id}.json`), "queda la serie de su carrera con GPS");
+}
+
 const t0 = Date.now();
-for (const [name, fn] of Object.entries({ novata, lesionado, fuerza, temporada, ingles: () => otroIdioma("en"), frances: () => otroIdioma("fr"), amigos })) {
+for (const [name, fn] of Object.entries({ novata, lesionado, fuerza, temporada, ingles: () => otroIdioma("en"), frances: () => otroIdioma("fr"), amigos, importadora, salud, grupos, errores, cambia, memoria, seVa })) {
   const before = problems.length;
   try {
     await fn();

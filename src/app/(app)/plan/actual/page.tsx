@@ -29,6 +29,7 @@ import { UndoSkip } from "@/components/UndoSkip";
 import { AiRating } from "@/components/AiRating";
 import { feedbackFor } from "@/lib/aiMemory";
 import { serverText } from "@/lib/i18n/serverText";
+import { planWarningText } from "@/lib/i18n/planWarningText";
 
 const VERDICT_TONE: Record<NonNullable<CoachState["verdict"]>, string> = {
   progresar: "bg-good/15 text-good-ink",
@@ -141,7 +142,7 @@ async function Content({ searchParams }: { searchParams: PageProps<"/plan/actual
           </summary>
           <ul className="mt-2 list-disc space-y-1 pl-5 text-ink-2">
             {plan.warnings.map((w) => (
-              <li key={w}>{w}</li>
+              <li key={w}>{planWarningText(w, locale)}</li>
             ))}
           </ul>
         </details>

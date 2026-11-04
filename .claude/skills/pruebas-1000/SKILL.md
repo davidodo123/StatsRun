@@ -40,7 +40,7 @@ node scripts/pruebas/acciones.mjs <scratchpad>/informe-acciones.json 1000 16
 ```bash
 node scripts/pruebas/casos.mjs <scratchpad>/informe-casos.json
 ```
-- Siete personas («prueba-caso-…»): novata (perfil → carrera → plan → registrar, medida, objetivo, entreno al momento, GPS), lesionado (bloquear, deshacer, saltar, liberar, cambiar de día, rehacer), solo fuerza (lugar, rutinas, entreno, cambiar, duplicar), temporada (carreras A, B y C, mismo día, quitar), en inglés y en francés (busca textos que se quedaron en español) y dos amigos (pedir, aceptar, entreno juntos, privacidad, dejar).
+- Catorce personas («prueba-caso-…»), entre ellas: novata (perfil → carrera → plan → registrar, medida, objetivo, entreno al momento, GPS), lesionado (bloquear, deshacer, saltar, liberar, cambiar de día, rehacer), solo fuerza (lugar, rutinas, entreno, cambiar, duplicar), temporada (carreras A, B y C, mismo día, quitar), en inglés y en francés (busca textos que se quedaron en español) y dos amigos (pedir, aceptar, entreno juntos, privacidad, dejar); importar un GPX (sin duplicar), editar y foto; atajo de Salud (clave, varios días, clave falsa, revocar, respuesta en su idioma); fuerza por grupos (lugares, ejercicio propio, rutina en el plan, EMOM); errores que tienen que salir sin guardar nada; cambiar de plan y de idioma (ca, pt); memoria de la IA; y borrar la cuenta sin que quede nada.
 - Unos segundos. Después del build y con el servidor en marcha; se borran con `--borrar` como los demás.
 
 ## 4. Arreglar y apuntar
