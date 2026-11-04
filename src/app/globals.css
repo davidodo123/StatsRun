@@ -267,6 +267,18 @@ input.input::-webkit-date-and-time-value {
 }
 
 /* Fotos de ejercicio: la primera se funde sobre la segunda, como un gif de la posición inicial y final */
+/* Inicio: el bloque del día elegido entra suave */
+@keyframes fadein {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 @keyframes exercise-frame {
   0%,
   42% {

@@ -16,11 +16,16 @@ export interface WeekBarDay {
 const STATUS_CLS = { partial: "text-warning", missed: "text-critical", today: "text-accent", upcoming: "text-muted" } as const;
 const startable = (s: WeekBarDay["sessions"][number]) => s.strength && s.status !== "done" && s.status !== "missed";
 
-/** Las barras de la semana de Inicio: al tocar un día se ven sus entrenos debajo (por defecto, hoy). */
-export function WeekBars({ days, today, locale }: { days: WeekBarDay[]; today: string; locale: Locale }) {
+/**
+ * Las barras de la semana de Inicio: al tocar un día se ven sus entrenos debajo (por defecto, hoy).
+ * Con `selected` y `onSelect`, el día lo lleva quien la usa (Inicio cambia también lo grande de arriba).
+ */
+export function WeekBars({ days, today, locale, selected, onSelect }: { days: WeekBarDay[]; today: string; locale: Locale; selected?: string; onSelect?: (date: string) => void }) {
   const t = translator(locale);
   const initials = weekdayInitials(locale);
-  const [sel, setSel] = useState(days.some((d) => d.date === today) ? today : days[0]?.date);
+  const [own, setOwn] = useState(days.some((d) => d.date === today) ? today : days[0]?.date);
+  const sel = selected ?? own;
+  const setSel = onSelect ?? setOwn;
   const maxKm = Math.max(1, ...days.map((d) => d.km));
   const day = days.find((d) => d.date === sel);
   const statusLabel = { done: t("sesion.hecho"), partial: t("sesion.parcial"), missed: t("sesion.noRealizado"), today: t("sesion.hoy"), upcoming: "" } as const;

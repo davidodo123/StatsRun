@@ -16,6 +16,31 @@ export interface Novedad {
  */
 export const NOVEDADES: Novedad[] = [
   {
+    id: "2026-11-04",
+    items: [
+      {
+        icon: "calendar",
+        txt: {
+          es: ["Mira cualquier día en grande", "En Inicio, toca un día de la semana y arriba sale su sesión en grande. «Volver a hoy» te trae de vuelta."],
+          en: ["See any day up front", "On Home, tap a day of the week and its session shows up big at the top. «Back to today» brings you back."],
+          ca: ["Mira qualsevol dia en gran", "A Inici, toca un dia de la setmana i a dalt surt la sessió en gran. «Tornar a avui» et torna."],
+          pt: ["Vê qualquer dia em grande", "No Início, toca num dia da semana e a sessão aparece em grande lá em cima. «Voltar a hoje» traz-te de volta."],
+          fr: ["Vois n'importe quel jour en grand", "Dans Accueil, touche un jour de la semaine et sa séance s'affiche en grand en haut. «Revenir à aujourd'hui» te ramène."],
+        },
+      },
+      {
+        icon: "dumbbell",
+        txt: {
+          es: ["La fuerza ya no se repite", "No te pone la misma rutina varios días de la semana, y si haces pecho el día de espalda, lo que queda se recoloca."],
+          en: ["Strength doesn't repeat", "No more the same routine several days a week; do chest on back day and the rest of the week rearranges."],
+          ca: ["La força ja no es repeteix", "No et posa la mateixa rutina diversos dies de la setmana, i si fas pit el dia d'esquena, la resta es recol·loca."],
+          pt: ["A força já não se repete", "Não te põe a mesma rotina vários dias da semana e, se fizeres peito no dia de costas, o resto reorganiza-se."],
+          fr: ["La muscu ne se répète plus", "Plus la même séance plusieurs jours de la semaine ; fais pecs le jour du dos et le reste se réorganise."],
+        },
+      },
+    ],
+  },
+  {
     id: "2026-11-03",
     items: [
       {

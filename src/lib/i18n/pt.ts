@@ -80,6 +80,7 @@ export const pt: Record<keyof typeof es, string> = {
   "hoy.zona": "zona",
   "hoy.yAdemas": "E ainda: {sesiones}",
   "hoy.ademas": "E ainda",
+  "hoy.volverHoy": "Voltar a hoje",
   "hoy.empezar": "Começar",
   "hoy.empezarRutina": "Começar rotina: {nombre}",
   "hoy.empezarFuerza": "Começar força: {nombre}",

@@ -82,6 +82,7 @@ export const es = {
   "hoy.zona": "zona",
   "hoy.yAdemas": "Y además: {sesiones}",
   "hoy.ademas": "Y además",
+  "hoy.volverHoy": "Volver a hoy",
   "hoy.empezar": "Empezar",
   "hoy.empezarRutina": "Empezar rutina: {nombre}",
   "hoy.empezarFuerza": "Empezar fuerza: {nombre}",
