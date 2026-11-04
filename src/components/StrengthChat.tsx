@@ -9,6 +9,7 @@ import { fmtDuration, fmtKm, fmtPace } from "@/lib/format";
 import { dayMonth, intlLocale, shortWeekdayDate, translator, type Locale, type T } from "@/lib/i18n";
 import type { Routine, StrengthChatMessage } from "@/lib/types";
 import { Icon } from "./icons";
+import { ChangeCard } from "./ChangeCard";
 import { AiRating } from "./AiRating";
 
 const SUGGESTIONS = ["chat.sug1", "chat.sug2", "chat.sug3", "chat.sug4"] as const;
@@ -67,6 +68,7 @@ function ActivityProposal({ m, t, locale }: { m: StrengthChatMessage; t: T; loca
 function PlanProposal({ m, t, locale }: { m: StrengthChatMessage; t: T; locale: Locale }) {
   const [state, apply, pending] = useActionState<FormState, FormData>(applyChatPlan, {});
   const done = m.planResult ?? state.message;
+  const change = m.planChange ?? state.change;
   return (
     <div className="mt-3 space-y-2">
       <div className="rounded-xl border border-line bg-surface p-3 text-xs text-ink-2">
@@ -75,13 +77,7 @@ function PlanProposal({ m, t, locale }: { m: StrengthChatMessage; t: T; locale: 
         {m.planRequest && <p>{m.planRequest}</p>}
       </div>
       {done ? (
-        <p className="text-xs font-semibold text-good-ink">
-          <Icon name="check" className="mr-1 h-3.5 w-3.5 align-[-2px]" />
-          {done}{" "}
-          <Link href="/plan/actual" className="text-accent underline">
-            {t("chat.verPlan")}
-          </Link>
-        </p>
+        <ChangeCard change={change} text={done} locale={locale} />
       ) : (
         <form action={apply}>
           <input type="hidden" name="at" value={m.at} />

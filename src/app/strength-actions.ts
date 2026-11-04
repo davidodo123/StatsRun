@@ -16,7 +16,7 @@ import { todayLocal, addDays } from "@/lib/dates";
 import { findExercise } from "@/lib/strength/catalog";
 import { cleanRoutineExercises, cleanWorkout, emomTitle } from "@/lib/strength/workouts";
 import { applyStrengthRoutines, doneStrength, routinesForPlan } from "@/lib/strength/routinePlan";
-import type { BodyMeasurement, Db } from "@/lib/types";
+import type { BodyMeasurement, Db, PlanChange } from "@/lib/types";
 
 /** Tras cambiar las rutinas, las sesiones de fuerza del plan se rehacen con ellas. */
 /** Rutinas en las sesiones de fuerza del plan, contando lo ya hecho esta semana (desde `from`: hoy, o mañana tras un entreno). */
@@ -512,27 +512,34 @@ export async function applyChatPlan(_: FormState, fd: FormData): Promise<FormSta
   const db = await readDbNow();
   const m = db.strengthChat?.find((x) => x.at === at && x.role === "assistant");
   if (!m?.planRequest && !m?.planDays?.length) return { error: await say("No hay ningún cambio que aplicar.") };
-  if (m.planResult) return { ok: true, message: m.planResult };
+  if (m.planResult) return { ok: true, message: m.planResult, change: m.planChange };
   if (!db.plan) return { error: await say("No tienes plan de carrera.") };
   const parts: string[] = [];
+  const change: PlanChange = { kind: "chat" };
   // los días que no puede: como «No puedo ese día» (las sesiones se mueven y se puede deshacer)
   if (m.planDays?.length) {
     const r = await markUnavailableDates(m.planDays);
     if (r.error) return r;
     parts.push(`${m.planDays.length === 1 ? "Día marcado" : `${m.planDays.length} días marcados`} sin entrenar.`);
+    change.blocked = m.planDays.length;
   }
   if (m.planRequest) {
     const r = await adaptWithAI(await requireUserId(), m.planRequest);
-    if (!r.ok) return { error: r.message };
+    if (!r.ok) return { error: await say(r.message) };
     parts.push(`${r.changed} ${r.changed === 1 ? "sesión ajustada" : "sesiones ajustadas"}. ${r.message}`);
-  } else if (coachConfig().configured) parts.push("La IA está rehaciendo tu rutina.");
+    change.adjusted = r.changed;
+    change.summary = r.message.slice(0, 600);
+  } else if (coachConfig().configured) {
+    parts.push("La IA está rehaciendo tu rutina.");
+    change.ai = true;
+  }
   const message = parts.join(" ").slice(0, 800);
   await updateDb((d) => {
     const x = d.strengthChat?.find((y) => y.at === at && y.role === "assistant");
-    if (x) x.planResult = message;
+    if (x) Object.assign(x, { planResult: message, planChange: change });
   });
   refresh();
-  return { ok: true, message };
+  return { ok: true, message, change };
 }
 
 export async function clearStrengthChat(): Promise<void> {

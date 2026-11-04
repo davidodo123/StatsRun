@@ -1,6 +1,7 @@
 "use client";
 
 import { ChipLink, DoneChip } from "./ui";
+import { Icon } from "./icons";
 import Link from "next/link";
 import { useState } from "react";
 import { translator, weekdayDate, weekdayInitials, intlLocale, type Locale } from "@/lib/i18n";
@@ -31,24 +32,36 @@ export function WeekBars({ days, today, locale, selected, onSelect }: { days: We
   const statusLabel = { done: t("sesion.hecho"), partial: t("sesion.parcial"), missed: t("sesion.noRealizado"), today: t("sesion.hoy"), upcoming: "" } as const;
   return (
     <>
-      <div className="mt-3 flex h-16 items-end gap-1.5" role="tablist" aria-label={t("hoy.semana")}>
-        {days.map((d) => (
-          <button
-            key={d.date}
-            type="button"
-            role="tab"
-            aria-selected={d.date === sel}
-            aria-label={weekdayDate(d.date, locale)}
-            onClick={() => setSel(d.date)}
-            className="group flex h-full flex-1 items-end"
-          >
-            <span
-              // solo el día elegido va en verde; al pasar por encima se ilumina
-              className={`block w-full rounded-sm transition ${d.date === sel ? "bg-accent" : `${d.done ? "bg-ink" : "bg-surface-2"} group-hover:bg-accent/60`}`}
-              style={{ height: `${d.km > 0 ? Math.max(14, (d.km / maxKm) * 100) : d.any ? 10 : 4}%` }}
-            />
-          </button>
-        ))}
+      <div className="mt-3 flex h-20 items-end gap-1.5" role="tablist" aria-label={t("hoy.semana")}>
+        {days.map((d) => {
+          const strength = d.sessions.some((x) => x.strength);
+          const run = d.km > 0 || d.sessions.some((x) => !x.strength);
+          // más uniformes: con carrera, de un 40 % a todo según los km; solo fuerza, su barra (antes era igual que descanso);
+          // descanso, una línea
+          const height = run ? 40 + (d.km / maxKm) * 60 : strength ? 40 : 5;
+          const on = d.date === sel;
+          return (
+            <button
+              key={d.date}
+              type="button"
+              role="tab"
+              aria-selected={on}
+              aria-label={weekdayDate(d.date, locale)}
+              onClick={() => setSel(d.date)}
+              className="group flex h-full flex-1 flex-col items-center justify-end gap-1"
+            >
+              {/* pesa: ese día hay fuerza (encima de la barra si también se corre; dentro si es solo fuerza) */}
+              {strength && run && <Icon name="dumbbell" className={`h-3.5 w-3.5 shrink-0 ${on ? "text-accent" : "text-muted"}`} />}
+              <span
+                // solo el día elegido va en verde; al pasar por encima se ilumina
+                className={`flex w-full items-center justify-center rounded-md transition ${on ? "bg-accent text-accent-ink" : `${d.done ? "bg-ink text-bg" : run || strength ? "bg-surface-2 text-muted" : "bg-surface-2/60"} group-hover:bg-accent/60`}`}
+                style={{ height: `${height}%` }}
+              >
+                {strength && !run && <Icon name="dumbbell" className="h-4 w-4" />}
+              </span>
+            </button>
+          );
+        })}
       </div>
       <div className="mt-1.5 grid grid-cols-7 gap-1.5 text-center text-xs text-muted">
         {days.map((d, i) => (

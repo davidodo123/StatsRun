@@ -375,7 +375,22 @@ export interface StrengthChatMessage {
   activityId?: string; // id de la actividad ya guardada
   planRequest?: string; // cambio del plan que pidió, listo para aplicar
   planDays?: string[]; // días que dijo que no puede entrenar, listos para marcar
-  planResult?: string; // lo que hizo la IA al aplicarlo
+  planResult?: string; // lo que hizo la IA al aplicarlo (texto; los mensajes antiguos solo tienen esto)
+  planChange?: PlanChange; // lo mismo, en datos (se pinta en el idioma de la app)
+}
+
+/** Lo que cambió en el plan al rehacerlo o al aplicar un cambio del chat (para la tarjeta de «Plan recalculado»). */
+export interface PlanChange {
+  kind: "recalc" | "chat";
+  days?: number; // días con sesiones distintas
+  kmBefore?: number;
+  kmAfter?: number; // km hasta la carrera
+  vdotBefore?: number;
+  vdotAfter?: number;
+  blocked?: number; // días marcados sin entrenar
+  adjusted?: number; // sesiones que ajustó la IA
+  summary?: string; // lo que explica la IA (ya en el idioma de la app)
+  ai?: boolean; // la IA sigue ajustando en segundo plano
 }
 
 /** Entreno contado en el chat (por escrito o por voz) y pasado a datos por la IA. */

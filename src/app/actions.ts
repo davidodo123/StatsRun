@@ -17,7 +17,7 @@ import { createHealthToken, revokeHealthToken } from "@/lib/healthToken";
 import { mergeHealth, parseHealthPayload, todayMadrid } from "@/lib/health";
 import { applyStrengthRoutines, doneStrength, routinesForPlan } from "@/lib/strength/routinePlan";
 import { WEEKDAYS, addDays, diffDays, mondayOf, shortDate, todayLocal, weekday } from "@/lib/dates";
-import type { Db, Feel, Focus, Goal, Level, Plan, Profile, Sex, TuneUpRace } from "@/lib/types";
+import type { Db, Feel, Focus, Goal, Level, Plan, Profile, Sex, TuneUpRace, PlanChange } from "@/lib/types";
 import { downloadCmCourse, findCmRace } from "@/lib/cruzandolametaStore";
 import { parseCourseFile } from "@/lib/importers/course";
 import { deleteImage, jpegFromDataUrl, photoKey, putImage } from "@/lib/photoStore";
@@ -30,6 +30,7 @@ export interface FormState {
   ok?: boolean;
   error?: string;
   message?: string;
+  change?: PlanChange; // al rehacer el plan: lo que cambió (la pantalla lo pinta en su idioma)
 }
 
 /** Tras cambiar datos, la IA reajusta los próximos entrenos en segundo plano. */
@@ -275,6 +276,14 @@ export async function regeneratePlan(): Promise<FormState> {
   return {
     ok: true,
     message: parts.length ? `Plan recalculado: ${parts.join(" · ")}.${ai}` : `Tus datos no han cambiado: el plan sale igual.${ai}`,
+    change: {
+      kind: "recalc",
+      days: changedDays,
+      kmBefore: Math.round(kmBefore),
+      kmAfter: Math.round(kmAfter),
+      ...(before && Math.round(before.targetVdot * 10) !== Math.round(plan.targetVdot * 10) ? { vdotBefore: Math.round(before.targetVdot * 10) / 10, vdotAfter: Math.round(plan.targetVdot * 10) / 10 } : {}),
+      ai: coachConfig().configured,
+    },
   };
 }
 
