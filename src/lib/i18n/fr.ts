@@ -80,6 +80,8 @@ export const fr: Record<keyof typeof es, string> = {
   "hoy.zona": "zone",
   "hoy.yAdemas": "Et aussi : {sesiones}",
   "hoy.ademas": "Et aussi",
+  "hoy.descansoTxt": "Récupère : marche tranquille, mobilité ou étirements.",
+  "hoy.alDiaSiguiente": "Le lendemain",
   "hoy.volverHoy": "Revenir à aujourd'hui",
   "hoy.empezar": "Commencer",
   "hoy.empezarRutina": "Commencer la séance : {nombre}",

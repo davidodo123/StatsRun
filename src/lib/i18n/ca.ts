@@ -80,6 +80,8 @@ export const ca: Record<keyof typeof es, string> = {
   "hoy.zona": "zona",
   "hoy.yAdemas": "I a més: {sesiones}",
   "hoy.ademas": "I a més",
+  "hoy.descansoTxt": "Recupera't: passeig suau, mobilitat o estiraments.",
+  "hoy.alDiaSiguiente": "L'endemà",
   "hoy.volverHoy": "Tornar a avui",
   "hoy.empezar": "Començar",
   "hoy.empezarRutina": "Començar rutina: {nombre}",

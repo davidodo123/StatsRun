@@ -89,6 +89,13 @@ export function TodayHero({ plan, matches, today, goal, locale }: { plan: Plan; 
         }
       />
 
+      {/* hoy es descanso: los estiramientos, debajo de la semana (dentro del bloque de arriba lo hacían enorme en todos los días) */}
+      {!sessions.some((s) => s.date === today) && (
+        <div className="mt-6">
+          <RestStretches locale={locale} />
+        </div>
+      )}
+
       {goal && daysToRace !== undefined && daysToRace >= 0 && (
         <Link href="/plan/actual" className="mt-5 flex items-center justify-between gap-4 border-t border-line pt-4">
           <span className="min-w-0">
@@ -122,18 +129,22 @@ function DayHero({ date, sessions, matches, today, locale }: { date: string; ses
   const eyebrow = isToday ? (main ? (done ? t("hoy.hechoHoy") : t("hoy.hoyToca")) : t("hoy.hoy")) : [cap(weekdayDate(date, locale)), status && STATUS[status]].filter(Boolean).join(" · ");
 
   if (!main) {
-    const next = isToday ? sessions.find((s) => s.date > today) : undefined;
+    const next = sessions.find((s) => s.date > date);
+    // el bloque mide lo del día más alto de la semana (para que las barras no se muevan): el descanso va centrado en ese hueco
     return (
-      <>
+      <div className="flex h-full min-h-[14rem] flex-col justify-center">
         <p className="text-sm font-bold tracking-[0.2em] text-accent uppercase">{eyebrow}</p>
         <h2 className="mt-1 font-display text-6xl leading-none tracking-[0.03em] uppercase">{t("hoy.descanso")}</h2>
+        <p className="mt-3 flex items-center gap-2 text-ink-2">
+          <Icon name="sunrise" className="h-5 w-5 shrink-0 text-accent" />
+          {t("hoy.descansoTxt")}
+        </p>
         {next && (
           <p className="mt-3 text-ink-2">
-            {next.date === addDays(today, 1) ? t("hoy.manana") : t("hoy.elDia", { dia: weekdayDate(next.date, locale) })}: <strong className="text-ink">{planText(next.title, locale)}</strong>
+            {next.date === addDays(date, 1) ? (isToday ? t("hoy.manana") : t("hoy.alDiaSiguiente")) : t("hoy.elDia", { dia: weekdayDate(next.date, locale) })}: <strong className="text-ink">{planText(next.title, locale)}</strong>
           </p>
         )}
-        {isToday && <RestStretches locale={locale} />}
-      </>
+      </div>
     );
   }
 
