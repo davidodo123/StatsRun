@@ -93,7 +93,10 @@ export function TuLinks({ focus, admin, locale = DEFAULT_LOCALE }: { focus?: Foc
 }
 
 /** Móvil: barra superior (logo = Inicio, Entrenador IA, Amigos) e inferior (Inicio, Plan, Registrar, Fuerza, Tú; o la de fuerza). */
-function MobileNav({ active, focus, locale }: { active: (href: string) => boolean; focus?: Focus; locale: Locale }) {
+// el menú provisional (antes de saber el idioma) va sin textos: salía en español un momento a quien usa otro idioma
+const Bar = () => <span aria-hidden className="inline-block h-2.5 w-12 rounded bg-surface-2" />;
+
+function MobileNav({ active, focus, locale, skeleton }: { active: (href: string) => boolean; focus?: Focus; locale: Locale; skeleton?: boolean }) {
   const t = translator(locale);
   const items = itemsFor(focus);
   const bottomHrefs = focus === "fuerza" ? STRENGTH_BOTTOM : MOBILE_BOTTOM;
@@ -146,7 +149,7 @@ function MobileNav({ active, focus, locale }: { active: (href: string) => boolea
             // prefetch: las secciones principales llegan precargadas con tus datos (y la pestaña elegida)
             <Link key={it.href} href={it.href} prefetch={true} className={`${tab} ${on(it.href) ? "text-accent" : "text-muted"}`}>
               <Icon d={it.icon} className="h-6 w-6" />
-              {t(it.href === "/perfil" ? "nav.tu" : it.label)}
+              {skeleton ? <Bar /> : t(it.href === "/perfil" ? "nav.tu" : it.label)}
             </Link>
           ),
         )}
@@ -187,7 +190,7 @@ export function lastVisited(skip: (url: string) => boolean, fallback: string): s
 }
 
 /** Menú sin sección resaltada (el que se prerenderiza) o con ella. */
-export function NavView({ path, focus, admin, locale = DEFAULT_LOCALE }: { path?: string; focus?: Focus; admin?: boolean; locale?: Locale }) {
+export function NavView({ path, focus, admin, locale = DEFAULT_LOCALE, skeleton }: { path?: string; focus?: Focus; admin?: boolean; locale?: Locale; skeleton?: boolean }) {
   const t = translator(locale);
   const items = [...itemsFor(focus), ...(admin ? [ADMIN_ITEM] : [])];
   // resalta la entrada más concreta: en /fuerza/entreno, «Entrenar» y no «Fuerza»
@@ -209,14 +212,14 @@ export function NavView({ path, focus, admin, locale = DEFAULT_LOCALE }: { path?
             }`}
           >
             <Icon d={it.icon} />
-            {t(it.long && it.href !== "/registrar" ? it.long : it.label)}
+            {skeleton ? <Bar /> : t(it.long && it.href !== "/registrar" ? it.long : it.label)}
           </Link>
         ))}
         <form action={logout} onSubmit={resetAnalytics} className="mt-auto">
-          <button className="w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-ink-2 hover:bg-surface-2">{t("nav.cerrarSesion")}</button>
+          <button className="w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-ink-2 hover:bg-surface-2">{skeleton ? <Bar /> : t("nav.cerrarSesion")}</button>
         </form>
       </nav>
-      <MobileNav active={active} focus={focus} locale={locale} />
+      <MobileNav active={active} focus={focus} locale={locale} skeleton={skeleton} />
     </>
   );
 }

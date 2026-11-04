@@ -1,6 +1,7 @@
 import { Card, Status } from "@/components/ui";
 import { type Readiness, type SelyePhase } from "@/lib/engine/readiness";
-import { translator, type Key, type T } from "@/lib/i18n";
+import { translator, type Key, type Locale, type T } from "@/lib/i18n";
+import { readinessText } from "@/lib/i18n/readinessText";
 import { Icon } from "./icons";
 
 const ORDER: SelyePhase[] = ["desentrenamiento", "alarma", "adaptacion", "agotamiento", "supercompensacion"];
@@ -36,7 +37,7 @@ const CHECK_LABEL: Record<keyof Readiness["check"], Key> = {
 };
 
 /** Diagnóstico del estado de forma (Selye + Banister + evaluación de recuperación). */
-export function ReadinessCard({ r, t = translator("es") }: { r: Readiness; t?: T }) {
+export function ReadinessCard({ r, t = translator("es"), locale = "es" }: { r: Readiness; t?: T; locale?: Locale }) {
   return (
     <Card title={t("forma.titulo")}>
       <div className="space-y-3 text-sm">
@@ -78,7 +79,7 @@ export function ReadinessCard({ r, t = translator("es") }: { r: Readiness; t?: T
           {r.reasons.length > 0 && (
             <ul className="mt-2 list-disc space-y-1 pl-5 text-ink-2">
               {r.reasons.map((x) => (
-                <li key={x}>{x}</li>
+                <li key={x}>{readinessText(x, locale)}</li>
               ))}
             </ul>
           )}

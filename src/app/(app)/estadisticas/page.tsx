@@ -80,9 +80,9 @@ async function Content() {
       {header}
       <ProgressSection data={progress} locale={locale} />
       <StatGroup className="md:grid-cols-4 lg:grid-cols-6">
-        <Stat label={t("st.kmAno")} value={fmtNum(T.yearKm, 0, locale)} unit="km" sub={t("st.carreras", { n: T.yearRuns })} />
+        <Stat label={t("st.kmAno")} value={fmtNum(T.yearKm, 0, locale)} unit="km" sub={(T.yearRuns === 1 ? t("st.carrera1") : t("st.carreras", { n: T.yearRuns }))} />
         <Stat label={t("st.kmMes")} value={fmtKm(T.monthKm, 1, locale)} unit="km" />
-        <Stat label={t("st.kmTotales")} value={fmtNum(T.allKm, 0, locale)} unit="km" sub={t("st.carreras", { n: T.allRuns })} />
+        <Stat label={t("st.kmTotales")} value={fmtNum(T.allKm, 0, locale)} unit="km" sub={(T.allRuns === 1 ? t("st.carrera1") : t("st.carreras", { n: T.allRuns }))} />
         <Stat label={t("st.horas")} value={fmtNum(T.allHours, 0, locale)} unit="h" sub={t("st.todosDeportes")} />
         <Stat label={t("st.desnivel")} value={fmtNum(T.elevation, 0, locale)} unit="m" />
         <Stat label={t("st.kcal")} value={fmtNum(T.kcal / 1000, 1, locale)} unit={t("st.milKcal")} />

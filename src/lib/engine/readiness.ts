@@ -144,11 +144,11 @@ export function assessReadiness({ stats, activities, today, missed14d, raceDate,
   else if (tsb > 5) phase = "supercompensacion";
   else phase = "adaptacion";
 
-  if (acwr > 1.5) reasons.push(`Carga aguda muy por encima de la crónica (ACWR ${acwr.toFixed(2)} > 1,5): riesgo de lesión.`);
-  else if (acwr > 1.3) reasons.push(`Subida de carga reciente (ACWR ${acwr.toFixed(2)}): el cuerpo está en fase de alarma.`);
-  else if (acwr > 0 && acwr < 0.8) reasons.push(`Carga reciente baja respecto a tu base (ACWR ${acwr.toFixed(2)}).`);
+  if (acwr > 1.5) reasons.push(`Carga aguda muy por encima de la crónica (ACWR ${acwr.toFixed(2).replace(".", ",")} > 1,5): riesgo de lesión.`);
+  else if (acwr > 1.3) reasons.push(`Subida de carga reciente (ACWR ${acwr.toFixed(2).replace(".", ",")}): el cuerpo está en fase de alarma.`);
+  else if (acwr > 0 && acwr < 0.8) reasons.push(`Carga reciente baja respecto a tu base (ACWR ${acwr.toFixed(2).replace(".", ",")}).`);
   if (tsb < -30) reasons.push(`Frescura muy negativa (TSB ${tsb.toFixed(0)}): fatiga acumulada alta.`);
-  if (stats.monotony > 2) reasons.push(`Semana muy monótona (monotonía ${stats.monotony.toFixed(1)} > 2): alterna días duros y suaves.`);
+  if (stats.monotony > 2) reasons.push(`Semana muy monótona (monotonía ${stats.monotony.toFixed(1).replace(".", ",")} > 2): alterna días duros y suaves.`);
   if (check.rendimientoBaja) reasons.push("Rendimiento a la baja: entrenos que se hacen duros, piernas cargadas o más pulsaciones al mismo ritmo.");
   if (recovery.shortSleep) reasons.push(`Duermes poco: ${fmt1(recovery.sleepAvg3!)} h de media las últimas noches (menos de 6,5 h).`);
   else if (check.malDescanso) reasons.push("Mencionas mal descanso.");
@@ -185,7 +185,7 @@ export function assessReadiness({ stats, activities, today, missed14d, raceDate,
 
   const maxSessionKm = longestRun30dKm !== undefined ? Math.round(longestRun30dKm * SPIKE_MARGIN * 10) / 10 : undefined;
   if (maxSessionKm !== undefined && verdict !== "descargar" && verdict !== "recuperar") {
-    reasons.push(`Ninguna sesión por encima de ${maxSessionKm} km (tu tirada más larga en 30 días + 10 %).`);
+    reasons.push(`Ninguna sesión por encima de ${fmt1(maxSessionKm)} km (tu tirada más larga en 30 días + 10 %).`);
   }
 
   return {

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { findExercise, exerciseName } from "@/lib/strength/catalog";
+import { findExercise } from "@/lib/strength/catalog";
 import { translator, type Key, type Locale } from "@/lib/i18n";
 import { ExerciseThumb } from "./ExerciseMedia";
 
@@ -28,7 +28,7 @@ export function RestStretches({ locale }: { locale: Locale }) {
           <li key={id}>
             <Link href={`/fuerza/ejercicios/${id}`} className="flex items-center gap-3 py-2">
               <ExerciseThumb x={x!} className="h-11 w-11" />
-              <span className="line-clamp-2 min-w-0 flex-1 text-sm leading-snug font-semibold">{exerciseName(x!, locale)}</span>
+              <span className="line-clamp-2 min-w-0 flex-1 text-sm leading-snug font-semibold">{t(`est.n.${id}` as Key)}</span>
               <span className="shrink-0 text-xs text-ink-2 tabular">{t(dose)}</span>
             </Link>
           </li>

@@ -252,6 +252,7 @@ async function Content({ searchParams }: { searchParams: PageProps<"/plan/actual
                 health: db.health,
               })}
               t={t}
+              locale={locale}
             />
           )}
           <Card title={t("plan.entrenadorIA")} subtitle={coachConfig().configured ? t("plan.modelo", { modelo: modelName(coachConfig().model) }) : t("plan.desactivado")}>

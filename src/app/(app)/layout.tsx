@@ -44,7 +44,7 @@ export default function AppLayout({ children }: LayoutProps<"/">) {
       <Suspense fallback={null}>
         <PushPromptMount />
       </Suspense>
-      <Suspense fallback={<NavView />}>
+      <Suspense fallback={<NavView skeleton />}>
         <AppNav />
       </Suspense>
       {/* arriba, margen para la barra de estado del iPhone cuando la app está instalada (pantalla completa) */}

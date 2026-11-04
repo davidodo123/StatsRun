@@ -36,6 +36,13 @@ node scripts/pruebas/acciones.mjs <scratchpad>/informe-acciones.json 1000 16
 - Luego lee el Db de cada uno y comprueba que quedó como debe (nada perdido, sin dos carreras el mismo día…). ~3 min con 16 a la vez.
 - Cambia los datos de los usuarios: para volver a pasar el recorrido, créalos otra vez.
 
+## 3c. Casos de uso (personas de principio a fin)
+```bash
+node scripts/pruebas/casos.mjs <scratchpad>/informe-casos.json
+```
+- Siete personas («prueba-caso-…»): novata (perfil → carrera → plan → registrar, medida, objetivo, entreno al momento, GPS), lesionado (bloquear, deshacer, saltar, liberar, cambiar de día, rehacer), solo fuerza (lugar, rutinas, entreno, cambiar, duplicar), temporada (carreras A, B y C, mismo día, quitar), en inglés y en francés (busca textos que se quedaron en español) y dos amigos (pedir, aceptar, entreno juntos, privacidad, dejar).
+- Unos segundos. Después del build y con el servidor en marcha; se borran con `--borrar` como los demás.
+
 ## 4. Arreglar y apuntar
 - Cada fallo real: arreglo + prueba unitaria si es del motor, y repetir los pasos 2-3 hasta que salga limpio.
 - En `diario/Roadmap.md`, sección «Pruebas con 1.000 usuarios»: lo encontrado (`[x]` arreglado, `[ ]` para decidir con David). Decisiones y nota del día como siempre.

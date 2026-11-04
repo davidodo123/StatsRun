@@ -98,6 +98,8 @@ function WeeksCard({ data, t, locale }: { data: ProgressData; t: T; locale: Loca
 
 function EffortCard({ e, t, locale }: { e: WeekEffort; t: T; locale: Locale }) {
   const [lo, hi] = e.range;
+  // sin semanas anteriores (recién llegado) no hay rango con el que comparar: salía «Recomendado: 0–0» y «Por encima»
+  const noBase = hi === 0;
   const state = e.score < lo ? "debajo" : e.score > hi ? "encima" : "enRango";
   const max = Math.max(hi * 1.3, e.score, 1);
   const pos = (v: number) => `${Math.min(100, (v / max) * 100)}%`;
@@ -105,10 +107,14 @@ function EffortCard({ e, t, locale }: { e: WeekEffort; t: T; locale: Locale }) {
     <Card title={t("pg.esfuerzo")} subtitle={t("pg.esfuerzoSub")}>
       <div className="flex items-baseline gap-3">
         <span className="font-display text-4xl text-ink tabular">{num(e.score, 0, locale)}</span>
-        <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${state === "enRango" ? "bg-good/15 text-good-ink" : state === "encima" ? "bg-warning/15 text-warning" : "bg-surface-2 text-ink-2"}`}>
+        {!noBase && <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${state === "enRango" ? "bg-good/15 text-good-ink" : state === "encima" ? "bg-warning/15 text-warning" : "bg-surface-2 text-ink-2"}`}>
           {t(`pg.${state}` as Key)}
-        </span>
+        </span>}
       </div>
+      {noBase ? (
+        <p className="mt-2 text-xs text-muted">{t("pg.sinBase")}</p>
+      ) : (
+        <>
       {/* barra: franja del rango recomendado y la marca de esta semana */}
       <div className="relative mt-3 h-2 rounded-full bg-surface-2" aria-hidden>
         <span className="absolute inset-y-0 rounded-full bg-accent/25" style={{ left: pos(lo), width: `calc(${pos(hi)} - ${pos(lo)})` }} />
@@ -118,14 +124,17 @@ function EffortCard({ e, t, locale }: { e: WeekEffort; t: T; locale: Locale }) {
         <span>{t("pg.rango", { a: num(lo, 0, locale), b: num(hi, 0, locale) })}</span>
         <span>{t("pg.semanaPasada", { n: num(e.lastWeek, 0, locale) })}</span>
       </p>
+        </>
+      )}
     </Card>
   );
 }
 
 function PredictionCard({ p, t, locale }: { p: ProgressData["prediction"]; t: T; locale: Locale }) {
   const now = p.trend.at(-1)?.sec ?? 0;
-  const monthAgo = p.trend.at(-5)?.sec ?? p.trend[0]?.sec ?? now;
-  const diff = monthAgo - now; // > 0: más rápido
+  // solo si hay datos de hace un mes (4 semanas antes): si no, sin comparación
+  const monthAgo = p.trend.length >= 5 ? p.trend.at(-5)!.sec : undefined;
+  const diff = monthAgo === undefined ? 0 : monthAgo - now; // > 0: más rápido
   return (
     <Card title={t("pg.prediccion")} subtitle={t("pg.prediccionSub")}>
       <p className="text-sm text-ink-2">{p.label}</p>
@@ -135,13 +144,13 @@ function PredictionCard({ p, t, locale }: { p: ProgressData["prediction"]; t: T;
           <span className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-semibold ${diff > 0 ? "bg-good/15 text-good-ink" : "bg-surface-2 text-ink-2"}`}>
             {diff > 0 ? "▼" : "▲"} {t(diff > 0 ? "pg.mejora" : "pg.empeora", { t: fmtDuration(Math.abs(diff)) })}
           </span>
-        ) : (
+        ) : monthAgo !== undefined ? (
           <span className="text-xs text-muted">{t("pg.igual")}</span>
-        )}
+        ) : null}
       </div>
-      <div className="mt-2">
+      {p.trend.length >= 2 && <div className="mt-2">
         <TrendLine data={p.trend} dataKey="sec" name={p.label} format="time" invert xKey="date" height={150} locale={locale} />
-      </div>
+      </div>}
     </Card>
   );
 }

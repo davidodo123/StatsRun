@@ -94,7 +94,7 @@ export function TodayHero({ plan, matches, today, goal, locale }: { plan: Plan; 
             )}
             {main.zone && (
               <div>
-                <dd className="text-xl font-bold text-ink">{main.zone}</dd>
+                <dd className="text-xl font-bold text-ink">{planText(main.zone, locale)}</dd>
                 <dt>{t("hoy.zona")}</dt>
               </div>
             )}

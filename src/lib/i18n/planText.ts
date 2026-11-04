@@ -8,6 +8,8 @@ type Tr = Partial<Record<Exclude<Locale, "es">, string>>;
 
 // textos fijos, tal cual los escribe el planificador
 export const EXACT: Record<string, Tr> = {
+  // zona de la sesión de carrera
+  Carrera: { en: "Race" },
   // foco de la semana
   "Base aeróbica: volumen suave, técnica y fuerza. Construir el motor.": { en: "Aerobic base: easy volume, technique and strength. Build the engine." },
   "Construcción: umbral y VO2max. Subir la cilindrada.": { en: "Build: threshold and VO2max. Raise your ceiling." },

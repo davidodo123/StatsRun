@@ -81,7 +81,7 @@ export function SessionCard({
             <span>{weekdayDate(s.date, locale)}</span>
           )}
           <span>· {t(kind.label)}</span>
-          {s.zone && <span>· {s.zone}</span>}
+          {s.zone && <span>· {planText(s.zone, locale)}</span>}
           {s.aiAdjusted && <span className="text-accent">· {t("sesion.ajustadaIA")}</span>}
           {s.movedFrom && <span>· {t("sesion.cambiada", { dia: shortWeekdayDate(s.movedFrom, locale) })}</span>}
         </div>

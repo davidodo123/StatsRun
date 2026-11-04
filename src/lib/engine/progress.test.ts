@@ -62,11 +62,15 @@ describe("esfuerzo de la semana", () => {
 });
 
 describe("tendencia de la predicción", () => {
-  it("un punto por semana y hoy al final", () => {
+  it("un punto por semana desde su primera carrera (6 oct) y hoy al final", () => {
     const p = predictionTrend(acts, profile, today, 10);
-    expect(p).toHaveLength(7);
+    expect(p).toHaveLength(5);
+    expect(p[0].date >= "2026-10-06").toBe(true);
     expect(p.at(-1)!.date).toBe(today);
     expect(p.every((x) => x.sec > 1800 && x.sec < 5400)).toBe(true);
+  });
+  it("sin carreras, solo hoy (no hay tendencia con la que comparar)", () => {
+    expect(predictionTrend([], profile, today, 10)).toHaveLength(1);
   });
 });
 

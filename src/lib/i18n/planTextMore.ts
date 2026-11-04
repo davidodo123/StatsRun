@@ -6,6 +6,7 @@ type More = { exact: Record<string, string>; patterns: string[] };
 
 const ca: More = {
   exact: {
+    Carrera: "Cursa",
     "Base aeróbica: volumen suave, técnica y fuerza. Construir el motor.": "Base aeròbica: volum suau, tècnica i força. Construir el motor.",
     "Construcción: umbral y VO2max. Subir la cilindrada.": "Construcció: llindar i VO2max. Pujar la cilindrada.",
     "Específico: ritmo de carrera y tiradas largas de calidad.": "Específic: ritme de cursa i tirades llargues de qualitat.",
@@ -188,6 +189,7 @@ const ca: More = {
 
 const pt: More = {
   exact: {
+    Carrera: "Prova",
     "Base aeróbica: volumen suave, técnica y fuerza. Construir el motor.": "Base aeróbia: volume suave, técnica e força. Construir o motor.",
     "Construcción: umbral y VO2max. Subir la cilindrada.": "Construção: limiar e VO2max. Subir a cilindrada.",
     "Específico: ritmo de carrera y tiradas largas de calidad.": "Específico: ritmo de prova e longões de qualidade.",
@@ -370,6 +372,7 @@ const pt: More = {
 
 const fr: More = {
   exact: {
+    Carrera: "Course",
     "Base aeróbica: volumen suave, técnica y fuerza. Construir el motor.": "Base aérobie : volume facile, technique et renfo. Construire le moteur.",
     "Construcción: umbral y VO2max. Subir la cilindrada.": "Développement : seuil et VO2max. Augmenter la cylindrée.",
     "Específico: ritmo de carrera y tiradas largas de calidad.": "Spécifique : allure course et sorties longues de qualité.",

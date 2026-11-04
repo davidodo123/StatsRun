@@ -30,7 +30,8 @@ interface UserRow {
 const users = (): { users: UserRow[] } => JSON.parse(readFileSync(USERS, "utf8"));
 
 function borrar() {
-  for (const f of readdirSync(DATA)) if (f.startsWith(`db_${PREFIX}`)) rmSync(path.join(DATA, f), { force: true });
+  // su Db y lo guardado aparte (series de GPS y fotos: «serie_prueba-…», «foto_prueba-…»)
+  for (const f of readdirSync(DATA)) if (["db_", "serie_", "foto_"].some((p) => f.startsWith(`${p}${PREFIX}`))) rmSync(path.join(DATA, f), { force: true });
   const doc = users();
   doc.users = doc.users.filter((u) => !u.id.startsWith(PREFIX)).map((u) => ({ ...u, friends: u.friends.filter((f) => !f.startsWith(PREFIX)) }));
   writeFileSync(USERS, JSON.stringify(doc));

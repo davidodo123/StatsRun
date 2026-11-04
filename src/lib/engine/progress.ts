@@ -82,15 +82,22 @@ export function weekEffort(acts: Activity[], profile: Profile, vdot: number, tod
   return { score: Math.round(acc), lastWeek: Math.round(prev[0]), range: [Math.round(avg * 0.8), Math.round(avg * 1.3)], daily };
 }
 
-/** Tiempo previsto para una distancia cada semana de las últimas `weeks` (con lo corrido hasta ese día). */
+/**
+ * Tiempo previsto para una distancia cada semana de las últimas `weeks` (con lo corrido hasta ese día).
+ * Empieza en su primera carrera: antes la predicción salía solo del perfil y comparar con ella engañaba
+ * («23:41 más lento que hace un mes» a quien acaba de empezar).
+ */
 export function predictionTrend(acts: Activity[], profile: Profile | undefined, today: string, km: number, weeks = 6): { date: string; sec: number }[] {
-  return Array.from({ length: weeks + 1 }, (_, i) => {
+  const firstRun = acts.filter((a) => a.sport === "run" && a.date <= today).reduce<string | undefined>((m, a) => (!m || a.date < m ? a.date : m), undefined);
+  const points = Array.from({ length: weeks + 1 }, (_, i) => {
     const date = addDays(today, -7 * (weeks - i));
     const upTo = acts.filter((a) => a.date <= date);
     const vdot = estimateVdot(upTo, profile, date).vdot;
     const runKm = upTo.filter((a) => a.sport === "run" && diffDays(date, a.date) < 42).reduce((s, a) => s + a.distanceM / 1000, 0);
     return { date, sec: Math.round(enduranceAdjustedTime(vdot, km, runKm / 6).timeSec) };
   });
+  const kept = firstRun ? points.filter((p) => p.date >= firstRun) : [];
+  return kept.length ? kept : points.slice(-1);
 }
 
 /** Lo que lleva hecho de un objetivo en su periodo actual (semana desde el lunes, mes o año naturales). */

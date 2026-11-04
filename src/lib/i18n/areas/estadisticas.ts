@@ -138,6 +138,8 @@ export const estadisticas = area({
     "pg.m.elev": "m de desnivel",
     "pg.m.count": "actividades",
     "pg.conseguido": "¡Conseguido!",
+    "pg.sinBase": "Aún no hay semanas anteriores con las que comparar: el rango recomendado sale a partir de la próxima.",
+    "st.carrera1": "1 carrera",
   },
   en: {
     "st.sinPerfil": "Create your profile to see stats",
@@ -275,6 +277,8 @@ export const estadisticas = area({
     "pg.m.elev": "m of elevation",
     "pg.m.count": "activities",
     "pg.conseguido": "Done!",
+    "pg.sinBase": "No previous weeks to compare with yet: the recommended range shows up from next week.",
+    "st.carrera1": "1 run",
   },
   ca: {
     "st.sinPerfil": "Crea el teu perfil per veure estadístiques",
@@ -412,6 +416,8 @@ export const estadisticas = area({
     "pg.m.elev": "m de desnivell",
     "pg.m.count": "activitats",
     "pg.conseguido": "Aconseguit!",
+    "pg.sinBase": "Encara no hi ha setmanes anteriors per comparar: el rang recomanat surt a partir de la propera.",
+    "st.carrera1": "1 cursa",
   },
   pt: {
     "st.sinPerfil": "Cria o teu perfil para ver estatísticas",
@@ -549,6 +555,8 @@ export const estadisticas = area({
     "pg.m.elev": "m de desnível",
     "pg.m.count": "atividades",
     "pg.conseguido": "Conseguido!",
+    "pg.sinBase": "Ainda não há semanas anteriores para comparar: o intervalo recomendado aparece a partir da próxima.",
+    "st.carrera1": "1 corrida",
   },
   fr: {
     "st.sinPerfil": "Crée ton profil pour voir les statistiques",
@@ -686,5 +694,7 @@ export const estadisticas = area({
     "pg.m.elev": "m de dénivelé",
     "pg.m.count": "activités",
     "pg.conseguido": "Réussi !",
+    "pg.sinBase": "Pas encore de semaines précédentes pour comparer : la fourchette conseillée apparaît dès la semaine prochaine.",
+    "st.carrera1": "1 sortie",
   },
 });

@@ -56,7 +56,6 @@ const PAGE_SIZE = 25;
 export default function PerfilPage({ searchParams }: PageProps<"/perfil">) {
   return (
     <>
-      <h1 className="sr-only">Perfil</h1>
       <Suspense fallback={<Loading />}>
         <Content searchParams={searchParams} />
       </Suspense>
@@ -78,6 +77,7 @@ async function Content({ searchParams }: { searchParams: PageProps<"/perfil">["s
 
   return (
     <div className="space-y-4">
+      <h1 className="sr-only">{tr("nav.perfil")}</h1>
       {db.profile && stats && (
         <ProfileHeader db={db} stats={stats} tab={tab} picture={me?.picture} tr={tr} locale={locale}>
           {/* las pestañas, dentro de la misma tarjeta: todas a la vista también en el móvil */}
