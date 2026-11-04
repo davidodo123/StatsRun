@@ -15,7 +15,7 @@ import { adaptIfMissed, adaptWithAI, coachConfig } from "@/lib/coach";
 import { fmtNum, parsePace, parseTime } from "@/lib/format";
 import { createHealthToken, revokeHealthToken } from "@/lib/healthToken";
 import { mergeHealth, parseHealthPayload, todayMadrid } from "@/lib/health";
-import { applyStrengthRoutines, routinesForPlan } from "@/lib/strength/routinePlan";
+import { applyStrengthRoutines, doneStrength, routinesForPlan } from "@/lib/strength/routinePlan";
 import { WEEKDAYS, addDays, diffDays, mondayOf, shortDate, todayLocal, weekday } from "@/lib/dates";
 import type { Db, Feel, Focus, Goal, Level, Plan, Profile, Sex, TuneUpRace } from "@/lib/types";
 import { downloadCmCourse, findCmRace } from "@/lib/cruzandolametaStore";
@@ -243,7 +243,7 @@ async function rebuildPlan(db: Db): Promise<Plan | undefined> {
   applyTuneUpRaces(plan, (db.races ?? []).filter((r) => r.priority !== "A"), today);
   applyBlockedDates(plan, db.unavailableDates ?? [], availableDaysOf(db.profile), today);
   // las sesiones de fuerza usan las rutinas del usuario (pierna en los huecos de pierna, superior en los de superior)
-  applyStrengthRoutines(plan, routinesForPlan(db), today);
+  applyStrengthRoutines(plan, routinesForPlan(db), today, doneStrength(db));
   plan.notes.push(`VDOT tomado de: ${stats.vdot.source}.`);
   if (hasRecentData) plan.notes.push(`Volumen de partida según tus actividades: ${stats.totals.avgWeeklyKm6.toFixed(0)} km/semana (media 6 semanas).`);
   // lo ya pasado del plan anterior se queda como estaba
@@ -701,7 +701,10 @@ export async function dismissSharedActivity(fd: FormData): Promise<void> {
 export async function deleteActivity(fd: FormData): Promise<void> {
   const id = String(fd.get("id") ?? "");
   await updateDb((db) => {
+    const gone = db.activities.find((a) => a.id === id);
     db.activities = db.activities.filter((a) => a.id !== id);
+    // si era fuerza, lo que queda de la semana se vuelve a colocar sin él
+    if (gone?.workout && db.plan) applyStrengthRoutines(db.plan, routinesForPlan(db), todayLocal(), doneStrength(db));
   });
   const uid = await requireUserId();
   await Promise.all([deleteImage(photoKey(uid, id)), deleteStream(uid, id)]);

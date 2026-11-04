@@ -69,8 +69,8 @@ export async function kvSet(key: string, json: string): Promise<void> {
       await fs.rename(tmp, file);
       return;
     } catch (e) {
-      // Windows bloquea un momento el archivo si otro lo está leyendo: se reintenta
-      if (i >= 5 || (e as NodeJS.ErrnoException).code !== "EPERM") {
+      // Windows bloquea un momento el archivo si otro lo está leyendo: se reintenta (con 5 intentos, 1 de 245.000 escrituras fallaba)
+      if (i >= 12 || (e as NodeJS.ErrnoException).code !== "EPERM") {
         await fs.rm(tmp, { force: true });
         throw e;
       }

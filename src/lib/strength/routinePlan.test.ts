@@ -103,3 +103,38 @@ describe("fuerza en el plan", () => {
     expect(strength.find((s) => s.strengthKind === "superior")?.routineId).toBe("sup");
   });
 });
+
+describe("sin repetir en la semana (lo vio David: tres días de «Pecho»)", () => {
+  const now = "2026-11-01T00:00:00.000Z";
+  const ex = (exerciseId: string) => ({ exerciseId, sets: [{ reps: 10, kg: 20 }, { reps: 10, kg: 20 }, { reps: 10, kg: 20 }], restSec: 90 });
+  const pecho = { id: "r_pecho", name: "Pecho", kind: "superior" as const, createdAt: now, updatedAt: now, exercises: [ex("Barbell_Bench_Press_-_Medium_Grip"), ex("Dumbbell_Flyes"), ex("Dips_-_Triceps_Version")] };
+  const espalda = { id: "r_espalda", name: "Espalda", createdAt: now, updatedAt: now, exercises: [ex("Bent_Over_Barbell_Row"), ex("Wide-Grip_Lat_Pulldown"), ex("Barbell_Curl")] };
+  const db = { routines: [pecho, espalda] } as unknown as Db;
+  // una semana con tres días de tren superior
+  const week = (kinds: string[]) => ({
+    weeks: [{ index: 0, start: "2026-11-02", phase: "base" as const, recovery: false, targetKm: 0, focus: "", sessions: kinds.map((k, i) => ({ id: `s${i}`, date: `2026-11-0${2 + i * 2}`, type: "strength" as const, title: "", description: "", steps: [], distanceKm: 0, durationMin: 40, strengthKind: k as never })) }],
+  }) as never;
+
+  it("la rutina marcada para «superior» no va a los tres días si hay otra de superior", () => {
+    const p = week(["superior", "superior", "superior"]);
+    applyStrengthRoutines(p, routinesForPlan(db), "2026-11-01");
+    const ids = (p as { weeks: { sessions: { routineId?: string }[] }[] }).weeks[0].sessions.map((s) => s.routineId);
+    expect(ids.filter((x) => x === "r_pecho").length).toBeLessThan(3);
+    expect(ids).toContain("r_espalda");
+  });
+
+  it("tras hacer pecho, lo que queda de la semana no vuelve a ser pecho", () => {
+    const p = week(["superior", "superior", "superior"]);
+    applyStrengthRoutines(p, routinesForPlan(db), "2026-11-03", [{ date: "2026-11-02", routineId: "r_pecho", group: "pecho" }]);
+    const later = (p as { weeks: { sessions: { date: string; routineId?: string }[] }[] }).weeks[0].sessions.filter((s) => s.date >= "2026-11-03");
+    expect(later[0].routineId).toBe("r_espalda");
+  });
+
+  it("por grupos: si hizo pecho el día de espalda, el día de pecho que quedaba pasa a espalda", () => {
+    const p = week(["espalda", "pecho", "hombro"]);
+    // lunes 2 (espalda) hizo pecho; hoy es martes 3
+    applyStrengthRoutines(p, routinesForPlan(db), "2026-11-03", [{ date: "2026-11-02", group: "pecho" }]);
+    const kinds = (p as { weeks: { sessions: { date: string; strengthKind?: string }[] }[] }).weeks[0].sessions.map((s) => `${s.date}:${s.strengthKind}`);
+    expect(kinds).toEqual(["2026-11-02:espalda", "2026-11-04:espalda", "2026-11-06:hombro"]);
+  });
+});

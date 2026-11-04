@@ -1,7 +1,8 @@
 // Mete las rutinas del usuario en las sesiones de fuerza del plan: las de pierna en los huecos de pierna,
 // las de tren superior en los de superior (el planificador decide qué tipo toca cada día).
 import { STRENGTH_KINDS, isLowerKind, strengthSession, type StrengthKind } from "../engine/planner";
-import type { Db, Phase, Plan } from "../types";
+import { addDays } from "../dates";
+import type { Activity, Db, Phase, Plan } from "../types";
 import { findExercise } from "./catalog";
 import type { Muscle } from "./labels";
 
@@ -99,6 +100,24 @@ const range = (xs: number[]) => {
   return lo === hi ? `${lo}` : `${lo}-${hi}`;
 };
 
+/** Fuerza ya hecha (para no repetir en la semana): fecha, rutina y parte del tren superior que trabajó. */
+export interface DoneStrength {
+  date: string;
+  routineId?: string;
+  group?: UpperGroup;
+}
+
+/** La fuerza que ya hizo: la rutina que siguió o, si fue libre, la parte del tren superior que más trabajó. */
+export function doneStrength(db: Pick<Db, "activities" | "routines" | "customExercises">): DoneStrength[] {
+  const byId = new Map(routinesForPlan(db).map((r) => [r.id, r]));
+  return db.activities
+    .filter((a): a is Activity & { workout: NonNullable<Activity["workout"]> } => Boolean(a.workout?.exercises.length))
+    .map((a) => {
+      const r = a.workout.routineId ? byId.get(a.workout.routineId) : undefined;
+      return { date: a.date, routineId: r?.id, group: r?.group ?? upperGroup(a.workout.exercises.map((e) => findExercise(db, e.exerciseId)?.muscles ?? [])) };
+    });
+}
+
 /** Rutinas del usuario listas para el plan: zona, pasos («3 × 8-10 Sentadilla a 80 kg») y duración estimada. */
 export function routinesForPlan(db: Pick<Db, "routines" | "customExercises">): RoutineForPlan[] {
   return (db.routines ?? []).filter((r) => r.planSlot !== "no").map((r) => {
@@ -147,8 +166,11 @@ const WANTS: Record<StrengthKind, RoutineZone[]> = {
 /**
  * Rehace las sesiones de fuerza futuras del plan: plantilla del tipo y la fase y, si hay una rutina del usuario
  * de esa zona, su contenido (rotando entre rutinas de la misma zona). En afinamiento se queda la activación.
+ * Dentro de una semana no repite rutina ni parte del tren superior si hay otra que encaje, contando lo que ya hizo
+ * (`done`): salían tres días de «Pecho» porque la rutina marcada para los días de superior iba a todos; y si hace
+ * pecho el día de espalda, el día de pecho que quedaba pasa a espalda.
  */
-export function applyStrengthRoutines(plan: Plan, routines: RoutineForPlan[], today: string): void {
+export function applyStrengthRoutines(plan: Plan, routines: RoutineForPlan[], today: string, done: DoneStrength[] = []): void {
   const turn: Record<string, number> = {};
   // planes creados antes de los tipos de fuerza: se asignan por orden en la semana (pierna, superior…)
   for (const w of plan.weeks) {
@@ -158,7 +180,18 @@ export function applyStrengthRoutines(plan: Plan, routines: RoutineForPlan[], to
       if (!s.strengthKind && kinds[i]) s.strengthKind = kinds[i];
     });
   }
-  for (const w of plan.weeks)
+  for (const w of plan.weeks) {
+    const end = addDays(w.start, 6);
+    const doneWeek = done.filter((d) => d.date >= w.start && d.date <= end);
+    const usedIds = new Set(doneWeek.map((d) => d.routineId).filter(Boolean));
+    const usedGroups = new Set<string>(doneWeek.flatMap((d) => (d.group ? [d.group] : [])));
+    // fuerza por grupos: si ya hizo la parte que toca un día que queda, ese día pasa a la que se saltó
+    const GROUPS = ["pecho", "espalda", "hombro"];
+    const planned = w.sessions.filter((s) => s.type === "strength" && GROUPS.includes(s.strengthKind ?? ""));
+    const future = planned.filter((s) => s.date >= today);
+    const missing = GROUPS.filter((g) => planned.some((s) => s.strengthKind === g) && !usedGroups.has(g) && !future.some((s) => s.strengthKind === g));
+    for (const s of future)
+      if (usedGroups.has(s.strengthKind!) && missing.length) s.strengthKind = missing.shift() as StrengthKind;
     w.sessions = w.sessions.map((s) => {
       if (s.type !== "strength" || !s.strengthKind || s.date < today) return s;
       // día de pierna de la fuerza por grupos: ese día no hay carrera
@@ -175,7 +208,15 @@ export function applyStrengthRoutines(plan: Plan, routines: RoutineForPlan[], to
       const options = exact.length ? exact : group ? fits.filter((r) => r.zone === "superior" && r.group === group) : fits.filter((r) => r.zone === zone);
       if (!options.length) return base;
       turn[key] ??= 0;
-      const r = options[turn[key]++ % options.length];
+      // por turnos, pero sin repetir en la semana rutina ni parte del tren superior si hay otra que valga
+      // (en la fuerza por grupos el día ya dice la parte: ahí solo se mira la rutina)
+      const start = turn[key]++;
+      const rotated = options.map((_, i) => options[(start + i) % options.length]);
+      const others = exact.length && !group ? fits.filter((r) => r.zone === zone && !exact.includes(r)) : [];
+      const fresh = (r: RoutineForPlan) => !usedIds.has(r.id) && (group || !r.group || !usedGroups.has(r.group));
+      const r = rotated.find(fresh) ?? others.find(fresh) ?? rotated[0];
+      usedIds.add(r.id);
+      if (r.group) usedGroups.add(r.group);
       const maintenance = w.phase === "especifico" || w.recovery;
       // rutina corta: se completa con lo que le falta de la plantilla de esa zona (remo, hombro, core…)
       const extra = complementSteps(base.steps, r.covers);
@@ -193,4 +234,5 @@ export function applyStrengthRoutines(plan: Plan, routines: RoutineForPlan[], to
         routineId: r.id,
       };
     });
+  }
 }

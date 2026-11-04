@@ -4,9 +4,11 @@
 // errores, textos rotos y, en inglés, frases que se quedaron en español. Los usuarios son «prueba-caso-…»: se borran con
 // `npx jiti scripts/pruebas/usuarios.ts --borrar`.
 //
-//   node scripts/pruebas/casos.mjs <informe.json>
+//   node scripts/pruebas/casos.mjs <informe.json>                 una ronda (unos 15 s)
+//   CASOS_MIN=60 node scripts/pruebas/casos.mjs <informe.json>    rondas seguidas durante 60 minutos, con datos al azar
+//                                                                  (cada ronda, las 14 personas a la vez; limpia cada 25)
 import { createHash, createHmac, randomBytes } from "node:crypto";
-import { readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 
 const [OUT = "informe-casos.json"] = process.argv.slice(2);
 const BASE = process.env.BASE ?? "http://localhost:3005";
@@ -42,10 +44,23 @@ const readDb = (id) => JSON.parse(readFileSync(`data/db_${id}.json`, "utf8"));
 const writeDb = (id, db) => writeFileSync(`data/db_${id}.json`, JSON.stringify(db));
 const form = (entries) => Object.assign(Array.isArray(entries) ? entries : Object.entries(entries), { __form: true });
 
+// ---------- rondas y azar ----------
+let R = 0; // ronda: va en los ids («prueba-caso-novata-12»)
+let seed = Number(process.env.SEMILLA ?? 2026);
+const rnd = () => ((seed = (seed * 1664525 + 1013904223) % 4294967296), seed / 4294967296);
+const int = (a, b) => a + Math.floor(rnd() * (b - a + 1));
+const pickOne = (list) => list[Math.floor(rnd() * list.length)];
+const jitter = (n, d = 20) => n + int(-d, d);
+
 const problems = [];
 const log = [];
 let steps = 0;
-const bad = (who, step, kind, detail = "") => problems.push({ who, step, kind, detail: String(detail).slice(0, 300) });
+const counts = {};
+const bad = (who, step, kind, detail = "") => {
+  const k = `${who.replace(/^prueba-caso-/, "").replace(/-\d+$/, "")} · ${step.replace(/\/actividad\/.*/, "/actividad/…").replace(/\/amigos\/.*/, "/amigos/…")} · ${kind}`;
+  counts[k] = (counts[k] ?? 0) + 1;
+  if (counts[k] <= 5) problems.push({ who, step, kind, detail: String(detail).slice(0, 300) });
+};
 const check = (who, step, ok, detail) => {
   steps++;
   if (!ok) bad(who, step, "no-cumple", detail);
@@ -72,7 +87,7 @@ async function act(who, lang, step, name, args, { error = false } = {}) {
   const err = text.match(/"error":"(?!\$)([^"]{0,200})/)?.[1];
   if (err && !error) bad(who, step, "rechazado", err);
   if (error && !err) bad(who, step, "esperaba-error", "");
-  log.push({ who, step, status: res.status, error: err });
+  if (log.length < 2000) log.push({ who, step, status: res.status, error: err });
   return err;
 }
 
@@ -131,17 +146,17 @@ function addUser(id, name) {
 
 const profileForm = (p) =>
   form([
-    ["name", p.name], ["sex", p.sex ?? "female"], ["age", p.age ?? 31], ["weightKg", p.weightKg ?? 60], ["heightCm", p.heightCm ?? 166],
+    ["name", p.name], ["sex", p.sex ?? pickOne(["female", "male"])], ["age", p.age ?? int(18, 66)], ["weightKg", p.weightKg ?? int(48, 98)], ["heightCm", p.heightCm ?? int(152, 196)],
     ["focus", p.focus ?? "ambos"], ["level", p.level ?? "principiante"], ["yearsRunning", p.yearsRunning ?? 0], ["weeklyKm", p.weeklyKm ?? 10],
     ["longestRunKm", p.longestRunKm ?? 6], ...(p.days ?? [0, 2, 4, 6]).map((d) => ["availableDays", d]), ["longRunDay", p.longRunDay ?? 6],
-    ["strengthPerWeek", p.strengthPerWeek ?? 2], ["strengthStyle", p.strengthStyle ?? "general"], ["injuries", p.injuries ?? ""],
+    ["strengthPerWeek", p.strengthPerWeek ?? int(0, 3)], ["strengthStyle", p.strengthStyle ?? "general"], ["injuries", p.injuries ?? ""],
   ]);
 
 const PAGES = ["/", "/plan", "/plan/actual", "/plan/al-momento", "/fuerza", "/perfil", "/perfil?tab=running", "/perfil?tab=fuerza", "/perfil?tab=actividades", "/perfil?tab=salud", "/estadisticas", "/registrar", "/entrenador", "/amigos", "/carreras"];
 
 // ---------- 1. Novata que prepara su primer 10K ----------
 async function novata() {
-  const who = "prueba-caso-novata", L = "es";
+  const who = `prueba-caso-novata-${R}`, L = "es";
   addUser(who, "Lucía Novata");
   await act(who, L, "perfil", "src/app/actions.ts#saveProfile", [{}, profileForm({ name: "Lucía Novata", level: "nuevo", weeklyKm: 0, longestRunKm: 0 })]);
   let db = readDb(who);
@@ -170,17 +185,18 @@ async function novata() {
 
 // ---------- 2. Lesionado que no puede entrenar unos días ----------
 async function lesionado() {
-  const who = "prueba-caso-lesion", L = "es";
+  const who = `prueba-caso-lesion-${R}`, L = "es";
   addUser(who, "Pablo Lesión");
   await act(who, L, "perfil", "src/app/actions.ts#saveProfile", [{}, profileForm({ name: "Pablo Lesión", sex: "male", age: 42, weightKg: 78, heightCm: 178, level: "intermedio", yearsRunning: 5, weeklyKm: 35, longestRunKm: 16, days: [0, 1, 3, 5, 6], longRunDay: 6, injuries: "tendinitis rotuliana" })]);
-  await act(who, L, "carrera", "src/app/actions.ts#saveGoal", [{}, form({ name: "Media de primavera", date: day(120), distanceKm: "21.0975", targetTime: "1:45:00" })]);
+  await act(who, L, "carrera", "src/app/actions.ts#saveGoal", [{}, form({ name: "Media de primavera", date: day(jitter(120)), distanceKm: "21.0975", targetTime: "1:45:00" })]);
   let db = readDb(who);
   const next = db.plan.weeks.flatMap((w) => w.sessions).find((s) => s.date > today && s.date <= day(14) && s.type !== "strength");
   // una semana sin poder
-  await act(who, L, "bloquear", "src/app/actions.ts#markUnavailable", [{}, form({ from: day(1), to: day(7) })]);
+  const nb = int(1, 7);
+  await act(who, L, "bloquear", "src/app/actions.ts#markUnavailable", [{}, form({ from: day(1), to: day(nb) })]);
   db = readDb(who);
-  const inBlocked = db.plan.weeks.flatMap((w) => w.sessions).filter((s) => s.date >= day(1) && s.date <= day(7) && s.type !== "race");
-  check(who, "bloquear", inBlocked.length === 0 && (db.unavailableDates ?? []).length === 7, inBlocked.map((s) => `${s.date}:${s.type}`).join(" "));
+  const inBlocked = db.plan.weeks.flatMap((w) => w.sessions).filter((s) => s.date >= day(1) && s.date <= day(nb) && s.type !== "race");
+  check(who, "bloquear", inBlocked.length === 0 && (db.unavailableDates ?? []).length === nb, inBlocked.map((s) => `${s.date}:${s.type}`).join(" "));
   await act(who, L, "deshacer", "src/app/actions.ts#undoSkip", []);
   db = readDb(who);
   check(who, "deshacer", !(db.unavailableDates ?? []).length && db.plan.weeks.flatMap((w) => w.sessions).some((s) => s.id === next?.id), JSON.stringify(db.unavailableDates));
@@ -205,7 +221,7 @@ async function lesionado() {
 
 // ---------- 3. Solo fuerza (sin carrera) ----------
 async function fuerza() {
-  const who = "prueba-caso-fuerza", L = "es";
+  const who = `prueba-caso-fuerza-${R}`, L = "es";
   addUser(who, "Marta Fuerza");
   await act(who, L, "perfil", "src/app/actions.ts#saveProfile", [{}, profileForm({ name: "Marta Fuerza", focus: "fuerza", strengthPerWeek: 3 })]);
   await act(who, L, "lugar", "src/app/strength-actions.ts#addPresetPlace", [form({ preset: "Gimnasio" })]);
@@ -227,7 +243,7 @@ async function fuerza() {
 
 // ---------- 4. Temporada con varias carreras ----------
 async function temporada() {
-  const who = "prueba-caso-temporada", L = "es";
+  const who = `prueba-caso-temporada-${R}`, L = "es";
   addUser(who, "Iker Temporada");
   await act(who, L, "perfil", "src/app/actions.ts#saveProfile", [{}, profileForm({ name: "Iker Temporada", sex: "male", age: 29, weightKg: 70, heightCm: 180, level: "avanzado", yearsRunning: 8, weeklyKm: 60, longestRunKm: 28, days: [0, 1, 2, 3, 4, 6], longRunDay: 6, strengthPerWeek: 1 })]);
   await act(who, L, "maraton", "src/app/actions.ts#saveGoal", [{}, form({ name: "Maratón de Sevilla", date: day(150), distanceKm: "42.195", targetTime: "2:59:00" })]);
@@ -251,11 +267,11 @@ async function temporada() {
 
 // ---------- 5. En otro idioma: buscar lo que se quedó en español ----------
 async function otroIdioma(L) {
-  const who = `prueba-caso-${L}`;
+  const who = `prueba-caso-${L}-${R}`;
   addUser(who, "Emma English");
   await act(who, L, "idioma", "src/app/lang-actions.ts#setLanguage", [form({ lang: L })]);
   await act(who, L, "perfil", "src/app/actions.ts#saveProfile", [{}, profileForm({ name: "Emma English", level: "intermedio", yearsRunning: 3, weeklyKm: 30, longestRunKm: 14, days: [1, 3, 5, 6], longRunDay: 6, injuries: "knee pain" })]);
-  await act(who, L, "carrera", "src/app/actions.ts#saveGoal", [{}, form({ name: "London Half", date: day(84), distanceKm: "21.0975", targetTime: "1:25:00" })]);
+  await act(who, L, "carrera", "src/app/actions.ts#saveGoal", [{}, form({ name: "London Half", date: day(jitter(84)), distanceKm: "21.0975", targetTime: "1:25:00" })]);
   await act(who, L, "registrar", "src/app/actions.ts#saveActivity", [{}, form({ date: day(-2), time: "08:00", sport: "run", name: "Morning run", distanceKm: "8", duration: "46:00", feel: "bien" })]);
   await act(who, L, "fuerza", "src/app/strength-actions.ts#finishWorkout", [{ name: "Legs", startLocal: `${day(-1)}T18:00:00`, durationSec: 2400, rpe: 7, workout: { exercises: [{ exerciseId: "Goblet_Squat", sets: [{ kg: 16, reps: 10, done: true }] }] } }]);
   await act(who, L, "objetivo", "src/app/progress-actions.ts#addTarget", [{}, form({ period: "month", metric: "km", sport: "run", value: "100" })]);
@@ -273,9 +289,11 @@ async function otroIdioma(L) {
 
 // ---------- 6. Dos amigos ----------
 async function amigos() {
-  const a = "prueba-caso-amiga", b = "prueba-caso-amigo", L = "es";
+  const a = `prueba-caso-amiga-${R}`, b = `prueba-caso-amigo-${R}`, L = "es";
+  const c = `prueba-caso-extrano-${R}`;
   addUser(a, "Sara Amiga");
   addUser(b, "Dani Amigo");
+  addUser(c, "Extraño");
   for (const [who, name] of [[a, "Sara Amiga"], [b, "Dani Amigo"]]) await act(who, L, "perfil", "src/app/actions.ts#saveProfile", [{}, profileForm({ name })]);
   await act(a, L, "pedir", "src/app/auth-actions.ts#requestFriend", [form({ id: b })]);
   await act(b, L, "aceptar", "src/app/auth-actions.ts#answerRequest", [form({ id: a, accept: "1" })]);
@@ -288,8 +306,6 @@ async function amigos() {
   if (act1) await page(b, L, `/actividad/${encodeURIComponent(act1.id)}?de=${a}`, { expect: ["Rodaje con Dani"] });
   await page(b, L, "/amigos");
   // un desconocido no puede ver su ficha
-  const c = "prueba-caso-extrano";
-  addUser(c, "Extraño");
   steps++;
   const res = await fetch(`${BASE}/amigos/${a}`, { headers: { cookie: cookieFor(c) }, redirect: "manual" });
   const html = await res.text();
@@ -300,7 +316,7 @@ async function amigos() {
 
 // ---------- 7. Importa un GPX, lo edita y le pone foto ----------
 async function importadora() {
-  const who = "prueba-caso-gpx", L = "es";
+  const who = `prueba-caso-gpx-${R}`, L = "es";
   addUser(who, "Nuria Importa");
   await act(who, L, "perfil", "src/app/actions.ts#saveProfile", [{}, profileForm({ name: "Nuria Importa", level: "intermedio", weeklyKm: 25, longestRunKm: 12 })]);
   // 3 km con una cuesta, un punto cada 5 s
@@ -345,7 +361,7 @@ async function importadora() {
 
 // ---------- 8. iPhone: atajo de Salud ----------
 async function salud() {
-  const who = "prueba-caso-salud", L = "es";
+  const who = `prueba-caso-salud-${R}`, L = "es";
   addUser(who, "Hugo Salud");
   await act(who, L, "perfil", "src/app/actions.ts#saveProfile", [{}, profileForm({ name: "Hugo Salud", sex: "male" })]);
   // la clave sale en la respuesta de la acción (formato de React): se busca «rio_…»
@@ -385,10 +401,10 @@ async function salud() {
 
 // ---------- 9. Fuerza por grupos, lugares, ejercicio propio y EMOM ----------
 async function grupos() {
-  const who = "prueba-caso-grupos", L = "es";
+  const who = `prueba-caso-grupos-${R}`, L = "es";
   addUser(who, "Alba Grupos");
   await act(who, L, "perfil", "src/app/actions.ts#saveProfile", [{}, profileForm({ name: "Alba Grupos", level: "intermedio", weeklyKm: 30, longestRunKm: 14, days: [0, 1, 2, 3, 4, 5, 6], longRunDay: 6, strengthPerWeek: 4, strengthStyle: "grupos" })]);
-  await act(who, L, "carrera", "src/app/actions.ts#saveGoal", [{}, form({ name: "15K", date: day(90), distanceKm: "15", targetTime: "" })]);
+  await act(who, L, "carrera", "src/app/actions.ts#saveGoal", [{}, form({ name: "15K", date: day(jitter(90)), distanceKm: "15", targetTime: "" })]);
   await act(who, L, "lugar", "src/app/strength-actions.ts#savePlace", [{}, form([["name", "Casa"], ["notes", "Mancuernas de 12 kg"], ["eq", "mancuernas"], ["eq", "bandas"]])]);
   await act(who, L, "lugar-2", "src/app/strength-actions.ts#addPresetPlace", [form({ preset: "Gimnasio" })]);
   let db = readDb(who);
@@ -420,7 +436,7 @@ async function grupos() {
 
 // ---------- 10. Se equivoca: los errores tienen que salir (y nada se guarda) ----------
 async function errores() {
-  const who = "prueba-caso-errores", L = "es";
+  const who = `prueba-caso-errores-${R}`, L = "es";
   addUser(who, "Rita Errores");
   await act(who, L, "edad-rara", "src/app/actions.ts#saveProfile", [{}, profileForm({ name: "Rita", age: 3 })], { error: true });
   await act(who, L, "sin-dias", "src/app/actions.ts#saveProfile", [{}, profileForm({ name: "Rita", days: [3] })], { error: true });
@@ -450,10 +466,10 @@ async function errores() {
 
 // ---------- 11. Cambia de idea: termina el plan, otro objetivo, otro idioma ----------
 async function cambia() {
-  const who = "prueba-caso-cambia", L = "es";
+  const who = `prueba-caso-cambia-${R}`, L = "es";
   addUser(who, "Leo Cambia");
   await act(who, L, "perfil", "src/app/actions.ts#saveProfile", [{}, profileForm({ name: "Leo Cambia", level: "intermedio", weeklyKm: 30, longestRunKm: 15 })]);
-  await act(who, L, "media", "src/app/actions.ts#saveGoal", [{}, form({ name: "Media", date: day(80), distanceKm: "21.0975", targetTime: "" })]);
+  await act(who, L, "media", "src/app/actions.ts#saveGoal", [{}, form({ name: "Media", date: day(jitter(80)), distanceKm: "21.0975", targetTime: "" })]);
   await act(who, L, "terminar", "src/app/actions.ts#clearPlan", []);
   let db = readDb(who);
   check(who, "terminar", !db.plan && (db.pastPlans?.length ?? 0) === 1, `plan ${Boolean(db.plan)} anteriores ${db.pastPlans?.length}`);
@@ -478,7 +494,7 @@ async function cambia() {
 
 // ---------- 12. Memoria de la IA: preferencias y valoraciones (sin llamar a la IA) ----------
 async function memoria() {
-  const who = "prueba-caso-memoria", L = "es";
+  const who = `prueba-caso-memoria-${R}`, L = "es";
   addUser(who, "Ana Memoria");
   await act(who, L, "perfil", "src/app/actions.ts#saveProfile", [{}, profileForm({ name: "Ana Memoria" })]);
   await act(who, L, "preferencia", "src/app/ai-actions.ts#addAiPreference", [{}, form({ text: "No quiero zancadas", area: "fuerza" })]);
@@ -500,7 +516,7 @@ async function memoria() {
 
 // ---------- 13. Se va: borra su cuenta y no queda nada ----------
 async function seVa() {
-  const who = "prueba-caso-adios", L = "es";
+  const who = `prueba-caso-adios-${R}`, L = "es";
   addUser(who, "Iván Adiós");
   await act(who, L, "perfil", "src/app/actions.ts#saveProfile", [{}, profileForm({ name: "Iván Adiós" })]);
   const t0r = Date.parse(`${today}T07:00:00`);
@@ -514,16 +530,39 @@ async function seVa() {
   check(who, "sin-serie", !a || !existsSync(`data/serie_${who}_${a.id}.json`), "queda la serie de su carrera con GPS");
 }
 
-const t0 = Date.now();
-for (const [name, fn] of Object.entries({ novata, lesionado, fuerza, temporada, ingles: () => otroIdioma("en"), frances: () => otroIdioma("fr"), amigos, importadora, salud, grupos, errores, cambia, memoria, seVa })) {
-  const before = problems.length;
-  try {
-    await fn();
-  } catch (e) {
-    bad(name, "script", "excepcion", e.stack?.split("\n").slice(0, 3).join(" | "));
-  }
-  console.log(`${name}: ${problems.length - before} problemas`);
+// ---------- limpieza entre rondas (con el servidor parado de escribir: entre una ronda y otra) ----------
+function limpiar() {
+  for (const f of readdirSync("data")) if (["db_", "serie_", "foto_"].some((p) => f.startsWith(`${p}prueba-caso-`))) rmSync(`data/${f}`, { force: true });
+  const doc = JSON.parse(readFileSync(USERS, "utf8"));
+  doc.users = doc.users.filter((u) => !u.id.startsWith("prueba-caso-")).map((u) => ({ ...u, friends: u.friends.filter((x) => !x.startsWith("prueba-caso-")), requests: u.requests?.filter((x) => !x.startsWith("prueba-caso-")) }));
+  writeFileSync(USERS, JSON.stringify(doc));
 }
-writeFileSync(OUT, JSON.stringify({ pasos: steps, problemas: problems, acciones: log }, null, 2));
-console.log(`Hecho: ${steps} comprobaciones en ${Math.round((Date.now() - t0) / 1000)} s · ${problems.length} problemas`);
-for (const p of problems.slice(0, 60)) console.log(`  ${p.who} · ${p.step} · ${p.kind} · ${p.detail}`);
+
+const PERSONAS = { novata, lesionado, fuerza, temporada, ingles: () => otroIdioma("en"), frances: () => otroIdioma("fr"), catalan: () => otroIdioma("ca"), portugues: () => otroIdioma("pt"), amigos, importadora, salud, grupos, errores, cambia, memoria, seVa };
+const MINUTES = Number(process.env.CASOS_MIN ?? 0);
+const t0 = Date.now();
+let personas = 0;
+do {
+  // las 14 a la vez: cada una crea su usuario antes de su primer await (la ronda empieza con users.json quieto)
+  await Promise.all(
+    Object.entries(PERSONAS).map(async ([name, fn]) => {
+      try {
+        await fn();
+      } catch (e) {
+        bad(`prueba-caso-${name}-${R}`, "script", "excepcion", e.stack?.split("\n").slice(0, 3).join(" | "));
+      }
+      personas++;
+    }),
+  );
+  R++;
+  if (R % 25 === 0) limpiar();
+  if (R % 10 === 0 || !MINUTES) {
+    const min = (Date.now() - t0) / 60000;
+    console.log(`ronda ${R} · ${personas} personas · ${steps} comprobaciones · ${Object.values(counts).reduce((a, b) => a + b, 0)} problemas · ${min.toFixed(1)} min`);
+    writeFileSync(OUT, JSON.stringify({ rondas: R, personas, pasos: steps, porTipo: counts, problemas: problems, acciones: log.slice(-200) }, null, 2));
+  }
+} while (MINUTES && Date.now() - t0 < MINUTES * 60000);
+limpiar();
+writeFileSync(OUT, JSON.stringify({ rondas: R, personas, pasos: steps, porTipo: counts, problemas: problems, acciones: log.slice(-200) }, null, 2));
+console.log(`Hecho: ${R} rondas, ${personas} personas, ${steps} comprobaciones en ${Math.round((Date.now() - t0) / 1000)} s · ${Object.values(counts).reduce((a, b) => a + b, 0)} problemas`);
+for (const [k, n] of Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 40)) console.log(`  ${n} × ${k}`);

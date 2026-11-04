@@ -1176,3 +1176,11 @@ Fuentes: screensdesign.com, posthog.com/pricing, revenuecat.com/pricing, revenue
 - Arreglos de la calibración: «ayer», «anteayer» y «hoy» del mensaje mandan sobre la fecha de la IA (ponía hoy por ayer); si hay rutina, fuera del texto la lista de ejercicios repetida; un segundo intento si el modelo contesta sin JSON; y que escriba con tildes (el gratis las quitaba).
 - De paso: dos expresiones regulares tenían caracteres de control en vez de `\b` (se colaron al escribirlas): «gym» no se reconocía como gimnasio en el chat, y en Cruzando la Meta no se descartaban las carreras de BTT/MTB por el nombre. Arreglado, con prueba.
 
+## Rutinas sin repetir en la semana
+*2026-11-04*
+
+- David: «de repente la rutina me pone 3 días de pecho». Causa: una rutina marcada para un tipo de día (las de la IA traen `kind`, o el «día del plan» que elige él) iba a **todos** los días de ese tipo, sin mirar si ya estaba esa semana ni lo que ya había entrenado.
+- Ahora (`applyStrengthRoutines`, `src/lib/strength/routinePlan.ts`): por turnos como antes, pero dentro de una semana no repite rutina ni parte del tren superior (pecho, espalda, hombro) si hay otra que encaje; y cuenta la fuerza ya hecha esa semana (`doneStrength`: la rutina que siguió o, si fue libre, la parte que más trabajó).
+- Lo que pidió: si hace pecho el día de espalda, al guardar el entreno lo que queda de la semana se recoloca desde mañana (en la fuerza por grupos, el día de pecho pasa a espalda). También al guardar un entreno que contó en el chat, al borrar uno y al rehacer el plan.
+- Con pruebas que reproducen los tres casos (fallan con el código de antes).
+

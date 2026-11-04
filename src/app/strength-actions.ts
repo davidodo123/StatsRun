@@ -12,15 +12,16 @@ import { aiLeft, aiLimitMessage, countAiUse, refundAiUse } from "@/lib/aiPlan";
 import { isAiUnlimited } from "@/lib/auth";
 import { CHAT_SYSTEM, chatContext, chatEquipment, chatExerciseList, chatHistory, chatReplyFromAi, type AiChatReply } from "@/lib/strength/chat";
 import { STRENGTH_SYSTEM, equipmentFromText, routinesFromAi, strengthRequest, type AiStrengthReply } from "@/lib/strength/aiRoutines";
-import { todayLocal } from "@/lib/dates";
+import { todayLocal, addDays } from "@/lib/dates";
 import { findExercise } from "@/lib/strength/catalog";
 import { cleanRoutineExercises, cleanWorkout, emomTitle } from "@/lib/strength/workouts";
-import { applyStrengthRoutines, routinesForPlan } from "@/lib/strength/routinePlan";
+import { applyStrengthRoutines, doneStrength, routinesForPlan } from "@/lib/strength/routinePlan";
 import type { BodyMeasurement, Db } from "@/lib/types";
 
 /** Tras cambiar las rutinas, las sesiones de fuerza del plan se rehacen con ellas. */
-function syncPlanRoutines(d: Db) {
-  if (d.plan) applyStrengthRoutines(d.plan, routinesForPlan(d), todayLocal());
+/** Rutinas en las sesiones de fuerza del plan, contando lo ya hecho esta semana (desde `from`: hoy, o mañana tras un entreno). */
+function syncPlanRoutines(d: Db, from = todayLocal()) {
+  if (d.plan) applyStrengthRoutines(d.plan, routinesForPlan(d), from, doneStrength(d));
 }
 import { CATEGORIES, EQUIPMENT, MUSCLES, PLACE_PRESETS, type Equipment, type ExerciseCategory, type Muscle } from "@/lib/strength/labels";
 import { markUnavailableDates, type FormState } from "./actions";
@@ -295,6 +296,8 @@ export async function finishWorkout(input: {
         workout,
       },
     ].sort((a, b) => a.startLocal.localeCompare(b.startLocal));
+    // lo que queda de la semana se recoloca: si hizo pecho el día de espalda, el día de pecho que quedaba pasa a espalda
+    syncPlanRoutines(d, addDays(todayLocal(), 1));
   });
   // la IA reajusta los próximos días con la nueva carga
   if (coachConfig().configured) {
@@ -493,6 +496,7 @@ export async function saveChatActivity(fd: FormData): Promise<void> {
     ].sort((a, b) => a.startLocal.localeCompare(b.startLocal));
     m.activityId = id;
     saved = true;
+    syncPlanRoutines(d, addDays(todayLocal(), 1));
   });
   // la IA reajusta los próximos días con el entreno nuevo
   if (saved && coachConfig().configured) {
