@@ -301,7 +301,7 @@ input.input::-webkit-date-and-time-value {
   }
 }
 
-/* Al registrar un entreno: una figura gigante del deporte se llena de líquido lima (WorkoutCelebration) */
+/* Al registrar un entreno: sobre la pantalla lima, una figura gigante del deporte se llena de líquido negro (WorkoutCelebration) */
 .liquid {
   position: fixed;
   inset: 0;
@@ -314,9 +314,9 @@ input.input::-webkit-date-and-time-value {
   padding: 1.5rem 1rem;
   overflow: hidden;
   pointer-events: none;
-  background: var(--bg);
+  background: var(--accent);
   text-align: center;
-  color: var(--accent);
+  color: var(--accent-ink);
   animation: liquid-screen 3s both;
 }
 .liquid-figure {
@@ -327,11 +327,12 @@ input.input::-webkit-date-and-time-value {
   overflow: visible;
 }
 .liquid-empty {
-  fill: var(--surface-2);
-  stroke: var(--surface-2);
+  fill: var(--accent-ink);
+  stroke: var(--accent-ink);
+  opacity: 0.14;
 }
 .liquid-level {
-  fill: var(--accent);
+  fill: var(--accent-ink);
   animation: liquid-rise 3s both;
 }
 .liquid-wave {
@@ -344,7 +345,7 @@ input.input::-webkit-date-and-time-value {
   animation-direction: reverse;
 }
 .liquid-bubble {
-  fill: var(--accent-ink);
+  fill: var(--accent);
   opacity: 0;
   animation: liquid-bubble 1.6s ease-in both;
 }

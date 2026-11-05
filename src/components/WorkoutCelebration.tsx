@@ -82,7 +82,7 @@ const FIGURES: Record<SportKind, ReactNode> = {
 };
 
 /**
- * Al registrar un entreno, una figura gigante del deporte hecho (pesas, muñeco corriendo, bici…) se llena de líquido lima.
+ * Al registrar un entreno, la pantalla se pone lima y una figura gigante del deporte hecho (pesas, muñeco corriendo, bici…) se llena de líquido negro.
  * Las acciones dejan una cookie con el deporte (lib/celebrate.ts) porque muchas cambian de pantalla justo al guardar; aquí
  * se mira cada poco para que valga igual con cambio de pantalla o sin él. No bloquea los toques.
  */
