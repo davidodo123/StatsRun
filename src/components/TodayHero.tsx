@@ -77,14 +77,12 @@ export function TodayHero({ plan, matches, today, goal, locale }: { plan: Plan; 
         today={today}
         locale={locale}
         backLabel={t("hoy.volverHoy")}
-        weekHeader={
+        weekLabel={t("hoy.semana")}
+        weekTotal={
           week && (
-            <div className="flex justify-between text-xs font-semibold tracking-wider text-muted uppercase">
-              <span>{t("hoy.semana")}</span>
-              <span>
-                <span className="text-ink">{Math.round(doneKm)}</span> / {week.targetKm} km
-              </span>
-            </div>
+            <>
+              <span className="text-ink">{Math.round(doneKm)}</span> / {week.targetKm} km
+            </>
           )
         }
       />

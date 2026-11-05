@@ -9,30 +9,29 @@ import type { Locale } from "@/lib/i18n";
  * Cada día ya viene pintado del servidor (`heroes`); aquí solo se elige cuál se ve.
  * Todos van apilados en la misma celda (los demás, invisibles): el bloque mide siempre lo del día más alto y las barras
  * no se mueven al cambiar de día (antes la pantalla subía o bajaba según el texto de cada día).
+ * «Volver a hoy» sustituye a la palabra «Semana» en su fila: así no ocupa sitio arriba ni mueve nada.
  */
 export function HeroWeek({
   heroes,
   days,
   today,
   locale,
-  weekHeader,
+  weekLabel,
+  weekTotal,
   backLabel,
 }: {
   heroes: Record<string, ReactNode>;
   days: WeekBarDay[];
   today: string;
   locale: Locale;
-  weekHeader?: ReactNode;
+  weekLabel: string;
+  weekTotal?: ReactNode;
   backLabel: string;
 }) {
   const [sel, setSel] = useState(today);
   const current = heroes[sel] ? sel : today;
   return (
     <>
-      {/* «Volver a hoy» siempre ocupa su sitio (invisible en hoy): si no, al salir de hoy todo bajaba una línea */}
-      <button type="button" onClick={() => setSel(today)} className={`mb-3 text-sm font-semibold text-accent ${current === today ? "invisible" : ""}`} aria-hidden={current === today} tabIndex={current === today ? -1 : 0}>
-        ← {backLabel}
-      </button>
       <div className="grid">
         {Object.entries(heroes).map(([date, hero]) => (
           <div key={date} style={{ gridArea: "1 / 1" }} className={date === current ? "" : "invisible"} aria-hidden={date !== current}>
@@ -42,7 +41,16 @@ export function HeroWeek({
       </div>
       {days.length > 0 && (
         <div className="mt-7 border-t border-line pt-4">
-          {weekHeader}
+          <div className="flex items-center justify-between text-xs font-semibold tracking-wider text-muted uppercase">
+            {current === today ? (
+              <span>{weekLabel}</span>
+            ) : (
+              <button type="button" onClick={() => setSel(today)} className="-my-2 py-2 font-semibold tracking-wider text-accent uppercase">
+                ← {backLabel}
+              </button>
+            )}
+            <span>{weekTotal}</span>
+          </div>
           <WeekBars days={days} today={today} locale={locale} selected={current} onSelect={setSel} />
         </div>
       )}
