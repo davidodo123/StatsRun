@@ -17,7 +17,7 @@ import { todayLocal, addDays } from "@/lib/dates";
 import { findExercise } from "@/lib/strength/catalog";
 import { cleanRoutineExercises, cleanWorkout, emomTitle } from "@/lib/strength/workouts";
 import { applyStrengthRoutines, doneStrength, routinesForPlan } from "@/lib/strength/routinePlan";
-import type { BodyMeasurement, Db, PlanChange } from "@/lib/types";
+import type { BodyMeasurement, Db, PlanChange, SportKind } from "@/lib/types";
 
 /** Tras cambiar las rutinas, las sesiones de fuerza del plan se rehacen con ellas. */
 /** Rutinas en las sesiones de fuerza del plan, contando lo ya hecho esta semana (desde `from`: hoy, o mañana tras un entreno). */
@@ -305,7 +305,7 @@ export async function finishWorkout(input: {
     const uid = await requireUserId();
     after(() => adaptWithAI(uid).then(() => undefined));
   }
-  await markCelebration();
+  await markCelebration("strength");
   refresh();
   redirect(`/actividad/${id}`);
 }
@@ -468,9 +468,9 @@ export async function saveChatRoutines(fd: FormData): Promise<void> {
 /** Guarda el entreno que contó en el chat (y que la IA dejó listo) como una actividad más. */
 export async function saveChatActivity(fd: FormData): Promise<void> {
   const at = text(fd, "at", 40);
-  let saved = false;
+  let saved: SportKind | undefined;
   await updateDb((d) => {
-    saved = false; // la escritura puede reintentarse
+    saved = undefined; // la escritura puede reintentarse
     const m = d.strengthChat?.find((x) => x.at === at && x.role === "assistant");
     const c = m?.activity;
     if (!m || !c || m.activityId) return;
@@ -497,10 +497,10 @@ export async function saveChatActivity(fd: FormData): Promise<void> {
       },
     ].sort((a, b) => a.startLocal.localeCompare(b.startLocal));
     m.activityId = id;
-    saved = true;
+    saved = c.sport;
     syncPlanRoutines(d, addDays(todayLocal(), 1));
   });
-  if (saved) await markCelebration();
+  if (saved) await markCelebration(saved);
   // la IA reajusta los próximos días con el entreno nuevo
   if (saved && coachConfig().configured) {
     const uid = await requireUserId();

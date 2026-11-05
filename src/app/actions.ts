@@ -586,7 +586,7 @@ export async function saveActivity(_: FormState, fd: FormData): Promise<FormStat
   await scheduleAiAdapt();
   // nuevo: volver con el formulario limpio para no registrarlo dos veces
   refresh();
-  if (!existingId) await markCelebration();
+  if (!existingId) await markCelebration(sport);
   if (!existingId) redirect(sessionId ? "/plan/actual?registrado=1" : `/registrar?guardado=${encodeURIComponent(id)}`);
   return { ok: true, message: "Entreno actualizado." };
 }
@@ -643,7 +643,7 @@ export async function saveRecordedRun(input: { sport?: string; name?: string; st
   });
   if (stream) await putStream(await requireUserId(), id, stream);
   await scheduleAiAdapt();
-  await markCelebration();
+  await markCelebration(sport);
   refresh();
   redirect(`/actividad/${id}`);
 }
@@ -700,7 +700,7 @@ export async function copySharedActivity(fd: FormData): Promise<void> {
       },
     ].sort((a, b) => a.startLocal.localeCompare(b.startLocal));
   });
-  if (copied) await markCelebration();
+  if (copied) await markCelebration(src.sport);
   await scheduleAiAdapt();
   refresh();
 }

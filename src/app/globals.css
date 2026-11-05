@@ -301,73 +301,85 @@ input.input::-webkit-date-and-time-value {
   }
 }
 
-/* Al registrar un entreno: el líquido lima sube ondulando, llena la pantalla y baja (WorkoutCelebration) */
+/* Al registrar un entreno: una figura gigante del deporte se llena de líquido lima (WorkoutCelebration) */
 .liquid {
   position: fixed;
   inset: 0;
   z-index: 70;
-  overflow: hidden;
-  pointer-events: none;
-}
-.liquid-body {
-  position: absolute;
-  inset: 0;
-  background: var(--accent);
-  animation: liquid-rise 2.6s both;
-}
-.liquid-wave {
-  position: absolute;
-  left: 0;
-  bottom: calc(100% - 1px);
-  width: 200%;
-  height: 48px;
-  fill: var(--accent);
-  animation: liquid-wave 1.1s linear infinite;
-}
-.liquid-wave-back {
-  height: 66px;
-  opacity: 0.45;
-  animation-duration: 1.7s;
-  animation-direction: reverse;
-}
-.liquid-bubble {
-  position: absolute;
-  top: 100%;
-  border-radius: 50%;
-  background: var(--accent-ink);
-  opacity: 0;
-  animation: liquid-bubble 1.5s ease-in both;
-}
-.liquid-message {
-  position: absolute;
-  inset: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 1.25rem;
-  padding: 1.5rem;
+  padding: 1.5rem 1rem;
+  overflow: hidden;
+  pointer-events: none;
+  background: var(--bg);
   text-align: center;
-  color: var(--accent-ink);
-  animation: liquid-message 2.6s both;
+  color: var(--accent);
+  animation: liquid-screen 3s both;
+}
+.liquid-figure {
+  width: 100%;
+  min-height: 0;
+  flex: 1 1 auto;
+  max-height: 72vh;
+  overflow: visible;
+}
+.liquid-empty {
+  fill: var(--surface-2);
+  stroke: var(--surface-2);
+}
+.liquid-level {
+  fill: var(--accent);
+  animation: liquid-rise 3s both;
+}
+.liquid-wave {
+  animation: liquid-wave 1.1s linear infinite;
+}
+.liquid-wave-back {
+  opacity: 0.45;
+  transform-origin: 0 0;
+  animation-duration: 1.7s;
+  animation-direction: reverse;
+}
+.liquid-bubble {
+  fill: var(--accent-ink);
+  opacity: 0;
+  animation: liquid-bubble 1.6s ease-in both;
+}
+.liquid-message {
+  animation: liquid-message 3s both;
+}
+@keyframes liquid-screen {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  7%,
+  90% {
+    opacity: 1;
+  }
 }
 @keyframes liquid-rise {
-  0% {
-    transform: translateY(calc(100% + 70px));
-    animation-timing-function: cubic-bezier(0.35, 0, 0.3, 1);
+  0%,
+  5% {
+    transform: translateY(540px);
+    animation-timing-function: cubic-bezier(0.4, 0, 0.6, 1);
   }
-  44%,
-  70% {
+  50%,
+  74% {
     transform: translateY(0);
     animation-timing-function: cubic-bezier(0.6, 0, 0.8, 0.6);
   }
+  98%,
   100% {
-    transform: translateY(calc(100% + 70px));
+    transform: translateY(540px);
   }
 }
 @keyframes liquid-wave {
   to {
-    transform: translateX(-50%);
+    transform: translateX(-400px);
   }
 }
 @keyframes liquid-bubble {
@@ -376,51 +388,42 @@ input.input::-webkit-date-and-time-value {
     transform: translateY(0);
   }
   25% {
-    opacity: 0.16;
+    opacity: 0.18;
   }
   100% {
     opacity: 0;
-    transform: translateY(-80vh);
+    transform: translateY(-340px);
   }
 }
 @keyframes liquid-message {
   0%,
-  32% {
+  38% {
     opacity: 0;
-    transform: scale(0.8);
+    transform: translateY(12px);
   }
-  44%,
-  68% {
+  50%,
+  76% {
     opacity: 1;
     transform: none;
   }
-  78%,
+  88%,
   100% {
     opacity: 0;
     transform: none;
-  }
-}
-@keyframes liquid-fade {
-  0%,
-  100% {
-    opacity: 0;
-  }
-  20%,
-  75% {
-    opacity: 1;
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  /* sin movimiento: el color aparece y se va, sin olas */
-  .liquid-body {
-    animation-name: liquid-fade;
-  }
+  /* sin movimiento: la figura ya llena aparece y se va */
+  .liquid-level,
   .liquid-wave,
+  .liquid-bubble {
+    animation: none;
+  }
   .liquid-bubble {
     display: none;
   }
   .liquid-message {
-    animation-name: liquid-fade;
+    animation: none;
   }
 }
 

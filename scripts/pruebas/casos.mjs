@@ -89,7 +89,7 @@ async function act(who, lang, step, name, args, { error = false } = {}) {
   if (err && !error) bad(who, step, "rechazado", err);
   if (error && !err) bad(who, step, "esperaba-error", "");
   if (log.length < 2000) log.push({ who, step, status: res.status, error: err });
-  celebrated[who] = res.headers.getSetCookie().some((c) => c.startsWith("rio_fiesta=1") && !/httponly/i.test(c));
+  celebrated[who] = res.headers.getSetCookie().find((c) => /^rio_fiesta=[a-z]/.test(c) && !/httponly/i.test(c))?.match(/^rio_fiesta=([a-z]+)/)[1];
   return err;
 }
 
@@ -171,7 +171,7 @@ async function novata() {
   for (const p of PAGES) await page(who, L, p);
   // primera semana: registra lo que hace
   await act(who, L, "registrar", "src/app/actions.ts#saveActivity", [{}, form({ date: day(-1), time: "19:00", sport: "run", name: "Primer trote", distanceKm: "3", duration: "24:00", feel: "duro" })]);
-  check(who, "animacion-registrar", celebrated[who], "registrar un entreno no lanza la animación");
+  check(who, "animacion-registrar", celebrated[who] === "run", "registrar una carrera no lanza su animación");
   await act(who, L, "medida", "src/app/strength-actions.ts#saveMeasurement", [{}, form({ date: today, weightKg: "60.5" })]);
   check(who, "sin-animacion-medida", !celebrated[who], "guardar una medida lanza la animación");
   await act(who, L, "objetivo", "src/app/progress-actions.ts#addSuggestedTarget", []);
@@ -179,7 +179,7 @@ async function novata() {
   const t0 = Date.parse(`${today}T07:00:00`);
   const pts = Array.from({ length: 181 }, (_, k) => ({ t: t0 + k * 3000, lat: 37.2 + k * 5.1e-5, lon: -3.6, alt: 640 + 5 * Math.sin(k / 30), acc: 6 }));
   await act(who, L, "gps", "src/app/actions.ts#saveRecordedRun", [{ sport: "run", name: "Vuelta al parque", startLocal: `${today}T07:00:00`, points: pts, rpe: 5 }]);
-  check(who, "animacion-gps", celebrated[who], "grabar con GPS no lanza la animación");
+  check(who, "animacion-gps", celebrated[who] === "run", "grabar con GPS no lanza su animación");
   db = readDb(who);
   const gps = db.activities.find((a) => a.name === "Vuelta al parque");
   check(who, "gps", gps && gps.distanceM > 900 && gps.efforts?.[400], JSON.stringify(gps)?.slice(0, 160));

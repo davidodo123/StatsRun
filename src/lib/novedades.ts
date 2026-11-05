@@ -21,11 +21,11 @@ export const NOVEDADES: Novedad[] = [
       {
         icon: "droplet",
         txt: {
-          es: ["Cada entreno se celebra", "Al registrar un entreno, el líquido verde de la app llena la pantalla."],
-          en: ["Every workout gets celebrated", "When you log a workout, the app's green liquid fills the screen."],
-          ca: ["Cada entrenament es celebra", "En registrar un entrenament, el líquid verd de l'app omple la pantalla."],
-          pt: ["Cada treino é celebrado", "Ao registar um treino, o líquido verde da app enche o ecrã."],
-          fr: ["Chaque entraînement se fête", "Quand tu enregistres un entraînement, le liquide vert de l'app remplit l'écran."],
+          es: ["Cada entreno se celebra", "Al registrar un entreno, el líquido verde llena una figura gigante: unas pesas si es fuerza, un muñeco corriendo si es carrera…"],
+          en: ["Every workout gets celebrated", "When you log a workout, green liquid fills a giant figure: dumbbells for strength, a runner for a run…"],
+          ca: ["Cada entrenament es celebra", "En registrar un entrenament, el líquid verd omple una figura gegant: unes peses si és força, un ninot corrent si és cursa…"],
+          pt: ["Cada treino é celebrado", "Ao registar um treino, o líquido verde enche uma figura gigante: halteres na força, um boneco a correr na corrida…"],
+          fr: ["Chaque entraînement se fête", "Quand tu enregistres un entraînement, le liquide vert remplit une figure géante : des haltères pour la muscu, un coureur pour la course…"],
         },
       },
     ],
