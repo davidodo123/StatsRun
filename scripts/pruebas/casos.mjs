@@ -350,7 +350,7 @@ async function importadora() {
   check(who, "sin-duplicar", j2.added === 0 && readDb(who).activities.length === 1, JSON.stringify(j2));
   // editarlo: nombre, sensaciones y RPE
   await act(who, L, "editar", "src/app/actions.ts#saveActivity", [{}, form({ id: a.id, date: a.date, time: a.startLocal.slice(11, 16), sport: "run", name: "Retiro con cuestas (editada)", distanceKm: String(a.distanceM / 1000), duration: `${Math.floor(a.movingSec / 60)}:${String(a.movingSec % 60).padStart(2, "0")}`, feel: "duro", feelings: "Las cuestas me costaron", rpe: "8" })]);
-  check(who, "sin-animacion-editar", !celebrated[who], "editar un entreno lanza la animación");
+  check(who, "animacion-editar", celebrated[who] === "run", "editar una carrera no lanza su animación");
   db = readDb(who);
   const e = db.activities.find((x) => x.id === a.id);
   check(who, "editar", e?.name === "Retiro con cuestas (editada)" && e.feelings === "Las cuestas me costaron" && db.activities.length === 1 && e.efforts?.[1000], JSON.stringify(e)?.slice(0, 160));

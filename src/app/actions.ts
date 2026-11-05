@@ -586,7 +586,7 @@ export async function saveActivity(_: FormState, fd: FormData): Promise<FormStat
   await scheduleAiAdapt();
   // nuevo: volver con el formulario limpio para no registrarlo dos veces
   refresh();
-  if (!existingId) await markCelebration(sport);
+  await markCelebration(sport);
   if (!existingId) redirect(sessionId ? "/plan/actual?registrado=1" : `/registrar?guardado=${encodeURIComponent(id)}`);
   return { ok: true, message: "Entreno actualizado." };
 }
