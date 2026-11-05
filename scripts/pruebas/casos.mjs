@@ -235,6 +235,7 @@ async function fuerza() {
   const r = db.routines?.find((x) => x.name === "Torso");
   check(who, "rutina", r?.exercises.length === 2, JSON.stringify(db.routines)?.slice(0, 160));
   await act(who, L, "entreno", "src/app/strength-actions.ts#finishWorkout", [{ name: "Torso", startLocal: `${day(-1)}T18:00:00`, durationSec: 3000, rpe: 8, workout: { routineId: r?.id, exercises: [{ exerciseId: "Barbell_Bench_Press_-_Medium_Grip", sets: [{ kg: 42.5, reps: 8, done: true }, { kg: 42.5, reps: 7, done: true }] }] } }]);
+  check(who, "animacion-fuerza", celebrated[who] === "strength", `animación ${celebrated[who]}`);
   await act(who, L, "cambiar-rutina", "src/app/strength-actions.ts#saveRoutine", [{ id: r?.id, name: "Torso A", exercises: r?.exercises }]);
   await act(who, L, "duplicar", "src/app/strength-actions.ts#duplicateRoutine", [form({ id: r?.id })]);
   db = readDb(who);
@@ -309,6 +310,13 @@ async function amigos() {
   check(a, "con-amigo", act1?.with?.includes(b), JSON.stringify(act1?.with));
   await page(b, L, `/amigos/${a}`, { expect: ["Sara Amiga"] });
   if (act1) await page(b, L, `/actividad/${encodeURIComponent(act1.id)}?de=${a}`, { expect: ["Rodaje con Dani"] });
+  if (act1) {
+    await act(b, L, "copiar-sesion", "src/app/actions.ts#copySharedActivity", [form({ owner: a, id: act1.id })]);
+    check(b, "animacion-copiar", celebrated[b] === "run", `animación ${celebrated[b]}`);
+    await act(b, L, "copiar-otra-vez", "src/app/actions.ts#copySharedActivity", [form({ owner: a, id: act1.id })]);
+    check(b, "sin-animacion-recopiar", !celebrated[b], "volver a copiar lanza la animación");
+    check(b, "copiada-una-vez", readDb(b).activities.filter((x) => x.sharedFrom === `${a}:${act1.id}`).length === 1, "");
+  }
   await page(b, L, "/amigos");
   // un desconocido no puede ver su ficha
   steps++;
@@ -430,6 +438,7 @@ async function grupos() {
   check(who, "rutina-en-plan", used.length > 0, `sesiones con la rutina: ${used.length}`);
   // EMOM de 10 minutos con 8 rondas hechas
   await act(who, L, "emom", "src/app/strength-actions.ts#finishWorkout", [{ name: "EMOM burpees", startLocal: `${today}T07:00:00`, durationSec: 600, rpe: 9, workout: { emom: { intervalSec: 60, rounds: 10, done: 8 }, exercises: [{ exerciseId: "Mountain_Climbers", sets: Array.from({ length: 10 }, (_, i) => ({ reps: 10, done: i < 8 })) }] } }]);
+  check(who, "animacion-emom", celebrated[who] === "strength", `animación ${celebrated[who]}`);
   db = readDb(who);
   const emom = db.activities.find((a) => a.name === "EMOM burpees");
   check(who, "emom", emom?.workout?.emom?.done === 8 && emom.workout.exercises[0]?.sets.length === 8, JSON.stringify(emom?.workout)?.slice(0, 160));
@@ -518,6 +527,19 @@ async function memoria() {
   await act(who, L, "quitar-preferencia", "src/app/ai-actions.ts#deleteAiPreference", [form({ id: pref?.id })]);
   check(who, "quitar-preferencia", readDb(who).aiPreferences?.length === 1, "");
   for (const p of ["/entrenador", "/plan/actual"]) await page(who, L, p);
+  for (const sport of ["ride", "swim", "walk", "strength", "other"]) {
+    await act(who, L, `registrar-${sport}`, "src/app/actions.ts#saveActivity", [{}, form({ date: day(-3), time: "10:00", sport, name: `Prueba ${sport}`, distanceKm: sport === "strength" ? "0" : "2", duration: "40:00" })]);
+    check(who, `animacion-${sport}`, celebrated[who] === sport, `animación ${celebrated[who]}`);
+  }
+  db = readDb(who);
+  const at = new Date().toISOString();
+  db.strengthChat = [...(db.strengthChat ?? []), { role: "assistant", at, text: "Lo apunto", activity: { sport: "ride", date: day(-2), name: "Bici del chat", durationSec: 3600, distanceKm: 20 } }];
+  writeDb(who, db);
+  await act(who, L, "guardar-chat", "src/app/strength-actions.ts#saveChatActivity", [form({ at })]);
+  check(who, "animacion-chat", celebrated[who] === "ride", `animación ${celebrated[who]}`);
+  await act(who, L, "guardar-chat-otra-vez", "src/app/strength-actions.ts#saveChatActivity", [form({ at })]);
+  check(who, "sin-animacion-chat-repetido", !celebrated[who], "guardar otra vez lanza la animación");
+  check(who, "chat-una-vez", readDb(who).activities.filter((x) => x.name === "Bici del chat").length === 1, "");
 }
 
 // ---------- 13. Se va: borra su cuenta y no queda nada ----------
