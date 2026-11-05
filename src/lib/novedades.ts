@@ -16,6 +16,21 @@ export interface Novedad {
  */
 export const NOVEDADES: Novedad[] = [
   {
+    id: "2026-11-05",
+    items: [
+      {
+        icon: "droplet",
+        txt: {
+          es: ["Cada entreno se celebra", "Al registrar un entreno, el líquido verde de la app llena la pantalla."],
+          en: ["Every workout gets celebrated", "When you log a workout, the app's green liquid fills the screen."],
+          ca: ["Cada entrenament es celebra", "En registrar un entrenament, el líquid verd de l'app omple la pantalla."],
+          pt: ["Cada treino é celebrado", "Ao registar um treino, o líquido verde da app enche o ecrã."],
+          fr: ["Chaque entraînement se fête", "Quand tu enregistres un entraînement, le liquide vert de l'app remplit l'écran."],
+        },
+      },
+    ],
+  },
+  {
     id: "2026-11-04",
     items: [
       {

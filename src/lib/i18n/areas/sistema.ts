@@ -35,6 +35,7 @@ export const sistema = area({
     "est.n.Ankle_On_The_Knee": "Estiramiento de glúteo (tobillo sobre rodilla)",
     "est.n.All_Fours_Quad_Stretch": "Estiramiento de cuádriceps a cuatro patas",
     "est.n.Hug_Knees_To_Chest": "Rodillas al pecho",
+    "cel.guardado": "¡Entreno guardado!",
   },
   en: {
     "est.titulo": "Stretches for today",
@@ -69,6 +70,7 @@ export const sistema = area({
     "est.n.Ankle_On_The_Knee": "Glute stretch (ankle over knee)",
     "est.n.All_Fours_Quad_Stretch": "All-fours quad stretch",
     "est.n.Hug_Knees_To_Chest": "Knees to chest",
+    "cel.guardado": "Workout saved!",
   },
   ca: {
     "est.titulo": "Estiraments per avui",
@@ -103,6 +105,7 @@ export const sistema = area({
     "est.n.Ankle_On_The_Knee": "Estirament de gluti (turmell sobre el genoll)",
     "est.n.All_Fours_Quad_Stretch": "Estirament de quàdriceps a quatre grapes",
     "est.n.Hug_Knees_To_Chest": "Genolls al pit",
+    "cel.guardado": "Entrenament desat!",
   },
   pt: {
     "est.titulo": "Alongamentos para hoje",
@@ -137,6 +140,7 @@ export const sistema = area({
     "est.n.Ankle_On_The_Knee": "Alongamento do glúteo (tornozelo sobre o joelho)",
     "est.n.All_Fours_Quad_Stretch": "Alongamento do quadríceps a quatro apoios",
     "est.n.Hug_Knees_To_Chest": "Joelhos ao peito",
+    "cel.guardado": "Treino guardado!",
   },
   fr: {
     "est.titulo": "Étirements du jour",
@@ -171,5 +175,6 @@ export const sistema = area({
     "est.n.Ankle_On_The_Knee": "Étirement du fessier (cheville sur le genou)",
     "est.n.All_Fours_Quad_Stretch": "Étirement des quadriceps à quatre pattes",
     "est.n.Hug_Knees_To_Chest": "Genoux à la poitrine",
+    "cel.guardado": "Entraînement enregistré !",
   },
 });

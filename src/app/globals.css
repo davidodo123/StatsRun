@@ -301,6 +301,129 @@ input.input::-webkit-date-and-time-value {
   }
 }
 
+/* Al registrar un entreno: el líquido lima sube ondulando, llena la pantalla y baja (WorkoutCelebration) */
+.liquid {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  overflow: hidden;
+  pointer-events: none;
+}
+.liquid-body {
+  position: absolute;
+  inset: 0;
+  background: var(--accent);
+  animation: liquid-rise 2.6s both;
+}
+.liquid-wave {
+  position: absolute;
+  left: 0;
+  bottom: calc(100% - 1px);
+  width: 200%;
+  height: 48px;
+  fill: var(--accent);
+  animation: liquid-wave 1.1s linear infinite;
+}
+.liquid-wave-back {
+  height: 66px;
+  opacity: 0.45;
+  animation-duration: 1.7s;
+  animation-direction: reverse;
+}
+.liquid-bubble {
+  position: absolute;
+  top: 100%;
+  border-radius: 50%;
+  background: var(--accent-ink);
+  opacity: 0;
+  animation: liquid-bubble 1.5s ease-in both;
+}
+.liquid-message {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.25rem;
+  padding: 1.5rem;
+  text-align: center;
+  color: var(--accent-ink);
+  animation: liquid-message 2.6s both;
+}
+@keyframes liquid-rise {
+  0% {
+    transform: translateY(calc(100% + 70px));
+    animation-timing-function: cubic-bezier(0.35, 0, 0.3, 1);
+  }
+  44%,
+  70% {
+    transform: translateY(0);
+    animation-timing-function: cubic-bezier(0.6, 0, 0.8, 0.6);
+  }
+  100% {
+    transform: translateY(calc(100% + 70px));
+  }
+}
+@keyframes liquid-wave {
+  to {
+    transform: translateX(-50%);
+  }
+}
+@keyframes liquid-bubble {
+  0% {
+    opacity: 0;
+    transform: translateY(0);
+  }
+  25% {
+    opacity: 0.16;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-80vh);
+  }
+}
+@keyframes liquid-message {
+  0%,
+  32% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  44%,
+  68% {
+    opacity: 1;
+    transform: none;
+  }
+  78%,
+  100% {
+    opacity: 0;
+    transform: none;
+  }
+}
+@keyframes liquid-fade {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  20%,
+  75% {
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  /* sin movimiento: el color aparece y se va, sin olas */
+  .liquid-body {
+    animation-name: liquid-fade;
+  }
+  .liquid-wave,
+  .liquid-bubble {
+    display: none;
+  }
+  .liquid-message {
+    animation-name: liquid-fade;
+  }
+}
+
 /* Campos numéricos con botones − / + propios: sin las flechas del navegador */
 .no-spin {
   -moz-appearance: textfield;

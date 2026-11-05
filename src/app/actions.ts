@@ -3,6 +3,7 @@ import { say } from "@/lib/i18n/server";
 
 import { refresh, updateTag } from "next/cache";
 import { redirect } from "next/navigation";
+import { markCelebration } from "@/lib/celebrate";
 import { after } from "next/server";
 import { updateDb, readDbNow as getDb } from "@/lib/db";
 import { VIEW_TAG, requireUserId } from "@/lib/session";
@@ -585,6 +586,7 @@ export async function saveActivity(_: FormState, fd: FormData): Promise<FormStat
   await scheduleAiAdapt();
   // nuevo: volver con el formulario limpio para no registrarlo dos veces
   refresh();
+  if (!existingId) await markCelebration();
   if (!existingId) redirect(sessionId ? "/plan/actual?registrado=1" : `/registrar?guardado=${encodeURIComponent(id)}`);
   return { ok: true, message: "Entreno actualizado." };
 }
@@ -641,6 +643,7 @@ export async function saveRecordedRun(input: { sport?: string; name?: string; st
   });
   if (stream) await putStream(await requireUserId(), id, stream);
   await scheduleAiAdapt();
+  await markCelebration();
   refresh();
   redirect(`/actividad/${id}`);
 }
@@ -670,8 +673,11 @@ export async function copySharedActivity(fd: FormData): Promise<void> {
   const src = (await getDb(ownerId)).activities.find((a) => a.id === actId);
   if (!src?.with?.includes(uid)) return;
   const sharedFrom = `${ownerId}:${actId}`;
+  let copied = false;
   await updateDb((db) => {
+    copied = false; // la escritura puede reintentarse
     if (db.activities.some((a) => a.sharedFrom === sharedFrom)) return;
+    copied = true;
     db.activities = [
       ...db.activities,
       {
@@ -694,6 +700,7 @@ export async function copySharedActivity(fd: FormData): Promise<void> {
       },
     ].sort((a, b) => a.startLocal.localeCompare(b.startLocal));
   });
+  if (copied) await markCelebration();
   await scheduleAiAdapt();
   refresh();
 }

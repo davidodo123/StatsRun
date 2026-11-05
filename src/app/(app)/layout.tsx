@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { NavView } from "@/components/Nav";
+import { WorkoutCelebration } from "@/components/WorkoutCelebration";
 import { AppNav } from "@/components/AppNav";
 import { InstallBanner } from "@/components/Pwa";
 import { AppUpdates } from "@/components/AppUpdates";
@@ -36,6 +37,7 @@ export default function AppLayout({ children }: LayoutProps<"/">) {
       {/* versión con la que se ha abierto la app (el commit de Vercel; en local, «dev») */}
       <AppUpdates version={process.env.VERCEL_GIT_COMMIT_SHA ?? "dev"} />
       <KeyboardFix />
+      <WorkoutCelebration />
       <Suspense fallback={null}>
         <NavHistory />
         <LiveWorkoutMount />

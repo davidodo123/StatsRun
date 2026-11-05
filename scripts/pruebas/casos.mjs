@@ -54,6 +54,7 @@ const jitter = (n, d = 20) => n + int(-d, d);
 
 const problems = [];
 const log = [];
+const celebrated = {}; // ¿la última acción de cada uno lanzó la animación de entreno registrado?
 let steps = 0;
 const counts = {};
 const bad = (who, step, kind, detail = "") => {
@@ -88,6 +89,7 @@ async function act(who, lang, step, name, args, { error = false } = {}) {
   if (err && !error) bad(who, step, "rechazado", err);
   if (error && !err) bad(who, step, "esperaba-error", "");
   if (log.length < 2000) log.push({ who, step, status: res.status, error: err });
+  celebrated[who] = res.headers.getSetCookie().some((c) => c.startsWith("rio_fiesta=1") && !/httponly/i.test(c));
   return err;
 }
 
@@ -169,12 +171,15 @@ async function novata() {
   for (const p of PAGES) await page(who, L, p);
   // primera semana: registra lo que hace
   await act(who, L, "registrar", "src/app/actions.ts#saveActivity", [{}, form({ date: day(-1), time: "19:00", sport: "run", name: "Primer trote", distanceKm: "3", duration: "24:00", feel: "duro" })]);
+  check(who, "animacion-registrar", celebrated[who], "registrar un entreno no lanza la animación");
   await act(who, L, "medida", "src/app/strength-actions.ts#saveMeasurement", [{}, form({ date: today, weightKg: "60.5" })]);
+  check(who, "sin-animacion-medida", !celebrated[who], "guardar una medida lanza la animación");
   await act(who, L, "objetivo", "src/app/progress-actions.ts#addSuggestedTarget", []);
   await act(who, L, "al-momento", "src/app/progress-actions.ts#addInstantSession", [{}, form({ mode: "facil", i: "0" })]);
   const t0 = Date.parse(`${today}T07:00:00`);
   const pts = Array.from({ length: 181 }, (_, k) => ({ t: t0 + k * 3000, lat: 37.2 + k * 5.1e-5, lon: -3.6, alt: 640 + 5 * Math.sin(k / 30), acc: 6 }));
   await act(who, L, "gps", "src/app/actions.ts#saveRecordedRun", [{ sport: "run", name: "Vuelta al parque", startLocal: `${today}T07:00:00`, points: pts, rpe: 5 }]);
+  check(who, "animacion-gps", celebrated[who], "grabar con GPS no lanza la animación");
   db = readDb(who);
   const gps = db.activities.find((a) => a.name === "Vuelta al parque");
   check(who, "gps", gps && gps.distanceM > 900 && gps.efforts?.[400], JSON.stringify(gps)?.slice(0, 160));
@@ -345,6 +350,7 @@ async function importadora() {
   check(who, "sin-duplicar", j2.added === 0 && readDb(who).activities.length === 1, JSON.stringify(j2));
   // editarlo: nombre, sensaciones y RPE
   await act(who, L, "editar", "src/app/actions.ts#saveActivity", [{}, form({ id: a.id, date: a.date, time: a.startLocal.slice(11, 16), sport: "run", name: "Retiro con cuestas (editada)", distanceKm: String(a.distanceM / 1000), duration: `${Math.floor(a.movingSec / 60)}:${String(a.movingSec % 60).padStart(2, "0")}`, feel: "duro", feelings: "Las cuestas me costaron", rpe: "8" })]);
+  check(who, "sin-animacion-editar", !celebrated[who], "editar un entreno lanza la animación");
   db = readDb(who);
   const e = db.activities.find((x) => x.id === a.id);
   check(who, "editar", e?.name === "Retiro con cuestas (editada)" && e.feelings === "Las cuestas me costaron" && db.activities.length === 1 && e.efforts?.[1000], JSON.stringify(e)?.slice(0, 160));

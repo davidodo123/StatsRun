@@ -4,6 +4,7 @@ import { say } from "@/lib/i18n/server";
 
 import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
+import { markCelebration } from "@/lib/celebrate";
 import { after } from "next/server";
 import { readDbNow, updateDb } from "@/lib/db";
 import { requireUserId } from "@/lib/session";
@@ -304,6 +305,7 @@ export async function finishWorkout(input: {
     const uid = await requireUserId();
     after(() => adaptWithAI(uid).then(() => undefined));
   }
+  await markCelebration();
   refresh();
   redirect(`/actividad/${id}`);
 }
@@ -498,6 +500,7 @@ export async function saveChatActivity(fd: FormData): Promise<void> {
     saved = true;
     syncPlanRoutines(d, addDays(todayLocal(), 1));
   });
+  if (saved) await markCelebration();
   // la IA reajusta los próximos días con el entreno nuevo
   if (saved && coachConfig().configured) {
     const uid = await requireUserId();
