@@ -100,7 +100,10 @@ describe("planificador con muchas combinaciones", () => {
       for (let k = 0; k < longs.length; k++) {
         // también cuenta la tirada más larga que ya hacía antes del plan
         const prev = [...longs.filter((x) => x.date < longs[k].date && diffDays(longs[k].date, x.date) <= 28).map((x) => x.distanceKm!), ...(diffDays(longs[k].date, today) <= 28 && profile.longestRunKm ? [profile.longestRunKm] : [])];
-        if (prev.length) expect(longs[k].distanceKm!).toBeLessThanOrEqual(Math.max(...prev) * 1.1 + 0.51);
+        // salvo si sube para igualar a la sesión de calidad de esa semana (la tirada es siempre la más larga)
+        const week = plan.weeks.find((w) => w.sessions.includes(longs[k]));
+        const topOther = Math.max(0, ...(week?.sessions ?? []).filter((s) => s.type !== "long").map((s) => s.distanceKm));
+        if (prev.length && longs[k].distanceKm! > topOther + 0.5) expect(longs[k].distanceKm!).toBeLessThanOrEqual(Math.max(...prev) * 1.1 + 0.51);
       }
     });
   }
@@ -141,5 +144,33 @@ describe("temporada con dos objetivos", () => {
     const one = generateSeason({ profile, goal: nov, currentVdot: 42, currentWeeklyKm: 30, longestRecentKm: 14, today });
     const base = generatePlan({ profile, goal: nov, currentVdot: 42, currentWeeklyKm: 30, longestRecentKm: 14, today });
     expect(one.weeks).toEqual(base.weeks);
+  });
+});
+
+describe("la tirada es la sesión más larga de la semana", () => {
+  const today = "2026-11-02";
+  const profile = { ...profileFor(0), level: "principiante" as const, weeklyKm: 15, longestRunKm: 3, daysPerWeek: 4, longRunDay: 6, strengthPerWeek: 0 };
+  const goal = { name: "Media", distanceKm: 21.0975, date: "2027-03-14" };
+  const plan = generatePlan({ profile, goal, currentVdot: 35, currentWeeklyKm: 25, longestRecentKm: 3, today });
+
+  it("hay semanas con calidad y ninguna la deja por debajo, salvo el afinamiento", () => {
+    const weeks = plan.weeks.filter((w) => w.phase !== "taper" && w.sessions.some((s) => s.type === "long"));
+    expect(weeks.some((w) => w.sessions.some((s) => ["tempo", "race_pace", "intervals"].includes(s.type)))).toBe(true);
+    for (const w of weeks) {
+      const long = w.sessions.find((s) => s.type === "long")!;
+      for (const s of w.sessions) expect(s.distanceKm, `${w.start} ${s.type}`).toBeLessThanOrEqual(long.distanceKm);
+    }
+  });
+
+  it("no pasa del tope de la tirada de esa distancia", () => {
+    const long = Math.max(...plan.weeks.flatMap((w) => w.sessions).filter((s) => s.type === "long").map((s) => s.distanceKm));
+    expect(long).toBeLessThanOrEqual(18);
+  });
+
+  it("los rodajes siguen sin superar a la tirada", () => {
+    for (const w of plan.weeks) {
+      const long = w.sessions.find((s) => s.type === "long");
+      if (long) for (const s of w.sessions.filter((x) => x.type === "easy")) expect(s.distanceKm).toBeLessThanOrEqual(Math.max(3, long.distanceKm));
+    }
   });
 });

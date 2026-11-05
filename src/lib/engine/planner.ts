@@ -404,6 +404,7 @@ export function generatePlan(input: PlanInput): Plan {
   let peakLong = 0; // la tirada más larga del propio plan (el afinamiento baja desde ella, no desde el historial)
   let lastLong = 0; // la tirada de la última semana normal (la descarga baja desde ella)
   let spikeLimited = false;
+  let longLifted = false; // alguna tirada se alargó para no quedar por debajo de la sesión de calidad
   const weeks: PlanWeek[] = [];
 
   for (let w = 0; w < nWeeks; w++) {
@@ -457,38 +458,60 @@ export function generatePlan(input: PlanInput): Plan {
     // con muy poco volumen, el mínimo de la sesión de calidad no puede comerse la semana (como mucho un 30 %)
     const qKm = clamp(vol * 0.2, Math.min(lvl === 0 ? 3 : 5, Math.max(2, vol * 0.3)), 16);
     const easySlots = slots.filter(([, s]) => s === "E" || s === "R").length;
-    // un rodaje suave nunca más largo que la tirada (con pocos días y la tirada limitada, el volumen sobrante iba todo a él)
-    const easyKm = Math.min(Math.max(3, (vol - longKm - nQ * qKm) / Math.max(1, easySlots)), Math.max(3, longKm));
-
-    const sessions: PlannedSession[] = [];
     const ctx: SessionCtx = { paces, cat, lvl, phase, phaseIdx, recovery, racePaceFlat, runWalk, weekIdx: w };
 
-    for (const [d, slot] of slots) {
-      const date = addDays(weekStart, d);
-      if (date < today) continue;
-      if (isRaceWeek && date >= goal.date) continue;
-      if (isRaceWeek && diffDays(goal.date, date) === 1) continue; // descanso el día antes
-      if (isRaceWeek && diffDays(goal.date, date) === 2) {
-        sessions.push(shakeout(date, paces));
-        continue;
+    const buildRuns = () => {
+      // un rodaje suave nunca más largo que la tirada (con pocos días y la tirada limitada, el volumen sobrante iba todo a él)
+      const easyKm = Math.min(Math.max(3, (vol - longKm - nQ * qKm) / Math.max(1, easySlots)), Math.max(3, longKm));
+      const sessions: PlannedSession[] = [];
+
+      for (const [d, slot] of slots) {
+        const date = addDays(weekStart, d);
+        if (date < today) continue;
+        if (isRaceWeek && date >= goal.date) continue;
+        if (isRaceWeek && diffDays(goal.date, date) === 1) continue; // descanso el día antes
+        if (isRaceWeek && diffDays(goal.date, date) === 2) {
+          sessions.push(shakeout(date, paces));
+          continue;
+        }
+        let s: PlannedSession;
+        // las 4 semanas después del correr-caminar, las sesiones (menos la tirada) suben poco a poco desde lo que duraba
+        // (si no, se pasaba de golpe de 4-5 km a 8-11 km por sesión)
+        const after = runWalkKm > 0 && w >= runWalkWeeks && w - runWalkWeeks < 4;
+        const ease = (km: number) => (after ? Math.min(km, Math.max(3, runWalkKm * (1.25 + 0.25 * (w - runWalkWeeks)))) : km);
+        // en la semana de la carrera no hay tirada larga: ese día, rodaje suave
+        if (slot === "L" && isRaceWeek) s = easyRun(date, round1(Math.min(easyKm, 6)), paces, phase);
+        else if (slot === "L") s = longRun(date, round1(longKm), ctx);
+        // calidad: nada mientras se hace correr-caminar (la segunda sesión de calidad no lo miraba) ni si no da tiempo
+        else if ((slot === "Q1" || slot === "Q2") && runWalk) s = runWalkSession(date, round1(easyKm), w, paces);
+        else if ((slot === "Q1" || slot === "Q2") && survive) s = easyRun(date, round1(ease(easyKm)), paces, phase);
+        else if (slot === "Q1") s = quality1(date, round1(ease(qKm)), ctx);
+        else if (slot === "Q2") s = quality2(date, round1(ease(qKm)), ctx);
+        else if (slot === "R") s = recoveryRun(date, round1(ease(Math.max(3, easyKm * 0.7))), paces);
+        else s = runWalk ? runWalkSession(date, round1(easyKm), w, paces) : easyRun(date, round1(ease(easyKm)), paces, phase);
+        if (s.type === "run_walk") runWalkKm = Math.max(runWalkKm, s.distanceKm);
+        sessions.push(s);
       }
-      let s: PlannedSession;
-      // las 4 semanas después del correr-caminar, las sesiones (menos la tirada) suben poco a poco desde lo que duraba
-      // (si no, se pasaba de golpe de 4-5 km a 8-11 km por sesión)
-      const after = runWalkKm > 0 && w >= runWalkWeeks && w - runWalkWeeks < 4;
-      const ease = (km: number) => (after ? Math.min(km, Math.max(3, runWalkKm * (1.25 + 0.25 * (w - runWalkWeeks)))) : km);
-      // en la semana de la carrera no hay tirada larga: ese día, rodaje suave
-      if (slot === "L" && isRaceWeek) s = easyRun(date, round1(Math.min(easyKm, 6)), paces, phase);
-      else if (slot === "L") s = longRun(date, round1(longKm), ctx);
-      // calidad: nada mientras se hace correr-caminar (la segunda sesión de calidad no lo miraba) ni si no da tiempo
-      else if ((slot === "Q1" || slot === "Q2") && runWalk) s = runWalkSession(date, round1(easyKm), w, paces);
-      else if ((slot === "Q1" || slot === "Q2") && survive) s = easyRun(date, round1(ease(easyKm)), paces, phase);
-      else if (slot === "Q1") s = quality1(date, round1(ease(qKm)), ctx);
-      else if (slot === "Q2") s = quality2(date, round1(ease(qKm)), ctx);
-      else if (slot === "R") s = recoveryRun(date, round1(ease(Math.max(3, easyKm * 0.7))), paces);
-      else s = runWalk ? runWalkSession(date, round1(easyKm), w, paces) : easyRun(date, round1(ease(easyKm)), paces, phase);
-      if (s.type === "run_walk") runWalkKm = Math.max(runWalkKm, s.distanceKm);
-      sessions.push(s);
+      return sessions;
+    };
+
+    let sessions = buildRuns();
+    // la tirada es la sesión más larga de la semana: si otra la supera (la calidad tiene un mínimo fijo, con su calentamiento),
+    // se alarga hasta igualarla, sin pasar del tope de la distancia, y los rodajes bajan para compensar.
+    // En el afinamiento no: alargarla justo antes de la carrera añadiría fatiga.
+    const firstLong = sessions.find((s) => s.type === "long");
+    if (firstLong && phase !== "taper" && !runWalk) {
+      const top = Math.min(Math.ceil(Math.max(...sessions.map((s) => s.distanceKm)) * 2) / 2, LONG_CAP[cat][lvl]);
+      if (top > firstLong.distanceKm) {
+        longKm = top;
+        longLifted = true;
+        sessions = buildRuns();
+        if (!recovery) {
+          longKmPrev = Math.max(longKmPrev, longKm);
+          peakLong = Math.max(peakLong, longKm);
+          lastLong = longKm;
+        }
+      }
     }
 
     if (isRaceWeek) sessions.push(raceSession(goal, racePaceFlat * courseFactor, predictedRace));
@@ -518,7 +541,7 @@ export function generatePlan(input: PlanInput): Plan {
     w.targetKm = Math.round(w.sessions.reduce((t, x) => t + x.distanceKm, 0));
   }
 
-  if (spikeLimited)
+  if (spikeLimited && !longLifted)
     notes.push(
       `La tirada larga sube como mucho un 10 % sobre la más larga reciente (más es un pico de riesgo de lesión). Tirada más larga del plan: ${round1(Math.max(...weeks.flatMap((w) => w.sessions).filter((s) => s.type === "long").map((s) => s.distanceKm), 0))} km.`,
     );

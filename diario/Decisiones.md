@@ -1184,3 +1184,13 @@ Fuentes: screensdesign.com, posthog.com/pricing, revenuecat.com/pricing, revenue
 - Lo que pidió: si hace pecho el día de espalda, al guardar el entreno lo que queda de la semana se recoloca desde mañana (en la fuerza por grupos, el día de pecho pasa a espalda). También al guardar un entreno que contó en el chat, al borrar uno y al rehacer el plan.
 - Con pruebas que reproducen los tres casos (fallan con el código de antes).
 
+## La tirada larga, siempre la sesión más larga
+*2026-11-06*
+
+- **Problema**: la calidad tiene un mínimo fijo (series más calentamiento y vuelta a la calma) y la tirada sube poco a poco desde el historial. En el 25 % de los usuarios con plan había semanas con la calidad más larga que la tirada (tempo de 7 km y tirada de 3 km). Quien preparaba una media podía llegar con una tirada máxima de 5,5 km.
+- **Alternativas**: recortar la calidad (más prudente; era mi recomendación), alargar la tirada o dejarlo. **David eligió alargarla.**
+- **Cómo queda** (`generatePlan`): si otra sesión de la semana supera a la tirada, la tirada sube hasta igualarla, sin pasar de `LONG_CAP`, y los rodajes bajan para compensar hasta su mínimo de 3 km. Esa tirada cuenta para las semanas siguientes.
+- **Excepciones**: el afinamiento (alargarla justo antes de la carrera añade fatiga) y las semanas de correr-caminar (no llevan calidad).
+- **Coste aceptado**: se rompe a propósito el límite de subir un 10 % en esas semanas. En 1.000 usuarios, las tiradas que suben más de un 50 % pasan de 217 a 347 semanas; los km medios por semana, de 32,7 a 33,2. Quien empieza hace más volumen (ejemplo: de 29 a 37 km en la semana más dura), porque sus rodajes ya están en el mínimo. Sin esa regla no sale la nota del plan que promete el 10 %.
+- **Alternativa si los saltos dan problemas**: subir la tirada poco a poco varias semanas, aunque la calidad quede por encima un tiempo.
+- Solo afecta a los planes que se rehacen.

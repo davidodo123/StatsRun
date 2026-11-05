@@ -96,13 +96,14 @@ describe("planificador", () => {
     expect(plan.weeks.map((w) => w.phase)).toContain("especifico");
   });
 
-  it("la tirada larga nunca supera en más de un 10 % (mín. 0,5 km) a la más larga de las 4 semanas anteriores", () => {
+  it("la tirada larga no supera en más de un 10 % (mín. 0,5 km) a la más larga de las 4 semanas anteriores, salvo para igualar a la calidad de esa semana", () => {
     for (const longest of [6, 16]) {
       const plan = generatePlan({ profile, goal: { ...goal, date: "2027-04-25" }, currentVdot: 45, currentWeeklyKm: 35, longestRecentKm: longest, today });
       const longs = plan.weeks.map((w) => w.sessions.find((s) => s.type === "long")?.distanceKm ?? 0);
       longs.forEach((km, i) => {
         const prevMax = Math.max(longest, ...longs.slice(Math.max(0, i - 4), i));
-        expect(km).toBeLessThanOrEqual(Math.max(prevMax * 1.1, prevMax + 0.5) + 0.05);
+        const topOther = Math.max(0, ...plan.weeks[i].sessions.filter((s) => s.type !== "long").map((s) => s.distanceKm));
+        if (km > Math.ceil(topOther * 2) / 2) expect(km).toBeLessThanOrEqual(Math.max(prevMax * 1.1, prevMax + 0.5) + 0.05);
       });
     }
   });
