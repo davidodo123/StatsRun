@@ -34,7 +34,7 @@ export function HeroWeek({
     <>
       <div className="grid">
         {Object.entries(heroes).map(([date, hero]) => (
-          <div key={date} style={{ gridArea: "1 / 1" }} className={date === current ? "" : "invisible"} aria-hidden={date !== current}>
+          <div key={date} style={{ gridArea: "1 / 1" }} className={`flex flex-col ${date === current ? "" : "invisible"}`} aria-hidden={date !== current}>
             {hero}
           </div>
         ))}

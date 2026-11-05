@@ -128,26 +128,35 @@ function DayHero({ date, sessions, matches, today, locale }: { date: string; ses
 
   if (!main) {
     const next = sessions.find((s) => s.date > date);
-    // el bloque mide lo del día más alto de la semana (para que las barras no se muevan): el descanso va centrado en ese hueco
+    // misma estructura que un día con sesión (título grande, tarjeta y botón abajo), para que no queden huecos
     return (
-      <div className="flex h-full min-h-[14rem] flex-col justify-center">
+      <div className="flex min-h-[14rem] flex-1 flex-col">
         <p className="text-sm font-bold tracking-[0.2em] text-accent uppercase">{eyebrow}</p>
-        <h2 className="mt-1 font-display text-6xl leading-none tracking-[0.03em] uppercase">{t("hoy.descanso")}</h2>
+        <h2 className="mt-1 font-display text-[min(84px,21vw)] leading-none tracking-[0.03em] uppercase">{t("hoy.descanso")}</h2>
         <p className="mt-3 flex items-center gap-2 text-ink-2">
           <Icon name="sunrise" className="h-5 w-5 shrink-0 text-accent" />
           {t("hoy.descansoTxt")}
         </p>
         {next && (
-          <p className="mt-3 text-ink-2">
-            {next.date === addDays(date, 1) ? (isToday ? t("hoy.manana") : t("hoy.alDiaSiguiente")) : t("hoy.elDia", { dia: weekdayDate(next.date, locale) })}: <strong className="text-ink">{planText(next.title, locale)}</strong>
-          </p>
+          <div className="mt-4 flex items-center gap-3 rounded-xl border border-line bg-surface p-3">
+            <Icon name="calendar" className="h-5 w-5 shrink-0 text-accent" />
+            <span className="min-w-0 flex-1">
+              <span className="block text-xs text-muted">{next.date === addDays(date, 1) ? (isToday ? t("hoy.manana") : t("hoy.alDiaSiguiente")) : t("hoy.elDia", { dia: weekdayDate(next.date, locale) })}</span>
+              <strong className="block truncate text-sm text-ink">{planText(next.title, locale)}</strong>
+            </span>
+          </div>
         )}
+        <div className="mt-auto pt-5">
+          <Link href="/plan/actual" className="btn btn-ghost w-full py-4 text-base tracking-wider uppercase">
+            {t("hoy.verEnPlan")}
+          </Link>
+        </div>
       </div>
     );
   }
 
   return (
-    <>
+    <div className="flex flex-1 flex-col">
       <p className="text-sm font-bold tracking-[0.2em] text-accent uppercase">{eyebrow}</p>
       <h2 className={`mt-1 font-display leading-none tracking-[0.03em] uppercase ${titleSize(heroTitle(main, locale))}`}>{heroTitle(main, locale)}</h2>
       {main.type !== "strength" && main.distanceKm > 0 ? (
@@ -206,16 +215,18 @@ function DayHero({ date, sessions, matches, today, locale }: { date: string; ses
           )}
         </div>
       )}
-      {/* «Empezar» solo hoy; los demás días (y lo ya hecho), al plan */}
-      {isToday && !done ? (
-        <Link href={startHref(main)} className="btn mt-5 w-full py-4 text-base tracking-wider uppercase">
-          {t("hoy.empezar")}
-        </Link>
-      ) : (
-        <Link href="/plan/actual" className="btn btn-ghost mt-5 w-full py-4 text-base tracking-wider uppercase">
-          {t("hoy.verEnPlan")}
-        </Link>
-      )}
-    </>
+      {/* «Empezar» solo hoy; los demás días (y lo ya hecho), al plan. Siempre abajo del bloque, pegado a la semana */}
+      <div className="mt-auto pt-5">
+        {isToday && !done ? (
+          <Link href={startHref(main)} className="btn w-full py-4 text-base tracking-wider uppercase">
+            {t("hoy.empezar")}
+          </Link>
+        ) : (
+          <Link href="/plan/actual" className="btn btn-ghost w-full py-4 text-base tracking-wider uppercase">
+            {t("hoy.verEnPlan")}
+          </Link>
+        )}
+      </div>
+    </div>
   );
 }
