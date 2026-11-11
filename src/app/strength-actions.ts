@@ -1,5 +1,5 @@
 "use server";
-import { say } from "@/lib/i18n/server";
+import { say, sayWith } from "@/lib/i18n/server";
 // Fuerza: lugares con su material, ejercicios propios, rutinas, entrenos y el chat del entrenador IA.
 
 import { refresh } from "next/cache";
@@ -62,7 +62,7 @@ export async function savePlace(_: FormState, fd: FormData): Promise<FormState> 
   });
   if (error) return { error };
   refresh();
-  return { ok: true, message: id ? "Guardado." : "Lugar añadido." };
+  return { ok: true, message: id ? await say("Guardado.") : await say("Lugar añadido.") };
 }
 
 // ---------- Medidas corporales ----------
@@ -101,7 +101,7 @@ export async function saveMeasurement(_: FormState, fd: FormData): Promise<FormS
     if (latest?.weightKg && db.profile) db.profile.weightKg = latest.weightKg;
   });
   refresh();
-  return { ok: true, message: "Medidas guardadas." };
+  return { ok: true, message: await say("Medidas guardadas.") };
 }
 
 export async function deleteMeasurement(fd: FormData): Promise<void> {
@@ -375,7 +375,7 @@ export async function generateStrengthRoutines(_: StrengthCoachForm, fd: FormDat
   refresh();
   return {
     ok: true,
-    message: result.summary || `${result.routines.length} rutinas creadas.`,
+    message: result.summary || (await sayWith("{n} rutinas creadas.", { n: result.routines.length })),
     routines: result.routines.map((r) => ({ id: r.id, name: r.name })),
   };
 }

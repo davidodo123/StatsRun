@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState, useTransition, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { ExercisePicker } from "./ExercisePicker";
 import { ExerciseThumb } from "./ExerciseMedia";
 import { BodyChip, LoadSwitch, SetBadge, onlyBody } from "./RoutineEditor";
@@ -41,6 +42,8 @@ interface Live {
 
 // el entreno en curso se guarda en el navegador: si se cierra la app o se bloquea el móvil, sigue donde estaba
 const STORAGE = LIVE_WORKOUT_KEY;
+// se ha ido a mirar cómo se hace un ejercicio: al volver se sigue sin el aviso de «Continúas…»
+const PEEK = "rio-entreno-ejercicio";
 const load = (): Live | undefined => {
   try {
     const raw = localStorage.getItem(STORAGE);
@@ -156,9 +159,14 @@ export function WorkoutLogger({
       return;
     }
     const stored = load();
+    let peeked = false;
+    try {
+      peeked = sessionStorage.getItem(PEEK) === "1";
+      sessionStorage.removeItem(PEEK);
+    } catch {}
     if (stored?.exercises && Date.now() - stored.startedAt < LIVE_WORKOUT_MAX_MS) {
       setW(stored);
-      setResumed(stored.routineId !== routine?.id || Boolean(stored.exercises.some((e) => e.sets.some((s) => s.done))));
+      setResumed(!peeked && (stored.routineId !== routine?.id || Boolean(stored.exercises.some((e) => e.sets.some((s) => s.done)))));
     } else setW(fromRoutine(routine, suggest, t("wl.entreno")));
     // eslint-disable-next-line react-hooks/exhaustive-deps -- solo al cambiar de rutina, no cada vez que llega el objeto
   }, [routine?.id]);
@@ -311,9 +319,19 @@ export function WorkoutLogger({
             )}
             <div className="flex items-center gap-3">
               {x && <ExerciseThumb x={x} className="h-11 w-11" />}
-              <a href={`/fuerza/ejercicios/${e.exerciseId}`} target="_blank" rel="noreferrer" className="min-w-0 flex-1 truncate font-semibold text-accent">
+              {/* en la misma ventana: en una nueva (target=_blank) la app instalada cargaba otra vez entera, con una pantalla en blanco.
+                  El entreno se guarda solo y «Volver» trae de vuelta aquí */}
+              <Link
+                href={`/fuerza/ejercicios/${e.exerciseId}`}
+                onClick={() => {
+                  try {
+                    sessionStorage.setItem(PEEK, "1");
+                  } catch {}
+                }}
+                className="min-w-0 flex-1 truncate font-semibold text-accent"
+              >
                 {x?.name ?? e.exerciseId}
-              </a>
+              </Link>
               <button
                 type="button"
                 className="px-1 text-muted hover:text-critical"

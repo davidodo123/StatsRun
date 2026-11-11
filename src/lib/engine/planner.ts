@@ -140,7 +140,7 @@ export function applyBlockedDates(plan: Plan, blocked: string[], avail: number[]
 /** Días a los que se puede pasar una sesión con «Cambiar de día»: desde hoy, una semana. */
 export const MOVE_DAYS = 7;
 
-export type MoveResult = { error: string } | { swapped: PlannedSession[]; warning?: string };
+export type MoveResult = { error: string } | { swapped: PlannedSession[]; warning?: string; clash?: [string, string] };
 
 /**
  * «Hoy no puedo la tirada, pero mañana sí»: pasa una sesión a otro día de los próximos MOVE_DAYS.
@@ -188,7 +188,7 @@ export function moveSession(plan: Plan, sessionId: string, to: string, today: st
     .map((x) => [x, now.find((y) => y !== x && isHardSession(y.type) && Math.abs(diffDays(y.date, x.date)) === 1)] as const)
     .find(([, y]) => y);
   const warning = clash ? `Quedan seguidas «${clash[0].title}» y «${clash[1]!.title}», dos sesiones fuertes: tómate la segunda con calma o cambia otra.` : undefined;
-  return { swapped, ...(warning ? { warning } : {}) };
+  return { swapped, ...(warning && clash ? { warning, clash: [clash[0].title, clash[1]!.title] as [string, string] } : {}) };
 }
 
 /** Días suaves tras competir a tope: uno por cada 3 km de carrera (Daniels). */

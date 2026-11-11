@@ -29,7 +29,7 @@ export async function rateAi(_: FormState, fd: FormData): Promise<FormState> {
       db.aiPreferences = addPreferences(db.aiPreferences, [{ text: reason, area: area === "plan" ? "plan" : "fuerza", source: "valoracion", at }], newId);
   });
   refresh();
-  return { ok: true, message: rating === 1 ? "Gracias." : reason ? "Apuntado: lo tendrá en cuenta." : "Gracias. Si nos dices qué falló, lo recordará." };
+  return { ok: true, message: rating === 1 ? await say("Gracias.") : reason ? await say("Apuntado: lo tendrá en cuenta.") : await say("Gracias. Si nos dices qué falló, lo recordará.") };
 }
 
 export async function addAiPreference(_: FormState, fd: FormData): Promise<FormState> {
@@ -44,7 +44,7 @@ export async function addAiPreference(_: FormState, fd: FormData): Promise<FormS
   });
   if (dup) return { error: await say("Ya la tenía apuntada.") };
   refresh();
-  return { ok: true, message: "Apuntado." };
+  return { ok: true, message: await say("Apuntado.") };
 }
 
 export async function deleteAiPreference(fd: FormData): Promise<void> {

@@ -16,6 +16,31 @@ export interface Novedad {
  */
 export const NOVEDADES: Novedad[] = [
   {
+    id: "2026-11-11",
+    items: [
+      {
+        icon: "dumbbell",
+        txt: {
+          es: ["Mira un ejercicio sin salir del entreno", "Toca su nombre: se abre al momento, sin pantalla en blanco, y «Volver» te deja donde estabas."],
+          en: ["See an exercise without leaving your workout", "Tap its name: it opens right away, no blank screen, and «Back» returns you where you were."],
+          ca: ["Mira un exercici sense sortir de l'entrenament", "Toca'n el nom: s'obre de seguida, sense pantalla en blanc, i «Tornar» et deixa on eres."],
+          pt: ["Vê um exercício sem sair do treino", "Toca no nome: abre logo, sem ecrã em branco, e «Voltar» deixa-te onde estavas."],
+          fr: ["Regarde un exercice sans quitter ta séance", "Touche son nom : il s'ouvre tout de suite, sans écran blanc, et «Retour» te ramène où tu étais."],
+        },
+      },
+      {
+        icon: "sparkle",
+        txt: {
+          es: ["Todo en tu idioma", "Los avisos al guardar, al cambiar una sesión de día o al añadir un amigo ya salen en tu idioma."],
+          en: ["Everything in your language", "Messages when saving, moving a session or adding a friend now show in your language."],
+          ca: ["Tot en el teu idioma", "Els avisos en desar, en canviar una sessió de dia o en afegir un amic ja surten en el teu idioma."],
+          pt: ["Tudo no teu idioma", "Os avisos ao guardar, ao mudar uma sessão de dia ou ao adicionar um amigo já aparecem no teu idioma."],
+          fr: ["Tout dans ta langue", "Les messages en enregistrant, en déplaçant une séance ou en ajoutant un ami s'affichent dans ta langue."],
+        },
+      },
+    ],
+  },
+  {
     id: "2026-11-05",
     items: [
       {

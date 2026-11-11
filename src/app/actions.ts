@@ -1,5 +1,7 @@
 "use server";
-import { say } from "@/lib/i18n/server";
+import { loginLocale, say, sayWith } from "@/lib/i18n/server";
+import { weekdayDate } from "@/lib/i18n";
+import { planText } from "@/lib/i18n/planText";
 
 import { refresh, updateTag } from "next/cache";
 import { redirect } from "next/navigation";
@@ -7,7 +9,7 @@ import { markCelebration } from "@/lib/celebrate";
 import { after } from "next/server";
 import { updateDb, readDbNow as getDb } from "@/lib/db";
 import { VIEW_TAG, requireUserId } from "@/lib/session";
-import { generateDemoActivities } from "@/lib/demo";
+import { generateDemoActivities, localizeDemo } from "@/lib/demo";
 import { applyBlockedDates, applyTuneUpRaces, availableDaysOf, generateSeason, keepPastWeeks, moveSession, planChanges } from "@/lib/engine/planner";
 import { computeStats } from "@/lib/engine/stats";
 import { profileAverages } from "@/lib/engine/profile";
@@ -17,7 +19,7 @@ import { fmtNum, parsePace, parseTime } from "@/lib/format";
 import { createHealthToken, revokeHealthToken } from "@/lib/healthToken";
 import { mergeHealth, parseHealthPayload, todayMadrid } from "@/lib/health";
 import { applyStrengthRoutines, doneStrength, routinesForPlan } from "@/lib/strength/routinePlan";
-import { WEEKDAYS, addDays, diffDays, mondayOf, shortDate, todayLocal, weekday } from "@/lib/dates";
+import { addDays, diffDays, mondayOf, todayLocal } from "@/lib/dates";
 import type { Db, Feel, Focus, Goal, Level, Plan, Profile, Sex, TuneUpRace, PlanChange } from "@/lib/types";
 import { downloadCmCourse, findCmRace } from "@/lib/cruzandolametaStore";
 import { parseCourseFile } from "@/lib/importers/course";
@@ -102,10 +104,10 @@ export async function saveProfile(_: FormState, fd: FormData): Promise<FormState
     await rebuildPlan(db);
     await scheduleAiAdapt();
     refresh();
-    return { ok: true, message: "Perfil guardado. Plan reorganizado con tus nuevos días; la IA lo está ajustando." };
+    return { ok: true, message: await say("Perfil guardado. Plan reorganizado con tus nuevos días; la IA lo está ajustando.") };
   }
   refresh();
-  return { ok: true, message: "Perfil guardado." };
+  return { ok: true, message: await say("Perfil guardado.") };
 }
 
 /** Actualiza los km/semana y la tirada más larga del perfil con la media real de las últimas 6 semanas. */
@@ -174,7 +176,7 @@ export async function saveGoal(_: FormState, fd: FormData): Promise<FormState> {
     redirect("/plan/actual");
   }
   refresh();
-  return { ok: true, message: "Objetivo guardado. Completa tu perfil para generar el plan." };
+  return { ok: true, message: await say("Objetivo guardado. Completa tu perfil para generar el plan.") };
 }
 
 /** Usa el desnivel del recorrido subido para la carrera objetivo y rehace el plan (cambia el ritmo previsto). */
@@ -295,8 +297,9 @@ export async function adaptPlanWithAI(): Promise<FormState> {
 }
 
 export async function loadDemo(): Promise<void> {
+  const locale = await loginLocale();
   await updateDb((db) => {
-    db.activities = [...db.activities.filter((a) => a.source !== "demo"), ...generateDemoActivities(todayLocal())].sort((a, b) =>
+    db.activities = [...db.activities.filter((a) => a.source !== "demo"), ...localizeDemo(generateDemoActivities(todayLocal()), locale)].sort((a, b) =>
       a.startLocal.localeCompare(b.startLocal),
     );
     db.profile ??= {
@@ -365,7 +368,7 @@ export async function addTuneUpRace(_: FormState, fd: FormData): Promise<FormSta
   await rebuildPlan(await getDb());
   await scheduleAiAdapt();
   refresh();
-  return { ok: true, message: "Carrera añadida. El plan se ha reorganizado a su alrededor." };
+  return { ok: true, message: await say("Carrera añadida. El plan se ha reorganizado a su alrededor.") };
 }
 
 export async function removeTuneUpRace(fd: FormData): Promise<void> {
@@ -402,7 +405,7 @@ export async function saveHealthFromApp(body: unknown): Promise<FormState> {
     db.healthConnectAt = new Date().toISOString();
   });
   refresh();
-  return { ok: true, message: `${parsed.days.length} días guardados.` };
+  return { ok: true, message: parsed.days.length === 1 ? await say("1 día guardado.") : await sayWith("{n} días guardados.", { n: parsed.days.length }) };
 }
 
 export async function revokeHealthKey(): Promise<void> {
@@ -438,8 +441,11 @@ export async function markUnavailableDates(list: string[]): Promise<FormState> {
   });
   await scheduleAiAdapt();
   refresh();
-  const what = [moved && `${moved} movidas`, dropped && `${dropped} quitadas`].filter(Boolean).join(", ");
-  return { ok: true, message: `Anotado.${what ? ` Sesiones ${what}.` : ""}${coachConfig().configured ? " La IA está rehaciendo tu rutina." : ""}` };
+  const parts = [await say("Anotado.")];
+  if (moved) parts.push(await sayWith("Sesiones movidas: {n}.", { n: moved }));
+  if (dropped) parts.push(await sayWith("Sesiones quitadas: {n}.", { n: dropped }));
+  if (coachConfig().configured) parts.push(await say("La IA está rehaciendo tu rutina."));
+  return { ok: true, message: parts.join(" ") };
 }
 
 /** «Cambiar de día»: pasa una sesión a otro día de la próxima semana (si ya hay otra, se intercambian). Se puede deshacer. */
@@ -462,11 +468,15 @@ export async function moveSessionDay(_: FormState, fd: FormData): Promise<FormSt
     if ("error" in result) return;
     db.lastSkip = { at: new Date().toISOString(), dates: [from], plan: before, unavailableDates: db.unavailableDates, move: { title, from, to } };
   });
-  if ("error" in result) return { error: result.error };
+  if ("error" in result) return { error: await say(result.error) };
   refresh();
-  const day = (d: string) => `${WEEKDAYS[weekday(d)].toLowerCase()} ${shortDate(d)}`;
-  const swap = result.swapped.length ? ` y ${result.swapped.map((x) => `«${x.title}»`).join(", ")} pasa al ${day(from)}` : "";
-  return { ok: true, message: `«${title}», al ${day(to)}${swap}.${result.warning ? ` ${result.warning}` : ""}` };
+  // en el idioma de cada uno: los nombres de las sesiones y los días también
+  const locale = await loginLocale();
+  const name = (t: string) => planText(t, locale);
+  const vars = { sesion: name(title), dia: weekdayDate(to, locale), otras: result.swapped.map((x) => `«${name(x.title)}»`).join(", "), dia2: weekdayDate(from, locale) };
+  const msg = result.swapped.length ? await sayWith("«{sesion}», al {dia}, y {otras} pasa al {dia2}.", vars) : await sayWith("«{sesion}», al {dia}.", vars);
+  const warn = result.clash ? await sayWith("Quedan seguidas «{a}» y «{b}», dos sesiones fuertes: tómate la segunda con calma o cambia otra.", { a: name(result.clash[0]), b: name(result.clash[1]) }) : "";
+  return { ok: true, message: warn ? `${msg} ${warn}` : msg };
 }
 
 /** «Hoy no puedo» / «No puedo ese día»: marca el día de una sesión de hoy o futura como no disponible (los pasados ya no). */
@@ -588,7 +598,7 @@ export async function saveActivity(_: FormState, fd: FormData): Promise<FormStat
   refresh();
   await markCelebration(sport);
   if (!existingId) redirect(sessionId ? "/plan/actual?registrado=1" : `/registrar?guardado=${encodeURIComponent(id)}`);
-  return { ok: true, message: "Entreno actualizado." };
+  return { ok: true, message: await say("Entreno actualizado.") };
 }
 
 const MAX_PHOTO = 900_000;

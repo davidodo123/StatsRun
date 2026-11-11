@@ -24,7 +24,7 @@ import {
 import { GOOGLE_PENDING_COOKIE, endSession, requireUserId, sealValue, startSession, unsealValue } from "@/lib/session";
 import { clearAttempts, noteAttempt, tooMany } from "@/lib/attempts";
 import { mailConfigured, sendMail } from "@/lib/mail";
-import { loginLocale, say } from "@/lib/i18n/server";
+import { loginLocale, say, sayWith } from "@/lib/i18n/server";
 import { translator } from "@/lib/i18n";
 import type { FormState } from "./actions";
 import { healthTokenKey, kvDel, readDbNow } from "@/lib/db";
@@ -43,7 +43,7 @@ export async function linkAccount(_: FormState, fd: FormData): Promise<FormState
   const g = await pendingGoogle();
   if (!g) redirect("/login?error=caducado");
   const r = await linkGoogleAccount(str(fd, "username"), str(fd, "password"), g);
-  if (!r.user) return { error: r.error };
+  if (!r.user) return { error: await say(r.error ?? "") };
   (await cookies()).delete(GOOGLE_PENDING_COOKIE);
   await startSession(r.user.id);
   redirect("/");
@@ -140,9 +140,11 @@ export async function logout(): Promise<void> {
 
 export async function addFriend(_: FormState, fd: FormData): Promise<FormState> {
   const r = await addFriendByCode(await requireUserId(), str(fd, "code"));
-  if (r.error) return { error: r.error };
+  // «Ya eres amigo de X.» lleva el nombre dentro: se traduce con su hueco
+  const ya = "Ya eres amigo de ";
+  if (r.error) return { error: r.error.startsWith(ya) ? await sayWith("Ya eres amigo de {nombre}.", { nombre: r.error.slice(ya.length, -1) }) : await say(r.error) };
   refresh();
-  return { ok: true, message: `Ahora ${r.friend?.name} y tú podéis ver vuestras estadísticas.` };
+  return { ok: true, message: await sayWith("Ahora {nombre} y tú podéis ver vuestras estadísticas.", { nombre: r.friend?.name ?? "" }) };
 }
 
 export async function requestFriend(fd: FormData): Promise<void> {

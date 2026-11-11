@@ -54,7 +54,8 @@ const jitter = (n, d = 20) => n + int(-d, d);
 
 const problems = [];
 const log = [];
-const celebrated = {}; // ¿la última acción de cada uno lanzó la animación de entreno registrado?
+const celebrated = {};
+const said = {}; // último mensaje de confirmación de cada uno (para mirar el idioma) // ¿la última acción de cada uno lanzó la animación de entreno registrado?
 let steps = 0;
 const counts = {};
 const bad = (who, step, kind, detail = "") => {
@@ -88,6 +89,7 @@ async function act(who, lang, step, name, args, { error = false } = {}) {
   const err = text.match(/"error":"(?!\$)([^"]{0,200})/)?.[1];
   if (err && !error) bad(who, step, "rechazado", err);
   if (error && !err) bad(who, step, "esperaba-error", "");
+  said[who] = text.match(/"message":"(?!$)([^"]{0,200})/)?.[1];
   if (log.length < 2000) log.push({ who, step, status: res.status, error: err });
   celebrated[who] = res.headers.getSetCookie().find((c) => /^rio_fiesta=[a-z]/.test(c) && !/httponly/i.test(c))?.match(/^rio_fiesta=([a-z]+)/)[1];
   return err;
@@ -558,15 +560,133 @@ async function seVa() {
   check(who, "sin-serie", !a || !existsSync(`data/serie_${who}_${a.id}.json`), "queda la serie de su carrera con GPS");
 }
 
+// ---------- 14. Rutinas desde el chat: crear, cambiar la suya en su sitio, borrar ----------
+async function rutinasChat() {
+  const who = `prueba-caso-rutinas-${R}`, L = "es";
+  addUser(who, "Rosa Rutinas");
+  await act(who, L, "perfil", "src/app/actions.ts#saveProfile", [{}, profileForm({ name: "Rosa Rutinas", focus: "fuerza", strengthPerWeek: 3 })]);
+  const ej = (id, kg) => ({ exerciseId: id, sets: [{ reps: 10, kg }, { reps: 10, kg }, { reps: 10, kg }], restSec: 90 });
+  let db = readDb(who);
+  const at1 = new Date(Date.now() - 60000).toISOString();
+  db.strengthChat = [{ role: "user", at: new Date(Date.now() - 70000).toISOString(), text: "Hazme una de empuje" }, { role: "assistant", at: at1, text: "Aquí la tienes", routines: [{ name: "Empuje", exercises: [ej("Pushups", 0), ej("Dumbbell_Bench_Press", 14)] }] }];
+  writeDb(who, db);
+  await act(who, L, "guardar-rutina-chat", "src/app/strength-actions.ts#saveChatRoutines", [form({ at: at1 })]);
+  db = readDb(who);
+  const r = db.routines?.find((x) => x.name === "Empuje");
+  check(who, "rutina-del-chat", r?.exercises.length === 2 && r.id, JSON.stringify(db.routines)?.slice(0, 160));
+  await act(who, L, "guardar-otra-vez", "src/app/strength-actions.ts#saveChatRoutines", [form({ at: at1 })]);
+  check(who, "sin-duplicar", readDb(who).routines?.length === 1, `rutinas ${readDb(who).routines?.length}`);
+  // le pide cambiarla: la IA la devuelve con su id y se cambia la suya, no una copia
+  db = readDb(who);
+  const at2 = new Date().toISOString();
+  db.strengthChat.push({ role: "assistant", at: at2, text: "Cambiada", routines: [{ id: r?.id, name: "Empuje B", exercises: [ej("Pushups", 0), ej("Dumbbell_Bench_Press", 16), ej("Dips_-_Triceps_Version", 0)] }] });
+  writeDb(who, db);
+  await act(who, L, "cambiar-rutina-chat", "src/app/strength-actions.ts#saveChatRoutines", [form({ at: at2 })]);
+  db = readDb(who);
+  const r2 = db.routines?.find((x) => x.id === r?.id);
+  check(who, "cambiada-en-su-sitio", db.routines?.length === 1 && r2?.name === "Empuje B" && r2.exercises.length === 3 && r2.createdAt === r?.createdAt, JSON.stringify(db.routines?.map((x) => [x.id === r?.id, x.name, x.exercises.length])));
+  for (const p of ["/fuerza", "/entrenador"]) await page(who, L, p, { expect: ["Empuje B"] });
+  await act(who, L, "medida", "src/app/strength-actions.ts#saveMeasurement", [{}, form({ date: day(-2), weightKg: "61.2" })]);
+  await act(who, L, "borrar-medida", "src/app/strength-actions.ts#deleteMeasurement", [form({ date: day(-2) })]);
+  check(who, "medida-borrada", !(readDb(who).measurements ?? []).some((x) => x.date === day(-2)), "");
+  await act(who, L, "borrar-rutina", "src/app/strength-actions.ts#deleteRoutine", [form({ id: r?.id })]);
+  check(who, "rutina-borrada", !(readDb(who).routines ?? []).length, "");
+  await act(who, L, "vaciar-chat", "src/app/strength-actions.ts#clearStrengthChat", []);
+  check(who, "chat-vacio", !readDb(who).strengthChat?.length, "");
+  for (const p of ["/fuerza", "/entrenador"]) await page(who, L, p);
+}
+
+// ---------- 15. Amigos por código, solicitud cancelada, sesión descartada y foto de perfil ----------
+async function codigo() {
+  const a = `prueba-caso-codigoa-${R}`, b = `prueba-caso-codigob-${R}`, c = `prueba-caso-codigoc-${R}`, L = "es";
+  addUser(a, "Alba Código");
+  addUser(b, "Bruno Código");
+  addUser(c, "Carla Código");
+  for (const [who, name] of [[a, "Alba Código"], [b, "Bruno Código"], [c, "Carla Código"]]) await act(who, L, "perfil", "src/app/actions.ts#saveProfile", [{}, profileForm({ name })]);
+  const users = () => JSON.parse(readFileSync(USERS, "utf8")).users;
+  const old = users().find((u) => u.id === a)?.friendCode;
+  await act(a, L, "codigo-nuevo", "src/app/auth-actions.ts#newFriendCode", []);
+  const code = users().find((u) => u.id === a)?.friendCode;
+  check(a, "codigo-nuevo", code && code !== old, `${old} → ${code}`);
+  await act(b, L, "codigo-viejo", "src/app/auth-actions.ts#addFriend", [{}, form({ code: old })], { error: true });
+  await act(b, "en", "por-codigo", "src/app/auth-actions.ts#addFriend", [{}, form({ code: code.toLowerCase() })]);
+  check(b, "mensaje-en-ingles", said[b] && /Alba/.test(said[b]) && !/podéis|estadísticas/.test(said[b]), said[b]);
+  check(b, "amigos-por-codigo", users().find((u) => u.id === b)?.friends.includes(a) && users().find((u) => u.id === a)?.friends.includes(b), "");
+  await act(b, L, "ya-amigos", "src/app/auth-actions.ts#addFriend", [{}, form({ code })], { error: true });
+  await act(a, L, "propio-codigo", "src/app/auth-actions.ts#addFriend", [{}, form({ code })], { error: true });
+  // en inglés, el error tiene que salir en inglés
+  const en = await act(c, "en", "codigo-malo-en", "src/app/auth-actions.ts#addFriend", [{}, form({ code: "ZZZZZZ" })], { error: true });
+  check(c, "error-en-ingles", en && !/[áéíóúñ]|No hay nadie|código/i.test(en), en);
+  // solicitud enviada y cancelada
+  await act(a, L, "pedir", "src/app/auth-actions.ts#requestFriend", [form({ id: c })]);
+  await act(a, L, "cancelar", "src/app/auth-actions.ts#cancelRequest", [form({ id: c })]);
+  const uc = users().find((u) => u.id === c);
+  check(a, "solicitud-cancelada", !(uc?.requests ?? []).includes(a) && !uc?.friends.includes(a), JSON.stringify(uc?.requests));
+  // entreno juntos: el amigo lo descarta y no se le añade
+  await act(a, L, "entreno-juntos", "src/app/actions.ts#saveActivity", [{}, form([["date", day(-1)], ["time", "08:00"], ["sport", "run"], ["name", "Series con Bruno"], ["distanceKm", "6"], ["duration", "33:00"], ["with", b]])]);
+  const s1 = readDb(a).activities.find((x) => x.name === "Series con Bruno");
+  if (s1) {
+    await act(b, L, "descartar", "src/app/actions.ts#dismissSharedActivity", [form({ owner: a, id: s1.id })]);
+    const db = readDb(b);
+    check(b, "descartada", db.dismissedShared?.includes(`${a}:${s1.id}`) && !db.activities.some((x) => x.sharedFrom), JSON.stringify(db.dismissedShared));
+  }
+  await page(b, L, "/amigos");
+  // foto de perfil
+  const sharp = (await import("sharp")).default;
+  const jpg = await sharp({ create: { width: 32, height: 32, channels: 3, background: "#3ec6ff" } }).jpeg().toBuffer();
+  await act(a, L, "avatar", "src/app/auth-actions.ts#saveAvatar", [`data:image/jpeg;base64,${jpg.toString("base64")}`]);
+  check(a, "avatar", Boolean(users().find((u) => u.id === a)?.photoAt), "");
+  await act(a, L, "avatar-malo", "src/app/auth-actions.ts#saveAvatar", ["data:image/jpeg;base64,xxxx"], { error: true });
+  await act(a, L, "quitar-avatar", "src/app/auth-actions.ts#removeAvatar", []);
+  check(a, "sin-avatar", !users().find((u) => u.id === a)?.photoAt, "");
+  for (const p of ["/amigos", `/amigos/${b}`, "/perfil"]) await page(a, L, p);
+}
+
+// ---------- 16. Prueba la app con datos de ejemplo, ajusta su perfil y el recorrido de su carrera ----------
+async function curioso() {
+  const who = `prueba-caso-curioso-${R}`, L = pickOne(["es", "en", "fr"]);
+  addUser(who, "Curro Curioso");
+  await act(who, L, "perfil", "src/app/actions.ts#saveProfile", [{}, profileForm({ name: "Curro Curioso", weeklyKm: 25, longestRunKm: 12 })]);
+  await act(who, L, "demo", "src/app/actions.ts#loadDemo", []);
+  let db = readDb(who);
+  const demo = db.activities.filter((x) => x.source === "demo").length;
+  check(who, "demo", demo > 20 && db.profile?.name === "Curro Curioso", `demo ${demo}`);
+  // el título de la pestaña sigue en español (pendiente: «Estadísticas · Zancavolt»)
+  for (const p of ["/", "/estadisticas", "/perfil?tab=actividades", "/perfil?tab=running"]) await page(who, L, p, { spanishOk: ["Zancavolt"] });
+  if (L !== "es") check(who, "demo-en-su-idioma", !readDb(who).activities.some((x) => ["Tirada larga", "Rodaje suave"].includes(x.name)), "nombres de la demo en español");
+  await act(who, L, "medias", "src/app/actions.ts#syncProfileAverages", []);
+  db = readDb(who);
+  check(who, "medias", Number.isFinite(db.profile?.weeklyKm) && Number.isFinite(db.profile?.longestRunKm), JSON.stringify([db.profile?.weeklyKm, db.profile?.longestRunKm]));
+  await act(who, L, "sesiones-perdidas", "src/app/actions.ts#checkMissedSessions", []);
+  await act(who, L, "esfuerzos", "src/app/progress-actions.ts#loadOldEfforts", []);
+  await act(who, L, "carrera", "src/app/actions.ts#saveGoal", [{}, form({ name: "Media de montaña", date: day(84), distanceKm: "21.1", targetTime: "" })]);
+  // un recorrido con su desnivel: al aplicarlo, la carrera lo toma y el plan se rehace
+  db = readDb(who);
+  if (db.goal) {
+    db.goal.course = { route: "", distanceKm: 21.1, elevationGainM: 640, elevationLossM: 640, markers: [], fileName: "media.gpx", name: "Recorrido" };
+    writeDb(who, db);
+    await act(who, L, "aplicar-recorrido", "src/app/actions.ts#applyCourseToPlan", []);
+    db = readDb(who);
+    check(who, "recorrido", db.goal?.elevationGainM === 640 && db.plan?.weeks.length > 0, JSON.stringify(db.goal)?.slice(0, 160));
+    await page(who, L, "/plan/actual");
+    await act(who, L, "quitar-recorrido", "src/app/actions.ts#removeCourse", []);
+    check(who, "sin-recorrido", !readDb(who).goal?.course && readDb(who).goal?.elevationGainM === 640, "");
+  }
+  await act(who, L, "quitar-demo", "src/app/actions.ts#clearDemo", []);
+  db = readDb(who);
+  check(who, "sin-demo", !db.activities.some((x) => x.source === "demo") && db.profile?.name === "Curro Curioso" && db.plan, `quedan ${db.activities.length}`);
+  for (const p of ["/", "/estadisticas", "/plan/actual"]) await page(who, L, p, { spanishOk: ["Zancavolt"] });
+}
+
 // ---------- limpieza entre rondas (con el servidor parado de escribir: entre una ronda y otra) ----------
 function limpiar() {
-  for (const f of readdirSync("data")) if (["db_", "serie_", "foto_"].some((p) => f.startsWith(`${p}prueba-caso-`))) rmSync(`data/${f}`, { force: true });
+  for (const f of readdirSync("data")) if (["db_", "serie_", "foto_", "avatar_"].some((p) => f.startsWith(`${p}prueba-caso-`))) rmSync(`data/${f}`, { force: true });
   const doc = JSON.parse(readFileSync(USERS, "utf8"));
   doc.users = doc.users.filter((u) => !u.id.startsWith("prueba-caso-")).map((u) => ({ ...u, friends: u.friends.filter((x) => !x.startsWith("prueba-caso-")), requests: u.requests?.filter((x) => !x.startsWith("prueba-caso-")) }));
   writeFileSync(USERS, JSON.stringify(doc));
 }
 
-const PERSONAS = { novata, lesionado, fuerza, temporada, ingles: () => otroIdioma("en"), frances: () => otroIdioma("fr"), catalan: () => otroIdioma("ca"), portugues: () => otroIdioma("pt"), amigos, importadora, salud, grupos, errores, cambia, memoria, seVa };
+const PERSONAS = { novata, lesionado, fuerza, temporada, ingles: () => otroIdioma("en"), frances: () => otroIdioma("fr"), catalan: () => otroIdioma("ca"), portugues: () => otroIdioma("pt"), amigos, importadora, salud, grupos, errores, cambia, memoria, seVa, rutinasChat, codigo, curioso };
 const MINUTES = Number(process.env.CASOS_MIN ?? 0);
 const t0 = Date.now();
 let personas = 0;

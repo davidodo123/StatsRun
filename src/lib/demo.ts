@@ -2,6 +2,23 @@
 import type { Activity } from "./types";
 import { addDays, weekday } from "./dates";
 import { raceTimeFromVdot, trainingPaces } from "./engine/physiology";
+import type { Locale } from "./i18n";
+
+// los nombres de las actividades de ejemplo en cada idioma (se generan en español)
+const DEMO_NAMES: Record<string, Record<Exclude<Locale, "es">, string>> = {
+  "Series 6×1000": { en: "Intervals 6×1000", ca: "Sèries 6×1000", pt: "Séries 6×1000", fr: "Fractionné 6×1000" },
+  Tempo: { en: "Tempo", ca: "Tempo", pt: "Tempo", fr: "Tempo" },
+  "Tirada larga": { en: "Long run", ca: "Tirada llarga", pt: "Longo", fr: "Sortie longue" },
+  "Rodaje suave": { en: "Easy run", ca: "Rodatge suau", pt: "Rodagem leve", fr: "Footing facile" },
+  Gimnasio: { en: "Gym", ca: "Gimnàs", pt: "Ginásio", fr: "Salle de sport" },
+  Bici: { en: "Bike", ca: "Bici", pt: "Bicicleta", fr: "Vélo" },
+  "Carrera 10K popular": { en: "Local 10K race", ca: "Cursa popular de 10K", pt: "Corrida popular de 10K", fr: "10 km populaire" },
+  Actividad: { en: "Activity", ca: "Activitat", pt: "Atividade", fr: "Activité" },
+};
+
+/** Las actividades de ejemplo con sus nombres en el idioma de quien las carga. */
+export const localizeDemo = (acts: Activity[], locale: Locale): Activity[] =>
+  locale === "es" ? acts : acts.map((a) => ({ ...a, name: DEMO_NAMES[a.name]?.[locale] ?? a.name }));
 
 /** PRNG determinista (mulberry32) para que la demo sea reproducible. */
 function rng(seed: number) {

@@ -41,3 +41,8 @@ export async function say(es: string): Promise<string> {
   const locale = await loginLocale();
   return locale === "es" ? es : (SERVER_TEXT[es]?.[locale] ?? es);
 }
+
+/** Igual, con huecos: sayWith("{n} días guardados.", { n: 3 }). */
+export async function sayWith(es: string, vars: Record<string, string | number>): Promise<string> {
+  return (await say(es)).replace(/\{(\w+)\}/g, (_, k: string) => String(vars[k] ?? ""));
+}
