@@ -268,7 +268,8 @@ for (const x of issues) {
   if (b.ejemplos.length < 5) b.ejemplos.push(x);
 }
 for (const code of Object.keys(byCode)) byCode[code].users = new Set(issues.filter((x) => x.code === code).map((x) => x.user)).size;
-writeFileSync(OUT, JSON.stringify({ usuarios: N, segundos: Math.round((Date.now() - t0) / 1000), fallos: byCode }, null, 2));
+// todos, para poder revisarlos uno a uno (los ejemplos son solo 5 por tipo)
+writeFileSync(OUT, JSON.stringify({ usuarios: N, segundos: Math.round((Date.now() - t0) / 1000), fallos: byCode, todos: issues.slice(0, 5000) }, null, 2));
 console.log(`${N} usuarios en ${Math.round((Date.now() - t0) / 1000)} s · ${issues.length} fallos de reglas en ${new Set(issues.map((x) => x.user)).size} usuarios`);
 for (const [code, b] of Object.entries(byCode).sort((a, b) => b[1].users - a[1].users)) console.log(`  ${code}: ${b.users} usuarios (${b.n})`);
 if (!existsSync(OUT)) process.exit(1);
