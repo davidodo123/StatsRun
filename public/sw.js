@@ -3,7 +3,7 @@
 // - Estáticos de Next (_next/static, con hash en el nombre) e iconos: de la caché primero, para abrir rápido.
 // No se guarda en caché ninguna página con datos del usuario.
 // subir la versión al cambiar offline.html o los iconos: renueva la caché en los móviles con la app instalada
-const VERSION = "v3";
+const VERSION = "v4"; // v4 (2026-11-12): un iPhone abría la app sin estilos ni fuentes, con lo guardado en la caché vieja
 const STATIC = `pacelab-static-${VERSION}`;
 const PRECACHE = ["/offline.html", "/icon.svg", "/icon-192.png", "/icon-512.png", "/apple-touch-icon.png"];
 
