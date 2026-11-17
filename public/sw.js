@@ -3,9 +3,25 @@
 // - Estáticos de Next (_next/static, con hash en el nombre) e iconos: de la caché primero, para abrir rápido.
 // No se guarda en caché ninguna página con datos del usuario.
 // subir la versión al cambiar offline.html o los iconos: renueva la caché en los móviles con la app instalada
-const VERSION = "v4"; // v4 (2026-11-12): un iPhone abría la app sin estilos ni fuentes, con lo guardado en la caché vieja
+const VERSION = "v5"; // v5 (2026-11-17): la página no se queda esperando para siempre y la caché no crece sin fin
 const STATIC = `pacelab-static-${VERSION}`;
 const PRECACHE = ["/offline.html", "/icon.svg", "/icon-192.png", "/icon-512.png", "/apple-touch-icon.png"];
+// cada versión publicada trae estáticos con otro nombre: se guardan los más recientes y se borran los viejos
+const MAX_STATIC = 160;
+// si la página no llega en este tiempo (cobertura mala, el iPhone recién despertado), pantalla propia que reintenta sola
+const NAV_TIMEOUT_MS = 12_000;
+// la petición adelantada (navigation preload) a veces no llega nunca en Safari al volver a la app: pasado esto, otra normal
+const PRELOAD_WAIT_MS = 4_000;
+
+const later = (ms) => new Promise((r) => setTimeout(() => r(undefined), ms));
+
+async function trimStatic() {
+  const c = await caches.open(STATIC);
+  const keys = await c.keys();
+  const keep = new Set(PRECACHE.map((p) => new URL(p, self.location.origin).href));
+  const old = keys.filter((k) => !keep.has(k.url));
+  await Promise.all(old.slice(0, Math.max(0, old.length - MAX_STATIC)).map((k) => c.delete(k)));
+}
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(STATIC).then((c) => c.addAll(PRECACHE)));
@@ -32,10 +48,23 @@ self.addEventListener("fetch", (event) => {
   if (req.mode === "navigate") {
     event.respondWith(
       (async () => {
+        // la pantalla sin conexión, en la misma dirección (al reintentar se recarga la página que se pedía);
+        // «lento»: la página no ha llegado a tiempo, y lo vuelve a intentar sola
+        const offline = async (slow) => {
+          const page = await caches.match("/offline.html");
+          if (!page || !slow) return page;
+          const html = (await page.text()).replace("<head>", "<head><script>window.LENTO = true</script>");
+          return new Response(html, { headers: { "Content-Type": "text/html; charset=utf-8" } });
+        };
+        const network = (async () => {
+          const pre = await Promise.race([Promise.resolve(event.preloadResponse).catch(() => undefined), later(PRELOAD_WAIT_MS)]);
+          return pre || fetch(req);
+        })();
         try {
-          return (await event.preloadResponse) || (await fetch(req));
+          const res = await Promise.race([network, later(NAV_TIMEOUT_MS)]);
+          return res || (await offline(true));
         } catch {
-          return caches.match("/offline.html");
+          return offline(false);
         }
       })(),
     );
@@ -50,7 +79,7 @@ self.addEventListener("fetch", (event) => {
           fetch(req).then((res) => {
             if (res.ok) {
               const copy = res.clone();
-              caches.open(STATIC).then((c) => c.put(req, copy));
+              event.waitUntil(caches.open(STATIC).then((c) => c.put(req, copy)).then(trimStatic));
             }
             return res;
           }),

@@ -12,6 +12,7 @@ App de entrenamiento para corredores: planes hacia una carrera, registro de entr
 
 > [!info] Fase actual: **Fase 9 · Publicar en Google Play** (2026-10-30)
 > Lo base para estar en Play: hecho lo de la app (borrar la cuenta, Premium oculto en Android, AAB 1.0, ficha y textos de los formularios en [[Google Play]]). Falta lo de David en Play Console: cuenta para revisores, vídeo del GPS, formularios y la prueba cerrada de 14 días. Ver [[Roadmap]].
+> 2026-11-17: arreglos (entreno en curso por cuenta, arranque sin pantalla en blanco, Perfil rápido con años de historial) y cuatro casos de uso nuevos: ver [[2026-11-17]].
 
 ## Notas
 
@@ -23,7 +24,7 @@ App de entrenamiento para corredores: planes hacia una carrera, registro de entr
 - [[Suscripción]] — qué sería gratis y qué de pago, precio y cómo cobrar
 - [[Estudio entrenamiento]] — la ciencia en la que se basa la IA (Selye, Banister, 80/20, Pirámide)
 - **Diario** — una nota por día de trabajo (carpeta `Diario/`)
-  - [[2026-10-09]] · … · [[2026-10-26]]
+  - [[2026-10-09]] · … · [[2026-11-17]]
 
 ## Cómo usamos esto
 

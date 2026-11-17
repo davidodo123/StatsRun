@@ -20,6 +20,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   // el color de las barras (no el del fondo): el iPhone lo usa para lo que queda fuera de la página
   themeColor: "#0f0f0f",
+  colorScheme: "dark",
   width: "device-width",
   initialScale: 1,
   // a pantalla completa en iPhone (barra de estado translúcida): los márgenes usan env(safe-area-inset-*)
@@ -28,8 +29,9 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="es" className={`h-full antialiased ${body.variable} ${heading.variable}`}>
-      <body className="flex min-h-full">
+    // fondo negro ya en la etiqueta: mientras llega la hoja de estilos (cobertura mala) no se ve una pantalla en blanco
+    <html lang="es" className={`h-full antialiased ${body.variable} ${heading.variable}`} style={{ backgroundColor: "#0f0f0f", colorScheme: "dark" }}>
+      <body className="flex min-h-full" style={{ backgroundColor: "#000", color: "#fff" }}>
         {children}
         <ServiceWorkerRegister />
         <NativeBridge />

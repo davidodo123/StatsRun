@@ -137,6 +137,7 @@ async function worker(queue) {
     await c.send("Network.clearBrowserCookies");
     await c.send("Network.setCookie", { name: "sr_session", value: cookieFor(id), domain: host, path: "/" });
     await c.send("Network.setCookie", { name: "rio_lang", value: lang, domain: host, path: "/" });
+    let ownWorkout = false; // ¿esta cuenta ha abierto ya un entreno? (si no, la barra «Entreno en curso» sería de otra)
     for (const page of pagesFor(id)) {
       current = { id, lang, page };
       const loaded = new Promise((r) => {
@@ -163,7 +164,7 @@ async function worker(queue) {
           }).slice(0, 3).map((el) => el.tagName.toLowerCase() + (el.className && typeof el.className === "string" ? "." + el.className.split(" ").slice(0, 3).join(".") : "") + " " + Math.round(el.getBoundingClientRect().right) + "px");
           const imgs = [...document.images].filter((i) => i.complete && i.naturalWidth === 0 && i.getAttribute("src") && !i.getAttribute("src").startsWith("data:")).map((i) => i.getAttribute("src")).slice(0, 3);
           const text = document.body.innerText;
-          return { scroll: document.documentElement.scrollWidth, w, wide, imgs, broken: /Algo ha fallado|Something went wrong/.test(text), login: location.pathname === "/login", len: text.length };
+          return { scroll: document.documentElement.scrollWidth, w, wide, imgs, bar: Boolean(document.querySelector(".live-workout-bar")), broken: /Algo ha fallado|Something went wrong/.test(text), login: location.pathname === "/login", len: text.length };
         })()`,
       });
       const v = r?.result?.value;
@@ -174,6 +175,8 @@ async function worker(queue) {
       }
       if (v.scroll > v.w + 1 || v.wide.length) bad(id, lang, page, "se-sale-por-el-lado", `${v.scroll}px en ${v.w}px · ${v.wide.join(" | ")}`);
       if (v.imgs.length) bad(id, lang, page, "imagen-rota", v.imgs.join(" "));
+      if (v.bar && !ownWorkout) bad(id, lang, page, "barra-de-otra-cuenta", "sale el entreno en curso de la cuenta anterior");
+      if (page.startsWith("/fuerza/entreno")) ownWorkout = true;
       if (v.broken) bad(id, lang, page, "algo-ha-fallado", "");
       if (v.login) bad(id, lang, page, "manda-al-login", "");
       if (v.len < 40) bad(id, lang, page, "pantalla-vacia", `${v.len} caracteres`);

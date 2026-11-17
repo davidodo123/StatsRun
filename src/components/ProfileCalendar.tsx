@@ -16,7 +16,7 @@ const SPORT_ICON: Record<string, IconName> = { run: "run", ride: "bike", swim: "
 const iso = (y: number, m: number, d: number) => `${y}-${String(m + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
 
 /** Calendario del mes: verde lo hecho, contorno lo que queda del plan. Al tocar un día se ven sus sesiones. */
-export function ProfileCalendar({ days, today, locale }: { days: Record<string, CalendarDay>; today: string; locale: Locale }) {
+export function ProfileCalendar({ days, from, today, locale }: { days: Record<string, CalendarDay>; from?: string; today: string; locale: Locale }) {
   const t = translator(locale);
   const [month, setMonth] = useState(() => ({ y: Number(today.slice(0, 4)), m: Number(today.slice(5, 7)) - 1 }));
   const [sel, setSel] = useState(today);
@@ -24,6 +24,8 @@ export function ProfileCalendar({ days, today, locale }: { days: Record<string, 
   const lead = (first.getUTCDay() + 6) % 7; // huecos antes del día 1 (la semana empieza en lunes)
   const count = new Date(Date.UTC(month.y, month.m + 1, 0)).getUTCDate();
   const go = (d: number) => setMonth(({ y, m }) => ({ y: m + d < 0 ? y - 1 : m + d > 11 ? y + 1 : y, m: (m + d + 12) % 12 }));
+  // no se va más atrás de lo que trae (`from`, «AAAA-MM-01»)
+  const atStart = Boolean(from && iso(month.y, month.m, 1) <= from);
   const raw = first.toLocaleDateString(intlLocale(locale), { month: "long", year: "numeric", timeZone: "UTC" });
   const title = raw.charAt(0).toUpperCase() + raw.slice(1); // «Octubre de 2026», no «Octubre De 2026»
   const day = days[sel];
@@ -37,7 +39,7 @@ export function ProfileCalendar({ days, today, locale }: { days: Record<string, 
           <p className="mt-0.5 text-sm font-semibold">{title}</p>
         </div>
         <div className="flex gap-1">
-          <button type="button" onClick={() => go(-1)} className="grid h-9 w-9 place-items-center rounded-full border border-line hover:border-accent" aria-label={t("cal.anterior")}>
+          <button type="button" onClick={() => go(-1)} disabled={atStart} className="grid h-9 w-9 place-items-center rounded-full border border-line hover:border-accent disabled:opacity-30 disabled:hover:border-line" aria-label={t("cal.anterior")}>
             <Icon name="chevron" className="h-4 w-4 rotate-180" />
           </button>
           <button type="button" onClick={() => go(1)} className="grid h-9 w-9 place-items-center rounded-full border border-line hover:border-accent" aria-label={t("cal.siguiente")}>

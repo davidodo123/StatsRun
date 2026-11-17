@@ -6,7 +6,8 @@
 //
 //   node scripts/pruebas/casos.mjs <informe.json>                 una ronda (unos 15 s)
 //   CASOS_MIN=60 node scripts/pruebas/casos.mjs <informe.json>    rondas seguidas durante 60 minutos, con datos al azar
-//                                                                  (cada ronda, las 14 personas a la vez; limpia cada 25)
+//   CASOS_SOLO=veterana node scripts/pruebas/casos.mjs <informe>   solo esa persona (tiempos sin las demás a la vez)
+//                                                                  (cada ronda, todas las personas a la vez; limpia cada 25)
 import { createHash, createHmac, randomBytes } from "node:crypto";
 import { existsSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 
@@ -114,16 +115,28 @@ const ES_WORDS_BY = {
   pt: /\b(Hoy|Mañana|Añadir|Quitar|Empezar|Volver|sesiones|sesión|días|Rodaje|Tirada|Distancia|Desnivel|Carrera|carreras|Entreno|entrenos|Fuerza|Rutina|rutinas|Estadísticas|Récord|Este mes|Cuánto|Estiramiento|ejercicio|Rodillas|pecho|mancuernas)\b/,
 };
 
+// lo que tarda cada pantalla (la media y la peor vez), para ver qué conviene optimizar
+const timings = {};
+const LENTA_MS = Number(process.env.CASOS_LENTA_MS ?? 6000); // con todas las personas a la vez en un servidor local: muy por encima de lo normal
+
 async function page(who, lang, path, { expect = [], spanishOk = [] } = {}) {
   steps++;
   let res;
   let html = "";
+  const t0p = Date.now();
   try {
     res = await fetch(BASE + path, { headers: { cookie: cookieFor(who, lang) }, redirect: "manual" });
     html = await res.text();
   } catch (e) {
     return bad(who, path, "sin-respuesta", e.message);
   }
+  const ms = Date.now() - t0p;
+  const tk = path.replace(/\/plan\/anterior\/.*/, "/plan/anterior/…").replace(/\/actividad\/.*/, "/actividad/…").replace(/\/amigos\/.*/, "/amigos/…");
+  const tm = (timings[tk] ??= { n: 0, total: 0, max: 0 });
+  tm.n++;
+  tm.total += ms;
+  tm.max = Math.max(tm.max, ms);
+  if (ms > LENTA_MS) bad(who, path, "lenta", `${ms} ms`);
   if (res.status >= 400) return bad(who, path, "estado", res.status);
   if (res.status >= 300) return bad(who, path, "redirige", res.headers.get("location"));
   if (/Algo ha fallado|Something went wrong/.test(html)) bad(who, path, "pantalla-error");
@@ -678,6 +691,114 @@ async function curioso() {
   for (const p of ["/", "/estadisticas", "/plan/actual"]) await page(who, L, p, { spanishOk: ["Zancavolt"] });
 }
 
+// ---------- 17. Veterana: cuatro años de historial (más de 1.000 entrenos); que todo siga abriendo rápido ----------
+async function veterana() {
+  const who = `prueba-caso-veterana-${R}`, L = "es";
+  addUser(who, "Vera Veterana");
+  await act(who, L, "perfil", "src/app/actions.ts#saveProfile", [{}, profileForm({ name: "Vera Veterana", level: "avanzado", yearsRunning: 10, weeklyKm: 55, longestRunKm: 26, days: [0, 1, 2, 3, 4, 6], longRunDay: 6, strengthPerWeek: 2 })]);
+  await act(who, L, "demo", "src/app/actions.ts#loadDemo", []);
+  // la demo son unas semanas: se copia hacia atrás hasta cubrir tres años, con otros ids y otras fechas
+  let db = readDb(who);
+  const demo = db.activities.filter((x) => x.source === "demo");
+  const dates = demo.map((x) => Date.parse(`${x.date}T12:00:00`)).sort((a, b) => a - b);
+  const spanDays = Math.max(7, Math.round((dates.at(-1) - dates[0]) / 864e5) + 7);
+  const shift = (iso, d) => {
+    const t = new Date(Date.parse(iso.length === 10 ? `${iso}T12:00:00` : iso) - d * 864e5);
+    return iso.length === 10 ? ymd(t) : `${ymd(t)}${iso.slice(10)}`;
+  };
+  const copies = [];
+  for (let k = 1; k * spanDays <= 4 * 365; k++)
+    for (const a of demo) copies.push({ ...structuredClone(a), id: `${a.id}-v${k}`, date: shift(a.date, k * spanDays), startLocal: shift(a.startLocal, k * spanDays) });
+  db.activities = [...copies, ...db.activities].sort((a, b) => a.startLocal.localeCompare(b.startLocal));
+  writeDb(who, db);
+  check(who, "historial-largo", db.activities.length > 1000, `entrenos ${db.activities.length}`);
+  await act(who, L, "carrera", "src/app/actions.ts#saveGoal", [{}, form({ name: "Maratón de Valencia", date: day(jitter(110)), distanceKm: "42.195", targetTime: "3:10:00" })]);
+  check(who, "plan", readDb(who).plan?.weeks.length > 0, "sin plan");
+  for (const p of PAGES) await page(who, L, p);
+  // un objetivo puesto y quitado; un entreno borrado
+  await act(who, L, "objetivo", "src/app/progress-actions.ts#addTarget", [{}, form({ period: "week", metric: "km", sport: "run", value: "50" })]);
+  const tg = readDb(who).targets?.at(-1);
+  if (tg) {
+    await act(who, L, "quitar-objetivo", "src/app/progress-actions.ts#deleteTarget", [form({ id: tg.id })]);
+    check(who, "objetivo-quitado", !(readDb(who).targets ?? []).some((x) => x.id === tg.id), "");
+  } else bad(who, "objetivo", "no-cumple", "no se guardó el objetivo");
+  const victim = readDb(who).activities.at(-1);
+  await act(who, L, "borrar-entreno", "src/app/actions.ts#deleteActivity", [form({ id: victim.id })]);
+  check(who, "entreno-borrado", !readDb(who).activities.some((x) => x.id === victim.id), "");
+  for (const p of ["/", "/estadisticas", "/perfil?tab=actividades"]) await page(who, L, p);
+}
+
+// ---------- 18. Se va de vacaciones: marca días sin poder entrenar, lo deshace y se lo pide al chat ----------
+async function vacaciones() {
+  const who = `prueba-caso-vacaciones-${R}`, L = pickOne(["es", "en", "pt"]);
+  addUser(who, "Valeria Vacaciones");
+  await act(who, L, "perfil", "src/app/actions.ts#saveProfile", [{}, profileForm({ name: "Valeria Vacaciones", level: "intermedio", weeklyKm: 30, longestRunKm: 14, days: [0, 2, 4, 6], longRunDay: 6, strengthPerWeek: 1 })]);
+  await act(who, L, "carrera", "src/app/actions.ts#saveGoal", [{}, form({ name: "Media de otoño", date: day(jitter(90)), distanceKm: "21.0975", targetTime: "" })]);
+  const sessions = (db) => db.plan?.weeks.flatMap((w) => w.sessions) ?? [];
+  const off = [day(2), day(3), day(4), day(5), day(6)];
+  await act(who, L, "vacaciones", "src/app/actions.ts#markUnavailableDates", [off]);
+  let db = readDb(who);
+  check(who, "fechas-guardadas", off.every((d) => db.unavailableDates?.includes(d)), JSON.stringify(db.unavailableDates));
+  const busy = sessions(db).filter((x) => off.includes(x.date) && x.type !== "rest" && !x.skipped);
+  check(who, "nada-en-vacaciones", !busy.length, busy.map((x) => `${x.date} ${x.type}`).join(", "));
+  await page(who, L, "/plan/actual");
+  await page(who, L, "/");
+  await act(who, L, "deshacer", "src/app/actions.ts#undoSkip", []);
+  db = readDb(who);
+  check(who, "deshecho", !off.some((d) => db.unavailableDates?.includes(d)), JSON.stringify(db.unavailableDates));
+  await act(who, L, "fechas-raras", "src/app/actions.ts#markUnavailableDates", [["ayer", day(400)]], { error: true });
+  // se lo cuenta al chat: la IA deja los días listos y el botón «Aplicar» los marca
+  db = readDb(who);
+  const at = new Date().toISOString();
+  db.strengthChat = [{ role: "user", at: new Date(Date.now() - 5000).toISOString(), text: "El jueves y el viernes no puedo" }, { role: "assistant", at, text: "Lo muevo", planDays: [day(8), day(9)] }];
+  writeDb(who, db);
+  await act(who, L, "aplicar-chat", "src/app/strength-actions.ts#applyChatPlan", [{}, form({ at })]);
+  db = readDb(who);
+  check(who, "dias-del-chat", [day(8), day(9)].every((d) => db.unavailableDates?.includes(d)), JSON.stringify(db.unavailableDates));
+  await act(who, L, "aplicar-otra-vez", "src/app/strength-actions.ts#applyChatPlan", [{}, form({ at })]);
+  check(who, "sin-repetir", readDb(who).unavailableDates?.filter((d) => d === day(8)).length === 1, "");
+  await act(who, L, "aplicar-nada", "src/app/strength-actions.ts#applyChatPlan", [{}, form({ at: "1999-01-01T00:00:00.000Z" })], { error: true });
+  await act(who, L, "liberar", "src/app/actions.ts#clearUnavailable", [form({ date: day(8) })]);
+  check(who, "liberado", !readDb(who).unavailableDates?.includes(day(8)) && readDb(who).unavailableDates?.includes(day(9)), JSON.stringify(readDb(who).unavailableDates));
+  for (const p of ["/plan/actual", "/entrenador", "/"]) await page(who, L, p);
+}
+
+// ---------- 19. Recién llegado: entra sin perfil y abre todas las pantallas antes de rellenar nada ----------
+async function recien() {
+  const who = `prueba-caso-recien-${R}`, L = pickOne(["es", "en", "ca", "pt", "fr"]);
+  addUser(who, "Nico Nuevo");
+  for (const p of [...PAGES, "/fuerza/entreno", "/fuerza/ejercicios", "/fuerza/emom", "/fuerza/material", "/fuerza/medidas", "/herramientas", "/premium", "/ajustes", "/sueno"]) await page(who, L, p, { spanishOk: ["Zancavolt"] });
+  check(who, "sigue-sin-perfil", !readDb(who).profile, "abrir pantallas no debería crear el perfil");
+  // registra algo sin tener perfil ni plan
+  await act(who, L, "registrar-sin-perfil", "src/app/actions.ts#saveActivity", [{}, form({ date: day(-1), time: "19:00", sport: "walk", name: "Paseo", distanceKm: "4", duration: "50:00", feel: "bien" })]);
+  check(who, "guardado", readDb(who).activities.some((x) => x.name === "Paseo"), "");
+  for (const p of ["/", "/estadisticas"]) await page(who, L, p, { spanishOk: ["Zancavolt"] });
+}
+
+// ---------- 20. Móvil compartido: dos cuentas, cada una ve solo lo suyo (también el entreno en curso) ----------
+async function compartido() {
+  const a = `prueba-caso-compartea-${R}`, b = `prueba-caso-comparteb-${R}`, L = "es";
+  addUser(a, "Sara Comparte");
+  addUser(b, "Teo Comparte");
+  await act(a, L, "perfil", "src/app/actions.ts#saveProfile", [{}, profileForm({ name: "Sara Comparte", focus: "fuerza", strengthPerWeek: 3 })]);
+  await act(b, L, "perfil", "src/app/actions.ts#saveProfile", [{}, profileForm({ name: "Teo Comparte", weeklyKm: 20 })]);
+  await act(a, L, "rutina", "src/app/strength-actions.ts#saveRoutine", [{ name: "Rutina de Sara", exercises: [{ exerciseId: "Pushups", sets: [{ reps: 12 }, { reps: 12 }], restSec: 60 }] }]);
+  const r = readDb(a).routines?.[0];
+  await act(a, L, "entreno", "src/app/strength-actions.ts#finishWorkout", [{ name: "Rutina de Sara", startLocal: `${day(-1)}T18:00:00`, durationSec: 1800, rpe: 7, workout: { routineId: r?.id, exercises: [{ exerciseId: "Pushups", sets: [{ reps: 12, done: true }] }] } }]);
+  // el entreno en curso se guarda en el móvil con la cuenta: la página del entreno lleva el id de quien la abre
+  const ha = await fetch(`${BASE}/fuerza/entreno?rutina=${r?.id}`, { headers: { cookie: cookieFor(a, L) } }).then((x) => x.text());
+  const hb = await fetch(`${BASE}/fuerza/entreno?rutina=${r?.id}`, { headers: { cookie: cookieFor(b, L) } }).then((x) => x.text());
+  steps += 2;
+  check(a, "entreno-con-dueno", ha.includes(a) && !ha.includes(b), "la página del entreno no lleva el id de la cuenta");
+  check(b, "rutina-ajena-no", !visible(hb).some((l) => l.includes("Rutina de Sara")), "abre la rutina de otra cuenta");
+  const linesB = await page(b, L, "/fuerza");
+  check(b, "no-ve-lo-de-otra", !(linesB ?? []).some((l) => l.includes("Rutina de Sara")), "ve la rutina de otra cuenta");
+  const linesB2 = await page(b, L, "/perfil?tab=actividades");
+  check(b, "no-ve-entrenos-ajenos", !(linesB2 ?? []).some((l) => l.includes("Rutina de Sara")), "ve los entrenos de otra cuenta");
+  const linesA = await page(a, L, "/perfil?tab=actividades");
+  check(a, "ve-lo-suyo", (linesA ?? []).some((l) => l.includes("Rutina de Sara")), "");
+}
+
 // ---------- limpieza entre rondas (con el servidor parado de escribir: entre una ronda y otra) ----------
 function limpiar() {
   for (const f of readdirSync("data")) if (["db_", "serie_", "foto_", "avatar_"].some((p) => f.startsWith(`${p}prueba-caso-`))) rmSync(`data/${f}`, { force: true });
@@ -686,14 +807,24 @@ function limpiar() {
   writeFileSync(USERS, JSON.stringify(doc));
 }
 
-const PERSONAS = { novata, lesionado, fuerza, temporada, ingles: () => otroIdioma("en"), frances: () => otroIdioma("fr"), catalan: () => otroIdioma("ca"), portugues: () => otroIdioma("pt"), amigos, importadora, salud, grupos, errores, cambia, memoria, seVa, rutinasChat, codigo, curioso };
+const PERSONAS = { novata, lesionado, fuerza, temporada, ingles: () => otroIdioma("en"), frances: () => otroIdioma("fr"), catalan: () => otroIdioma("ca"), portugues: () => otroIdioma("pt"), amigos, importadora, salud, grupos, errores, cambia, memoria, seVa, rutinasChat, codigo, curioso, veterana, vacaciones, recien, compartido };
+const tiemposDe = () =>
+  Object.fromEntries(
+    Object.entries(timings)
+      .map(([p, t]) => [p, { veces: t.n, media: Math.round(t.total / t.n), peor: t.max }])
+      .sort((x, y) => y[1].media - x[1].media),
+  );
 const MINUTES = Number(process.env.CASOS_MIN ?? 0);
+// CASOS_SOLO=veterana,recien: solo esas personas (p. ej. para medir tiempos sin las demás a la vez)
+const SOLO = (process.env.CASOS_SOLO ?? "").split(",").filter(Boolean);
 const t0 = Date.now();
 let personas = 0;
 do {
-  // las 14 a la vez: cada una crea su usuario antes de su primer await (la ronda empieza con users.json quieto)
+  // todas a la vez: cada una crea su usuario antes de su primer await (la ronda empieza con users.json quieto)
   await Promise.all(
-    Object.entries(PERSONAS).map(async ([name, fn]) => {
+    Object.entries(PERSONAS)
+      .filter(([name]) => !SOLO.length || SOLO.includes(name))
+      .map(async ([name, fn]) => {
       try {
         await fn();
       } catch (e) {
@@ -707,10 +838,12 @@ do {
   if (R % 10 === 0 || !MINUTES) {
     const min = (Date.now() - t0) / 60000;
     console.log(`ronda ${R} · ${personas} personas · ${steps} comprobaciones · ${Object.values(counts).reduce((a, b) => a + b, 0)} problemas · ${min.toFixed(1)} min`);
-    writeFileSync(OUT, JSON.stringify({ rondas: R, personas, pasos: steps, porTipo: counts, problemas: problems, acciones: log.slice(-200) }, null, 2));
+    writeFileSync(OUT, JSON.stringify({ rondas: R, personas, pasos: steps, porTipo: counts, problemas: problems, tiempos: tiemposDe(), acciones: log.slice(-200) }, null, 2));
   }
 } while (MINUTES && Date.now() - t0 < MINUTES * 60000);
 limpiar();
-writeFileSync(OUT, JSON.stringify({ rondas: R, personas, pasos: steps, porTipo: counts, problemas: problems, acciones: log.slice(-200) }, null, 2));
+writeFileSync(OUT, JSON.stringify({ rondas: R, personas, pasos: steps, porTipo: counts, problemas: problems, tiempos: tiemposDe(), acciones: log.slice(-200) }, null, 2));
 console.log(`Hecho: ${R} rondas, ${personas} personas, ${steps} comprobaciones en ${Math.round((Date.now() - t0) / 1000)} s · ${Object.values(counts).reduce((a, b) => a + b, 0)} problemas`);
 for (const [k, n] of Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 40)) console.log(`  ${n} × ${k}`);
+console.log("Pantallas más lentas (media / peor):");
+for (const [p, t] of Object.entries(tiemposDe()).slice(0, 10)) console.log(`  ${String(t.media).padStart(5)} / ${String(t.peor).padStart(5)} ms  ${p}`);

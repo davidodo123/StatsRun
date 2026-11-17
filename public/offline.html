@@ -53,9 +53,32 @@
   <body>
     <main>
       <img src="/icon.svg" alt="" />
-      <h1>Sin conexión</h1>
-      <p>Zancavolt necesita internet para cargar tu plan y tus entrenos. Cuando vuelvas a tener cobertura, reintenta.</p>
-      <button onclick="location.reload()">Reintentar</button>
+      <h1 id="t">Sin conexión</h1>
+      <p id="p">Zancavolt necesita internet para cargar tu plan y tus entrenos. Cuando vuelvas a tener cobertura, reintenta.</p>
+      <button id="b" onclick="location.reload()">Reintentar</button>
     </main>
+    <script>
+      // la pone el service worker en la dirección que se pedía: recargar vuelve a pedir esa página
+      (function () {
+        var T = {
+          es: ["Sin conexión", "Zancavolt necesita internet para cargar tu plan y tus entrenos. Cuando vuelvas a tener cobertura, reintenta.", "Está tardando más de lo normal", "La conexión va lenta. Lo volvemos a intentar solos en unos segundos.", "Reintentar"],
+          en: ["You're offline", "Zancavolt needs the internet to load your plan and workouts. Try again when you're back online.", "This is taking longer than usual", "The connection is slow. We'll try again by ourselves in a few seconds.", "Try again"],
+          ca: ["Sense connexió", "Zancavolt necessita internet per carregar el teu pla i els teus entrenaments. Quan tornis a tenir cobertura, torna-ho a provar.", "Està trigant més del normal", "La connexió va lenta. Ho tornem a provar sols d'aquí a uns segons.", "Torna-ho a provar"],
+          pt: ["Sem ligação", "O Zancavolt precisa de internet para carregar o teu plano e os teus treinos. Quando voltares a ter rede, tenta outra vez.", "Está a demorar mais do que o normal", "A ligação está lenta. Voltamos a tentar sozinhos dentro de uns segundos.", "Tentar outra vez"],
+          fr: ["Hors connexion", "Zancavolt a besoin d'internet pour charger ton plan et tes séances. Réessaie quand tu auras du réseau.", "C'est plus long que d'habitude", "La connexion est lente. On réessaie tout seuls dans quelques secondes.", "Réessayer"],
+        };
+        var m = /(?:^|; )rio_lang=([a-z]{2})/.exec(document.cookie);
+        var lang = (m && m[1]) || (navigator.language || "es").slice(0, 2);
+        var x = T[lang] || T.es;
+        var slow = window.LENTO === true;
+        document.documentElement.lang = T[lang] ? lang : "es";
+        document.getElementById("t").textContent = slow ? x[2] : x[0];
+        document.getElementById("p").textContent = slow ? x[3] : x[1];
+        document.getElementById("b").textContent = x[4];
+        // con cobertura otra vez, sola; si solo iba lenta, un intento más a los pocos segundos
+        window.addEventListener("online", function () { location.reload(); });
+        if (slow) setTimeout(function () { location.reload(); }, 4000);
+      })();
+    </script>
   </body>
 </html>

@@ -214,7 +214,7 @@ function Resumen({ db, stats, matches, today, locale }: { db: Db; stats: Stats; 
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
       <div className="space-y-4 lg:col-span-2">
         <Preparacion db={db} matches={matches} today={today} locale={locale} />
-        <ProfileCalendar days={calendarDays(db, matches, today, locale)} today={today} locale={locale} />
+        <ProfileCalendar days={calendarDays(db, matches, today, locale)} from={calendarFrom(today)} today={today} locale={locale} />
         <Card
           title={t("pr.recientes")}
           action={<ChipLink href="/perfil?tab=actividades">{t("pr.verTodas")}</ChipLink>}
@@ -255,15 +255,19 @@ function Resumen({ db, stats, matches, today, locale }: { db: Db; stats: Stats; 
   );
 }
 
+/** El calendario llega hasta hace un año (el día 1 de ese mes): con años de historial, la página pesaba cientos de KB. Lo de antes, en «Actividades». */
+const calendarFrom = (today: string) => `${Number(today.slice(0, 4)) - 1}${today.slice(4, 8)}01`;
+
 /** Lo de cada día para el calendario: entrenos hechos y sesiones del plan (por hacer o que no se hicieron). */
 function calendarDays(db: Db, matches: Map<string, SessionMatch> | undefined, today: string, locale: Locale): Record<string, CalendarDay> {
   const days: Record<string, CalendarDay> = {};
   const at = (d: string) => (days[d] ??= { acts: [], plan: [] });
-  for (const a of db.activities) at(a.date).acts.push({ id: a.id, name: a.name, sport: a.sport, km: Math.round(a.distanceM / 10) / 100, min: Math.round(a.movingSec / 60) });
+  const from = calendarFrom(today);
+  for (const a of db.activities) if (a.date >= from) at(a.date).acts.push({ id: a.id, name: a.name, sport: a.sport, km: Math.round(a.distanceM / 10) / 100, min: Math.round(a.movingSec / 60) });
   for (const s of db.plan?.weeks.flatMap((w) => w.sessions) ?? []) {
     const status = matches?.get(s.id)?.status;
     // las hechas ya salen como entreno; las pasadas sin hacer, como «no hecho»
-    if (status === "done" || status === "partial") continue;
+    if (status === "done" || status === "partial" || s.date < from) continue;
     at(s.date).plan.push({ id: s.id, title: planText(s.title, locale), km: s.distanceKm, min: s.durationMin, strength: s.type === "strength", pending: s.date >= today });
   }
   return days;

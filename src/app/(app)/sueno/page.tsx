@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { SleepCalculator } from "@/components/SleepCalculator";
-import { Notice, PageHeader } from "@/components/ui";
+import { Loading, Notice, PageHeader } from "@/components/ui";
 import { getDb } from "@/lib/db";
 import { addDays } from "@/lib/dates";
 import { viewToday } from "@/lib/analysis";
@@ -13,7 +13,8 @@ export const metadata: Metadata = { title: "Sueño" };
 
 export default function SleepPage() {
   return (
-    <Suspense fallback={<SleepCalculator hardTomorrow={false} />}>
+    // mientras carga, sin textos: la versión de antes salía en español a todos
+    <Suspense fallback={<Loading />}>
       <Content />
     </Suspense>
   );

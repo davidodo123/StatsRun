@@ -109,7 +109,7 @@ async function Dashboard() {
         }
       />
       )}
-      <UndoSkip db={db} today={today} />
+      <UndoSkip db={db} today={today} locale={locale} />
 
       <StatGroup className="md:grid-cols-3 lg:grid-cols-6">
         <Stat label="VDOT" value={stats.vdot.vdot.toFixed(1)} sub={tr(`est.${vo2maxLabel(stats.vdot.vdot, profile.sex, profile.age)}` as Key)} hint={stats.vdot.source} />

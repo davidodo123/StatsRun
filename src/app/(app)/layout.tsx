@@ -14,7 +14,8 @@ import { requireViewerId } from "@/lib/session";
 import { viewLocale } from "@/lib/i18n/server";
 
 async function LiveWorkoutMount() {
-  return <LiveWorkoutBar locale={await viewLocale()} />;
+  const [owner, locale] = await Promise.all([requireViewerId(), viewLocale()]);
+  return <LiveWorkoutBar locale={locale} owner={owner} />;
 }
 
 async function AnalyticsMount() {

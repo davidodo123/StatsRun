@@ -10,6 +10,7 @@ import type { Routine } from "@/lib/types";
 import { viewLocale } from "@/lib/i18n/server";
 import { weekdayDate } from "@/lib/i18n";
 import { viewToday } from "@/lib/analysis";
+import { requireViewerId } from "@/lib/session";
 
 export const metadata: Metadata = { title: "Entreno" };
 
@@ -22,7 +23,7 @@ export default function WorkoutPage({ searchParams }: PageProps<"/fuerza/entreno
 }
 
 async function Content({ searchParams }: { searchParams: PageProps<"/fuerza/entreno">["searchParams"] }) {
-  const [sp, db, locale] = await Promise.all([searchParams, getDb(), viewLocale()]);
+  const [sp, db, locale, owner] = await Promise.all([searchParams, getDb(), viewLocale(), requireViewerId()]);
   const session = typeof sp.sesion === "string" ? db.plan?.weeks.flatMap((w) => w.sessions).find((x) => x.id === sp.sesion && x.type === "strength") : undefined;
   const id = session?.routineId ?? (typeof sp.rutina === "string" ? sp.rutina : undefined);
   const own = id ? db.routines?.find((r) => r.id === id) : undefined;
@@ -49,6 +50,7 @@ async function Content({ searchParams }: { searchParams: PageProps<"/fuerza/entr
       pastStart={fecha && `${fecha}T${hora}:00`}
       pastLabel={fecha && weekdayDate(fecha, locale)}
       locale={locale}
+      owner={owner}
     />
   );
 }

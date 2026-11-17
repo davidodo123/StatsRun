@@ -38,7 +38,10 @@ export function activityTags(acts: Activity[], loadOf?: (a: Activity) => number)
   let maxLoad = 0;
   let runsSeen = 0;
   let actsSeen = 0;
-  const runs: Activity[] = [];
+  // carreras de 3 km o más ya vistas, en orden; `from` es la primera de los últimos 30 días (ventana que se desliza:
+  // antes se recorrían todas en cada carrera y, con años de historial, el perfil tardaba cada vez más)
+  const runs3k: Activity[] = [];
+  let from = 0;
   const lifts = strengthRecords(acts);
 
   for (const a of sorted) {
@@ -60,13 +63,14 @@ export function activityTags(acts: Activity[], loadOf?: (a: Activity) => number)
       if (runsSeen >= MIN_HISTORY && a.elevationGainM >= 50 && a.elevationGainM > climb) add(a, { kind: "climb", label: "Más desnivel", key: "tag.desnivel", icon: "mountain" });
 
       // mejor ritmo de los últimos 30 días (carreras de 3 km o más, con al menos 3 en la ventana)
-      const window = runs.filter((r) => r.distanceM >= 3000 && diffDays(a.date, r.date) < 30);
+      while (from < runs3k.length && diffDays(a.date, runs3k[from].date) >= 30) from++;
+      const window = runs3k.slice(from);
       if (a.distanceM >= 3000 && window.length >= MIN_HISTORY && window.every((r) => pace < r.movingSec / r.distanceM))
         add(a, { kind: "pace", label: "Mejor ritmo del mes", key: "tag.ritmoMes", icon: "bolt" });
 
       longest = Math.max(longest, a.distanceM);
       climb = Math.max(climb, a.elevationGainM);
-      runs.push(a);
+      if (a.distanceM >= 3000) runs3k.push(a);
       runsSeen++;
     }
     const recs = lifts.get(a.id);

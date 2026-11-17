@@ -16,7 +16,7 @@ const clock = (sec: number) => {
 };
 
 /** Con un entreno empezado, una pestaña encima de la barra de abajo para volver a él desde cualquier sección. */
-export function LiveWorkoutBar({ locale }: { locale: Locale }) {
+export function LiveWorkoutBar({ locale, owner }: { locale: Locale; owner: string }) {
   const t = translator(locale);
   const path = usePathname();
   const [w, setW] = useState<LiveWorkoutInfo>();
@@ -25,11 +25,11 @@ export function LiveWorkoutBar({ locale }: { locale: Locale }) {
   // se mira al cambiar de página (al terminar o descartar el entreno se cambia de página) y si otra pestaña lo cambia
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- localStorage solo existe en el navegador
-    setW(readLiveWorkout());
-    const onStorage = () => setW(readLiveWorkout());
+    setW(readLiveWorkout(owner));
+    const onStorage = () => setW(readLiveWorkout(owner));
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
-  }, [path]);
+  }, [path, owner]);
   useEffect(() => {
     if (!w || w.pausedAt) return;
     const t = setInterval(() => setNow(Date.now()), 1000);
@@ -44,7 +44,7 @@ export function LiveWorkoutBar({ locale }: { locale: Locale }) {
     <div className="live-workout-bar hide-on-kb fixed inset-x-0 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-30 px-3 pb-2 md:bottom-4 md:left-56 md:px-8">
       <Link
         href={w.routineId ? `/fuerza/entreno?rutina=${w.routineId}` : "/fuerza/entreno"}
-        className="mx-auto flex max-w-xl items-center gap-3 rounded-2xl border border-accent/40 bg-surface px-3 py-2.5 shadow-lg"
+        className="mx-auto flex min-w-0 max-w-xl items-center gap-3 overflow-hidden rounded-2xl border border-accent/40 bg-surface px-3 py-2.5 shadow-lg"
       >
         <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-accent text-accent-ink">
           <Icon name="dumbbell" className="h-4 w-4" />

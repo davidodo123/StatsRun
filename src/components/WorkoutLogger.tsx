@@ -6,7 +6,7 @@ import Link from "next/link";
 import { ExercisePicker } from "./ExercisePicker";
 import { ExerciseThumb } from "./ExerciseMedia";
 import { BodyChip, LoadSwitch, SetBadge, onlyBody } from "./RoutineEditor";
-import { LIVE_WORKOUT_KEY, LIVE_WORKOUT_MAX_MS } from "@/lib/strength/liveWorkout";
+import { LIVE_WORKOUT_MAX_MS, dropLegacyLiveWorkout, liveWorkoutKey } from "@/lib/strength/liveWorkout";
 import { finishWorkout } from "@/app/strength-actions";
 import { withCustom } from "@/lib/strength/exerciseList";
 import type { Equipment, ExerciseSummary } from "@/lib/strength/labels";
@@ -40,22 +40,22 @@ interface Live {
   exercises: LiveExercise[];
 }
 
-// el entreno en curso se guarda en el navegador: si se cierra la app o se bloquea el móvil, sigue donde estaba
-const STORAGE = LIVE_WORKOUT_KEY;
+// el entreno en curso se guarda en el navegador (uno por cuenta): si se cierra la app o se bloquea el móvil, sigue donde estaba
 // se ha ido a mirar cómo se hace un ejercicio: al volver se sigue sin el aviso de «Continúas…»
 const PEEK = "rio-entreno-ejercicio";
-const load = (): Live | undefined => {
+const load = (owner: string): Live | undefined => {
   try {
-    const raw = localStorage.getItem(STORAGE);
+    dropLegacyLiveWorkout();
+    const raw = localStorage.getItem(liveWorkoutKey(owner));
     return raw ? (JSON.parse(raw) as Live) : undefined;
   } catch {
     return undefined;
   }
 };
-const store = (w: Live | undefined) => {
+const store = (owner: string, w: Live | undefined) => {
   try {
-    if (w) localStorage.setItem(STORAGE, JSON.stringify(w));
-    else localStorage.removeItem(STORAGE);
+    if (w) localStorage.setItem(liveWorkoutKey(owner), JSON.stringify(w));
+    else localStorage.removeItem(liveWorkoutKey(owner));
   } catch {}
 };
 
@@ -114,6 +114,7 @@ export function WorkoutLogger({
   pastStart,
   pastLabel,
   locale,
+  owner,
 }: {
   routine?: Routine;
   pastStart?: string; // apuntar un entreno ya hecho: «AAAA-MM-DDTHH:MM:00» (sin cronómetro ni descansos)
@@ -123,6 +124,7 @@ export function WorkoutLogger({
   available?: Equipment[];
   bodyKg?: number; // peso del perfil, para los ejercicios con peso corporal
   locale: Locale;
+  owner: string; // id de la cuenta: el entreno en curso se guarda aparte para cada una
 }) {
   const router = useRouter();
   const t = translator(locale);
@@ -158,7 +160,7 @@ export function WorkoutLogger({
       setW(fromRoutine(routine, suggest, t("wl.entreno")));
       return;
     }
-    const stored = load();
+    const stored = load(owner);
     let peeked = false;
     try {
       peeked = sessionStorage.getItem(PEEK) === "1";
@@ -171,8 +173,8 @@ export function WorkoutLogger({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- solo al cambiar de rutina, no cada vez que llega el objeto
   }, [routine?.id]);
   useEffect(() => {
-    if (!saved.current && !pastStart) store(w);
-  }, [w, pastStart]);
+    if (!saved.current && !pastStart) store(owner, w);
+  }, [w, pastStart, owner]);
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(t);
@@ -218,14 +220,14 @@ export function WorkoutLogger({
   };
   const discard = () => {
     if (!confirm(t("wl.descartarConfirm"))) return;
-    store(undefined);
+    store(owner, undefined);
     router.push("/fuerza");
   };
   const finish = (fd: FormData) =>
     start(async () => {
       // se borra antes de guardar porque la acción redirige; si falla, se vuelve a guardar
       saved.current = true;
-      store(undefined);
+      store(owner, undefined);
       const res = await finishWorkout({
         name: String(fd.get("name") ?? ""),
         startLocal: pastStart ?? localIso(w.startedAt),
@@ -240,7 +242,7 @@ export function WorkoutLogger({
       // si se guardó, la acción redirige y no vuelve aquí
       if (res?.error) {
         saved.current = false;
-        store(w);
+        store(owner, w);
         setError(res.error);
       }
     });

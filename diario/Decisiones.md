@@ -1194,3 +1194,14 @@ Fuentes: screensdesign.com, posthog.com/pricing, revenuecat.com/pricing, revenue
 - **Coste aceptado**: se rompe a propósito el límite de subir un 10 % en esas semanas. En 1.000 usuarios, las tiradas que suben más de un 50 % pasan de 217 a 347 semanas; los km medios por semana, de 32,7 a 33,2. Quien empieza hace más volumen (ejemplo: de 29 a 37 km en la semana más dura), porque sus rodajes ya están en el mínimo. Sin esa regla no sale la nota del plan que promete el 10 %.
 - **Alternativa si los saltos dan problemas**: subir la tirada poco a poco varias semanas, aunque la calidad quede por encima un tiempo.
 - Solo afecta a los planes que se rehacen.
+
+## Arranque más rápido y entreno en curso por cuenta
+*2026-11-17*
+
+- **Pantalla negra o blanca al abrir** (David): producción responde rápido (la primera vez tras un rato, 1,5 s por el arranque en frío de Vercel), así que lo largo venía del móvil. Tres causas posibles, las tres cubiertas:
+  - La página no tenía color hasta que llegaba la hoja de estilos: con mala cobertura, pantalla blanca. Ahora el negro va escrito en la propia etiqueta (`layout.tsx`, y `color-scheme: dark`).
+  - El service worker esperaba la página sin límite. En Safari la «petición adelantada» (navigation preload) a veces no llega al volver a la app: a los 4 s se pide de nuevo. A los 12 s sin respuesta, pantalla «Está tardando más de lo normal» que reintenta sola, en la misma dirección. Alternativa descartada: guardar en caché las páginas para abrir al momento (llevan datos personales y saldrían viejas).
+  - La caché de estáticos crecía con cada versión publicada (nunca se borraba): se quedan los 160 más nuevos.
+- **Entreno en curso**: se guardaba en el móvil con una sola clave para todos, así que en un móvil compartido la siguiente cuenta veía (y podía continuar) el entreno de la anterior. Ahora cada cuenta tiene su clave (`rio-entreno:<id>`). El de antes no se sabe de quién es y se borra (como mucho se pierde un entreno a medias el día que llegue la versión).
+- **Perfil lento con años de historial**: la etiqueta «Mejor ritmo del mes» recorría todas las carreras anteriores en cada carrera (n²). Ahora ventana de 30 días que avanza (mismas etiquetas, comprobado con 1.185 entrenos: de 288 ms a 10 ms). El calendario de Perfil llega a un año atrás (antes, todo el historial en la página: 455 KB con 4 años; ahora 209 KB); lo anterior está en «Actividades».
+
